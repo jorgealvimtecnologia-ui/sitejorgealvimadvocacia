@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Área do Cliente • Jorge Alvim Advocacia</title>
+  <meta name="description" content="Portal do Cliente de Jorge Alvim Advocacia. Acompanhe seus processos judiciais, andamentos, contrato de honorários, pagamentos e mensagens diretas.">
+  <meta name="theme-color" content="#0A192F">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23B8860B'><path d='M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14'/></svg>">
+
+  <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              950: '#060E1A',
+              900: '#0A192F',
+              850: '#0E223D',
+              800: '#132B4D',
+            },
+            gold: {
+              800: '#855E1C',
+              700: '#996515',
+              600: '#B8860B',
+              500: '#D4AF37',
+              400: '#DFBE4B',
+              300: '#E6CA65',
+              200: '#F3E3A2',
+              100: '#FAF2D4',
+              50: '#FDFBF4',
+            },
+            warm: {
+              50: '#FDFBF7',
+              100: '#F9F6F0',
+              200: '#F0EBE1',
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FDFBF7;
+      color: #0F172A;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    ::selection {
+      background-color: #B8860B;
+      color: #FFFFFF;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #B8860B;
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #855E1C 0%, #B8860B 50%, #D4AF37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- ================= TOP HEADER DA ÁREA DO CLIENTE ================= -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Logo e Título -->
+        <a href="/" class="flex items-center space-x-3 group">
+          <div class="w-11 h-11 rounded-xl bg-navy-900 border-2 border-gold-400 flex items-center justify-center text-gold-400 shadow-sm group-hover:border-gold-500 transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+            </svg>
+          </div>
+          <div>
+            <span class="font-serif text-lg sm:text-xl font-extrabold text-navy-950 block">JORGE ALVIM</span>
+            <span class="text-[10px] uppercase tracking-widest text-gold-600 font-bold block -mt-0.5">Área do Cliente • OAB/MG 222.943</span>
+          </div>
+        </a>
+
+        <!-- Botões de Navegação Superior -->
+        <div class="flex items-center space-x-3">
+          <a href="/" class="hidden sm:inline-flex items-center space-x-1 text-xs font-semibold text-slate-600 hover:text-navy-950 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors">
+            <span>←</span>
+            <span>Voltar ao Site</span>
+          </a>
+
+          <!-- Bloco do Usuário Logado (Oculto se deslogado) -->
+          <div id="header-user-block" class="hidden items-center space-x-3">
+            <div class="text-right hidden md:block">
+              <span id="header-user-name" class="block text-xs font-bold text-navy-950">Cliente</span>
+              <span id="header-user-id" class="block text-[10px] text-slate-500 font-mono">JA-2026-0000</span>
+            </div>
+            <button 
+              onclick="logoutClient()" 
+              class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition-colors cursor-pointer flex items-center space-x-1"
+            >
+              <span>🚪</span>
+              <span class="hidden sm:inline">Sair</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= CONTEÚDO PRINCIPAL ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+
+    <!-- ================= VIEW 1: AUTENTICAÇÃO / LOGIN / CADASTRO (QUANDO DESLOGADO) ================= -->
+    <div id="auth-view" class="max-w-xl mx-auto">
+      
+      <!-- Cabeçalho do Card de Acesso -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-50 to-amber-100 border border-gold-300 text-gold-700 shadow-sm mb-4">
+          <span class="text-2xl">🏛️</span>
+        </div>
+        <h1 class="font-serif text-2xl sm:text-3xl font-extrabold text-navy-950">Portal do Cliente</h1>
+        <p class="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">
+          Acompanhe seus processos judiciais em tempo real, consulte seu contrato, emita faturas e converse com o Dr. Jorge Alvim.
+        </p>
+      </div>
+
+      <!-- Card de Login & Cadastro -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden">
+        
+        <!-- Navegação de Abas: Login vs Cadastro -->
+        <div class="grid grid-cols-2 p-1.5 bg-slate-100/80 border-b border-slate-200 text-xs font-bold">
+          <button 
+            id="tab-auth-login-btn" 
+            onclick="switchAuthTab('login')" 
+            class="py-3 rounded-2xl bg-white text-navy-950 shadow-xs transition-all flex items-center justify-center space-x-1.5"
+          >
+            <span>🔑</span>
+            <span>Já sou Cliente (Entrar)</span>
+          </button>
+          <button 
+            id="tab-auth-register-btn" 
+            onclick="switchAuthTab('register')" 
+            class="py-3 rounded-2xl text-slate-600 hover:text-navy-950 transition-all flex items-center justify-center space-x-1.5"
+          >
+            <span>📝</span>
+            <span>Novo Cadastro</span>
+          </button>
+        </div>
+
+        <div class="p-6 sm:p-8">
+          
+          <!-- FORMULÁRIO 1: LOGIN -->
+          <form id="client-login-form" onsubmit="handleClientLogin(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">CPF, CNPJ ou E-mail cadastrado *</label>
+              <input 
+                type="text" 
+                id="login-identifier" 
+                required 
+                placeholder="Digite seu CPF, CNPJ ou E-mail" 
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm font-medium text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
+              />
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="block text-xs font-bold text-slate-700">Sua Senha de Acesso *</label>
+                <button 
+                  type="button" 
+                  onclick="openForgotPasswordModal()" 
+                  class="text-xs font-semibold text-gold-700 hover:text-gold-800 hover:underline cursor-pointer"
+                >
+                  Esqueceu a senha?
+                </button>
+              </div>
+              <input 
+                type="password" 
+                id="login-password" 
+                required 
+                placeholder="••••••••" 
+                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
+              />
+            </div>
+
+            <div id="login-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium"></div>
+
+            <button 
+              type="submit" 
+              id="login-submit-btn" 
+              class="w-full py-3.5 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 border border-gold-500/40 cursor-pointer mt-2"
+            >
+              <span>Acessar Meu Portal</span>
+              <span>→</span>
+            </button>
+
+            <div class="text-center pt-2">
+              <span class="text-xs text-slate-500">Ainda não tem acesso?</span>
+              <button 
+                type="button" 
+                onclick="switchAuthTab('register')" 
+                class="text-xs font-bold text-gold-700 hover:underline ml-1 cursor-pointer"
+              >
+                Cadastre-se agora
+              </button>
+            </div>
+          </form>
+
+          <!-- FORMULÁRIO 2: NOVO CADASTRO (PF OU PJ) -->
+          <form id="client-register-form" onsubmit="handleClientRegister(event)" class="hidden space-y-4">
+            
+            <!-- Seletor Tipo: Pessoa Física vs Jurídica -->
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+              <label class="block text-xs font-bold text-slate-700 mb-2">Tipo de Cadastro *</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-gold-500 transition-colors">
+                  <input type="radio" name="reg_client_type" value="PF" checked onchange="toggleRegisterTypeUI()" class="text-gold-600 focus:ring-gold-500">
+                  <span class="text-xs font-bold text-slate-800">👤 Pessoa Física (CPF)</span>
+                </label>
+                <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-gold-500 transition-colors">
+                  <input type="radio" name="reg_client_type" value="PJ" onchange="toggleRegisterTypeUI()" class="text-gold-600 focus:ring-gold-500">
+                  <span class="text-xs font-bold text-slate-800">🏢 Pessoa Jurídica (Empresa)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Dados Principais -->
+            <div>
+              <label id="reg-name-label" class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
+              <input 
+                type="text" 
+                id="reg-fullname" 
+                required 
+                placeholder="Ex: João da Silva ou Empresa LTDA" 
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white"
+              />
+            </div>
+
+            <!-- CPF / RG (se PF) -->
+            <div id="reg-pf-docs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">CPF *</label>
+                <input 
+                  type="text" 
+                  id="reg-cpf" 
+                  placeholder="000.000.000-00" 
+                  oninput="maskCPF(this)" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">RG / Órgão Emissor</label>
+                <input 
+                  type="text" 
+                  id="reg-rg" 
+                  placeholder="Ex: MG-12.345.678" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+              </div>
+            </div>
+
+            <!-- CNPJ (se PJ) -->
+            <div id="reg-pj-docs-grid" class="hidden">
+              <label class="block text-xs font-bold text-slate-700 mb-1">CNPJ da Empresa *</label>
+              <input 
+                type="text" 
+                id="reg-cnpj" 
+                placeholder="00.000.000/0001-00" 
+                oninput="maskCNPJ(this)" 
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+              />
+            </div>
+
+            <!-- Contato -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">E-mail de Acesso *</label>
+                <input 
+                  type="email" 
+                  id="reg-email" 
+                  required 
+                  placeholder="seuemail@exemplo.com" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Telefone *</label>
+                <input 
+                  type="text" 
+                  id="reg-phone" 
+                  required 
+                  placeholder="(32) 99999-9999" 
+                  oninput="maskPhone(this)" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+              </div>
+            </div>
+
+            <!-- Qualificação Civil (se PF) -->
+            <div id="reg-pf-extra-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Nacionalidade</label>
+                <input type="text" id="reg-nationality" value="brasileiro(a)" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Estado Civil</label>
+                <select id="reg-marital-status" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs font-medium">
+                  <option value="solteiro(a)">Solteiro(a)</option>
+                  <option value="casado(a)">Casado(a)</option>
+                  <option value="divorciado(a)">Divorciado(a)</option>
+                  <option value="viúvo(a)">Viúvo(a)</option>
+                  <option value="união estável">União Estável</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Profissão</label>
+                <input type="text" id="reg-profession" placeholder="Ex: Autônomo" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
+              </div>
+            </div>
+
+            <!-- Representante Legal (se PJ) -->
+            <div id="reg-pj-rep-block" class="hidden p-3 bg-amber-50/60 rounded-2xl border border-gold-200 space-y-2">
+              <span class="text-xs font-bold text-navy-950 block">👤 Dados do Sócio / Representante Legal da Empresa:</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input type="text" id="reg-rep-name" placeholder="Nome do Representante" class="w-full px-2.5 py-2 rounded-lg bg-white border border-slate-300 text-xs" />
+                <input type="text" id="reg-rep-cpf" placeholder="CPF do Representante" oninput="maskCPF(this)" class="w-full px-2.5 py-2 rounded-lg bg-white border border-slate-300 text-xs" />
+              </div>
+            </div>
+
+            <!-- Endereço com Busca Automática de CEP -->
+            <div class="pt-2 border-t border-slate-100 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700">Endereço Completo</span>
+                <span class="text-[10px] text-slate-400">Busca rápida por CEP</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="col-span-1">
+                  <input 
+                    type="text" 
+                    id="reg-cep" 
+                    placeholder="CEP: 00000-000" 
+                    oninput="maskCEP(this)" 
+                    onblur="buscarCEP(this.value)" 
+                    class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs font-mono"
+                  />
+                </div>
+                <div class="col-span-2">
+                  <input type="text" id="reg-street" placeholder="Rua / Avenida" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <input type="text" id="reg-number" placeholder="Nº" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
+                </div>
+                <div>
+                  <input type="text" id="reg-neighborhood" placeholder="Bairro" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
+                </div>
+                <div>
+                  <input type="text" id="reg-city" placeholder="Cidade - UF" value="Juiz de Fora - MG" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Criação de Senha -->
+            <div class="pt-2 border-t border-slate-100 space-y-2">
+              <label class="block text-xs font-bold text-slate-700">Crie uma Senha de Acesso Segura *</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input 
+                  type="password" 
+                  id="reg-password" 
+                  required 
+                  minlength="6" 
+                  placeholder="Mínimo 6 caracteres" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+                <input 
+                  type="password" 
+                  id="reg-confirm-password" 
+                  required 
+                  minlength="6" 
+                  placeholder="Confirme sua senha" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+              </div>
+            </div>
+
+            <div id="register-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium"></div>
+
+            <button 
+              type="submit" 
+              id="register-submit-btn" 
+              class="w-full py-3.5 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 border border-gold-500/40 cursor-pointer mt-3"
+            >
+              <span>Concluir Cadastro & Entrar</span>
+              <span>✓</span>
+            </button>
+
+            <p class="text-[10px] text-slate-400 text-center leading-relaxed">
+              Ao cadastrar-se, você declara estar de acordo com a nossa Política de Privacidade e Tratamento de Dados (LGPD).
+            </p>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= VIEW 2: PAINEL LOGADO DO CLIENTE ================= -->
+    <div id="portal-view" class="hidden space-y-6">
+
+      <!-- BANNER DE BOAS-VINDAS & PERFIL DO CLIENTE -->
+      <div class="bg-gradient-to-r from-navy-900 via-navy-850 to-navy-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-gold-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div class="space-y-1.5">
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-300 text-[11px] font-bold border border-gold-500/30">
+              Cliente Cadastrado
+            </span>
+            <span id="portal-user-type-badge" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-mono">
+              PF
+            </span>
+          </div>
+          <h2 id="portal-welcome-name" class="font-serif text-2xl sm:text-3xl font-extrabold text-white">
+            Olá, Cliente!
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300 flex items-center space-x-2">
+            <span>Matrícula: <strong id="portal-client-id" class="font-mono text-gold-400">JA-2026-0000</strong></span>
+            <span>•</span>
+            <span id="portal-client-doc">CPF: 000.000.000-00</span>
+          </p>
+        </div>
+
+        <!-- Card Rápido de Notificações por E-mail -->
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-center space-x-3 w-full md:w-auto">
+          <div class="w-10 h-10 rounded-xl bg-gold-500/20 flex items-center justify-center text-gold-400 text-lg flex-shrink-0">
+            ✉️
+          </div>
+          <div class="flex-1">
+            <div class="text-xs font-bold text-white">Andamentos por E-mail</div>
+            <div class="text-[11px] text-slate-300">Receba atualizações do processo</div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="portal-email-notif-toggle" onchange="toggleEmailNotifications(this.checked)" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- NAVEGAÇÃO DE ABAS DO PORTAL DO CLIENTE -->
+      <div class="flex flex-wrap gap-2 p-1.5 bg-white rounded-2xl border border-slate-200 shadow-xs">
+        <button 
+          id="btn-portal-tab-lawsuits" 
+          onclick="switchPortalTab('lawsuits')" 
+          class="flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-bold bg-navy-900 text-white shadow-sm transition-all flex items-center justify-center space-x-2"
+        >
+          <span>⚖️</span>
+          <span>Meus Processos (<span id="count-lawsuits">0</span>)</span>
+        </button>
+        
+        <button 
+          id="btn-portal-tab-contract" 
+          onclick="switchPortalTab('contract')" 
+          class="flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
+        >
+          <span>📑</span>
+          <span>Contrato & Financeiro</span>
+        </button>
+
+        <button 
+          id="btn-portal-tab-messages" 
+          onclick="switchPortalTab('messages')" 
+          class="flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
+        >
+          <span>💬</span>
+          <span>Mensagens (<span id="count-messages">0</span>)</span>
+        </button>
+
+        <button 
+          id="btn-portal-tab-profile" 
+          onclick="switchPortalTab('profile')" 
+          class="flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
+        >
+          <span>⚙️</span>
+          <span>Meus Dados & Senha</span>
+        </button>
+      </div>
+
+      <!-- ================= ABA 1: MEUS PROCESSOS & ANDAMENTOS ================= -->
+      <div id="portal-tab-lawsuits" class="space-y-4">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h3 class="font-serif text-lg font-bold text-navy-950">Acompanhamento Processual</h3>
+            <p class="text-xs text-slate-500">Consulte os números CNJ, tribunais, instâncias e o histórico de andamentos das suas ações.</p>
+          </div>
+          <a 
+            href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20uma%20d%C3%BAvida%20sobre%20meu%20processo." 
+            target="_blank" 
+            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition-colors flex items-center space-x-1.5"
+          >
+            <span>💬</span>
+            <span>Dúvida sobre o Processo</span>
+          </a>
+        </div>
+
+        <!-- Container Dinâmico dos Processos do Cliente -->
+        <div id="portal-lawsuits-list" class="space-y-4">
+          <!-- Renderizado via JavaScript -->
+        </div>
+
+      </div>
+
+      <!-- ================= ABA 2: CONTRATO & FINANCEIRO (CARNÊ / PIX ASAAS) ================= -->
+      <div id="portal-tab-contract" class="hidden space-y-6">
+        
+        <!-- Resumo do Contrato -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-card-light">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+            <div>
+              <span class="text-xs font-bold text-gold-700 uppercase tracking-wider">Contrato de Prestação de Serviços Advocatícios</span>
+              <h3 class="font-serif text-xl font-bold text-navy-950 mt-0.5">Resumo Financeiro & Honorários</h3>
+            </div>
+            <span id="portal-contract-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              🟢 Ativo
+            </span>
+          </div>
+
+          <!-- Cards de Valores -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <span class="text-[10px] text-slate-500 font-bold uppercase block">Valor Total</span>
+              <span id="portal-contract-val" class="font-serif text-lg sm:text-xl font-bold text-navy-950 block mt-1">R$ 0,00</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <span class="text-[10px] text-slate-500 font-bold uppercase block">Parcelamento</span>
+              <span id="portal-contract-installments" class="font-bold text-slate-800 text-sm sm:text-base block mt-1">1x</span>
+            </div>
+            <div class="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200">
+              <span class="text-[10px] text-emerald-800 font-bold uppercase block">Total Liquidado</span>
+              <span id="portal-contract-paid" class="font-serif text-lg sm:text-xl font-bold text-emerald-700 block mt-1">R$ 0,00</span>
+            </div>
+            <div class="bg-rose-50/60 p-4 rounded-2xl border border-rose-200">
+              <span class="text-[10px] text-rose-800 font-bold uppercase block">Saldo Devedor</span>
+              <span id="portal-contract-balance" class="font-serif text-lg sm:text-xl font-bold text-rose-700 block mt-1">R$ 0,00</span>
+            </div>
+          </div>
+
+          <!-- Barra de Progresso de Quitação -->
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+              <span>Progresso de Pagamento do Contrato:</span>
+              <span id="portal-contract-progress-text">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+              <div id="portal-contract-progress-bar" class="bg-gradient-to-r from-gold-500 to-emerald-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grade de Parcelas & Boletos / PIX Asaas -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+              <h4 class="font-serif font-bold text-navy-950 text-base">Carnê de Parcelas & Cobranças</h4>
+              <p class="text-xs text-slate-500">Pague via PIX Dinâmico Instantâneo, Boleto Bancário ou consulte seus comprovantes.</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-100 text-slate-700 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th class="px-5 py-3.5">Parcela</th>
+                  <th class="px-5 py-3.5">Valor (R$)</th>
+                  <th class="px-5 py-3.5">Vencimento</th>
+                  <th class="px-5 py-3.5">Status</th>
+                  <th class="px-5 py-3.5 text-center">Pagamento / PIX</th>
+                </tr>
+              </thead>
+              <tbody id="portal-installments-table-body" class="divide-y divide-slate-100">
+                <!-- Preenchido via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= ABA 3: MENSAGENS COM O ESCRITÓRIO ================= -->
+      <div id="portal-tab-messages" class="hidden space-y-6">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Coluna 1: Enviar Nova Mensagem -->
+          <div class="lg:col-span-1 bg-white rounded-3xl p-6 border border-slate-200 shadow-card-light h-fit space-y-4">
+            <div>
+              <span class="text-xs font-bold text-gold-700 uppercase tracking-wider">Canal Direto</span>
+              <h4 class="font-serif text-lg font-bold text-navy-950">Enviar Mensagem</h4>
+              <p class="text-xs text-slate-500 mt-1">Sua mensagem será entregue diretamente ao Dr. Jorge Alvim.</p>
+            </div>
+
+            <form id="portal-send-msg-form" onsubmit="handleSendClientMessage(event)" class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Assunto</label>
+                <input 
+                  type="text" 
+                  id="msg-subject" 
+                  required 
+                  placeholder="Ex: Dúvida sobre audiência / Documento" 
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-navy-950 focus:outline-none focus:border-gold-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Mensagem *</label>
+                <textarea 
+                  id="msg-content" 
+                  rows="4" 
+                  required 
+                  placeholder="Digite sua mensagem com detalhes..." 
+                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-navy-950 focus:outline-none focus:border-gold-500 resize-none"
+                ></textarea>
+              </div>
+
+              <button 
+                type="submit" 
+                id="msg-submit-btn" 
+                class="w-full py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs shadow-sm transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <span>✉️</span>
+                <span>Enviar ao Escritório</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Coluna 2 & 3: Histórico de Mensagens -->
+          <div class="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-card-light space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 class="font-serif text-lg font-bold text-navy-950">Histórico de Comunicações</h4>
+              <span class="text-xs text-slate-400">Mensagens arquivadas com segurança</span>
+            </div>
+
+            <div id="portal-messages-feed" class="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              <!-- Renderizado via JavaScript -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ================= ABA 4: MEUS DADOS & SENHA / EXCLUSÃO LGPD ================= -->
+      <div id="portal-tab-profile" class="hidden space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- CARD 1: EDITAR DADOS CADASTRAIS -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-card-light space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+              <span class="text-xs font-bold text-gold-700 uppercase tracking-wider">Cadastro Geral</span>
+              <h4 class="font-serif text-lg font-bold text-navy-950">Alterar Meus Dados</h4>
+            </div>
+
+            <form id="portal-update-profile-form" onsubmit="handleUpdateProfile(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nome Completo / Razão Social *</label>
+                <input type="text" id="prof-fullname" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-medium" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">E-mail *</label>
+                  <input type="email" id="prof-email" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Telefone / WhatsApp *</label>
+                  <input type="text" id="prof-phone" required oninput="maskPhone(this)" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Profissão</label>
+                  <input type="text" id="prof-profession" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Estado Civil</label>
+                  <select id="prof-marital-status" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-medium">
+                    <option value="solteiro(a)">Solteiro(a)</option>
+                    <option value="casado(a)">Casado(a)</option>
+                    <option value="divorciado(a)">Divorciado(a)</option>
+                    <option value="viúvo(a)">Viúvo(a)</option>
+                    <option value="união estável">União Estável</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Endereço (Rua, Número, Bairro, Cidade)</label>
+                <input type="text" id="prof-address" placeholder="Rua, nº, Bairro, Cidade - UF" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold shadow-xs transition-colors cursor-pointer flex items-center justify-center space-x-1.5 border border-gold-600"
+              >
+                <span>💾</span>
+                <span>Salvar Alterações no Cadastro</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- CARD 2: ALTERAÇÃO DE SENHA & EXCLUSÃO DE CONTA -->
+          <div class="space-y-6">
+            
+            <!-- Alterar Senha -->
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-card-light space-y-4">
+              <div class="border-b border-slate-100 pb-3">
+                <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Segurança</span>
+                <h4 class="font-serif text-lg font-bold text-navy-950">Alterar Senha de Acesso</h4>
+              </div>
+
+              <form id="portal-change-pwd-form" onsubmit="handleChangePassword(event)" class="space-y-3 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Senha Atual *</label>
+                  <input type="password" id="pwd-current" required placeholder="••••••••" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nova Senha *</label>
+                    <input type="password" id="pwd-new" required minlength="6" placeholder="Mínimo 6 dígitos" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1">Confirmar Nova *</label>
+                    <input type="password" id="pwd-confirm" required minlength="6" placeholder="Repita a senha" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  class="w-full py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-bold shadow-xs transition-colors cursor-pointer flex items-center justify-center space-x-1.5"
+                >
+                  <span>🔒</span>
+                  <span>Atualizar Minha Senha</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Excluir Conta / LGPD -->
+            <div class="bg-rose-50/50 rounded-3xl p-6 border border-rose-200 space-y-3">
+              <div class="flex items-center space-x-2 text-rose-800 font-bold text-sm">
+                <span>⚠️</span>
+                <span>Excluir Cadastro & Dados (Direito LGPD)</span>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Você pode solicitar a exclusão da sua conta e remoção dos seus dados cadastrais conforme a Lei Geral de Proteção de Dados (LGPD).
+              </p>
+              <button 
+                onclick="handleDeleteAccountPrompt()" 
+                class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center space-x-1"
+              >
+                <span>🗑️</span>
+                <span>Excluir Minha Conta Permanentemente</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= MODAL: RECUPERAÇÃO DE SENHA ================= -->
+  <div id="forgot-password-modal" class="hidden fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl space-y-5">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2 font-serif font-bold text-lg text-navy-950">
+          <span>🔄</span>
+          <span>Recuperar Senha</span>
+        </div>
+        <button onclick="closeForgotPasswordModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+
+      <!-- Passo 1: Solicitar Código -->
+      <div id="forgot-step-1" class="space-y-3">
+        <p class="text-xs text-slate-600">
+          Informe seu CPF, CNPJ ou E-mail cadastrado para gerar seu código de recuperação.
+        </p>
+        <input 
+          type="text" 
+          id="forgot-identifier" 
+          placeholder="CPF, CNPJ ou E-mail" 
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
+        />
+        <button 
+          onclick="handleRequestResetCode()" 
+          id="forgot-step1-btn" 
+          class="w-full py-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs shadow-sm transition-colors"
+        >
+          Enviar Código de Redefinição
+        </button>
+      </div>
+
+      <!-- Passo 2: Redefinir Senha -->
+      <div id="forgot-step-2" class="hidden space-y-3">
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium">
+          Código gerado! Digite o código de 6 dígitos e sua nova senha:
+        </div>
+        <input 
+          type="text" 
+          id="forgot-code" 
+          placeholder="Código de 6 dígitos (Ex: 123456)" 
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-mono text-center font-bold"
+        />
+        <input 
+          type="password" 
+          id="forgot-new-pwd" 
+          placeholder="Nova senha (mínimo 6 caracteres)" 
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm"
+        />
+        <button 
+          onclick="handleConfirmResetPassword()" 
+          id="forgot-step2-btn" 
+          class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-colors"
+        >
+          Salvar Nova Senha & Entrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: PIX DINÂMICO & FATURA ASAAS ================= -->
+  <div id="portal-pix-modal" class="hidden fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl space-y-4 text-center">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2 font-serif font-bold text-lg text-navy-950 text-left">
+          <span>⚡</span>
+          <span>Pagamento via PIX Asaas</span>
+        </div>
+        <button onclick="closePortalPixModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-700">✕</button>
+      </div>
+
+      <div>
+        <span class="text-xs text-slate-500">Valor da Parcela:</span>
+        <div id="portal-pix-modal-amount" class="text-2xl font-extrabold font-serif text-navy-950 mt-0.5">R$ 0,00</div>
+        <span id="portal-pix-modal-due" class="text-xs text-slate-500 block">Vencimento: --/--/----</span>
+      </div>
+
+      <!-- QR Code Visual -->
+      <div id="portal-pix-qrcode-box" class="flex justify-center my-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+        <img id="portal-pix-qrcode-img" src="" alt="QR Code PIX" class="w-48 h-48 object-contain rounded-xl shadow-xs" />
+      </div>
+
+      <!-- Copia e Cola -->
+      <div class="space-y-1.5 text-left">
+        <label class="block text-xs font-bold text-slate-700">Código PIX Copia e Cola:</label>
+        <div class="flex items-center space-x-1.5">
+          <input 
+            type="text" 
+            id="portal-pix-copypaste" 
+            readonly 
+            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-mono select-all focus:outline-none"
+          />
+          <button 
+            onclick="copyPortalPixCode(this)" 
+            class="px-3.5 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs whitespace-nowrap shadow-xs transition-colors"
+          >
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Links Alternativos de Fatura / Boleto -->
+      <div class="pt-3 border-t border-slate-100 flex justify-center space-x-2">
+        <a id="portal-pix-fatura-btn" href="#" target="_blank" class="hidden px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors">
+          📄 Abrir Boleto / Fatura
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 space-y-1">
+      <p class="font-semibold text-navy-950">Jorge Alvim Advocacia & Consultoria Jurídica • OAB/MG 222.943</p>
+      <p>Rua Henrique Dias, nº 259, Galeria 259, Loja 5, Bairro Benfica — Juiz de Fora - MG • CEP 36.080-000</p>
+      <p class="text-[11px] text-slate-400 pt-1">Atendimento: (32) 99815-3429 • Portal do Cliente Criptografado</p>
+    </div>
+  </footer>
+
+  <!-- ================= JAVASCRIPT DO PORTAL DO CLIENTE ================= -->
+  <script>
+    const CLIENT_TOKEN_KEY = 'jorgealvim_client_token';
+    let currentClientData = null;
+
+    // Utilitários de Formatação
+    function formatMoney(val) {
+      return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const parts = dateStr.split('T')[0].split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    }
+
+    function formatDateTime(isoStr) {
+      if (!isoStr) return '—';
+      const d = new Date(isoStr);
+      return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function maskCPF(i) {
+      let v = i.value.replace(/\D/g, '').substring(0, 11);
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      i.value = v;
+    }
+
+    function maskCNPJ(i) {
+      let v = i.value.replace(/\D/g, '').substring(0, 14);
+      v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+      v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+      v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+      v = v.replace(/(\d{4})(\d)/, '$1-$2');
+      i.value = v;
+    }
+
+    function maskPhone(i) {
+      let v = i.value.replace(/\D/g, '').substring(0, 11);
+      v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
+      v = v.replace(/(\d)(\d{4})$/, '$1-$2');
+      i.value = v;
+    }
+
+    function maskCEP(i) {
+      let v = i.value.replace(/\D/g, '').substring(0, 8);
+      v = v.replace(/^(\d{5})(\d)/, '$1-$2');
+      i.value = v;
+    }
+
+    async function buscarCEP(val) {
+      const cep = val.replace(/\D/g, '');
+      if (cep.length !== 8) return;
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          document.getElementById('reg-street').value = data.logradouro || '';
+          document.getElementById('reg-neighborhood').value = data.bairro || '';
+          document.getElementById('reg-city').value = `${data.localidade} - ${data.uf}`;
+        }
+      } catch (e) {
+        console.warn('Erro ao consultar ViaCEP:', e);
+      }
+    }
+
+    // Alternador de Abas de Autenticação (Login vs Cadastro)
+    function switchAuthTab(tab) {
+      const loginBtn = document.getElementById('tab-auth-login-btn');
+      const regBtn = document.getElementById('tab-auth-register-btn');
+      const loginForm = document.getElementById('client-login-form');
+      const regForm = document.getElementById('client-register-form');
+
+      if (tab === 'login') {
+        loginBtn.className = 'py-3 rounded-2xl bg-white text-navy-950 shadow-xs transition-all flex items-center justify-center space-x-1.5 font-bold';
+        regBtn.className = 'py-3 rounded-2xl text-slate-600 hover:text-navy-950 transition-all flex items-center justify-center space-x-1.5 font-semibold';
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+      } else {
+        regBtn.className = 'py-3 rounded-2xl bg-white text-navy-950 shadow-xs transition-all flex items-center justify-center space-x-1.5 font-bold';
+        loginBtn.className = 'py-3 rounded-2xl text-slate-600 hover:text-navy-950 transition-all flex items-center justify-center space-x-1.5 font-semibold';
+        regForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+      }
+    }
+
+    function toggleRegisterTypeUI() {
+      const isPJ = document.querySelector('input[name="reg_client_type"]:checked').value === 'PJ';
+      const pfDocs = document.getElementById('reg-pf-docs-grid');
+      const pjDocs = document.getElementById('reg-pj-docs-grid');
+      const pfExtra = document.getElementById('reg-pf-extra-grid');
+      const pjRep = document.getElementById('reg-pj-rep-block');
+      const nameLabel = document.getElementById('reg-name-label');
+
+      if (isPJ) {
+        pfDocs.classList.add('hidden');
+        pjDocs.classList.remove('hidden');
+        pfExtra.classList.add('hidden');
+        pjRep.classList.remove('hidden');
+        nameLabel.textContent = 'Razão Social da Empresa *';
+      } else {
+        pfDocs.classList.remove('hidden');
+        pjDocs.classList.add('hidden');
+        pfExtra.classList.remove('hidden');
+        pjRep.classList.add('hidden');
+        nameLabel.textContent = 'Nome Completo *';
+      }
+    }
+
+    // ================= LOGIN DO CLIENTE =================
+    async function handleClientLogin(e) {
+      e.preventDefault();
+      const login = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorMsg = document.getElementById('login-error-msg');
+      const submitBtn = document.getElementById('login-submit-btn');
+
+      errorMsg.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Verificando credenciais...</span>';
+
+      try {
+        const res = await fetch('/api/client-portal/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success && data.token) {
+          localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
+          await loadClientPortal();
+        } else {
+          errorMsg.textContent = data.error || 'Credenciais inválidas. Tente novamente.';
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Erro ao conectar ao servidor do escritório.';
+        errorMsg.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Acessar Meu Portal</span><span>→</span>';
+      }
+    }
+
+    // ================= CADASTRO DO CLIENTE =================
+    async function handleClientRegister(e) {
+      e.preventDefault();
+      const client_type = document.querySelector('input[name="reg_client_type"]:checked').value;
+      const full_name = document.getElementById('reg-fullname').value.trim();
+      const cpf = document.getElementById('reg-cpf').value.trim();
+      const rg = document.getElementById('reg-rg').value.trim();
+      const cnpj = document.getElementById('reg-cnpj').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirmPassword = document.getElementById('reg-confirm-password').value;
+      const nationality = document.getElementById('reg-nationality')?.value.trim();
+      const marital_status = document.getElementById('reg-marital-status')?.value;
+      const profession = document.getElementById('reg-profession')?.value.trim();
+      const street = document.getElementById('reg-street')?.value.trim();
+      const number = document.getElementById('reg-number')?.value.trim();
+      const neighborhood = document.getElementById('reg-neighborhood')?.value.trim();
+      const city = document.getElementById('reg-city')?.value.trim();
+      const cep = document.getElementById('reg-cep')?.value.trim();
+      const rep_name = document.getElementById('reg-rep-name')?.value.trim();
+      const rep_cpf = document.getElementById('reg-rep-cpf')?.value.trim();
+
+      const errorMsg = document.getElementById('register-error-msg');
+      const submitBtn = document.getElementById('register-submit-btn');
+
+      if (password !== confirmPassword) {
+        errorMsg.textContent = 'A confirmação de senha não confere com a senha digitada.';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      errorMsg.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Cadastrando...</span>';
+
+      try {
+        const res = await fetch('/api/client-portal/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_type, full_name, cpf, rg, cnpj, email, phone, password,
+            nationality, marital_status, profession, street, number, neighborhood, city, cep,
+            rep_name, rep_cpf
+          })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success && data.token) {
+          localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
+          alert('🎉 Bem-vindo(a) ao Portal do Cliente Jorge Alvim Advocacia!');
+          await loadClientPortal();
+        } else {
+          errorMsg.textContent = data.error || 'Erro ao realizar cadastro.';
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Erro ao comunicar com o servidor.';
+        errorMsg.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Concluir Cadastro & Entrar</span><span>✓</span>';
+      }
+    }
+
+    // ================= CARREGAR DADOS DO CLIENTE LOGADO =================
+    async function loadClientPortal() {
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      if (!token) {
+        showAuthView();
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/client-portal/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          currentClientData = data;
+          renderClientPortal(data);
+          showPortalView();
+        } else {
+          logoutClient();
+        }
+      } catch (err) {
+        console.error('Erro ao consultar dados do portal:', err);
+        showAuthView();
+      }
+    }
+
+    function showAuthView() {
+      document.getElementById('auth-view').classList.remove('hidden');
+      document.getElementById('portal-view').classList.add('hidden');
+      document.getElementById('header-user-block').classList.add('hidden');
+    }
+
+    function showPortalView() {
+      document.getElementById('auth-view').classList.add('hidden');
+      document.getElementById('portal-view').classList.remove('hidden');
+      document.getElementById('header-user-block').classList.remove('hidden');
+      document.getElementById('header-user-block').classList.add('flex');
+    }
+
+    function logoutClient() {
+      localStorage.removeItem(CLIENT_TOKEN_KEY);
+      currentClientData = null;
+      showAuthView();
+    }
+
+    function renderClientPortal(data) {
+      const { client, lawsuits, installments, messages } = data;
+
+      // Header e Banner
+      document.getElementById('header-user-name').textContent = client.full_name;
+      document.getElementById('header-user-id').textContent = client.id;
+      document.getElementById('portal-welcome-name').textContent = `Olá, ${client.full_name}!`;
+      document.getElementById('portal-client-id').textContent = client.id;
+      document.getElementById('portal-user-type-badge').textContent = client.client_type === 'PJ' ? 'Pessoa Jurídica' : 'Pessoa Física';
+      document.getElementById('portal-client-doc').textContent = client.client_type === 'PJ' ? `CNPJ: ${client.cnpj || '—'}` : `CPF: ${client.cpf || '—'}`;
+      document.getElementById('portal-email-notif-toggle').checked = !!client.email_notifications;
+
+      // Contadores das Abas
+      document.getElementById('count-lawsuits').textContent = lawsuits.length;
+      document.getElementById('count-messages').textContent = messages.length;
+
+      // 1. Renderizar Processos
+      renderPortalLawsuits(lawsuits);
+
+      // 2. Renderizar Contrato & Parcelas
+      renderPortalContractAndInstallments(client, installments);
+
+      // 3. Renderizar Mensagens
+      renderPortalMessages(messages);
+
+      // 4. Preencher Formulário de Meus Dados
+      renderPortalProfileData(client);
+    }
+
+    // ================= RENDERIZAR PROCESSOS & TIMELINE =================
+    function renderPortalLawsuits(lawsuits) {
+      const container = document.getElementById('portal-lawsuits-list');
+
+      if (lawsuits.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-card-light text-center space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-gold-600 flex items-center justify-center text-2xl mx-auto border border-gold-200">
+              ⚖️
+            </div>
+            <h4 class="font-serif text-lg font-bold text-navy-950">Nenhum Processo Ativo Vinculado</h4>
+            <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+              O Dr. Jorge Alvim está preparando a petição inicial ou providenciando a distribuição do seu caso. Assim que o número do processo for cadastrado, você poderá acompanhar todos os andamentos aqui.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = lawsuits.map(l => {
+        const movementsHtml = l.movements && l.movements.length > 0 ? l.movements.map(m => `
+          <div class="relative pl-6 pb-4 last:pb-0">
+            <div class="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-gold-500 border-2 border-white shadow-xs"></div>
+            <div class="text-xs font-bold text-navy-950">${m.title}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">${formatDate(m.movement_date)} ${m.has_deadline ? '• <strong class="text-rose-600">Prazo: ' + formatDate(m.deadline_date) + '</strong>' : ''}</div>
+            <p class="text-xs text-slate-700 mt-1 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">${m.description || 'Movimentação processual registrada.'}</p>
+          </div>
+        `).join('') : `
+          <div class="text-xs text-slate-400 py-3 italic text-center">Nenhuma movimentação lançada até o momento.</div>
+        `;
+
+        return `
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden">
+            <div class="p-5 sm:p-6 bg-gradient-to-r from-slate-50 to-amber-50/30 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-navy-900 text-white">
+                    ${l.instance || '1ª Instância'}
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    ${l.status || 'Em Andamento'}
+                  </span>
+                </div>
+                <div class="font-serif font-extrabold text-navy-950 text-base sm:text-lg mt-1">
+                  CNJ: ${l.cnj_number}
+                </div>
+                <div class="text-xs text-slate-600 mt-0.5 font-medium">
+                  Tribunal: <strong>${l.tribunal}</strong> • ${l.court_branch || 'Vara Cível'}
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 block uppercase font-bold">Tipo de Ação</span>
+                <span class="text-xs font-bold text-slate-800">${l.action_type || 'Ação Judicial'}</span>
+              </div>
+            </div>
+
+            <!-- Linha do Tempo dos Andamentos -->
+            <div class="p-5 sm:p-6 space-y-3">
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block border-b border-slate-100 pb-2">
+                📜 Linha do Tempo de Andamentos (${l.movements ? l.movements.length : 0})
+              </span>
+              <div class="relative border-l-2 border-slate-200 ml-1.5 mt-3">
+                ${movementsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ================= RENDERIZAR CONTRATO & CARNÊ =================
+    function renderPortalContractAndInstallments(client, installments) {
+      const contractVal = client.contract_value || 0;
+      const amountPaid = client.amount_paid || 0;
+      const balanceDue = client.balance_due || (contractVal - amountPaid);
+      const progress = contractVal > 0 ? Math.min(100, Math.round((amountPaid / contractVal) * 100)) : 0;
+
+      document.getElementById('portal-contract-val').textContent = formatMoney(contractVal);
+      document.getElementById('portal-contract-installments').textContent = `${client.installments_count || 1}x de ${formatMoney(client.installment_value || 0)}`;
+      document.getElementById('portal-contract-paid').textContent = formatMoney(amountPaid);
+      document.getElementById('portal-contract-balance').textContent = formatMoney(balanceDue);
+      document.getElementById('portal-contract-progress-text').textContent = `${progress}% Quitado`;
+      document.getElementById('portal-contract-progress-bar').style.width = `${progress}%`;
+      document.getElementById('portal-contract-status-badge').textContent = client.contract_status === 'Quitado' ? '✅ Quitado' : '🟢 Ativo';
+
+      const tbody = document.getElementById('portal-installments-table-body');
+      if (installments.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-8 text-slate-400">
+              Nenhuma parcela cadastrada no momento. Fale com o escritório para gerar seu carnê.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = installments.map(inst => {
+        const isPago = inst.status === 'Pago';
+        const isVencido = !isPago && new Date(inst.due_date + 'T23:59:59') < new Date();
+
+        let statusBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-bold text-xs border border-amber-200">🟡 A Vencer</span>`;
+        if (isPago) {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold text-xs border border-emerald-200">🟢 Quitado (${formatDate(inst.paid_date)})</span>`;
+        } else if (isVencido) {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 font-bold text-xs border border-rose-200">🔴 Vencido</span>`;
+        }
+
+        let actionBtn = '';
+        if (isPago) {
+          actionBtn = `<span class="text-xs font-bold text-emerald-700">✓ Pago</span>`;
+        } else {
+          actionBtn = `
+            <button 
+              onclick="openClientPixModal(${inst.id})" 
+              class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-xs shadow-xs transition-all flex items-center space-x-1 mx-auto"
+            >
+              <span>⚡</span>
+              <span>Pagar PIX / Boleto</span>
+            </button>
+          `;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-5 py-4 font-bold text-slate-800">
+              Parcela ${inst.installment_number} de ${inst.total_installments}
+            </td>
+            <td class="px-5 py-4 font-serif font-extrabold text-navy-950 text-sm">
+              ${formatMoney(inst.amount)}
+            </td>
+            <td class="px-5 py-4 font-medium ${isVencido ? 'text-rose-700 font-bold' : 'text-slate-700'}">
+              ${formatDate(inst.due_date)}
+            </td>
+            <td class="px-5 py-4">${statusBadge}</td>
+            <td class="px-5 py-4 text-center">${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ================= MODAL PIX DO CLIENTE =================
+    async function openClientPixModal(installmentId) {
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      const inst = currentClientData?.installments?.find(i => i.id === installmentId);
+      if (!inst) return;
+
+      document.getElementById('portal-pix-modal-amount').textContent = formatMoney(inst.amount);
+      document.getElementById('portal-pix-modal-due').textContent = `Vencimento: ${formatDate(inst.due_date)}`;
+
+      // Se já tem dados do Asaas gravados na parcela
+      if (inst.asaas_pix_qrcode || inst.asaas_pix_copy_paste) {
+        setPixModalData(inst.asaas_pix_qrcode, inst.asaas_pix_copy_paste, inst.asaas_invoice_url);
+        document.getElementById('portal-pix-modal').classList.remove('hidden');
+        return;
+      }
+
+      // Se ainda não gerou no Asaas, requisita geração
+      try {
+        const res = await fetch(`/api/financial/installments/${installmentId}/asaas-charge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ billingType: 'UNDEFINED' })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setPixModalData(data.pixQrCode, data.pixCopyPaste, data.invoiceUrl);
+          document.getElementById('portal-pix-modal').classList.remove('hidden');
+          loadClientPortal();
+        } else {
+          alert('Chave PIX do escritório: jorgealvimadvocacia@gmail.com\n(Configure a integração Asaas no painel)');
+        }
+      } catch (err) {
+        alert('Erro ao carregar PIX.');
+      }
+    }
+
+    function setPixModalData(qrCode, copyPaste, invoiceUrl) {
+      const qrImg = document.getElementById('portal-pix-qrcode-img');
+      if (qrCode) {
+        qrImg.src = qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`;
+        document.getElementById('portal-pix-qrcode-box').classList.remove('hidden');
+      } else {
+        document.getElementById('portal-pix-qrcode-box').classList.add('hidden');
+      }
+      document.getElementById('portal-pix-copypaste').value = copyPaste || '';
+      
+      const faturaBtn = document.getElementById('portal-pix-fatura-btn');
+      if (invoiceUrl) {
+        faturaBtn.href = invoiceUrl;
+        faturaBtn.classList.remove('hidden');
+      } else {
+        faturaBtn.classList.add('hidden');
+      }
+    }
+
+    function closePortalPixModal() {
+      document.getElementById('portal-pix-modal').classList.add('hidden');
+    }
+
+    function copyPortalPixCode(btn) {
+      const input = document.getElementById('portal-pix-copypaste');
+      if (!input.value) return;
+      navigator.clipboard.writeText(input.value).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copiado!';
+        btn.className = 'px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs whitespace-nowrap shadow-xs';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.className = 'px-3.5 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs whitespace-nowrap shadow-xs';
+        }, 2000);
+      });
+    }
+
+    // ================= RENDERIZAR MENSAGENS =================
+    function renderPortalMessages(messages) {
+      const feed = document.getElementById('portal-messages-feed');
+      if (messages.length === 0) {
+        feed.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-xs">
+            Nenhuma mensagem registrada. Envie uma mensagem ao Dr. Jorge Alvim pelo formulário ao lado.
+          </div>
+        `;
+        return;
+      }
+
+      feed.innerHTML = messages.map(m => {
+        const isClient = m.sender === 'client';
+        return `
+          <div class="p-4 rounded-2xl border ${isClient ? 'bg-slate-50 border-slate-200 ml-6' : 'bg-amber-50/70 border-gold-200 mr-6'} space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold ${isClient ? 'text-slate-800' : 'text-gold-900'}">
+                ${isClient ? '👤 Você' : '🏛️ ' + (m.sender_name || 'Dr. Jorge Alvim')}
+              </span>
+              <span class="text-[10px] text-slate-400">${formatDateTime(m.created_at)}</span>
+            </div>
+            <div class="font-semibold text-xs text-navy-950">${m.subject || 'Mensagem'}</div>
+            <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">${m.message}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function handleSendClientMessage(e) {
+      e.preventDefault();
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      const subject = document.getElementById('msg-subject').value.trim();
+      const message = document.getElementById('msg-content').value.trim();
+      const btn = document.getElementById('msg-submit-btn');
+
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/client-portal/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ subject, message })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          document.getElementById('msg-subject').value = '';
+          document.getElementById('msg-content').value = '';
+          alert('✅ Mensagem enviada com sucesso ao Dr. Jorge Alvim!');
+          loadClientPortal();
+        } else {
+          alert(data.error || 'Erro ao enviar mensagem.');
+        }
+      } catch (err) {
+        alert('Erro ao enviar mensagem.');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ================= MEUS DADOS & SEGURANÇA =================
+    function renderPortalProfileData(client) {
+      document.getElementById('prof-fullname').value = client.full_name || '';
+      document.getElementById('prof-email').value = client.email || '';
+      document.getElementById('prof-phone').value = client.phone || '';
+      document.getElementById('prof-profession').value = client.profession || '';
+      document.getElementById('prof-marital-status').value = client.marital_status || 'solteiro(a)';
+      document.getElementById('prof-address').value = `${client.street || ''} ${client.number ? ', nº ' + client.number : ''} ${client.neighborhood ? '— ' + client.neighborhood : ''} ${client.city ? ', ' + client.city : ''}`;
+    }
+
+    async function handleUpdateProfile(e) {
+      e.preventDefault();
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      const full_name = document.getElementById('prof-fullname').value.trim();
+      const email = document.getElementById('prof-email').value.trim();
+      const phone = document.getElementById('prof-phone').value.trim();
+      const profession = document.getElementById('prof-profession').value.trim();
+      const marital_status = document.getElementById('prof-marital-status').value;
+      const street = document.getElementById('prof-address').value.trim();
+
+      try {
+        const res = await fetch('/api/client-portal/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ full_name, email, phone, profession, marital_status, street })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Seus dados cadastrais foram atualizados com sucesso!');
+          loadClientPortal();
+        } else {
+          alert(data.error || 'Erro ao atualizar cadastro.');
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      const current_password = document.getElementById('pwd-current').value;
+      const new_password = document.getElementById('pwd-new').value;
+      const confirm_password = document.getElementById('pwd-confirm').value;
+
+      if (new_password !== confirm_password) {
+        alert('A confirmação da nova senha não confere.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/client-portal/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ current_password, new_password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Sua senha foi alterada com sucesso!');
+          document.getElementById('portal-change-pwd-form').reset();
+        } else {
+          alert(data.error || 'Erro ao alterar senha.');
+        }
+      } catch (err) {
+        alert('Erro de comunicação.');
+      }
+    }
+
+    async function toggleEmailNotifications(enabled) {
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      try {
+        await fetch('/api/client-portal/email-notifications', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ enabled })
+        });
+      } catch (err) {
+        console.error('Erro ao salvar notificação:', err);
+      }
+    }
+
+    async function handleDeleteAccountPrompt() {
+      const pwd = prompt('⚠️ ATENÇÃO: Esta ação excluirá permanentemente seu cadastro e dados no sistema (LGPD).\n\nPara confirmar, digite sua senha de acesso:');
+      if (!pwd) return;
+
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      try {
+        const res = await fetch('/api/client-portal/account', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ password: pwd })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('Sua conta e dados foram excluídos com sucesso.');
+          logoutClient();
+        } else {
+          alert(data.error || 'Não foi possível excluir a conta.');
+        }
+      } catch (err) {
+        alert('Erro ao excluir conta.');
+      }
+    }
+
+    // ================= RECUPERAÇÃO DE SENHA MODAL =================
+    function openForgotPasswordModal() {
+      document.getElementById('forgot-step-1').classList.remove('hidden');
+      document.getElementById('forgot-step-2').classList.add('hidden');
+      document.getElementById('forgot-password-modal').classList.remove('hidden');
+    }
+
+    function closeForgotPasswordModal() {
+      document.getElementById('forgot-password-modal').classList.add('hidden');
+    }
+
+    async function handleRequestResetCode() {
+      const login = document.getElementById('forgot-identifier').value.trim();
+      if (!login) {
+        alert('Informe seu CPF, CNPJ ou E-mail.');
+        return;
+      }
+
+      const btn = document.getElementById('forgot-step1-btn');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/client-portal/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(data.message);
+          document.getElementById('forgot-step-1').classList.add('hidden');
+          document.getElementById('forgot-step-2').classList.remove('hidden');
+          if (data.reset_code_demo) {
+            document.getElementById('forgot-code').value = data.reset_code_demo;
+          }
+        } else {
+          alert(data.error || 'Cadastro não encontrado.');
+        }
+      } catch (err) {
+        alert('Erro ao solicitar recuperação.');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function handleConfirmResetPassword() {
+      const login = document.getElementById('forgot-identifier').value.trim();
+      const reset_code = document.getElementById('forgot-code').value.trim();
+      const new_password = document.getElementById('forgot-new-pwd').value;
+
+      if (!reset_code || !new_password) {
+        alert('Digite o código e a nova senha.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/client-portal/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, reset_code, new_password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Senha redefinida com sucesso! Você já pode fazer login.');
+          closeForgotPasswordModal();
+          switchAuthTab('login');
+          document.getElementById('login-identifier').value = login;
+          document.getElementById('login-password').value = new_password;
+        } else {
+          alert(data.error || 'Código inválido ou expirado.');
+        }
+      } catch (err) {
+        alert('Erro ao redefinir senha.');
+      }
+    }
+
+    // Alternador de Sub-Abas do Portal Logado
+    function switchPortalTab(tab) {
+      const tabs = ['lawsuits', 'contract', 'messages', 'profile'];
+      tabs.forEach(t => {
+        const sec = document.getElementById(`portal-tab-${t}`);
+        const btn = document.getElementById(`btn-portal-tab-${t}`);
+        if (sec) {
+          if (t === tab) sec.classList.remove('hidden');
+          else sec.classList.add('hidden');
+        }
+        if (btn) {
+          if (t === tab) {
+            btn.className = 'flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-bold bg-navy-900 text-white shadow-sm transition-all flex items-center justify-center space-x-2';
+          } else {
+            btn.className = 'flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all flex items-center justify-center space-x-2';
+          }
+        }
+      });
+    }
+
+    // Inicialização ao carregar
+    document.addEventListener('DOMContentLoaded', loadClientPortal);
+  </script>
+</body>
+</html>

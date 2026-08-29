@@ -1,0 +1,32 @@
+services:
+  # Aplicação Node.js (Backend + Frontend)
+  site-advocacia:
+    build: .
+    container_name: jorgealvim_site
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./storage:/app/storage
+      - ./leads.db:/app/leads.db
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+
+  # Proxy Reverso Nginx com Suporte a HTTPS / SSL
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: jorgealvim_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - site-advocacia

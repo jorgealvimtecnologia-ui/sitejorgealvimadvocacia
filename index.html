@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
   
   <!-- SEO & Informações Primárias -->
   <title>Jorge Alvim Advocacia | Consultoria e Assessoria Jurídica em Juiz de Fora - MG</title>
@@ -141,11 +142,11 @@
     "telephone": "+55-32-99815-3429",
     "email": "jorgealvimadvocacia@gmail.com",
     "url": "https://jorgealvimadvocacia.com.br",
-    "openingHours": "Mo-Fr 08:30-18:00",
+    "openingHours": "Mo-Fr 09:00-16:00",
     "priceRange": "$$",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Rua Henrique Dias, nº 259, Galeria nº 259, Bairro Benfica",
+      "streetAddress": "Rua Henrique Dias, nº 259, Loja 5, Bairro Benfica",
       "addressLocality": "Juiz de Fora",
       "addressRegion": "MG",
       "addressCountry": "BR"
@@ -156,35 +157,24 @@
 
 <body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
 
-  <!-- ================= TOP BAR INFORMATIVA RESPONSIVA ================= -->
-  <aside aria-label="Informações de Contato Rápidas" class="bg-navy-900 text-slate-200 text-[11px] sm:text-xs py-2 px-3 sm:px-6 border-b border-navy-800">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1.5 sm:gap-4 text-center sm:text-left">
-      <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-6">
-        <span class="inline-flex items-center space-x-1.5 truncate max-w-full">
-          <svg class="w-3.5 h-3.5 text-gold-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          <span class="truncate">Rua Henrique Dias, 259 - Benfica, Juiz de Fora - MG</span>
-        </span>
-        <span class="hidden md:inline-flex items-center space-x-1.5 text-slate-300">
-          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <span>Seg à Sex: 08h30 às 18h00</span>
-        </span>
+  <!-- ================= TOP BAR INFORMATIVA RESPONSIVA (DESIGN CLARO) ================= -->
+  <aside aria-label="Informações de Atendimento e Endereço" class="bg-slate-50 text-slate-700 text-xs sm:text-[13px] py-2.5 px-4 sm:px-8 border-b border-slate-200/90 font-medium">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 text-center md:text-left">
+      <!-- Endereço Completo -->
+      <div class="inline-flex items-center space-x-2 text-slate-700">
+        <svg class="w-4 h-4 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Rua Henrique Dias, nº 259, Loja 5, Benfica, Juiz de Fora - MG</span>
       </div>
-      
-      <div class="flex items-center justify-center space-x-4">
-        <a href="mailto:jorgealvimadvocacia@gmail.com" class="hidden lg:inline-flex items-center space-x-1.5 hover:text-gold-300 transition-colors">
-          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-          </svg>
-          <span>jorgealvimadvocacia@gmail.com</span>
-        </a>
-        <a href="https://wa.me/5532998153429" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold inline-flex items-center space-x-1.5">
-          <span>WhatsApp: <strong>(32) 99815-3429</strong></span>
-        </a>
+
+      <!-- Horário de Funcionamento -->
+      <div class="inline-flex items-center space-x-2 text-slate-600">
+        <svg class="w-4 h-4 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Seg à Sex: 09h às 16h <span class="text-slate-500 font-normal">(preferencialmente agendamento)</span></span>
       </div>
     </div>
   </aside>
@@ -217,10 +207,19 @@
           <a href="#sobre" class="hover:text-gold-600 transition-colors">Sobre Nós</a>
           <a href="#areas" class="hover:text-gold-600 transition-colors">Áreas de Atuação</a>
           <a href="#como-funciona" class="hover:text-gold-600 transition-colors">Como Funciona</a>
-          <a href="#contato" class="hover:text-gold-600 transition-colors">Contato & Envio</a>
-          <a href="/painel" target="_blank" class="text-xs text-gold-700 hover:text-gold-600 font-bold px-3 py-1.5 rounded-lg bg-gold-100 hover:bg-gold-200 transition-colors shadow-sm" title="Painel do Escritório">
-            📊 Painel
+          <a href="/blog" class="hover:text-gold-600 transition-colors font-bold flex items-center space-x-1">
+            <span>📰</span>
+            <span>Blog Jurídico</span>
           </a>
+          <a href="#contato" class="hover:text-gold-600 transition-colors">Contato & Envio</a>
+          <a href="/cliente" class="text-xs text-navy-900 hover:text-navy-950 font-extrabold px-3.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-xs inline-flex items-center space-x-1.5" title="Área do Cliente: Acompanhe seus processos e contratos">
+            <span>👤</span>
+            <span>Área do Cliente</span>
+          </a>
+          <button onclick="openAdminLoginModal()" type="button" class="text-xs text-gold-700 hover:text-gold-600 font-bold px-3 py-1.5 rounded-lg bg-gold-100 hover:bg-gold-200 transition-colors shadow-sm inline-flex items-center space-x-1.5 cursor-pointer" title="Acesso Restrito ao Painel">
+            <span>🔒</span>
+            <span>Painel</span>
+          </button>
         </nav>
 
         <!-- CTA Header -->
@@ -245,41 +244,52 @@
       </div>
     </div>
 
-    <!-- Drawer Mobile Menu Fullscreen Otimizado -->
-    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-navy-950/98 backdrop-blur-2xl text-white flex flex-col justify-between p-6 overflow-y-auto min-h-[100dvh]">
+    <!-- Drawer Mobile Menu Fullscreen Otimizado (Design Claro) -->
+    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-white/98 backdrop-blur-2xl text-slate-800 flex flex-col justify-between p-6 overflow-y-auto min-h-[100dvh] border-l border-slate-200">
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-slate-800">
+        <div class="flex items-center justify-between pb-6 border-b border-slate-200">
           <div class="flex items-center space-x-3">
-            <div class="w-11 h-11 rounded-xl bg-navy-900 border-2 border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+            <div class="w-11 h-11 rounded-xl bg-gold-50 border-2 border-gold-400 flex items-center justify-center text-gold-600 shadow-sm">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
               </svg>
             </div>
             <div>
-              <span class="font-serif font-extrabold text-lg text-white block">Jorge Alvim</span>
-              <span class="text-[10px] uppercase tracking-widest text-gold-400 font-bold block">Advocacia • Juiz de Fora</span>
+              <span class="font-serif font-extrabold text-lg text-navy-950 block">Jorge Alvim</span>
+              <span class="text-[10px] uppercase tracking-widest text-gold-600 font-bold block">Advocacia • Juiz de Fora</span>
             </div>
           </div>
-          <button id="mobile-menu-close" type="button" aria-label="Fechar Menu" class="p-2.5 rounded-xl bg-navy-900 border border-slate-700 text-slate-300 hover:text-white">
+          <button id="mobile-menu-close" type="button" aria-label="Fechar Menu" class="p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
           </button>
         </div>
 
-        <nav class="flex flex-col space-y-4 pt-8 text-base xs:text-lg font-semibold text-slate-200">
-          <a href="#inicio" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Início</a>
-          <a href="#sobre" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Sobre o Dr. Jorge Alvim</a>
-          <a href="#areas" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Áreas de Atuação</a>
-          <a href="#como-funciona" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Como Funciona</a>
-          <a href="#contato" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Contato & Envio de Documentos</a>
-          <a href="/painel" target="_blank" class="mobile-nav-link text-gold-300 font-bold py-2 bg-navy-900/80 px-3 rounded-lg border border-gold-500/40">📊 Painel de Clientes (Restrito)</a>
+        <nav class="flex flex-col space-y-4 pt-8 text-base xs:text-lg font-semibold text-slate-700">
+          <a href="#inicio" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Início</a>
+          <a href="#sobre" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Sobre o Dr. Jorge Alvim</a>
+          <a href="#areas" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Áreas de Atuação</a>
+          <a href="#como-funciona" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Como Funciona</a>
+          <a href="/blog" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors font-bold text-navy-950 flex items-center space-x-2">
+            <span>📰</span>
+            <span>Blog & Notícias Jurídicas</span>
+          </a>
+          <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Contato & Envio de Documentos</a>
+          <a href="/cliente" class="mobile-nav-link text-left text-emerald-950 font-bold py-2.5 bg-emerald-50 px-3.5 rounded-lg border border-emerald-300 flex items-center justify-between">
+            <span>👤 Área do Cliente</span>
+            <span class="text-xs text-emerald-700 font-bold">Acessar →</span>
+          </a>
+          <button onclick="openAdminLoginModal()" type="button" class="mobile-nav-link text-left text-gold-800 font-bold py-2.5 bg-gold-50 px-3.5 rounded-lg border border-gold-300 flex items-center justify-between">
+            <span>🔒 Painel do Administrador</span>
+            <span class="text-xs text-slate-500">Entrar →</span>
+          </button>
         </nav>
       </div>
 
-      <div class="pt-6 border-t border-slate-800 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center space-x-2 py-4 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 text-navy-950 font-extrabold text-center shadow-lg">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <div class="pt-6 border-t border-slate-200 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center space-x-2 py-4 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 text-white font-extrabold text-center shadow-lg border border-gold-400/50">
+          <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
           </svg>
           <span>Falar no WhatsApp: (32) 99815-3429</span>
@@ -314,21 +324,6 @@
         <p class="mt-4 sm:mt-5 text-sm xs:text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto font-normal leading-relaxed">
           Assessoria jurídica ágil e ética conduzida pelo Dr. Jorge Alvim. Atuação combativa e preventiva para solucionar o seu caso com total segurança.
         </p>
-
-        <div class="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full max-w-md sm:max-w-none mx-auto">
-          <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20agendar%20uma%20consulta%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-500 text-navy-950 font-bold text-sm sm:text-base shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-300">
-            <svg class="w-5 h-5 text-navy-950 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-            </svg>
-            <span>Falar no WhatsApp: (32) 99815-3429</span>
-          </a>
-          <a href="#contato" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm sm:text-base border border-slate-300 hover:border-gold-500 transition-all duration-300 shadow-sm">
-            <span>Anexar Documentos & Enviar</span>
-            <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </a>
-        </div>
 
         <!-- 3 Pilares em Destaque no Hero -->
         <div class="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto text-left">
@@ -464,7 +459,7 @@
               />
               <div class="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/40 to-transparent p-4 sm:p-5 flex flex-col justify-end">
                 <h3 class="font-serif text-base sm:text-lg font-bold text-white">Sede Própria em Benfica & Atendimento Seguro</h3>
-                <p class="text-[11px] sm:text-xs text-slate-200">Localizado na Rua Henrique Dias, nº 259 (Galeria nº 259) em Juiz de Fora - MG.</p>
+                <p class="text-[11px] sm:text-xs text-slate-200">Localizado na Rua Henrique Dias, nº 259, Loja 5 (Benfica) em Juiz de Fora - MG.</p>
               </div>
             </div>
 
@@ -872,6 +867,132 @@
       </div>
     </section>
 
+    <!-- ================= SEÇÃO: INFORMATIVO & BLOG JURÍDICO (SEO & MARKETING) ================= -->
+    <section id="blog" class="py-14 sm:py-20 bg-white border-t border-slate-200 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12">
+          <div>
+            <div class="inline-block px-3 py-1 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-2">
+              Captação de Clientes & Marketing Educativo
+            </div>
+            <h2 class="font-serif text-2xl xs:text-3xl sm:text-4xl font-bold text-navy-950">
+              Artigos & <span class="gold-gradient-text">Informativo Jurídico</span>
+            </h2>
+            <p class="text-slate-600 text-xs sm:text-sm mt-2 max-w-xl">
+              Conteúdos práticos elaborados pelo Dr. Jorge Alvim para orientar cidadãos e empresários sobre seus direitos fundamentais em Juiz de Fora e Minas Gerais.
+            </p>
+          </div>
+
+          <div class="mt-4 md:mt-0">
+            <a 
+              href="/blog" 
+              class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow-md transition-all border border-gold-500/40"
+            >
+              <span>Ver Todos os Artigos</span>
+              <span>→</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Grade de Destaques do Blog na Home -->
+        <div id="home-blog-posts-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          
+          <!-- Card 1: CNH & Trânsito -->
+          <div class="bg-warm-50 rounded-3xl border border-slate-200 overflow-hidden shadow-card-light hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div class="h-48 relative overflow-hidden bg-slate-200">
+                <img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=800&q=80" alt="Defesa de CNH" class="w-full h-full object-cover">
+                <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-navy-950 shadow-xs border border-slate-200">
+                  Direito de Trânsito & CNH
+                </span>
+              </div>
+              <div class="p-5 sm:p-6 space-y-2">
+                <span class="text-[11px] text-slate-400 font-medium">📅 Juiz de Fora e MG • 3 min</span>
+                <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
+                  <a href="/blog/como-funciona-defesa-cnh-juiz-de-fora" class="hover:text-gold-700 transition-colors">
+                    Como Funciona a Defesa contra Suspensão e Cassação de CNH
+                  </a>
+                </h3>
+                <p class="text-slate-600 text-xs leading-relaxed line-clamp-3">
+                  Entenda os prazos legais, instâncias recursais (JARI e CETRAN/MG) e como garantir o efeito suspensivo para continuar dirigindo enquanto seu processo é analisado.
+                </p>
+              </div>
+            </div>
+            <div class="p-5 sm:p-6 pt-0 border-t border-slate-200/60 mt-2 flex items-center justify-between">
+              <span class="text-[11px] text-gold-700 font-bold">Por Dr. Jorge Alvim</span>
+              <a href="/blog/como-funciona-defesa-cnh-juiz-de-fora" class="text-xs font-bold text-navy-900 hover:text-gold-700 flex items-center space-x-1">
+                <span>Ler Artigo</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 2: Direito do Consumidor -->
+          <div class="bg-warm-50 rounded-3xl border border-slate-200 overflow-hidden shadow-card-light hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div class="h-48 relative overflow-hidden bg-slate-200">
+                <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80" alt="Direito do Consumidor" class="w-full h-full object-cover">
+                <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-navy-950 shadow-xs border border-slate-200">
+                  Direito do Consumidor
+                </span>
+              </div>
+              <div class="p-5 sm:p-6 space-y-2">
+                <span class="text-[11px] text-slate-400 font-medium">📅 Zona da Mata & Aeroportos • 4 min</span>
+                <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
+                  <a href="/blog/direitos-consumidor-voos-transportes-indenizacao" class="hover:text-gold-700 transition-colors">
+                    Direitos do Passageiro: Indenizações por Voo Cancelado e Extravio
+                  </a>
+                </h3>
+                <p class="text-slate-600 text-xs leading-relaxed line-clamp-3">
+                  Saiba o que a lei garante em caso de atrasos no Aeroporto Regional da Zona da Mata (IZA) e como pleitear indenizações por danos morais e materiais.
+                </p>
+              </div>
+            </div>
+            <div class="p-5 sm:p-6 pt-0 border-t border-slate-200/60 mt-2 flex items-center justify-between">
+              <span class="text-[11px] text-gold-700 font-bold">Por Dr. Jorge Alvim</span>
+              <a href="/blog/direitos-consumidor-voos-transportes-indenizacao" class="text-xs font-bold text-navy-900 hover:text-gold-700 flex items-center space-x-1">
+                <span>Ler Artigo</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Card 3: Inventário em Cartório -->
+          <div class="bg-warm-50 rounded-3xl border border-slate-200 overflow-hidden shadow-card-light hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div class="h-48 relative overflow-hidden bg-slate-200">
+                <img src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80" alt="Inventário em Cartório" class="w-full h-full object-cover">
+                <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-navy-950 shadow-xs border border-slate-200">
+                  Família & Sucessões
+                </span>
+              </div>
+              <div class="p-5 sm:p-6 space-y-2">
+                <span class="text-[11px] text-slate-400 font-medium">📅 Cartórios de Juiz de Fora • 3 min</span>
+                <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
+                  <a href="/blog/inventario-extrajudicial-cartorio-juiz-de-fora" class="hover:text-gold-700 transition-colors">
+                    Inventário em Cartório em Juiz de Fora: Passo a Passo e Custas
+                  </a>
+                </h3>
+                <p class="text-slate-600 text-xs leading-relaxed line-clamp-3">
+                  Descubra como realizar a partilha de bens de forma ágil por escritura pública em cartório de notas, economizando meses de burocracia e custas processuais.
+                </p>
+              </div>
+            </div>
+            <div class="p-5 sm:p-6 pt-0 border-t border-slate-200/60 mt-2 flex items-center justify-between">
+              <span class="text-[11px] text-gold-700 font-bold">Por Dr. Jorge Alvim</span>
+              <a href="/blog/inventario-extrajudicial-cartorio-juiz-de-fora" class="text-xs font-bold text-navy-900 hover:text-gold-700 flex items-center space-x-1">
+                <span>Ler Artigo</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
     <!-- ================= CONTATO, FORMULÁRIO DUPLO & ANEXO DE DOCUMENTOS RESPONSIVO ================= -->
     <section id="contato" class="py-14 sm:py-20 bg-warm-50 border-t border-slate-200 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -905,7 +1026,7 @@
                 <div class="min-w-0">
                   <h3 class="text-[10px] sm:text-xs uppercase font-bold text-slate-500 tracking-wider">Endereço do Escritório</h3>
                   <p class="text-navy-950 font-bold text-xs sm:text-sm leading-snug truncate sm:whitespace-normal">
-                    Rua Henrique Dias, nº 259, Galeria nº 259
+                    Rua Henrique Dias, nº 259, Loja 5
                   </p>
                   <p class="text-[11px] sm:text-xs text-slate-600">Bairro Benfica, Juiz de Fora - MG</p>
                 </div>
@@ -1013,6 +1134,29 @@
                   </div>
                 </div>
 
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                  <div>
+                    <label for="form-email" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
+                      E-mail (Opcional)
+                    </label>
+                    <input type="email" id="form-email" placeholder="seuemail@exemplo.com" class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-xs sm:text-sm" />
+                  </div>
+
+                  <div>
+                    <label for="form-cpf" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
+                      CPF / CNPJ (Opcional)
+                    </label>
+                    <input type="text" id="form-cpf" placeholder="000.000.000-00" class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-xs sm:text-sm" />
+                  </div>
+
+                  <div>
+                    <label for="form-city" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
+                      Cidade / UF (Opcional)
+                    </label>
+                    <input type="text" id="form-city" placeholder="Juiz de Fora - MG" class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-xs sm:text-sm" />
+                  </div>
+                </div>
+
                 <div>
                   <label for="form-area" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
                     Área de Interesse Jurídico
@@ -1091,69 +1235,69 @@
     </section>
   </main>
 
-  <!-- ================= RODAPÉ RESPONSIVO ================= -->
-  <footer class="bg-navy-950 text-slate-300 text-sm">
+  <!-- ================= RODAPÉ RESPONSIVO (DESIGN CLARO EXECUTIVO) ================= -->
+  <footer class="bg-slate-100 text-slate-700 text-sm border-t border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 mb-10 sm:mb-12">
         
         <div class="space-y-4">
           <div class="flex items-center space-x-3">
-            <div class="w-11 h-11 rounded-xl bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md flex-shrink-0">
+            <div class="w-11 h-11 rounded-xl bg-gold-50 border border-gold-400 flex items-center justify-center text-gold-600 shadow-sm flex-shrink-0">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
               </svg>
             </div>
             <div>
-              <span class="block font-serif text-lg sm:text-xl font-bold text-white">JORGE ALVIM</span>
-              <span class="block text-[9px] uppercase tracking-[0.25em] text-gold-400 font-bold">ADVOCACIA</span>
+              <span class="block font-serif text-lg sm:text-xl font-bold text-navy-950">JORGE ALVIM</span>
+              <span class="block text-[9px] uppercase tracking-[0.25em] text-gold-600 font-bold">ADVOCACIA</span>
             </div>
           </div>
-          <p class="text-xs text-slate-400 leading-relaxed">
+          <p class="text-xs text-slate-600 leading-relaxed">
             Excelência técnica, atendimento humanizado e estratégia jurídica para resguardar seus direitos em todas as instâncias.
           </p>
-          <div class="text-xs text-gold-400 font-semibold">
+          <div class="text-xs text-gold-700 font-bold">
             Inscrição OAB Ativa • Juiz de Fora - MG
           </div>
         </div>
 
         <div>
-          <h3 class="font-serif text-white text-sm sm:text-base font-bold mb-3 sm:mb-4">Navegação Rápida</h3>
-          <ul class="space-y-2 text-xs text-slate-400">
-            <li><a href="#inicio" class="hover:text-gold-400 transition-colors">Início</a></li>
-            <li><a href="#sobre" class="hover:text-gold-400 transition-colors">Sobre o Dr. Jorge Alvim</a></li>
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Áreas de Atuação</a></li>
-            <li><a href="#como-funciona" class="hover:text-gold-400 transition-colors">Passo a Passo</a></li>
-            <li><a href="/painel" class="hover:text-gold-400 transition-colors">Painel de Clientes (Restrito)</a></li>
+          <h3 class="font-serif text-navy-950 text-sm sm:text-base font-bold mb-3 sm:mb-4">Navegação Rápida</h3>
+          <ul class="space-y-2 text-xs text-slate-600">
+            <li><a href="#inicio" class="hover:text-gold-600 transition-colors">Início</a></li>
+            <li><a href="#sobre" class="hover:text-gold-600 transition-colors">Sobre o Dr. Jorge Alvim</a></li>
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Áreas de Atuação</a></li>
+            <li><a href="#como-funciona" class="hover:text-gold-600 transition-colors">Passo a Passo</a></li>
+            <li><a href="javascript:void(0)" onclick="openAdminLoginModal()" class="hover:text-gold-600 font-semibold transition-colors">🔒 Painel do Administrador (Restrito)</a></li>
           </ul>
         </div>
 
         <div>
-          <h3 class="font-serif text-white text-sm sm:text-base font-bold mb-3 sm:mb-4">Especialidades</h3>
-          <ul class="space-y-2 text-xs text-slate-400">
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito dos Transportes e Trânsito</a></li>
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito Civil & Contratos</a></li>
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Família & Sucessões</a></li>
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito do Trabalho</a></li>
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Previdenciário (INSS)</a></li>
-            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito Imobiliário</a></li>
+          <h3 class="font-serif text-navy-950 text-sm sm:text-base font-bold mb-3 sm:mb-4">Especialidades</h3>
+          <ul class="space-y-2 text-xs text-slate-600">
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Direito dos Transportes e Trânsito</a></li>
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Direito Civil & Contratos</a></li>
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Família & Sucessões</a></li>
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Direito do Trabalho</a></li>
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Previdenciário (INSS)</a></li>
+            <li><a href="#areas" class="hover:text-gold-600 transition-colors">Direito Imobiliário</a></li>
           </ul>
         </div>
 
         <div>
-          <h3 class="font-serif text-white text-sm sm:text-base font-bold mb-3 sm:mb-4">Sede em Juiz de Fora</h3>
-          <p class="text-xs text-slate-300 font-semibold mb-1">Rua Henrique Dias, nº 259, Galeria 259</p>
-          <p class="text-xs text-slate-400 mb-2">Bairro Benfica, Juiz de Fora - MG</p>
-          <p class="text-xs text-slate-300 font-semibold mb-1">WhatsApp: (32) 99815-3429</p>
-          <p class="text-xs text-slate-400 mb-3">jorgealvimadvocacia@gmail.com</p>
-          <a href="#contato" class="inline-block text-xs text-gold-400 hover:text-gold-300 font-bold underline">
+          <h3 class="font-serif text-navy-950 text-sm sm:text-base font-bold mb-3 sm:mb-4">Sede em Juiz de Fora</h3>
+          <p class="text-xs text-slate-800 font-semibold mb-1">Rua Henrique Dias, nº 259, Loja 5</p>
+          <p class="text-xs text-slate-600 mb-2">Bairro Benfica, Juiz de Fora - MG</p>
+          <p class="text-xs text-slate-800 font-semibold mb-1">WhatsApp: (32) 99815-3429</p>
+          <p class="text-xs text-slate-600 mb-3">jorgealvimadvocacia@gmail.com</p>
+          <a href="#contato" class="inline-block text-xs text-gold-700 hover:text-gold-800 font-bold underline">
             Enviar documentos para análise →
           </a>
         </div>
 
       </div>
 
-      <div class="pt-6 sm:pt-8 border-t border-slate-800/80 text-[10px] sm:text-[11px] text-slate-500 space-y-3">
+      <div class="pt-6 sm:pt-8 border-t border-slate-200 text-[10px] sm:text-[11px] text-slate-500 space-y-3">
         <p class="leading-relaxed">
           <strong>Aviso Ético e Legal:</strong> Este site possui finalidade estritamente informativa e institucional, em total conformidade com o Provimento nº 205/2021 e o Código de Ética e Disciplina da Ordem dos Advogados do Brasil (OAB). Nenhuma informação veiculada neste endereço deve ser interpretada como consulta jurídica formal ou promessa de resultado garantido.
         </p>
@@ -1295,6 +1439,9 @@
 
           const name = document.getElementById('form-name')?.value.trim();
           const phone = document.getElementById('form-phone')?.value.trim();
+          const email = document.getElementById('form-email')?.value.trim() || '';
+          const cpf = document.getElementById('form-cpf')?.value.trim() || '';
+          const city = document.getElementById('form-city')?.value.trim() || '';
           const area = document.getElementById('form-area')?.value;
           const message = document.getElementById('form-message')?.value.trim();
 
@@ -1320,6 +1467,9 @@
             const formData = new FormData();
             formData.append('name', name);
             formData.append('phone', phone);
+            formData.append('email', email);
+            formData.append('cpf', cpf);
+            formData.append('city', city);
             formData.append('area', area);
             formData.append('message', message);
 
@@ -1349,6 +1499,9 @@
           msg += `*Protocolo:* #${generatedClientId}\n\n`;
           msg += `*Nome:* ${name}\n`;
           msg += `*Telefone:* ${phone}\n`;
+          if (email) msg += `*E-mail:* ${email}\n`;
+          if (cpf) msg += `*CPF/CNPJ:* ${cpf}\n`;
+          if (city) msg += `*Cidade/UF:* ${city}\n`;
           msg += `*Área de Interesse:* ${area}\n`;
           if (message) msg += `*Resumo:* ${message}\n`;
           if (selectedFiles.length > 0) {
@@ -1374,7 +1527,444 @@
         });
       }
     });
+
+    // ================= FUNÇÕES DE LOGIN ADMINISTRATIVO NO HEADER =================
+    function openAdminLoginModal() {
+      const modal = document.getElementById('admin-login-modal');
+      const err = document.getElementById('header-login-error');
+      if (err) err.classList.add('hidden');
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('hl-username')?.focus();
+      }, 100);
+    }
+
+    function closeAdminLoginModal() {
+      const modal = document.getElementById('admin-login-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleHeaderLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('hl-username').value;
+      const password = document.getElementById('hl-password').value;
+      const errorDiv = document.getElementById('header-login-error');
+      const errorText = document.getElementById('header-login-error-text');
+
+      if (errorDiv) errorDiv.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          localStorage.setItem('ja_admin_token', data.token);
+          localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+          window.location.href = '/painel';
+        } else {
+          errorText.textContent = data.error || 'Usuário ou senha incorretos.';
+          errorDiv.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorText.textContent = 'Erro ao conectar ao servidor.';
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    // ================= RASTREAMENTO DE VISITAS, GEOLOCALIZAÇÃO & PRÉ-CLIENTES =================
+    let currentVisitId = null;
+
+    async function trackSiteVisit() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const payload = {
+          page_url: window.location.href,
+          path: window.location.pathname,
+          referer: document.referrer || '',
+          utm_source: urlParams.get('utm_source') || '',
+          utm_medium: urlParams.get('utm_medium') || '',
+          utm_campaign: urlParams.get('utm_campaign') || '',
+          utm_term: urlParams.get('utm_term') || '',
+          utm_content: urlParams.get('utm_content') || ''
+        };
+
+        const res = await fetch('/api/visits/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          currentVisitId = data.visitId;
+          sessionStorage.setItem('ja_visit_id', currentVisitId);
+        }
+      } catch (e) {
+        console.warn('[VISIT TRACKER] Falha ao registrar visita:', e);
+      }
+    }
+
+    function checkWelcomeModal() {
+      const seen = sessionStorage.getItem('ja_welcome_modal_seen');
+      if (!seen) {
+        setTimeout(() => {
+          openWelcomeModal();
+        }, 1200);
+      }
+    }
+
+    function openWelcomeModal() {
+      const modal = document.getElementById('welcome-geolocation-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeWelcomeModal() {
+      const modal = document.getElementById('welcome-geolocation-modal');
+      if (modal) modal.classList.add('hidden');
+      sessionStorage.setItem('ja_welcome_modal_seen', 'true');
+    }
+
+    async function requestVisitorLocation() {
+      const statusDiv = document.getElementById('geo-status-msg');
+      const btnGeo = document.getElementById('btn-share-location');
+      
+      if (!navigator.geolocation) {
+        statusDiv.innerHTML = '<span class="text-rose-600 font-semibold">Seu navegador não suporta compartilhamento de geolocalização.</span>';
+        statusDiv.classList.remove('hidden');
+        return;
+      }
+
+      btnGeo.disabled = true;
+      btnGeo.innerHTML = `
+        <svg class="animate-spin h-4 w-4 text-navy-950 inline mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Obtendo localização...</span>
+      `;
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const accuracy = position.coords.accuracy;
+
+          let resolvedCity = 'Juiz de Fora';
+          let resolvedState = 'MG';
+          let resolvedAddress = '';
+
+          try {
+            // Tentativa rápida de reverse geocoding via OpenStreetMap
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`);
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              if (geoData.address) {
+                resolvedCity = geoData.address.city || geoData.address.town || geoData.address.municipality || 'Juiz de Fora';
+                resolvedState = geoData.address.state || 'MG';
+                resolvedAddress = geoData.display_name || '';
+              }
+            }
+          } catch (err) {
+            console.log('Reverse geocode fallback:', err);
+          }
+
+          const visitId = currentVisitId || sessionStorage.getItem('ja_visit_id');
+
+          try {
+            const updateRes = await fetch('/api/visits/update-location', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                visitId,
+                latitude: lat,
+                longitude: lon,
+                accuracy,
+                city: resolvedCity,
+                state: resolvedState,
+                address: resolvedAddress
+              })
+            });
+
+            if (updateRes.ok) {
+              btnGeo.innerHTML = '<span>✓ Localização Compartilhada!</span>';
+              btnGeo.classList.remove('bg-gold-400', 'hover:bg-gold-500');
+              btnGeo.classList.add('bg-emerald-500', 'text-white');
+              
+              statusDiv.innerHTML = `
+                <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center space-x-2">
+                  <span>📍</span>
+                  <span>Localização registrada com sucesso na auditoria: <strong>${resolvedCity} - ${resolvedState}</strong>. Obrigado!</span>
+                </div>
+              `;
+              statusDiv.classList.remove('hidden');
+
+              setTimeout(() => {
+                closeWelcomeModal();
+              }, 2500);
+            }
+          } catch (err) {
+            statusDiv.innerHTML = '<span class="text-rose-600 font-semibold">Erro ao registrar localização no servidor.</span>';
+            statusDiv.classList.remove('hidden');
+          }
+        },
+        (error) => {
+          btnGeo.disabled = false;
+          btnGeo.innerHTML = '<span>📍 Compartilhar Localização</span>';
+          let msg = 'Permissão de localização não concedida.';
+          if (error.code === error.PERMISSION_DENIED) {
+            msg = 'Você optou por não compartilhar sua localização. Sem problemas!';
+          }
+          statusDiv.innerHTML = `<span class="text-slate-600 text-xs">${msg}</span>`;
+          statusDiv.classList.remove('hidden');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    }
+
+    function togglePreClientForm() {
+      const form = document.getElementById('preclient-accordion-form');
+      const btn = document.getElementById('btn-toggle-preclient');
+      if (form.classList.contains('hidden')) {
+        form.classList.remove('hidden');
+        btn.textContent = '✕ Ocultar Formulário';
+      } else {
+        form.classList.add('hidden');
+        btn.textContent = '+ Deixar Redes Sociais ou Site da Empresa';
+      }
+    }
+
+    async function handlePreClientSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('pre-name').value;
+      const phone = document.getElementById('pre-phone').value;
+      const social_media = document.getElementById('pre-social').value;
+      const website = document.getElementById('pre-website').value;
+      const google_business = document.getElementById('pre-google').value;
+      const interest_area = document.getElementById('pre-area').value;
+
+      const visitId = currentVisitId || sessionStorage.getItem('ja_visit_id');
+      const submitBtn = document.getElementById('btn-submit-preclient');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+
+      try {
+        const res = await fetch('/api/visits/pre-client', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visitId,
+            name,
+            phone,
+            social_media,
+            website,
+            google_business,
+            interest_area
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✓ Dados de pré-atendimento registrados com sucesso! Entraremos em contato prioritário.');
+          closeWelcomeModal();
+        } else {
+          alert(data.error || 'Erro ao enviar dados.');
+        }
+      } catch (err) {
+        alert('Erro de conexão ao salvar dados.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Salvar Pré-Atendimento';
+      }
+    }
+
+    // Inicialização ao carregar
+    document.addEventListener('DOMContentLoaded', () => {
+      trackSiteVisit();
+      checkWelcomeModal();
+    });
   </script>
+
+  <!-- ================= MODAL DE BOAS-VINDAS & GEOLOCALIZAÇÃO ================= -->
+  <div id="welcome-geolocation-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-amber-200/80 relative space-y-5 my-auto max-h-[92vh] overflow-y-auto">
+      
+      <!-- Botão Fechar -->
+      <button onclick="closeWelcomeModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar">&times;</button>
+      
+      <!-- Topo com Saudação Elegante -->
+      <div class="text-center space-y-2.5 pb-3 border-b border-amber-100">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-amber-50 to-gold-100 border border-gold-300 flex items-center justify-center text-2xl shadow-sm">
+          ⚖️
+        </div>
+        <div>
+          <span class="inline-block px-3 py-0.5 rounded-full bg-gold-100/70 text-gold-900 text-[11px] font-bold uppercase tracking-wider mb-1">
+            Atendimento Jurídico Especializado
+          </span>
+          <h3 class="font-serif text-xl sm:text-2xl font-bold text-navy-950">Seja Bem-vindo(a)!</h3>
+          <p class="text-xs text-slate-600 max-w-sm mx-auto mt-1">
+            Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943<br/>
+            Escritório em Benfica, Juiz de Fora - MG
+          </p>
+        </div>
+      </div>
+
+      <!-- Bloco de Pergunta de Geolocalização -->
+      <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-200 text-center space-y-3">
+        <p class="text-xs text-slate-700 leading-relaxed font-medium">
+          Deseja compartilhar sua <strong>localização aproximada</strong> para direcionarmos seu atendimento prioritário perante as comarcas e fóruns de Juiz de Fora e região?
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
+          <button 
+            id="btn-share-location" 
+            onclick="requestVisitorLocation()" 
+            class="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-navy-950 font-bold text-xs shadow-sm transition-all flex items-center justify-center space-x-1.5"
+          >
+            <span>📍 Compartilhar Minha Localização</span>
+          </button>
+          <button 
+            onclick="closeWelcomeModal()" 
+            class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200 transition-all"
+          >
+            Continuar sem compartilhar
+          </button>
+        </div>
+
+        <div id="geo-status-msg" class="hidden text-center text-xs pt-1"></div>
+      </div>
+
+      <!-- Acordeão Opcional: Pré-Cliente (Redes Sociais, Empresa, Site) -->
+      <div class="pt-1">
+        <button 
+          type="button" 
+          id="btn-toggle-preclient" 
+          onclick="togglePreClientForm()" 
+          class="w-full text-center py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 transition-colors"
+        >
+          + Deixar Redes Sociais ou Site da Empresa
+        </button>
+
+        <form id="preclient-accordion-form" onsubmit="handlePreClientSubmit(event)" class="hidden mt-3 p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 text-left text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Seu Nome / Razão Social</label>
+              <input type="text" id="pre-name" placeholder="Ex: Carlos Silva" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">WhatsApp / Telefone</label>
+              <input type="tel" id="pre-phone" placeholder="(32) 99999-9999" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Redes Sociais (Instagram, LinkedIn, etc.)</label>
+              <input type="text" id="pre-social" placeholder="@seuperfil ou link" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Site da Empresa / Website</label>
+              <input type="url" id="pre-website" placeholder="https://suaempresa.com.br" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Perfil Google Meu Negócio / Empresa</label>
+              <input type="text" id="pre-google" placeholder="Nome no Google Maps ou link" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Área de Interesse</label>
+              <select id="pre-area" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500 font-medium">
+                <option value="Direito de Trânsito & CNH">Direito de Trânsito & CNH</option>
+                <option value="Direito do Consumidor & Transportes">Direito do Consumidor & Transportes</option>
+                <option value="Direito Civil & Contratos">Direito Civil & Contratos</option>
+                <option value="Direito de Família & Sucessões">Direito de Família & Sucessões</option>
+                <option value="Direito Trabalhista">Direito Trabalhista</option>
+                <option value="Direito Imobiliário">Direito Imobiliário</option>
+                <option value="Outro Assunto">Outro Assunto</option>
+              </select>
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            id="btn-submit-preclient" 
+            class="w-full py-2.5 rounded-xl bg-navy-950 text-white font-bold text-xs hover:bg-gold-600 transition-all shadow-sm flex items-center justify-center space-x-1.5"
+          >
+            <span>Salvar Pré-Atendimento</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE LOGIN DO ADMINISTRADOR ================= -->
+  <div id="admin-login-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative">
+      <button onclick="closeAdminLoginModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="text-center space-y-3 pb-5 border-b border-slate-100">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-navy-900 to-navy-950 border-2 border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-serif text-xl font-bold text-navy-950">Acesso Restrito ao Painel</h3>
+          <p class="text-[11px] text-gold-600 font-bold uppercase tracking-wider mt-0.5">Identifique-se como Administrador</p>
+        </div>
+      </div>
+
+      <form id="header-login-form" onsubmit="handleHeaderLogin(event)" class="mt-5 space-y-4">
+        <div id="header-login-error" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
+          <svg class="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span id="header-login-error-text">Usuário ou senha inválidos.</span>
+        </div>
+
+        <div>
+          <label for="hl-username" class="block text-xs font-bold text-slate-700 mb-1">Usuário / Login</label>
+          <input 
+            type="text" 
+            id="hl-username" 
+            name="username"
+            required 
+            placeholder="jorgealvimtecnologia" 
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+          />
+        </div>
+
+        <div>
+          <label for="hl-password" class="block text-xs font-bold text-slate-700 mb-1">Senha</label>
+          <input 
+            type="password" 
+            id="hl-password" 
+            name="password"
+            required 
+            placeholder="••••••••" 
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all border border-gold-500/40 flex items-center justify-center space-x-2"
+        >
+          <span>Entrar no Painel</span>
+          <svg class="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
 
 </body>
 </html>
