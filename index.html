@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- SEO & Informações Primárias -->
+  <title>Jorge Alvim Advocacia | Consultoria e Assessoria Jurídica de Excelência</title>
+  <meta name="description" content="Escritório de advocacia especializado em Direito Civil, Família e Sucessões, Trabalhista, Previdenciário (INSS), Imobiliário e Direito dos Transportes e Trânsito. Atendimento humanizado, ético e ágil." />
+  <meta name="keywords" content="advogado, advocacia, direito civil, divórcio, inventário, direito do trabalho, aposentadoria inss, direito imobiliário, direito de transito, cnh suspensa, multas, transportes, Jorge Alvim" />
+  <meta name="author" content="Jorge Alvim Advocacia" />
+  <meta name="theme-color" content="#ffffff" />
+
+  <!-- Open Graph / Redes Sociais & WhatsApp Preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Jorge Alvim Advocacia | Soluções Jurídicas Estratégicas" />
+  <meta property="og:description" content="Assessoria jurídica de excelência, pautada na ética, agilidade e atendimento 100% humanizado. Fale conosco pelo WhatsApp." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80" />
+  <meta property="og:url" content="https://jorgealvimadvocacia.com.br" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
+
+  <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              950: '#060D17',
+              900: '#0B192C',
+              850: '#10223B',
+              800: '#162C4B',
+              700: '#1E3E62',
+              600: '#2C5685',
+              100: '#E2E8F0',
+              50: '#F8FAFC',
+            },
+            gold: {
+              700: '#855E1C',
+              600: '#A17529',
+              500: '#B8860B',
+              400: '#D4AF37',
+              300: '#E6CA65',
+              200: '#F3E3A2',
+              100: '#FAF2D4',
+              50: '#FDFBF4',
+            },
+            warm: {
+              50: '#FDFBF7',
+              100: '#F9F6F0',
+              200: '#F0EBE1',
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'gold-glow': '0 4px 20px -2px rgba(184, 134, 11, 0.25)',
+            'gold-glow-lg': '0 10px 30px -4px rgba(184, 134, 11, 0.35)',
+            'card-light': '0 4px 25px -4px rgba(15, 23, 42, 0.06), 0 2px 10px -2px rgba(15, 23, 42, 0.04)',
+            'card-hover': '0 20px 35px -5px rgba(15, 23, 42, 0.12), 0 10px 15px -3px rgba(15, 23, 42, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Estilos Customizados Adicionais (Tema Claro Sofisticado) -->
+  <style>
+    html {
+      scroll-behavior: smooth;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background-color: #FDFBF7;
+      color: #0F172A;
+    }
+    ::selection {
+      background-color: #B8860B;
+      color: #FFFFFF;
+    }
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 5px;
+      border: 2px solid #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #B8860B;
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #855E1C 0%, #B8860B 50%, #D4AF37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+  </style>
+
+  <!-- Schema.org LegalService JSON-LD para SEO Local e Google -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LegalService",
+    "name": "Jorge Alvim Advocacia",
+    "description": "Escritório de advocacia especializado em Direito Civil, Família, Trabalhista, Previdenciário, Imobiliário e Direito dos Transportes e Trânsito.",
+    "telephone": "+55-11-99999-9999",
+    "email": "contato@jorgealvimadvocacia.com.br",
+    "url": "https://jorgealvimadvocacia.com.br",
+    "openingHours": "Mo-Fr 08:30-18:00",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "São Paulo",
+      "addressRegion": "SP",
+      "addressCountry": "BR"
+    }
+  }
+  </script>
+</head>
+
+<body class="bg-warm-50 text-slate-800 font-sans antialiased">
+
+  <!-- ================= TOP BAR INFORMATIVA (CLARA) ================= -->
+  <aside aria-label="Informações de Contato Rápidas" class="bg-navy-900 text-slate-200 text-xs py-2.5 hidden md:block border-b border-navy-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <div class="flex items-center space-x-6">
+        <span class="flex items-center space-x-2">
+          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Atendimento: Segunda a Sexta das 08h30 às 18h00</span>
+        </span>
+        <span class="flex items-center space-x-2">
+          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Inscrição OAB Ativa • Atendimento Digital em Todo o Brasil & Presencial</span>
+        </span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <a href="mailto:contato@jorgealvimadvocacia.com.br" class="hover:text-gold-300 transition-colors flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <span>contato@jorgealvimadvocacia.com.br</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= HEADER / NAVEGAÇÃO (FUNDO CLARO & LOGOTIPO AMPLIADO) ================= -->
+  <header id="main-header" class="sticky top-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-24">
+        
+        <!-- LOGOTIPO AMPLIADO -->
+        <a href="#" class="flex items-center space-x-4 group">
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950 border-2 border-gold-400 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:border-gold-500 transition-all">
+            <svg class="w-8 h-8 text-gold-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+            </svg>
+          </div>
+          <div>
+            <span class="block font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-navy-950 group-hover:text-gold-600 transition-colors">
+              JORGE ALVIM
+            </span>
+            <span class="block text-xs uppercase tracking-[0.3em] text-gold-600 font-bold -mt-0.5">
+              ADVOCACIA & CONSULTORIA
+            </span>
+          </div>
+        </a>
+
+        <!-- Menu Desktop -->
+        <nav class="hidden lg:flex items-center space-x-7 text-sm font-semibold text-slate-700">
+          <a href="#inicio" class="hover:text-gold-600 transition-colors">Início</a>
+          <a href="#sobre" class="hover:text-gold-600 transition-colors">Sobre Nós</a>
+          <a href="#areas" class="hover:text-gold-600 transition-colors">Áreas de Atuação</a>
+          <a href="#diferenciais" class="hover:text-gold-600 transition-colors">Diferenciais</a>
+          <a href="#como-funciona" class="hover:text-gold-600 transition-colors">Como Funciona</a>
+          <a href="#faq" class="hover:text-gold-600 transition-colors">Dúvidas (FAQ)</a>
+          <a href="#contato" class="hover:text-gold-600 transition-colors">Contato</a>
+        </nav>
+
+        <!-- CTA Header -->
+        <div class="hidden sm:flex items-center space-x-4">
+          <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20solicitar%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-500/50">
+            <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            <span>Falar no WhatsApp</span>
+          </a>
+        </div>
+
+        <!-- Botão Hambúrguer Mobile -->
+        <div class="flex lg:hidden">
+          <button id="mobile-menu-toggle" type="button" aria-label="Abrir Menu Principal" class="p-2.5 rounded-lg text-slate-700 hover:text-gold-600 hover:bg-slate-100 focus:outline-none">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Drawer Mobile Menu -->
+    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-white/98 backdrop-blur-2xl flex flex-col justify-between p-6">
+      <div>
+        <div class="flex items-center justify-between pb-6 border-b border-slate-200">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-xl bg-navy-900 border-2 border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+              </svg>
+            </div>
+            <div>
+              <span class="font-serif font-extrabold text-xl text-navy-950 block">Jorge Alvim</span>
+              <span class="text-[10px] uppercase tracking-widest text-gold-600 font-bold block">Advocacia</span>
+            </div>
+          </div>
+          <button id="mobile-menu-close" type="button" aria-label="Fechar Menu" class="p-2 text-slate-500 hover:text-navy-950">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <nav class="flex flex-col space-y-5 pt-8 text-lg font-semibold text-slate-800">
+          <a href="#inicio" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Início</a>
+          <a href="#sobre" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Sobre Nós</a>
+          <a href="#areas" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Áreas de Atuação</a>
+          <a href="#diferenciais" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Diferenciais</a>
+          <a href="#como-funciona" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Como Funciona</a>
+          <a href="#faq" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Dúvidas Frequentes</a>
+          <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Contato & Localização</a>
+        </nav>
+      </div>
+
+      <div class="pt-6 border-t border-slate-200 space-y-3">
+        <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20uma%20consulta." target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center space-x-2 py-3.5 rounded-xl bg-navy-900 text-white font-bold text-center shadow-lg border border-gold-500/50">
+          <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+          </svg>
+          <span>Iniciar Conversa no WhatsApp</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= HERO SECTION (FUNDO CLARO & ELEGANTE COM FOTO AMBIENTE) ================= -->
+    <section id="inicio" class="relative min-h-[85vh] flex items-center justify-center py-16 lg:py-24 overflow-hidden bg-gradient-to-b from-warm-100 via-white to-warm-50">
+      
+      <!-- Imagem de Fundo Suave com Opacidade Refinada -->
+      <div class="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1920&q=80" 
+          alt="Biblioteca Jurídica e Balança da Justiça" 
+          class="w-full h-full object-cover object-center opacity-10"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-warm-50 via-transparent to-white/90"></div>
+      </div>
+
+      <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        
+        <!-- Badge de Confiança -->
+        <div class="inline-flex items-center space-x-2.5 px-5 py-2 rounded-full bg-white border border-gold-400/60 text-navy-900 text-xs sm:text-sm font-semibold mb-6 shadow-sm">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Atendimento Jurídico Especializado • OAB Ativa • Online em Todo o Brasil & Presencial</span>
+        </div>
+
+        <!-- TÍTULO PRINCIPAL (TAMANHO DE FONTE AJUSTADO / MAIS HARMONIOSO) -->
+        <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-navy-950 max-w-4xl mx-auto leading-tight">
+          Soluções Jurídicas Estratégicas para <span class="gold-gradient-text">Defender Seus Direitos</span> e seu Patrimônio
+        </h1>
+
+        <!-- Subtítulo / Proposta de Valor -->
+        <p class="mt-5 text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto font-normal leading-relaxed">
+          Atuação consultiva e contenciosa de excelência. Combinamos rigor técnico, ética inegociável e agilidade para oferecer a melhor estratégia para o seu caso.
+        </p>
+
+        <!-- Botões de Ação Principal (CTAs) -->
+        <div class="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
+          <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20agendar%20uma%20consulta%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-500 text-navy-950 font-bold text-base shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-300">
+            <svg class="w-5 h-5 text-navy-950" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            <span>Falar com o Advogado</span>
+          </a>
+          <a href="#areas" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-base border border-slate-300 hover:border-gold-500 transition-all duration-300 shadow-sm">
+            <span>Conhecer Especialidades</span>
+            <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- 3 Pilares em Destaque no Hero (Cards Claros) -->
+        <div class="mt-14 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto text-left">
+          
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <h2 class="text-lg font-bold text-navy-950 mb-2">Agilidade & Clareza</h2>
+            <p class="text-sm text-slate-600 leading-relaxed">Comunicação direta, relatórios claros sobre o andamento do seu processo e zero juridiquês desnecessário.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <h2 class="text-lg font-bold text-navy-950 mb-2">Sigilo & Segurança</h2>
+            <p class="text-sm text-slate-600 leading-relaxed">Confidencialidade absoluta em cada detalhe, tratando suas informações com a máxima segurança jurídica.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+            </div>
+            <h2 class="text-lg font-bold text-navy-950 mb-2">Atendimento Humanizado</h2>
+            <p class="text-sm text-slate-600 leading-relaxed">Cada caso é único. Estudamos minuciosamente sua situação para aplicar a solução jurídica mais assertiva.</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SOBRE O ESCRITÓRIO (TEMA CLARO & ELEGANTE) ================= -->
+    <section id="sobre" class="py-20 bg-white border-t border-b border-slate-200 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <!-- Fotos e Apresentação do Advogado -->
+          <div class="lg:col-span-5 relative">
+            <div class="relative mx-auto max-w-md lg:max-w-none">
+              
+              <!-- Moldura Suave com Sombra -->
+              <div class="relative rounded-2xl bg-warm-50 border border-slate-200 overflow-hidden shadow-card-hover">
+                
+                <!-- Foto de Retrato Profissional -->
+                <div class="relative h-80 sm:h-96 w-full overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80" 
+                    alt="Dr. Jorge Alvim - Advogado" 
+                    class="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/20 to-transparent"></div>
+                  
+                  <div class="absolute bottom-4 left-6 right-6">
+                    <span class="inline-block px-3 py-1 rounded-md bg-gold-500 text-white text-xs font-bold uppercase tracking-wider mb-1 shadow-sm">
+                      Advogado Titular
+                    </span>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white">
+                      Dr. Jorge Alvim
+                    </h2>
+                    <p class="text-gold-300 text-xs font-semibold tracking-wide">
+                      OAB Ativa • Especialista em Estratégia Jurídica
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-6 space-y-3.5 text-sm text-slate-700 bg-white">
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Especialista em Estratégias Contenciosas e Preventivas</span>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Foco em Resguardar Seu Patrimônio e Seus Direitos</span>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Atendimento Pessoal, Acessível e Transparente</span>
+                  </div>
+                </div>
+
+                <div class="px-6 pb-6 pt-3 border-t border-slate-100 bg-warm-50 flex items-center justify-between">
+                  <div>
+                    <span class="block text-2xl font-bold font-serif text-navy-950">100%</span>
+                    <span class="text-xs text-slate-500">Dedicação aos Casos</span>
+                  </div>
+                  <div class="h-8 w-px bg-slate-300"></div>
+                  <div>
+                    <span class="block text-2xl font-bold font-serif text-gold-600">Ética</span>
+                    <span class="text-xs text-slate-500">Padrão OAB</span>
+                  </div>
+                  <div class="h-8 w-px bg-slate-300"></div>
+                  <div>
+                    <span class="block text-2xl font-bold font-serif text-navy-950">Nacional</span>
+                    <span class="text-xs text-slate-500">Alcance Digital</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Texto Institucional / Missão e Valores -->
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider">
+              Compromisso & Vocação
+            </div>
+            
+            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 leading-tight">
+              Uma advocacia moderna, focada em <span class="gold-gradient-text">soluções reais</span> para você.
+            </h2>
+
+            <p class="text-slate-700 text-base sm:text-lg leading-relaxed">
+              No escritório <strong>Jorge Alvim Advocacia</strong>, acreditamos que o Direito deve ser exercido com excelência técnica, proximidade e absoluto respeito à história e aos anseios de cada cliente.
+            </p>
+
+            <p class="text-slate-600 text-base leading-relaxed">
+              Seja na defesa de seus direitos de trânsito e transporte, na resolução de conflitos familiares, na proteção do patrimônio, no resguardo dos direitos trabalhistas ou previdenciários, nossa atuação se destaca pelo planejamento estratégico personalizado e pela transparência em todas as etapas processuais.
+            </p>
+
+            <!-- Card com Foto do Ambiente Corporativo / Reunião -->
+            <div class="rounded-xl overflow-hidden border border-slate-200 relative group shadow-sm">
+              <img 
+                src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80" 
+                alt="Sala de Consultoria Jurídica e Atendimento" 
+                class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/40 to-transparent p-5 flex flex-col justify-end">
+                <h3 class="font-serif text-lg font-bold text-white">Infraestrutura Moderna & Atendimento Seguro</h3>
+                <p class="text-xs text-slate-200">Ambiente preparado para reuniões presenciais confortáveis e atendimento digital criptografado.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div class="p-4 rounded-xl bg-warm-50 border border-slate-200">
+                <h3 class="font-bold text-navy-950 text-base mb-1 flex items-center space-x-2">
+                  <span class="w-2 h-2 rounded-full bg-gold-500"></span>
+                  <span>Atuação Preventiva</span>
+                </h3>
+                <p class="text-xs text-slate-600">Evite litígios e prejuízos com análise prévia de riscos e consultoria estratégica.</p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-warm-50 border border-slate-200">
+                <h3 class="font-bold text-navy-950 text-base mb-1 flex items-center space-x-2">
+                  <span class="w-2 h-2 rounded-full bg-gold-500"></span>
+                  <span>Atuação Contenciosa</span>
+                </h3>
+                <p class="text-xs text-slate-600">Defesa combativa e firme em todas as instâncias administrativas e judiciais.</p>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-gold-700 hover:text-gold-600 font-bold text-base group">
+                <span>Agende uma conversa e conheça nossa forma de trabalhar</span>
+                <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= ÁREAS DE ATUAÇÃO (COM DIREITO DOS TRANSPORTES E TRÂNSITO) ================= -->
+    <section id="areas" class="py-20 bg-warm-50 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto mb-14">
+          <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+            Especialidades Jurídicas
+          </div>
+          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+            Áreas de Atuação com <span class="gold-gradient-text">Foco Estratégico</span>
+          </h2>
+          <p class="text-slate-600 text-base">
+            Prestamos assessoria completa nas principais áreas do Direito, oferecendo soluções sob medida para defender seus interesses.
+          </p>
+        </div>
+
+        <!-- Grid de Cards de Especialidades (Fundo Claro com Fotos e Sombras Refinadas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          <!-- 1. Direito dos Transportes e do Trânsito (DESTAQUE NOVO) -->
+          <div class="rounded-2xl bg-white border-2 border-gold-400/80 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1.5 relative">
+            
+            <div class="absolute top-3 right-3 z-10">
+              <span class="px-2.5 py-1 rounded-md bg-gold-500 text-white text-[11px] font-bold uppercase tracking-wider shadow-sm">
+                Especialidade
+              </span>
+            </div>
+
+            <div>
+              <div class="relative h-48 w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80" 
+                  alt="Direito dos Transportes e do Trânsito" 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 5h8m-4 5v2m-6 2h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6">
+                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+                  Direito dos Transportes e do Trânsito
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                  Defesa especializada contra penalidades indevidas, processos de suspensão/cassação de CNH, acidentes de trânsito e assessoria a transportadores.
+                </p>
+                <ul class="space-y-2 text-xs text-slate-700">
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Defesa em processos de suspensão e cassação de CNH</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Recursos contra multas graves, bafômetro e autuações indevidas</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Indenizações por acidentes de trânsito e ações contra seguradoras</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Assessoria para motoristas profissionais, frotas e transportadoras</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 pt-0">
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20Direito%20dos%20Transportes%20e%20Tr%C3%A2nsito." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+                <span>Consultar sobre Trânsito & Transportes</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- 2. Direito Civil & Contratos -->
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
+            <div>
+              <div class="relative h-48 w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80" 
+                  alt="Direito Civil e Assinatura de Contratos" 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6">
+                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+                  Direito Civil & Contratos
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                  Elaboração e revisão contratual minuciosa, ações de cobrança, recuperação de créditos e reparações por danos patrimoniais e morais.
+                </p>
+                <ul class="space-y-2 text-xs text-slate-700">
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Análise e blindagem de cláusulas contratuais</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Indenizações por danos materiais e morais</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Execuções de títulos e cobranças judiciais</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 pt-0">
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20Direito%20Civil%20e%20Contratos." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+                <span>Consultar sobre esta área</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- 3. Família & Sucessões -->
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
+            <div>
+              <div class="relative h-48 w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80" 
+                  alt="Direito de Família e Proteção Patrimonial" 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6">
+                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+                  Família & Sucessões
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                  Condução sensível, rápida e estratégica de inventários, partilha de bens, divórcios consensuais e litigiosos, guarda e pensão.
+                </p>
+                <ul class="space-y-2 text-xs text-slate-700">
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Inventários judiciais e extrajudiciais em cartório</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Divórcio consensual e litigioso, partilha justa</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Pensão alimentícia, guarda e planejamento sucessório</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 pt-0">
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20Fam%C3%ADlia%20e%20Sucess%C3%B5es." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+                <span>Consultar sobre esta área</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- 4. Direito Trabalhista -->
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
+            <div>
+              <div class="relative h-48 w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80" 
+                  alt="Direito do Trabalho e Relações Profissionais" 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6">
+                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+                  Direito Trabalhista
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                  Defesa intransigente de direitos em rescisões, horas extras, insalubridade, pejotização e acordos estratégicos.
+                </p>
+                <ul class="space-y-2 text-xs text-slate-700">
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Cálculo preciso e cobrança de verbas rescisórias</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Reconhecimento de vínculo de emprego e equiparação</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Indenizações por assédio moral e acidente de trabalho</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 pt-0">
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20Direito%20Trabalhista." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+                <span>Consultar sobre esta área</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- 5. Direito Previdenciário (INSS) -->
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
+            <div>
+              <div class="relative h-48 w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=800&q=80" 
+                  alt="Direito Previdenciário e Aposentadoria INSS" 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6">
+                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+                  Direito Previdenciário (INSS)
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                  Planejamento previdenciário e concessão de benefícios: aposentadorias por idade/tempo/especial, auxílio por incapacidade e BPC/LOAS.
+                </p>
+                <ul class="space-y-2 text-xs text-slate-700">
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Planejamento da melhor aposentadoria</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Ações contra benefícios negados pelo INSS</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Benefício assistencial ao idoso e deficiente (BPC/LOAS)</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 pt-0">
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20Previdenci%C3%A1rio%20e%20INSS." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+                <span>Consultar sobre esta área</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- 6. Direito Imobiliário -->
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
+            <div>
+              <div class="relative h-48 w-full overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" 
+                  alt="Direito Imobiliário e Propriedade" 
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="p-6">
+                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+                  Direito Imobiliário
+                </h3>
+                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                  Segurança jurídica na compra, venda e locação de imóveis, usucapião, regularização fundiária e defesas possessórias.
+                </p>
+                <ul class="space-y-2 text-xs text-slate-700">
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Usucapião judicial e extrajudicial em cartório</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Regularização de escrituras e registros de imóveis</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                    <span>Ações de despejo, rescisões e contratos de locação</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-6 pt-0">
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20sobre%20Direito%20Imobili%C3%A1rio." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+                <span>Consultar sobre esta área</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= DIFERENCIAIS (TEMA CLARO) ================= -->
+    <section id="diferenciais" class="py-20 bg-white border-t border-slate-200 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto mb-14">
+          <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+            Por Que Escolher o Escritório
+          </div>
+          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+            Nossos Diferenciais de <span class="gold-gradient-text">Excelência</span>
+          </h2>
+          <p class="text-slate-600 text-base">
+            Combinamos solidez jurídica com agilidade digital para um atendimento mais eficiente, seguro e próximo de você.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          <div class="p-6 rounded-2xl bg-warm-50 border border-slate-200 hover:border-gold-500/60 hover:shadow-card-hover transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-gold-600 mb-4 border border-gold-300 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Transparência Total</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">Contratos e honorários claros desde o início, sem letras miúdas ou custos ocultos.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-warm-50 border border-slate-200 hover:border-gold-500/60 hover:shadow-card-hover transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-gold-600 mb-4 border border-gold-300 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Atendimento Direto</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">Você conversa e se consulta diretamente com o advogado responsável pelo seu processo.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-warm-50 border border-slate-200 hover:border-gold-500/60 hover:shadow-card-hover transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-gold-600 mb-4 border border-gold-300 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Processos Digitais</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">Envio ágil de documentos por WhatsApp e acompanhamento fácil no smartphone.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-warm-50 border border-slate-200 hover:border-gold-500/60 hover:shadow-card-hover transition-all duration-300">
+            <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-gold-600 mb-4 border border-gold-300 shadow-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Rigor Técnico</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">Constante atualização doutrinária e jurisprudencial nos tribunais superiores.</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= COMO FUNCIONA O ATENDIMENTO ================= -->
+    <section id="como-funciona" class="py-20 bg-warm-50 border-t border-slate-200 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center max-w-3xl mx-auto mb-14">
+          <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+            Passo a Passo
+          </div>
+          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+            Como Funciona o Nosso <span class="gold-gradient-text">Atendimento</span>
+          </h2>
+          <p class="text-slate-600 text-base">
+            Um processo claro e descomplicado para você obter orientação jurídica segura desde o primeiro momento.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          
+          <!-- Passo 1 -->
+          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-slate-200 shadow-card-light">
+            <div class="w-12 h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-md border-2 border-gold-400">
+              1
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Contato Inicial</h3>
+            <p class="text-sm text-slate-600">Você nos envia uma mensagem pelo WhatsApp ou formulário relatando seu caso.</p>
+          </div>
+
+          <!-- Passo 2 -->
+          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-slate-200 shadow-card-light">
+            <div class="w-12 h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-md border-2 border-gold-400">
+              2
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Análise Prévia</h3>
+            <p class="text-sm text-slate-600">Examinamos a viabilidade jurídica, documentos e precedentes para traçar a melhor estratégia.</p>
+          </div>
+
+          <!-- Passo 3 -->
+          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-slate-200 shadow-card-light">
+            <div class="w-12 h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-md border-2 border-gold-400">
+              3
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Estratégia & Proposta</h3>
+            <p class="text-sm text-slate-600">Apresentamos o plano de ação, prazos estimados e proposta de honorários sem compromisso.</p>
+          </div>
+
+          <!-- Passo 4 -->
+          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-slate-200 shadow-card-light">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-gold-glow">
+              4
+            </div>
+            <h3 class="text-lg font-bold text-navy-950 mb-2">Atuação & Acompanhamento</h3>
+            <p class="text-sm text-slate-600">Iniciamos as medidas jurídicas necessárias e você recebe atualizações constantes.</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= PERGUNTAS FREQUENTES (FAQ) ================= -->
+    <section id="faq" class="py-20 bg-white border-t border-slate-200 relative">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center mb-14">
+          <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+            Tire Suas Dúvidas
+          </div>
+          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+            Perguntas <span class="gold-gradient-text">Frequentes</span>
+          </h2>
+          <p class="text-slate-600 text-base">
+            Respostas para as principais questões sobre nossos serviços e atendimento.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          
+          <!-- Item 1 -->
+          <div class="faq-item rounded-xl bg-warm-50 border border-slate-200 overflow-hidden transition-all duration-200 shadow-sm">
+            <button type="button" aria-expanded="false" class="faq-button w-full p-6 text-left flex justify-between items-center space-x-4 focus:outline-none hover:text-gold-700">
+              <span class="font-serif font-bold text-lg text-navy-950">Como funciona o primeiro atendimento com o advogado?</span>
+              <svg class="faq-icon w-5 h-5 text-gold-600 flex-shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="faq-content hidden px-6 pb-6 text-slate-700 text-sm leading-relaxed border-t border-slate-200 pt-4 bg-white">
+              O primeiro contato pode ser feito diretamente pelo WhatsApp ou formulário. Nessa conversa inicial, ouvimos atentamente o seu relato para entender o contexto do problema e agendamos a consulta para análise detalhada de documentos e definição da estratégia jurídica.
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="faq-item rounded-xl bg-warm-50 border border-slate-200 overflow-hidden transition-all duration-200 shadow-sm">
+            <button type="button" aria-expanded="false" class="faq-button w-full p-6 text-left flex justify-between items-center space-x-4 focus:outline-none hover:text-gold-700">
+              <span class="font-serif font-bold text-lg text-navy-950">Vocês atendem clientes de outros estados ou apenas localmente?</span>
+              <svg class="faq-icon w-5 h-5 text-gold-600 flex-shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="faq-content hidden px-6 pb-6 text-slate-700 text-sm leading-relaxed border-t border-slate-200 pt-4 bg-white">
+              Atendemos clientes em todo o território nacional. Com a digitalização completa do Poder Judiciário e órgãos de trânsito e previdência, realizamos reuniões online, assinaturas digitais e acompanhamento processual com total comodidade e segurança jurídica.
+            </div>
+          </div>
+
+          <!-- Item 3 -->
+          <div class="faq-item rounded-xl bg-warm-50 border border-slate-200 overflow-hidden transition-all duration-200 shadow-sm">
+            <button type="button" aria-expanded="false" class="faq-button w-full p-6 text-left flex justify-between items-center space-x-4 focus:outline-none hover:text-gold-700">
+              <span class="font-serif font-bold text-lg text-navy-950">Recebi uma notificação de suspensão/cassação de CNH ou multa grave. O que fazer?</span>
+              <svg class="faq-icon w-5 h-5 text-gold-600 flex-shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="faq-content hidden px-6 pb-6 text-slate-700 text-sm leading-relaxed border-t border-slate-200 pt-4 bg-white">
+              É essencial agir com rapidez dentro do prazo legal indicado na notificação. Nossa equipe analisa os autos da infração, identifica possíveis nulidades formais ou materiais e elabora a defesa técnica cabível para buscar o cancelamento da penalidade e a preservação do seu direito de dirigir.
+            </div>
+          </div>
+
+          <!-- Item 4 -->
+          <div class="faq-item rounded-xl bg-warm-50 border border-slate-200 overflow-hidden transition-all duration-200 shadow-sm">
+            <button type="button" aria-expanded="false" class="faq-button w-full p-6 text-left flex justify-between items-center space-x-4 focus:outline-none hover:text-gold-700">
+              <span class="font-serif font-bold text-lg text-navy-950">Como são calculados e cobrados os honorários advocatícios?</span>
+              <svg class="faq-icon w-5 h-5 text-gold-600 flex-shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="faq-content hidden px-6 pb-6 text-slate-700 text-sm leading-relaxed border-t border-slate-200 pt-4 bg-white">
+              Nossos honorários são fixados em estrita observância à tabela da OAB e à complexidade de cada causa. Apresentamos uma proposta detalhada com contrato formal de prestação de serviços, com opções flexíveis de pagamento para viabilizar a defesa dos seus direitos.
+            </div>
+          </div>
+
+          <!-- Item 5 -->
+          <div class="faq-item rounded-xl bg-warm-50 border border-slate-200 overflow-hidden transition-all duration-200 shadow-sm">
+            <button type="button" aria-expanded="false" class="faq-button w-full p-6 text-left flex justify-between items-center space-x-4 focus:outline-none hover:text-gold-700">
+              <span class="font-serif font-bold text-lg text-navy-950">Como sou informado sobre o andamento do meu processo?</span>
+              <svg class="faq-icon w-5 h-5 text-gold-600 flex-shrink-0 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="faq-content hidden px-6 pb-6 text-slate-700 text-sm leading-relaxed border-t border-slate-200 pt-4 bg-white">
+              Prezamos pela comunicação constante. Sempre que houver uma movimentação relevante, audiência ou decisão, você será notificado diretamente via WhatsApp ou e-mail com uma explicação clara e transparente do que aconteceu.
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= CONTATO & FORMULÁRIO (TEMA CLARO) ================= -->
+    <section id="contato" class="py-20 bg-warm-50 border-t border-slate-200 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          <!-- Informações de Contato -->
+          <div class="lg:col-span-5 space-y-8">
+            <div>
+              <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+                Fale Conosco
+              </div>
+              <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+                Agende Sua <span class="gold-gradient-text">Consulta Jurídica</span>
+              </h2>
+              <p class="text-slate-600 text-base leading-relaxed">
+                Entre em contato pelo WhatsApp, envie uma mensagem pelo formulário ou utilize nossos canais de atendimento. Estamos prontos para analisar o seu caso com a máxima dedicação.
+              </p>
+            </div>
+
+            <div class="space-y-4">
+              
+              <!-- WhatsApp / Telefone -->
+              <div class="flex items-start space-x-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
+                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">WhatsApp & Telefone</h3>
+                  <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!" target="_blank" rel="noopener noreferrer" class="text-navy-950 hover:text-gold-600 font-bold text-base transition-colors">
+                    (11) 99999-9999
+                  </a>
+                </div>
+              </div>
+
+              <!-- E-mail -->
+              <div class="flex items-start space-x-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">E-mail Profissional</h3>
+                  <a href="mailto:contato@jorgealvimadvocacia.com.br" class="text-navy-950 hover:text-gold-600 font-bold text-base transition-colors">
+                    contato@jorgealvimadvocacia.com.br
+                  </a>
+                </div>
+              </div>
+
+              <!-- Horário de Atendimento -->
+              <div class="flex items-start space-x-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div class="w-11 h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">Horário de Funcionamento</h3>
+                  <p class="text-navy-950 font-bold text-sm">Segunda a Sexta-feira: 08h30 às 18h00</p>
+                  <p class="text-xs text-slate-500 mt-0.5">Atendimento em plantão para casos urgentes sob consulta prévia.</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Botão Direto para WhatsApp -->
+            <div>
+              <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20iniciar%20um%20atendimento." target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center space-x-3 px-6 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-md transition-all transform hover:-translate-y-0.5">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                </svg>
+                <span>Chamar no WhatsApp Imediatamente</span>
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Formulário de Mensagem Direta (Fundo Branco Elegante) -->
+          <div class="lg:col-span-7">
+            <div class="rounded-2xl bg-white border border-slate-200 p-8 sm:p-10 shadow-card-hover relative">
+              
+              <h3 class="font-serif text-2xl font-bold text-navy-950 mb-2">Envie Sua Mensagem</h3>
+              <p class="text-sm text-slate-600 mb-8">Preencha os campos abaixo para direcionar seu caso com prioridade.</p>
+
+              <!-- Feedback de Sucesso -->
+              <div id="form-success-feedback" class="hidden mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-sm font-medium">
+                Mensagem formatada com sucesso! Redirecionando para o WhatsApp...
+              </div>
+
+              <form id="contact-form" class="space-y-6">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label for="form-name" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                      Nome Completo *
+                    </label>
+                    <input type="text" id="form-name" required placeholder="Seu nome" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors" />
+                  </div>
+
+                  <div>
+                    <label for="form-phone" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                      Telefone / WhatsApp *
+                    </label>
+                    <input type="tel" id="form-phone" required placeholder="(11) 99999-9999" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors" />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="form-area" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                    Área de Interesse Jurídico
+                  </label>
+                  <select id="form-area" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors">
+                    <option value="Direito dos Transportes e Trânsito">Direito dos Transportes e Trânsito (Multas / CNH / Acidentes)</option>
+                    <option value="Direito Civil e Contratos">Direito Civil e Contratos</option>
+                    <option value="Direito de Família e Sucessões">Direito de Família e Sucessões (Divórcio / Inventário)</option>
+                    <option value="Direito Trabalhista">Direito Trabalhista</option>
+                    <option value="Direito Previdenciário (INSS)">Direito Previdenciário (INSS / Aposentadoria)</option>
+                    <option value="Direito Imobiliário">Direito Imobiliário (Regularização / Usucapião)</option>
+                    <option value="Outro Assunto">Outro Assunto / Dúvida Geral</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="form-message" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                    Breve Resumo da Sua Situação (Opcional)
+                  </label>
+                  <textarea id="form-message" rows="4" placeholder="Descreva resumidamente sua dúvida ou necessidade..." class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors resize-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full inline-flex items-center justify-center space-x-2 py-4 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-base shadow-md hover:shadow-lg transition-all duration-300 border border-gold-500/50">
+                  <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                  </svg>
+                  <span>Enviar Mensagem para o WhatsApp</span>
+                </button>
+
+                <p class="text-[11px] text-slate-500 text-center leading-relaxed">
+                  Seus dados estão protegidos por sigilo profissional e pela Lei Geral de Proteção de Dados (LGPD).
+                </p>
+
+              </form>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= RODAPÉ & AVISO OAB (ESTILO NOBRE ESCURO) ================= -->
+  <footer class="bg-navy-950 text-slate-300 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        
+        <!-- Coluna 1: Marca & Resumo -->
+        <div class="space-y-4">
+          <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-xl bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+              </svg>
+            </div>
+            <div>
+              <span class="block font-serif text-xl font-bold text-white">JORGE ALVIM</span>
+              <span class="block text-[10px] uppercase tracking-[0.25em] text-gold-400 font-bold">ADVOCACIA</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Excelência técnica, atendimento humanizado e estratégia jurídica para resguardar seus direitos em todas as instâncias.
+          </p>
+          <div class="text-xs text-gold-400 font-semibold">
+            Inscrição OAB Ativa
+          </div>
+        </div>
+
+        <!-- Coluna 2: Navegação Rápida -->
+        <div>
+          <h3 class="font-serif text-white text-base font-bold mb-4">Navegação Rápida</h3>
+          <ul class="space-y-2.5 text-xs text-slate-400">
+            <li><a href="#inicio" class="hover:text-gold-400 transition-colors">Início</a></li>
+            <li><a href="#sobre" class="hover:text-gold-400 transition-colors">Sobre o Dr. Jorge Alvim</a></li>
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Áreas de Atuação</a></li>
+            <li><a href="#diferenciais" class="hover:text-gold-400 transition-colors">Diferenciais</a></li>
+            <li><a href="#como-funciona" class="hover:text-gold-400 transition-colors">Passo a Passo</a></li>
+            <li><a href="#faq" class="hover:text-gold-400 transition-colors">Perguntas Frequentes</a></li>
+          </ul>
+        </div>
+
+        <!-- Coluna 3: Áreas Atendidas -->
+        <div>
+          <h3 class="font-serif text-white text-base font-bold mb-4">Especialidades</h3>
+          <ul class="space-y-2.5 text-xs text-slate-400">
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito dos Transportes e Trânsito</a></li>
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito Civil & Contratos</a></li>
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Família & Sucessões</a></li>
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito do Trabalho</a></li>
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Previdenciário (INSS)</a></li>
+            <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito Imobiliário</a></li>
+          </ul>
+        </div>
+
+        <!-- Coluna 4: Contato Direto -->
+        <div>
+          <h3 class="font-serif text-white text-base font-bold mb-4">Canais de Contato</h3>
+          <p class="text-xs text-slate-400 mb-2">WhatsApp: (11) 99999-9999</p>
+          <p class="text-xs text-slate-400 mb-2">E-mail: contato@jorgealvimadvocacia.com.br</p>
+          <p class="text-xs text-slate-400 mb-4">Atendimento nacional online e presencial sob agendamento.</p>
+          <a href="#contato" class="inline-block text-xs text-gold-400 hover:text-gold-300 font-bold underline">
+            Solicitar atendimento agora →
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Aviso Legal Obrigatório (Código de Ética OAB) -->
+      <div class="pt-8 border-t border-slate-800/80 text-[11px] text-slate-500 space-y-3">
+        <p class="leading-relaxed">
+          <strong>Aviso Ético e Legal:</strong> Este site possui finalidade estritamente informativa e institucional, em total conformidade com o Provimento nº 205/2021 e o Código de Ética e Disciplina da Ordem dos Advogados do Brasil (OAB). Nenhuma informação veiculada neste endereço deve ser interpretada como consulta jurídica formal ou promessa de resultado garantido.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-between items-center pt-4 text-slate-500 text-xs">
+          <div>
+            &copy; 2026 Jorge Alvim Advocacia. Todos os direitos reservados.
+          </div>
+          <div class="mt-2 sm:mt-0">
+            Desenvolvido com excelência técnica e alta performance.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ================= BOTÃO FLUTUANTE DE WHATSAPP ================= -->
+  <aside aria-label="Atendimento Rápido WhatsApp" class="fixed bottom-6 right-6 z-40">
+    <a href="https://wa.me/5511999999999?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" aria-label="Conversar pelo WhatsApp" class="group relative flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xl transition-all duration-300 transform hover:scale-110 animate-float">
+      
+      <!-- Efeito de Pulso -->
+      <span class="absolute inset-0 rounded-full bg-emerald-400 opacity-75 animate-ping pointer-events-none"></span>
+
+      <!-- Ícone do WhatsApp -->
+      <svg class="w-7 h-7 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+      </svg>
+
+      <!-- Tooltip -->
+      <span class="absolute right-16 px-3 py-1.5 rounded-lg bg-navy-900 border border-gold-400 text-xs font-bold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg">
+        Fale Conosco no WhatsApp
+      </span>
+    </a>
+  </aside>
+
+  <!-- Script Embutido com Garantia de Funcionamento 100% Local -->
+  <script>
+    // Configurações do Escritório
+    const SITE_CONFIG = {
+      whatsappNumber: '5511999999999',
+      defaultMessage: 'Olá! Gostaria de agendar uma consulta jurídica com o Dr. Jorge Alvim.'
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Header Scroll
+      const header = document.getElementById('main-header');
+      if (header) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 20) {
+            header.classList.add('shadow-md');
+          } else {
+            header.classList.remove('shadow-md');
+          }
+        }, { passive: true });
+      }
+
+      // 2. Mobile Menu
+      const toggleBtn = document.getElementById('mobile-menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const closeBtn = document.getElementById('mobile-menu-close');
+      const navLinks = document.querySelectorAll('.mobile-nav-link');
+
+      if (toggleBtn && mobileMenu) {
+        toggleBtn.addEventListener('click', () => {
+          mobileMenu.classList.remove('hidden');
+          document.body.classList.add('overflow-hidden');
+        });
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+          });
+        }
+        navLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+          });
+        });
+      }
+
+      // 3. FAQ Accordion
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach(item => {
+        const button = item.querySelector('.faq-button');
+        const content = item.querySelector('.faq-content');
+        const icon = item.querySelector('.faq-icon');
+
+        if (button && content) {
+          button.addEventListener('click', () => {
+            const isOpen = !content.classList.contains('hidden');
+
+            faqItems.forEach(other => {
+              const otherContent = other.querySelector('.faq-content');
+              const otherIcon = other.querySelector('.faq-icon');
+              if (otherContent && otherContent !== content) {
+                otherContent.classList.add('hidden');
+                if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+              }
+            });
+
+            if (isOpen) {
+              content.classList.add('hidden');
+              if (icon) icon.style.transform = 'rotate(0deg)';
+              button.setAttribute('aria-expanded', 'false');
+            } else {
+              content.classList.remove('hidden');
+              if (icon) icon.style.transform = 'rotate(180deg)';
+              button.setAttribute('aria-expanded', 'true');
+            }
+          });
+        }
+      });
+
+      // 4. Máscara de Telefone
+      const phoneInput = document.getElementById('form-phone');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+          let value = e.target.value.replace(/\D/g, '');
+          if (value.length > 11) value = value.slice(0, 11);
+
+          if (value.length > 10) {
+            value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+          } else if (value.length > 5) {
+            value = value.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+          } else if (value.length > 2) {
+            value = value.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+          } else if (value.length > 0) {
+            value = value.replace(/^(\d*)$/, '($1');
+          }
+          e.target.value = value;
+        });
+      }
+
+      // 5. Envio do Formulário Direto para WhatsApp
+      const form = document.getElementById('contact-form');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const name = document.getElementById('form-name')?.value.trim();
+          const phone = document.getElementById('form-phone')?.value.trim();
+          const area = document.getElementById('form-area')?.value;
+          const message = document.getElementById('form-message')?.value.trim();
+
+          if (!name || !phone) {
+            alert('Por favor, informe seu nome e telefone para contato.');
+            return;
+          }
+
+          let msg = `*Novo Contato via Site - Jorge Alvim Advocacia*\n\n`;
+          msg += `*Nome:* ${name}\n`;
+          msg += `*Telefone:* ${phone}\n`;
+          msg += `*Área de Interesse:* ${area}\n`;
+          if (message) msg += `*Resumo do Caso:* ${message}\n`;
+          msg += `\n_Mensagem enviada através da página institucional_`;
+
+          const encoded = encodeURIComponent(msg);
+          window.open(`https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encoded}`, '_blank');
+
+          const feedback = document.getElementById('form-success-feedback');
+          if (feedback) {
+            feedback.classList.remove('hidden');
+            form.reset();
+            setTimeout(() => feedback.classList.add('hidden'), 6000);
+          }
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

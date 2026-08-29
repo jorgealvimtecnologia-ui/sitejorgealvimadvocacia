@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #1e293b;
+    background-color: #060D17;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: #C89D4D;
+    color: #0B192C;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #060D17;
+}
+::-webkit-scrollbar-thumb {
+  background: #162C4B;
+  border-radius: 5px;
+  border: 2px solid #060D17;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C89D4D;
+}
+
+/* Custom Utility Classes & Animations */
+@layer components {
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #FBF5E8 0%, #DDB569 50%, #B0883C 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gold-gradient-bg {
+    background: linear-gradient(135deg, #C89D4D 0%, #B0883C 50%, #95712E 100%);
+  }
+
+  .gold-gradient-border {
+    border-image: linear-gradient(135deg, #DDB569, rgba(200, 157, 77, 0.2), #95712E) 1;
+  }
+
+  .glass-card-dark {
+    background: rgba(16, 34, 59, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(200, 157, 77, 0.18);
+  }
+
+  .glass-card-dark:hover {
+    border-color: rgba(200, 157, 77, 0.45);
+    box-shadow: 0 12px 35px -8px rgba(200, 157, 77, 0.15);
+  }
+
+  .glass-card-light {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.05); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 6s ease-in-out infinite;
+}
+
+/* Accordion Transition */
+.accordion-content {
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
