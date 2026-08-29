@@ -322,7 +322,20 @@
           <span id="tab-preclients-count" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">Visitas</span>
         </button>
 
-        <!-- Aba 9: Usuários e Senhas -->
+        <!-- Aba 9: Radar Judicial & Busca Nacional (DataJud CNJ / MNI) -->
+        <button 
+          id="tab-btn-judicial" 
+          onclick="switchTab('judicial')" 
+          class="flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50"
+        >
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <span>Radar Judicial (CNJ)</span>
+          <span class="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">DataJud & MNI</span>
+        </button>
+
+        <!-- Aba 10: Usuários e Senhas -->
         <button 
           id="tab-btn-users" 
           onclick="switchTab('users')" 
@@ -2075,7 +2088,336 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       </section>
 
+      <!-- ================= ABA 9: RADAR JUDICIAL (BUSCA NACIONAL DE PROCESSOS) ================= -->
+      <section id="tab-content-judicial" class="hidden space-y-6">
+        
+        <!-- Cabeçalho do Radar Judicial -->
+        <div class="bg-gradient-to-r from-blue-900 via-navy-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div class="flex items-center space-x-2 mb-2">
+                <span class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[11px] font-bold uppercase tracking-wider">
+                  ⚡ Base Nacional CNJ & MNI Integrada
+                </span>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold">
+                  ● DataJud API Online
+                </span>
+              </div>
+              <h3 class="font-serif text-2xl sm:text-3xl font-bold tracking-tight">Radar Judicial de Processos</h3>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-2xl mt-1">
+                Central unificada de busca e consulta de ações judiciais em tempo real no TJMG, TRF6, TRF1, TRT3, TJSP, STJ e STF com histórico de movimentações e acesso a documentos públicos.
+              </p>
+            </div>
+
+            <!-- Status dos Protocolos -->
+            <div class="grid grid-cols-2 gap-2 text-[11px] bg-white/5 p-3 rounded-2xl border border-white/10 backdrop-blur-sm">
+              <div class="flex items-center space-x-1.5 text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>DataJud CNJ</span>
+              </div>
+              <div class="flex items-center space-x-1.5 text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Protocolo MNI / PJe</span>
+              </div>
+              <div class="flex items-center space-x-1.5 text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Domicílio Eletrônico</span>
+              </div>
+              <div class="flex items-center space-x-1.5 text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>STJ / STF / TST</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box de Busca Estilo Jusbrasil -->
+        <div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-sm space-y-5">
+          
+          <!-- Seletor de Tipo de Busca -->
+          <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-4">
+            <button 
+              id="judicial-type-btn-number" 
+              onclick="setJudicialSearchType('number')" 
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-50 text-blue-900 border border-blue-300 shadow-sm flex items-center space-x-2"
+            >
+              <span>🔢 Por Número do Processo (CNJ / NPU)</span>
+            </button>
+            <button 
+              id="judicial-type-btn-name" 
+              onclick="setJudicialSearchType('name')" 
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2"
+            >
+              <span>👤 Por Nome da Parte ou Advogado</span>
+            </button>
+            <button 
+              id="judicial-type-btn-doc" 
+              onclick="setJudicialSearchType('cpf')" 
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2"
+            >
+              <span>📄 Por CPF ou CNPJ (PF / PJ)</span>
+            </button>
+          </div>
+
+          <!-- Formulário de Busca e Filtros -->
+          <form onsubmit="handleJudicialSearch(event)" class="space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+              
+              <!-- Input Principal de Busca -->
+              <div class="lg:col-span-8 relative">
+                <label id="judicial-input-label" for="judicial-search-input" class="block text-xs font-bold text-slate-700 mb-1">
+                  Número Único do Processo (CNJ)
+                </label>
+                <div class="relative">
+                  <input 
+                    type="text" 
+                    id="judicial-search-input" 
+                    required 
+                    placeholder="Ex: 5007788-99.2026.8.13.0145 ou 50077889920268130145" 
+                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-300 text-sm font-medium text-navy-950 focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                  />
+                  <svg class="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Seletor de Tribunal -->
+              <div class="lg:col-span-4">
+                <label for="judicial-tribunal-select" class="block text-xs font-bold text-slate-700 mb-1">Tribunal de Origem</label>
+                <select 
+                  id="judicial-tribunal-select" 
+                  class="w-full px-3.5 py-3.5 rounded-2xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-medium text-navy-950 focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                >
+                  <option value="all">🌐 Todos os Tribunais (Busca Nacional)</option>
+                  <option value="tjmg" selected>🏛️ TJMG - Tribunal de Justiça de Minas Gerais</option>
+                  <option value="trf6">⚖️ TRF6 - Tribunal Regional Federal 6ª Região (MG)</option>
+                  <option value="trt3">👷 TRT3 - Tribunal Regional do Trabalho 3ª Região (MG)</option>
+                  <option value="trf1">🏢 TRF1 - Tribunal Regional Federal 1ª Região</option>
+                  <option value="tjsp">🏛️ TJSP - Tribunal de Justiça de São Paulo</option>
+                  <option value="stj">⚖️ STJ - Superior Tribunal de Justiça</option>
+                  <option value="stf">🏛️ STF - Supremo Tribunal Federal</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Botões de Ação da Busca -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <div class="flex items-center space-x-2 text-[11px] text-slate-500">
+                <span>💡 Exemplos rápidos:</span>
+                <button type="button" onclick="setJudicialSearchExample('5007788-99.2026.8.13.0145', 'number')" class="text-blue-700 font-bold hover:underline">5007788-99 (TJMG)</button>
+                <span>•</span>
+                <button type="button" onclick="setJudicialSearchExample('Mariana Souza Teste', 'name')" class="text-blue-700 font-bold hover:underline">Mariana Souza</button>
+                <span>•</span>
+                <button type="button" onclick="setJudicialSearchExample('111.222.333-44', 'cpf')" class="text-blue-700 font-bold hover:underline">111.222.333-44</button>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button 
+                  type="button" 
+                  onclick="clearJudicialSearch()" 
+                  class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+                >
+                  Limpar
+                </button>
+                <button 
+                  type="submit" 
+                  id="judicial-search-submit-btn" 
+                  class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-700 to-navy-900 hover:from-blue-600 hover:to-navy-800 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
+                >
+                  <span>🔍 Buscar no DataJud & MNI</span>
+                </button>
+              </div>
+            </div>
+
+          </form>
+
+        </div>
+
+        <!-- Painel de Resultados da Pesquisa -->
+        <div class="space-y-4">
+          
+          <!-- Cabeçalho de Resultados -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-1">
+            <div>
+              <h4 class="font-serif font-bold text-base text-navy-950 flex items-center space-x-2">
+                <span>Resultados Encontrados</span>
+                <span id="judicial-results-count-badge" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 text-xs font-bold">
+                  0 processos
+                </span>
+              </h4>
+              <p id="judicial-search-status-text" class="text-xs text-slate-500">
+                Utilize o campo acima para consultar a base nacional de processos
+              </p>
+            </div>
+            
+            <div id="judicial-cache-indicator" class="hidden text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 font-semibold flex items-center space-x-1.5">
+              <span>⚡ Resposta Instantânea (Cache Local)</span>
+            </div>
+          </div>
+
+          <!-- Spinner de Carregamento -->
+          <div id="judicial-loading-spinner" class="hidden bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
+            <div class="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <p class="text-sm font-bold text-slate-800">Consultando Base Nacional do DataJud (CNJ) e Tribunais...</p>
+            <p class="text-xs text-slate-500">Mapeando partes, movimentações e documentos públicos</p>
+          </div>
+
+          <!-- Lista de Cards de Processos (Grid Dinâmico) -->
+          <div id="judicial-results-container" class="space-y-4">
+            
+            <!-- Estado Inicial / Sem Busca -->
+            <div id="judicial-empty-state" class="bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-3">
+              <div class="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mx-auto border border-blue-200">
+                🔍
+              </div>
+              <h5 class="font-serif font-bold text-base text-navy-950">Nenhuma pesquisa realizada ainda</h5>
+              <p class="text-xs text-slate-500 max-w-md mx-auto">
+                Digite um número de processo, nome da parte ou CPF/CNPJ para localizar autos judiciais com histórico completo de andamentos e peças públicas.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
     </main>
+  </div>
+
+  <!-- Modal: Detalhes dos Autos Judiciais (Estilo Jusbrasil) -->
+  <div id="judicial-process-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-7 shadow-2xl space-y-5 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
+      
+      <!-- Cabeçalho do Modal do Processo -->
+      <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+        <div>
+          <div class="flex items-center space-x-2 mb-1">
+            <span id="jmodal-tribunal-badge" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 font-bold text-[11px]">
+              TJMG
+            </span>
+            <span id="jmodal-system-badge" class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px]">
+              PJe 1G
+            </span>
+            <span id="jmodal-confidential-badge" class="hidden px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[11px]">
+              🔒 Segredo de Justiça
+            </span>
+          </div>
+          <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950 font-mono" id="jmodal-process-number">
+            0000000-00.0000.0.00.0000
+          </h3>
+          <p class="text-xs text-slate-600 font-medium" id="jmodal-class-name">Procedimento Comum Cível</p>
+        </div>
+        <button onclick="closeJudicialProcessModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      </div>
+
+      <!-- Resumo Principal da Ação -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+        <div>
+          <span class="block text-[10px] font-bold uppercase text-slate-400">Assunto CNJ:</span>
+          <span id="jmodal-subject" class="font-bold text-slate-900">Direito do Consumidor</span>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold uppercase text-slate-400">Data de Distribuição:</span>
+          <span id="jmodal-distribution" class="font-bold text-slate-900">-</span>
+        </div>
+        <div>
+          <span class="block text-[10px] font-bold uppercase text-slate-400">Órgão Julgador / Vara:</span>
+          <span id="jmodal-court-branch" class="font-bold text-slate-900">Vara Cível - Juiz de Fora</span>
+        </div>
+      </div>
+
+      <!-- Polos do Processo (Autor vs Réu) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Polo Ativo -->
+        <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-1">
+          <span class="text-[10px] font-bold uppercase text-emerald-800 tracking-wider">👤 Polo Ativo (Autor / Requerente):</span>
+          <div id="jmodal-polo-ativo" class="font-bold text-slate-900 text-sm">
+            -
+          </div>
+          <span id="jmodal-polo-ativo-doc" class="text-[11px] text-slate-500 font-mono block"></span>
+        </div>
+
+        <!-- Polo Passivo -->
+        <div class="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 text-xs space-y-1">
+          <span class="text-[10px] font-bold uppercase text-rose-800 tracking-wider">🏢 Polo Passivo (Réu / Requerido):</span>
+          <div id="jmodal-polo-passivo" class="font-bold text-slate-900 text-sm">
+            -
+          </div>
+          <span id="jmodal-polo-passivo-doc" class="text-[11px] text-slate-500 font-mono block"></span>
+        </div>
+      </div>
+
+      <!-- Advogados Cadastrados -->
+      <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold uppercase text-amber-800 block">Patronos / Advogados Registrados:</span>
+          <span id="jmodal-lawyers" class="font-bold text-slate-900">Dr. Jorge Eduardo da Silva Alvim (OAB/MG 222.943)</span>
+        </div>
+        <span class="px-2 py-1 bg-amber-200/60 text-amber-900 rounded-lg text-[10px] font-bold">OAB Regular</span>
+      </div>
+
+      <!-- Documentos Públicos Disponíveis -->
+      <div class="space-y-2">
+        <h5 class="text-xs font-bold uppercase text-slate-700 tracking-wider flex items-center space-x-1.5">
+          <span>📄 Peças e Documentos Públicos:</span>
+          <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px]">Autos Eletrônicos</span>
+        </h5>
+        <div id="jmodal-docs-container" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <!-- Gerado dinamicamente -->
+        </div>
+      </div>
+
+      <!-- Linha do Tempo das Movimentações Processuais -->
+      <div class="space-y-3 pt-2">
+        <h5 class="text-xs font-bold uppercase text-slate-700 tracking-wider flex items-center space-x-1.5">
+          <span>⏳ Histórico Completo de Movimentações (Linha do Tempo):</span>
+        </h5>
+
+        <div id="jmodal-movements-timeline" class="space-y-3 max-h-60 overflow-y-auto pr-2 border-l-2 border-blue-200 ml-3 pl-4">
+          <!-- Movimentações geradas dinamicamente -->
+        </div>
+      </div>
+
+      <!-- Botões de Ação do Modal -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-100">
+        <a 
+          id="jmodal-portal-link" 
+          href="#" 
+          target="_blank" 
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center space-x-2 transition-all"
+        >
+          <span>🌐 Abrir no Portal Oficial do Tribunal</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
+
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <button 
+            type="button" 
+            onclick="closeJudicialProcessModal()" 
+            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all"
+          >
+            Fechar
+          </button>
+          
+          <button 
+            type="button" 
+            id="jmodal-import-btn" 
+            onclick="importCurrentJudicialProcess()" 
+            class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
+          >
+            <span>📥 Importar para o Escritório</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- Modal: Detalhes do Pré-Cliente / Visita -->
@@ -3697,6 +4039,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const tabBlog = document.getElementById('tab-content-blog');
       const tabAudit = document.getElementById('tab-content-audit');
       const tabPreClients = document.getElementById('tab-content-pre-clients');
+      const tabJudicial = document.getElementById('tab-content-judicial');
       const tabUsers = document.getElementById('tab-content-users');
 
       const btnLeads = document.getElementById('tab-btn-leads');
@@ -3707,6 +4050,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const btnBlog = document.getElementById('tab-btn-blog');
       const btnAudit = document.getElementById('tab-btn-audit');
       const btnPreClients = document.getElementById('tab-btn-pre-clients');
+      const btnJudicial = document.getElementById('tab-btn-judicial');
       const btnUsers = document.getElementById('tab-btn-users');
 
       const activeClass = "flex items-center space-x-2 px-4 py-2 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-b-2 border-gold-500 bg-amber-50/80 text-gold-900 shadow-sm";
@@ -3720,6 +4064,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (tabBlog) tabBlog.classList.add('hidden');
       if (tabAudit) tabAudit.classList.add('hidden');
       if (tabPreClients) tabPreClients.classList.add('hidden');
+      if (tabJudicial) tabJudicial.classList.add('hidden');
       tabUsers.classList.add('hidden');
 
       btnLeads.className = inactiveClass;
@@ -3730,6 +4075,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (btnBlog) btnBlog.className = inactiveClass;
       if (btnAudit) btnAudit.className = inactiveClass;
       if (btnPreClients) btnPreClients.className = inactiveClass;
+      if (btnJudicial) btnJudicial.className = inactiveClass;
       btnUsers.className = inactiveClass;
 
       if (tab === 'leads') {
@@ -3764,6 +4110,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         if (tabPreClients) tabPreClients.classList.remove('hidden');
         if (btnPreClients) btnPreClients.className = activeClass;
         initPreClientsTab();
+      } else if (tab === 'judicial') {
+        if (tabJudicial) tabJudicial.classList.remove('hidden');
+        if (btnJudicial) btnJudicial.className = activeClass;
+        initJudicialTab();
       } else if (tab === 'users') {
         tabUsers.classList.remove('hidden');
         btnUsers.className = activeClass;
@@ -8212,6 +8562,375 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+
+    // =========================================================================
+    // FUNÇÕES DA ABA 9: RADAR JUDICIAL (DATAJUD CNJ, MNI & TRIBUNAIS)
+    // =========================================================================
+    let currentJudicialSearchType = 'number';
+    let currentJudicialResults = [];
+    let selectedJudicialProcess = null;
+
+    function initJudicialTab() {
+      // Inicialização da aba
+      const input = document.getElementById('judicial-search-input');
+      if (input && !input.value) {
+        input.focus();
+      }
+    }
+
+    function setJudicialSearchType(type) {
+      currentJudicialSearchType = type;
+      const btnNumber = document.getElementById('judicial-type-btn-number');
+      const btnName = document.getElementById('judicial-type-btn-name');
+      const btnDoc = document.getElementById('judicial-type-btn-doc');
+      const label = document.getElementById('judicial-input-label');
+      const input = document.getElementById('judicial-search-input');
+
+      const activeBtnClass = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-50 text-blue-900 border border-blue-300 shadow-sm flex items-center space-x-2";
+      const inactiveBtnClass = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2";
+
+      btnNumber.className = inactiveBtnClass;
+      btnName.className = inactiveBtnClass;
+      btnDoc.className = inactiveBtnClass;
+
+      if (type === 'number') {
+        btnNumber.className = activeBtnClass;
+        label.textContent = 'Número Único do Processo (CNJ / NPU)';
+        input.placeholder = 'Ex: 5007788-99.2026.8.13.0145 ou 50077889920268130145';
+      } else if (type === 'name') {
+        btnName.className = activeBtnClass;
+        label.textContent = 'Nome Completo da Parte, Empresa ou Advogado';
+        input.placeholder = 'Ex: Mariana Souza, Banco do Brasil, Dr. Jorge Alvim';
+      } else if (type === 'cpf' || type === 'cnpj') {
+        btnDoc.className = activeBtnClass;
+        label.textContent = 'CPF ou CNPJ da Parte';
+        input.placeholder = 'Ex: 111.222.333-44 ou 00.000.000/0001-00';
+      }
+      input.focus();
+    }
+
+    function setJudicialSearchExample(val, type) {
+      setJudicialSearchType(type);
+      const input = document.getElementById('judicial-search-input');
+      input.value = val;
+      handleJudicialSearch(new Event('submit'));
+    }
+
+    function clearJudicialSearch() {
+      document.getElementById('judicial-search-input').value = '';
+      currentJudicialResults = [];
+      document.getElementById('judicial-results-container').innerHTML = `
+        <div id="judicial-empty-state" class="bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-3">
+          <div class="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl mx-auto border border-blue-200">
+            🔍
+          </div>
+          <h5 class="font-serif font-bold text-base text-navy-950">Nenhuma pesquisa realizada ainda</h5>
+          <p class="text-xs text-slate-500 max-w-md mx-auto">
+            Digite um número de processo, nome da parte ou CPF/CNPJ para localizar autos judiciais com histórico completo de andamentos e peças públicas.
+          </p>
+        </div>
+      `;
+      document.getElementById('judicial-results-count-badge').textContent = '0 processos';
+      document.getElementById('judicial-cache-indicator').classList.add('hidden');
+      document.getElementById('judicial-search-status-text').textContent = 'Utilize o campo acima para consultar a base nacional de processos';
+    }
+
+    async function handleJudicialSearch(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      const term = document.getElementById('judicial-search-input').value.trim();
+      const tribunal = document.getElementById('judicial-tribunal-select').value;
+      const submitBtn = document.getElementById('judicial-search-submit-btn');
+      const spinner = document.getElementById('judicial-loading-spinner');
+      const container = document.getElementById('judicial-results-container');
+      const countBadge = document.getElementById('judicial-results-count-badge');
+      const cacheIndicator = document.getElementById('judicial-cache-indicator');
+      const statusText = document.getElementById('judicial-search-status-text');
+
+      if (!term) {
+        alert('Por favor, informe o número, nome ou documento para pesquisar.');
+        return;
+      }
+
+      spinner.classList.remove('hidden');
+      container.classList.add('hidden');
+      cacheIndicator.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Consultando CNJ...</span>';
+
+      try {
+        const res = await fetch('/api/judicial/search', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            query_type: currentJudicialSearchType,
+            query_term: term,
+            tribunal: tribunal
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          currentJudicialResults = data.processes || [];
+          countBadge.textContent = `${currentJudicialResults.length} processo(s)`;
+          statusText.textContent = `Consulta realizada em ${data.source === 'cache' ? 'cache local' : 'tempo real nos tribunais'}`;
+          
+          if (data.source === 'cache') {
+            cacheIndicator.classList.remove('hidden');
+          }
+
+          renderJudicialResults(currentJudicialResults);
+        } else {
+          alert(`❌ ${data.error || 'Erro ao consultar o Radar Judicial.'}`);
+          container.innerHTML = `
+            <div class="bg-rose-50 p-8 rounded-3xl border border-rose-200 text-center space-y-2">
+              <p class="text-sm font-bold text-rose-800">Falha na consulta judicial</p>
+              <p class="text-xs text-rose-600">${data.error || 'Não foi possível consultar a base do CNJ no momento.'}</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        alert('Falha de conexão com o servidor ao consultar o Radar Judicial.');
+      } finally {
+        spinner.classList.add('hidden');
+        container.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🔍 Buscar no DataJud & MNI</span>';
+      }
+    }
+
+    function renderJudicialResults(processes) {
+      const container = document.getElementById('judicial-results-container');
+      if (!processes || processes.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto border border-amber-200">
+              📂
+            </div>
+            <h5 class="font-serif font-bold text-base text-navy-950">Nenhum processo localizado</h5>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Não encontramos processos públicos para os parâmetros informados. Verifique se o número do CNJ ou nome está correto ou selecione a opção "Todos os Tribunais".
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = processes.map((p, index) => {
+        const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Processo Ativo', date: p.distribution_date };
+        const poloAtivoName = p.polo_ativo?.[0]?.name || 'Parte Autora';
+        const poloPassivoName = p.polo_passivo?.[0]?.name || 'Parte Ré';
+        const formattedDate = lastMov.date ? new Date(lastMov.date).toLocaleDateString('pt-BR') : '-';
+
+        return `
+          <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
+            
+            <!-- Cabeçalho do Card -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 font-bold text-[10px] uppercase">
+                    ${p.tribunal_code ? p.tribunal_code.toUpperCase() : 'TJ'}
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
+                    ${p.court_system || 'PJe'}
+                  </span>
+                  <span class="text-xs text-slate-400">•</span>
+                  <span class="text-xs font-semibold text-slate-500">${p.tribunal_name}</span>
+                </div>
+                <h4 class="font-mono font-bold text-base sm:text-lg text-navy-950 hover:text-blue-700 cursor-pointer" onclick="openJudicialProcessModal('${p.id}')">
+                  ${p.numero_processo}
+                </h4>
+              </div>
+
+              <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center space-x-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Em Tramitação</span>
+              </span>
+            </div>
+
+            <!-- Dados da Ação & Partes -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div class="space-y-1">
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Classe & Assunto:</span>
+                <p class="font-bold text-slate-800">${p.class_name}</p>
+                <p class="text-slate-500 text-[11px]">${p.subject}</p>
+              </div>
+
+              <div class="space-y-1">
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Polos da Ação:</span>
+                <p class="text-slate-800"><strong class="text-emerald-700">Autor:</strong> ${poloAtivoName}</p>
+                <p class="text-slate-800"><strong class="text-rose-700">Réu:</strong> ${poloPassivoName}</p>
+              </div>
+
+              <div class="space-y-1">
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Comarca / Juízo:</span>
+                <p class="font-bold text-slate-800">${p.court_branch}</p>
+                <p class="text-slate-500 text-[11px]">Distribuído em: ${p.distribution_date}</p>
+              </div>
+            </div>
+
+            <!-- Última Movimentação -->
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-2 overflow-hidden">
+                <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px] whitespace-nowrap">Último Andamento (${formattedDate})</span>
+                <span class="text-slate-700 font-medium truncate">${lastMov.title} ${lastMov.details ? '- ' + lastMov.details : ''}</span>
+              </div>
+            </div>
+
+            <!-- Ações do Processo -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+              <a 
+                href="${p.direct_portal_url}" 
+                target="_blank" 
+                class="inline-flex items-center space-x-1.5 text-xs font-bold text-blue-700 hover:text-blue-900 hover:underline"
+              >
+                <span>🌐 Acessar Portal do Tribunal</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+              </a>
+
+              <div class="flex items-center space-x-2">
+                <button 
+                  onclick="openJudicialProcessModal('${p.id}')" 
+                  class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center space-x-1.5"
+                >
+                  <span>📄 Ver Autos & Movimentações</span>
+                </button>
+
+                <button 
+                  onclick="quickImportJudicialProcess('${p.id}')" 
+                  class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-sm hover:shadow transition-all flex items-center space-x-1.5"
+                >
+                  <span>📥 Importar para o Escritório</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openJudicialProcessModal(processId) {
+      const process = currentJudicialResults.find(p => p.id === processId);
+      if (!process) return;
+
+      selectedJudicialProcess = process;
+
+      document.getElementById('jmodal-tribunal-badge').textContent = (process.tribunal_code || 'TJ').toUpperCase();
+      document.getElementById('jmodal-system-badge').textContent = process.court_system || 'PJe';
+      document.getElementById('jmodal-process-number').textContent = process.numero_processo;
+      document.getElementById('jmodal-class-name').textContent = process.class_name;
+      document.getElementById('jmodal-subject').textContent = process.subject;
+      document.getElementById('jmodal-distribution').textContent = process.distribution_date;
+      document.getElementById('jmodal-court-branch').textContent = process.court_branch;
+
+      const poloAtivoName = process.polo_ativo?.[0]?.name || 'Autor';
+      const poloAtivoDoc = process.polo_ativo?.[0]?.document || '';
+      document.getElementById('jmodal-polo-ativo').textContent = poloAtivoName;
+      document.getElementById('jmodal-polo-ativo-doc').textContent = poloAtivoDoc ? `Documento: ${poloAtivoDoc}` : '';
+
+      const poloPassivoName = process.polo_passivo?.[0]?.name || 'Réu';
+      const poloPassivoDoc = process.polo_passivo?.[0]?.document || '';
+      document.getElementById('jmodal-polo-passivo').textContent = poloPassivoName;
+      document.getElementById('jmodal-polo-passivo-doc').textContent = poloPassivoDoc ? `Documento: ${poloPassivoDoc}` : '';
+
+      const lawyerName = process.lawyers?.[0]?.name || 'Dr. Jorge Eduardo da Silva Alvim';
+      const lawyerOAB = process.lawyers?.[0]?.oab || '222.943';
+      document.getElementById('jmodal-lawyers').textContent = `${lawyerName} (OAB/${process.lawyers?.[0]?.uf || 'MG'} ${lawyerOAB})`;
+
+      document.getElementById('jmodal-portal-link').href = process.direct_portal_url;
+
+      // Renderizar Documentos Públicos
+      const docsContainer = document.getElementById('jmodal-docs-container');
+      const docs = process.public_documents || [];
+      docsContainer.innerHTML = docs.map(d => `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs hover:bg-blue-50/50 hover:border-blue-200 transition-all cursor-pointer" onclick="alert('Documento Público dos Autos Eletrônicos: ${d.title} (Disponível no Portal do Tribunal)')">
+          <div class="flex items-center space-x-2 truncate">
+            <span class="p-1 rounded bg-rose-100 text-rose-700 font-bold text-[10px]">${d.type}</span>
+            <span class="font-semibold text-slate-800 truncate">${d.title}</span>
+          </div>
+          <span class="text-[10px] text-blue-600 font-bold">Ver</span>
+        </div>
+      `).join('');
+
+      // Renderizar Movimentações
+      const movTimeline = document.getElementById('jmodal-movements-timeline');
+      const movs = process.movements || [];
+      movTimeline.innerHTML = movs.map(m => {
+        const d = m.date ? new Date(m.date).toLocaleString('pt-BR') : '-';
+        return `
+          <div class="relative group">
+            <span class="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-white ring-2 ring-blue-200"></span>
+            <div class="bg-slate-50 hover:bg-slate-100 p-3 rounded-2xl border border-slate-200 transition-all text-xs">
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-bold text-navy-950">${m.title}</span>
+                <span class="text-[10px] text-slate-400 font-mono">${d}</span>
+              </div>
+              ${m.details ? `<p class="text-slate-600 text-[11px] mt-0.5">${m.details}</p>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('judicial-process-modal').classList.remove('hidden');
+    }
+
+    function closeJudicialProcessModal() {
+      document.getElementById('judicial-process-modal').classList.add('hidden');
+      selectedJudicialProcess = null;
+    }
+
+    async function quickImportJudicialProcess(processId) {
+      const process = currentJudicialResults.find(p => p.id === processId);
+      if (!process) return;
+      selectedJudicialProcess = process;
+      await importCurrentJudicialProcess();
+    }
+
+    async function importCurrentJudicialProcess() {
+      if (!selectedJudicialProcess) {
+        alert('Nenhum processo selecionado para importação.');
+        return;
+      }
+
+      const importBtn = document.getElementById('jmodal-import-btn');
+      if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.textContent = 'Importando...';
+      }
+
+      try {
+        const res = await fetch('/api/judicial/import-to-office', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            process_data: selectedJudicialProcess
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          alert(`🎉 ${data.message}\n\nO cliente e o processo foram cadastrados no sistema com todo o histórico de movimentações!`);
+          closeJudicialProcessModal();
+          loadClients();
+          loadLawsuits();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao importar processo para o escritório.'}`);
+        }
+      } catch (err) {
+        alert('Falha de conexão com o servidor ao importar processo.');
+      } finally {
+        if (importBtn) {
+          importBtn.disabled = false;
+          importBtn.innerHTML = '<span>📥 Importar para o Escritório</span>';
+        }
+      }
     }
 
     // Inicialização ao Carregar
