@@ -4745,55 +4745,33 @@ async function callDataJudAPI(tribunalCode, esQuery) {
   const tribunal = JUDICIAL_TRIBUNALS[tribunalCode];
   if (!tribunal) throw new Error(`Tribunal '${tribunalCode}' não suportado.`);
 
-  const apiKey = process.env.DATAJUD_API_KEY || 'APIKey cDZHYzlZa0JadVREZDJCendQbXBtZzpVakpQZDNqM1FYR3N1Yl9Yc3NqY2RR';
+  const apiKey = process.env.DATAJUD_API_KEY || 'APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==';
   const url = `https://api-publica.datajud.cnj.jus.br/${tribunal.apiEndpoint}/_search`;
 
-  return new Promise((resolve) => {
-    try {
-      const payload = JSON.stringify(esQuery);
-      const req = https.request(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': apiKey,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload),
-          'User-Agent': 'JorgeAlvimAdvocacia-LegalTech/2.0'
-        },
-        timeout: 7000
-      }, (res) => {
-        let rawData = '';
-        res.on('data', chunk => rawData += chunk);
-        res.on('end', () => {
-          try {
-            if (res.statusCode === 200) {
-              const parsed = JSON.parse(rawData);
-              resolve({ success: true, data: parsed });
-            } else {
-              console.warn(`[DATAJUD] Tribunal ${tribunalCode} respondeu HTTP ${res.statusCode}:`, rawData.substring(0, 120));
-              resolve({ success: false, status: res.statusCode, error: 'Resposta não-200 do DataJud' });
-            }
-          } catch (err) {
-            resolve({ success: false, error: 'Falha ao decodificar JSON do DataJud' });
-          }
-        });
-      });
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json',
+        'User-Agent': 'JorgeAlvimAdvocacia-LegalTech/2.0'
+      },
+      body: JSON.stringify(esQuery),
+      signal: AbortSignal.timeout(8000)
+    });
 
-      req.on('error', (err) => {
-        console.warn(`[DATAJUD] Erro de conexão com ${tribunalCode}:`, err.message);
-        resolve({ success: false, error: err.message });
-      });
-
-      req.on('timeout', () => {
-        req.destroy();
-        resolve({ success: false, error: 'Timeout ao consultar DataJud' });
-      });
-
-      req.write(payload);
-      req.end();
-    } catch (e) {
-      resolve({ success: false, error: e.message });
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, data };
+    } else {
+      const errText = await res.text();
+      console.warn(`[DATAJUD] Tribunal ${tribunalCode} respondeu HTTP ${res.status}:`, errText.substring(0, 150));
+      return { success: false, status: res.status, error: 'Resposta não-200 do DataJud' };
     }
-  });
+  } catch (err) {
+    console.warn(`[DATAJUD] Erro ao consultar ${tribunalCode}:`, err.message);
+    return { success: false, error: err.message };
+  }
 }
 
 /**
@@ -4855,6 +4833,12 @@ function normalizeJudicialHit(hit, tribunalCode) {
   // Ordenar movimentações da mais recente para a mais antiga
   movements.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // Formatar data de distribuição
+  let distDate = src.dataAjuizamento || src.dataDistribuicao || new Date().toISOString().split('T')[0];
+  if (typeof distDate === 'string' && distDate.length >= 8 && !distDate.includes('-')) {
+    distDate = `${distDate.slice(0, 4)}-${distDate.slice(4, 6)}-${distDate.slice(6, 8)}`;
+  }
+
   return {
     id: src.id || rawNumber,
     numero_processo: formattedNumber,
@@ -4865,7 +4849,7 @@ function normalizeJudicialHit(hit, tribunalCode) {
     court_system: tribunal.system || 'PJe',
     class_name: src.classe?.nome || 'Ação Cível / Procedimento Comum',
     subject: Array.isArray(src.assuntos) ? src.assuntos.map(a => a.nome).join(', ') : (src.assunto || 'Direito Civil / Consumidor'),
-    distribution_date: src.dataAjuizamento || src.dataDistribuicao || new Date().toISOString().split('T')[0],
+    distribution_date: distDate,
     court_branch: src.orgaoJulgador?.nome || 'Vara Cível / Juizado Especial',
     city: src.orgaoJulgador?.municipio || 'Juiz de Fora - MG',
     confidential: !!src.nivelSigilo,
@@ -4907,81 +4891,73 @@ async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' })
     console.warn('Erro ao consultar cache judicial:', err);
   }
 
-  // 2. Determinar quais tribunais consultar
-  let targetTribunals = [];
-  if (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) {
-    targetTribunals = [tribunal];
-  } else if (queryType === 'number') {
-    const detected = detectTribunalFromNPU(digitsOnly);
-    targetTribunals = detected ? [detected] : ['tjmg', 'trf6', 'trf1', 'trt3', 'tjsp', 'stj', 'stf'];
-  } else {
-    targetTribunals = ['tjmg', 'trf6', 'trt3', 'tjsp', 'stj'];
-  }
-
   let aggregatedProcesses = [];
 
-  // 3. Montar Consulta ElasticSearch
-  let esQuery = { size: 10 };
-  if (queryType === 'number') {
-    esQuery.query = { match: { numeroProcesso: digitsOnly } };
-  } else if (queryType === 'cpf' || queryType === 'cnpj') {
-    esQuery.query = {
-      nested: {
-        path: 'polos.partes',
-        query: {
-          match: { 'polos.partes.numeroDocumentoPrincipal': digitsOnly }
+  // 2. SE FOR BUSCA POR NÚMERO DO PROCESSO: Consulta a API DataJud em Tempo Real
+  if (queryType === 'number' && digitsOnly.length >= 8) {
+    let targetTribunals = [];
+    if (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) {
+      targetTribunals = [tribunal];
+    } else {
+      const detected = detectTribunalFromNPU(digitsOnly);
+      targetTribunals = detected ? [detected] : ['tjmg', 'trf6', 'trf1', 'trt3', 'tjsp', 'stj', 'stf', 'tst'];
+    }
+
+    const esQuery = {
+      size: 10,
+      query: {
+        match: {
+          numeroProcesso: digitsOnly
         }
       }
     };
-  } else {
-    // Busca por Nome da Parte ou Advogado
-    esQuery.query = {
-      nested: {
-        path: 'polos.partes',
-        query: {
-          match: { 'polos.partes.nome': cleanTerm }
+
+    const apiPromises = targetTribunals.map(async (tribCode) => {
+      try {
+        const res = await callDataJudAPI(tribCode, esQuery);
+        if (res.success && res.data?.hits?.hits?.length > 0) {
+          return res.data.hits.hits.map(hit => normalizeJudicialHit(hit, tribCode));
         }
+      } catch (e) {
+        console.warn(`Falha na busca remota no tribunal ${tribCode}:`, e.message);
       }
-    };
+      return [];
+    });
+
+    const resultsByTribunal = await Promise.all(apiPromises);
+    resultsByTribunal.forEach(list => {
+      aggregatedProcesses.push(...list);
+    });
   }
 
-  // 4. Executar chamadas em paralelo aos tribunais alvo
-  const apiPromises = targetTribunals.map(async (tribCode) => {
-    try {
-      const res = await callDataJudAPI(tribCode, esQuery);
-      if (res.success && res.data?.hits?.hits?.length > 0) {
-        return res.data.hits.hits.map(hit => normalizeJudicialHit(hit, tribCode));
-      }
-    } catch (e) {
-      console.warn(`Falha na busca remota no tribunal ${tribCode}:`, e.message);
-    }
-    return [];
-  });
-
-  const resultsByTribunal = await Promise.all(apiPromises);
-  resultsByTribunal.forEach(list => {
-    aggregatedProcesses.push(...list);
-  });
-
-  // 5. Fallback Inteligente e Dados Locais:
-  // Se a API externa não retornou ou se buscamos processos já salvos no escritório, enriquecemos os dados
+  // 3. BUSCA POR NOME, CPF, CNPJ, OAB OU PROCESSOS DO ESCRITÓRIO:
   if (aggregatedProcesses.length === 0) {
     try {
       let localProcesses = [];
+      const cleanDoc = digitsOnly;
+      const isOabSearch = queryType === 'oab' || cleanTerm.toLowerCase().includes('oab') || cleanTerm.includes('222943') || cleanTerm.includes('222.943');
+
       if (queryType === 'number') {
         localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number LIKE ? OR cnj_number LIKE ?`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
+      } else if (isOabSearch) {
+        localProcesses = db.prepare(`SELECT * FROM lawsuits ORDER BY created_at DESC`).all();
       } else {
         localProcesses = db.prepare(`
           SELECT l.* FROM lawsuits l
           LEFT JOIN clients c ON l.client_id = c.id
-          WHERE c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ? OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?
-        `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
+          WHERE c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ? 
+             OR REPLACE(REPLACE(REPLACE(c.cpf, '.', ''), '-', ''), ' ', '') LIKE ?
+             OR REPLACE(REPLACE(REPLACE(REPLACE(c.cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
+             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?
+        `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
 
         if (localProcesses.length === 0) {
           const matchedClients = db.prepare(`
             SELECT * FROM clients 
             WHERE full_name LIKE ? OR cpf LIKE ? OR cnpj LIKE ?
-          `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
+               OR REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?
+               OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
+          `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`);
 
           matchedClients.forEach(c => {
             localProcesses.push({
@@ -5014,7 +4990,7 @@ async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' })
             tribunal_name: lp.tribunal ? `${lp.tribunal} - Tribunal de Justiça` : 'Tribunal de Justiça de Minas Gerais (TJMG)',
             segment: 'Justiça Estadual',
             court_system: 'PJe / MNI',
-            class_name: lp.action_type || 'Ação Cível',
+            class_name: lp.action_type || 'Ação Cível / Procedimento Comum',
             subject: lp.subject || lp.notes || 'Defesa do Consumidor / Danos Morais',
             distribution_date: lp.distribution_date || (lp.created_at ? lp.created_at.split('T')[0] : '2026-01-15'),
             court_branch: lp.court_branch || 'Vara Cível de Juiz de Fora - MG',
@@ -5040,7 +5016,38 @@ async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' })
     }
   }
 
-  // 6. Salvar em Cache (Validade de 2 horas apenas se houver resultados)
+  // 4. SE AINDA NÃO HOUVER RESULTADOS: Criar Cards com Links Diretos de Consulta no Portal Oficial
+  if (aggregatedProcesses.length === 0) {
+    const selectedTrib = (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) ? JUDICIAL_TRIBUNALS[tribunal] : JUDICIAL_TRIBUNALS['tjmg'];
+    
+    aggregatedProcesses.push({
+      id: 'BUSCA-' + Date.now(),
+      numero_processo: queryType === 'number' ? cleanTerm : `Consulta: ${cleanTerm}`,
+      numero_processo_raw: digitsOnly,
+      tribunal_code: selectedTrib.code,
+      tribunal_name: selectedTrib.name,
+      segment: selectedTrib.segment,
+      court_system: selectedTrib.system,
+      class_name: `Consulta Pública de Autos por ${queryType.toUpperCase()}`,
+      subject: `Pesquisa de autos públicos nos tribunais para '${cleanTerm}'`,
+      distribution_date: now.toISOString().split('T')[0],
+      court_branch: 'Tribunais do Brasil / Portal PJe & ESAJ',
+      city: 'Juiz de Fora - MG',
+      confidential: false,
+      polo_ativo: [{ name: queryType === 'name' ? cleanTerm : (queryType === 'cpf' || queryType === 'cnpj' ? `Doc: ${cleanTerm}` : 'Parte Solicitante'), document: digitsOnly }],
+      polo_passivo: [{ name: 'Tribunal de Justiça & Justiça Federal', document: '' }],
+      lawyers: [{ name: queryType === 'oab' ? cleanTerm : 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
+      movements: [
+        { date: now.toISOString(), title: 'Consulta Direcionada aos Tribunais', details: 'Acesse o portal oficial do tribunal clicando no botão abaixo para ver todos os processos públicos vinculados.' }
+      ],
+      direct_portal_url: selectedTrib.portalUrl ? selectedTrib.portalUrl(cleanTerm) : 'https://pje.tjmg.jus.br/',
+      public_documents: [
+        { title: 'Acesso Direto ao Portal do Tribunal', type: 'WEB', is_public: true }
+      ]
+    });
+  }
+
+  // 5. Salvar em Cache (Validade de 2 horas apenas se houver resultados)
   if (aggregatedProcesses.length > 0) {
     try {
       const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();

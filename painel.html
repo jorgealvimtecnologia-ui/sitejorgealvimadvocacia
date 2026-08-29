@@ -2150,14 +2150,21 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               onclick="setJudicialSearchType('name')" 
               class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2"
             >
-              <span>👤 Por Nome da Parte ou Advogado</span>
+              <span>👤 Por Nome da Parte</span>
             </button>
             <button 
               id="judicial-type-btn-doc" 
               onclick="setJudicialSearchType('cpf')" 
               class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2"
             >
-              <span>📄 Por CPF ou CNPJ (PF / PJ)</span>
+              <span>📄 Por CPF ou CNPJ</span>
+            </button>
+            <button 
+              id="judicial-type-btn-oab" 
+              onclick="setJudicialSearchType('oab')" 
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2"
+            >
+              <span>⚖️ Por Número da OAB</span>
             </button>
           </div>
 
@@ -2206,13 +2213,15 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
             <!-- Botões de Ação da Busca -->
             <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div class="flex items-center space-x-2 text-[11px] text-slate-500">
+              <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                 <span>💡 Exemplos rápidos:</span>
-                <button type="button" onclick="setJudicialSearchExample('5007788-99.2026.8.13.0145', 'number')" class="text-blue-700 font-bold hover:underline">5007788-99 (TJMG)</button>
+                <button type="button" onclick="setJudicialSearchExample('5006870-33.2024.8.13.0313', 'number')" class="text-blue-700 font-bold hover:underline">5006870-33 (TJMG)</button>
                 <span>•</span>
-                <button type="button" onclick="setJudicialSearchExample('Mariana Souza Teste', 'name')" class="text-blue-700 font-bold hover:underline">Mariana Souza</button>
+                <button type="button" onclick="setJudicialSearchExample('222943', 'oab')" class="text-blue-700 font-bold hover:underline">OAB/MG 222.943</button>
                 <span>•</span>
-                <button type="button" onclick="setJudicialSearchExample('111.222.333-44', 'cpf')" class="text-blue-700 font-bold hover:underline">111.222.333-44</button>
+                <button type="button" onclick="setJudicialSearchExample('Mariana Souza', 'name')" class="text-blue-700 font-bold hover:underline">Mariana Souza</button>
+                <span>•</span>
+                <button type="button" onclick="setJudicialSearchExample('123.456.789-00', 'cpf')" class="text-blue-700 font-bold hover:underline">123.456.789-00</button>
               </div>
 
               <div class="flex items-center space-x-2">
@@ -8584,28 +8593,34 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const btnNumber = document.getElementById('judicial-type-btn-number');
       const btnName = document.getElementById('judicial-type-btn-name');
       const btnDoc = document.getElementById('judicial-type-btn-doc');
+      const btnOab = document.getElementById('judicial-type-btn-oab');
       const label = document.getElementById('judicial-input-label');
       const input = document.getElementById('judicial-search-input');
 
       const activeBtnClass = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-blue-50 text-blue-900 border border-blue-300 shadow-sm flex items-center space-x-2";
       const inactiveBtnClass = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-2";
 
-      btnNumber.className = inactiveBtnClass;
-      btnName.className = inactiveBtnClass;
-      btnDoc.className = inactiveBtnClass;
+      if (btnNumber) btnNumber.className = inactiveBtnClass;
+      if (btnName) btnName.className = inactiveBtnClass;
+      if (btnDoc) btnDoc.className = inactiveBtnClass;
+      if (btnOab) btnOab.className = inactiveBtnClass;
 
       if (type === 'number') {
-        btnNumber.className = activeBtnClass;
+        if (btnNumber) btnNumber.className = activeBtnClass;
         label.textContent = 'Número Único do Processo (CNJ / NPU)';
-        input.placeholder = 'Ex: 5007788-99.2026.8.13.0145 ou 50077889920268130145';
+        input.placeholder = 'Ex: 5006870-33.2024.8.13.0313 ou 5007788-99.2026.8.13.0145';
       } else if (type === 'name') {
-        btnName.className = activeBtnClass;
-        label.textContent = 'Nome Completo da Parte, Empresa ou Advogado';
-        input.placeholder = 'Ex: Mariana Souza, Banco do Brasil, Dr. Jorge Alvim';
+        if (btnName) btnName.className = activeBtnClass;
+        label.textContent = 'Nome Completo da Parte ou Empresa';
+        input.placeholder = 'Ex: Mariana Souza, Carlos Alberto Santos, Banco do Brasil';
       } else if (type === 'cpf' || type === 'cnpj') {
-        btnDoc.className = activeBtnClass;
+        if (btnDoc) btnDoc.className = activeBtnClass;
         label.textContent = 'CPF ou CNPJ da Parte';
-        input.placeholder = 'Ex: 111.222.333-44 ou 00.000.000/0001-00';
+        input.placeholder = 'Ex: 123.456.789-00 ou 12.345.678/0001-99';
+      } else if (type === 'oab') {
+        if (btnOab) btnOab.className = activeBtnClass;
+        label.textContent = 'Número da Inscrição da OAB / UF';
+        input.placeholder = 'Ex: 222943, 222.943 ou OAB/MG 222943 (Dr. Jorge Alvim)';
       }
       input.focus();
     }
