@@ -2,10 +2,11 @@
  * Jorge Alvim Advocacia - Scripts Interativos
  */
 
-// Configurações Gerais do Escritório (Facilmente editáveis)
+// Configurações Oficiais do Escritório
 const SITE_CONFIG = {
-  // Substitua pelo número real de WhatsApp com DDD e código do país (ex: 5511999999999)
-  whatsappNumber: '5511999999999', 
+  whatsappNumber: '5532998153429', // (32) 99815-3429
+  email: 'jorgealvimadvocacia@gmail.com',
+  address: 'Rua Henrique Dias, nº 259, Galeria nº 259, Bairro Benfica, Juiz de Fora - MG',
   defaultMessage: 'Olá! Gostaria de agendar uma consulta e obter orientação jurídica com o Dr. Jorge Alvim.',
 };
 
@@ -27,11 +28,9 @@ function initNavbarScroll() {
 
   const handleScroll = () => {
     if (window.scrollY > 30) {
-      header.classList.add('bg-navy-950/95', 'shadow-lg', 'border-b', 'border-gold-500/20', 'backdrop-blur-md');
-      header.classList.remove('bg-transparent');
+      header.classList.add('shadow-md');
     } else {
-      header.classList.remove('bg-navy-950/95', 'shadow-lg', 'border-b', 'border-gold-500/20', 'backdrop-blur-md');
-      header.classList.add('bg-transparent');
+      header.classList.remove('shadow-md');
     }
   };
 
@@ -90,7 +89,6 @@ function initFaqAccordion() {
         const otherIcon = otherItem.querySelector('.faq-icon');
         if (otherContent && otherContent !== content) {
           otherContent.classList.add('hidden');
-          otherContent.style.maxHeight = null;
           if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
         }
       });
@@ -98,7 +96,6 @@ function initFaqAccordion() {
       // Alterna o item atual
       if (isOpen) {
         content.classList.add('hidden');
-        content.style.maxHeight = null;
         if (icon) icon.style.transform = 'rotate(0deg)';
         button.setAttribute('aria-expanded', 'false');
       } else {
@@ -122,13 +119,10 @@ function initPhoneMask() {
       if (value.length > 11) value = value.slice(0, 11);
 
       if (value.length > 10) {
-        // (11) 98765-4321
         value = value.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
       } else if (value.length > 5) {
-        // (11) 9876-5432
         value = value.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
       } else if (value.length > 2) {
-        // (11) 9876
         value = value.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
       } else if (value.length > 0) {
         value = value.replace(/^(\d*)$/, '($1');
@@ -167,7 +161,7 @@ function initContactForm() {
     if (message) {
       fullText += `*Descrição do Caso/Dúvida:* ${message}\n`;
     }
-    fullText += `\n_Enviado através da página jorgealvimadvocacia.com.br_`;
+    fullText += `\n_Enviado através do site oficial de Juiz de Fora - MG_`;
 
     const encodedText = encodeURIComponent(fullText);
     const whatsappUrl = `https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encodedText}`;
@@ -199,7 +193,7 @@ function initSmoothScroll() {
       const targetElement = document.querySelector(targetId);
       if (targetElement) {
         e.preventDefault();
-        const headerOffset = 80;
+        const headerOffset = 90;
         const elementPosition = targetElement.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -212,5 +206,4 @@ function initSmoothScroll() {
   });
 }
 
-// Exporta caso precise de chamadas externas
 export { SITE_CONFIG };
