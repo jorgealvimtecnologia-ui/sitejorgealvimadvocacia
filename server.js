@@ -5068,7 +5068,8 @@ async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' })
  */
 app.post('/api/judicial/search', requireAuth, async (req, res) => {
   try {
-    const { query_type = 'number', query_term, tribunal = 'all' } = req.body;
+    const body = req.body || {};
+    const { query_type = 'number', query_term, tribunal = 'all' } = body;
 
     if (!query_term || !query_term.trim()) {
       return res.status(400).json({ error: 'Informe o número do processo, nome, CPF ou CNPJ para pesquisar.' });
@@ -5117,7 +5118,8 @@ app.get('/api/judicial/tribunals', requireAuth, (req, res) => {
  */
 app.post('/api/judicial/import-to-office', requireAuth, (req, res) => {
   try {
-    const { process_data } = req.body;
+    const body = req.body || {};
+    const { process_data } = body;
     if (!process_data || !process_data.numero_processo) {
       return res.status(400).json({ error: 'Dados do processo inválidos para importação.' });
     }

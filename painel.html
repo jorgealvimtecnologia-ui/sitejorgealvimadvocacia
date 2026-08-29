@@ -8662,7 +8662,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       try {
         const res = await fetch('/api/judicial/search', {
           method: 'POST',
-          headers: getAuthHeaders(),
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({
             query_type: currentJudicialSearchType,
             query_term: term,
@@ -8907,7 +8907,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       try {
         const res = await fetch('/api/judicial/import-to-office', {
           method: 'POST',
-          headers: getAuthHeaders(),
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({
             process_data: selectedJudicialProcess
           })
