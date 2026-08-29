@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Painel de Clientes & Ficheiros | Jorge Alvim Advocacia</title>
   <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
   
@@ -14,6 +14,14 @@
   <script>
     tailwind.config = {
       theme: {
+        screens: {
+          'xs': '375px',
+          'sm': '640px',
+          'md': '768px',
+          'lg': '1024px',
+          'xl': '1280px',
+          '2xl': '1536px',
+        },
         extend: {
           colors: {
             navy: {
@@ -38,32 +46,41 @@
       }
     }
   </script>
+  <style>
+    @media screen and (max-width: 768px) {
+      input, select {
+        font-size: 16px !important;
+      }
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased overflow-x-hidden">
 
-  <!-- Header do Painel -->
+  <!-- Header do Painel Responsivo -->
   <header class="bg-navy-950 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div class="flex items-center space-x-3.5">
-        <div class="w-11 h-11 rounded-xl bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-sm">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="font-serif text-xl font-bold tracking-wide text-white">Jorge Alvim Advocacia</h1>
-          <p class="text-xs text-gold-400 font-medium tracking-wider uppercase">Painel de Atendimentos & Ficheiros</p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-sm flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+            </svg>
+          </div>
+          <div class="truncate">
+            <h1 class="font-serif text-base sm:text-lg md:text-xl font-bold tracking-wide text-white truncate">Jorge Alvim Advocacia</h1>
+            <p class="text-[10px] sm:text-xs text-gold-400 font-medium tracking-wider uppercase truncate">Painel de Atendimentos & Ficheiros</p>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center space-x-3">
-        <button onclick="loadLeads()" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-navy-850 hover:bg-navy-800 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors">
+      <div class="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-end">
+        <button onclick="loadLeads()" class="inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-lg bg-navy-850 hover:bg-navy-800 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors">
           <svg class="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
-          <span>Atualizar Lista</span>
+          <span>Atualizar</span>
         </button>
-        <a href="/" target="_blank" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-gold-500 hover:bg-gold-400 text-navy-950 text-xs font-bold shadow-sm transition-colors">
+        <a href="/" target="_blank" class="inline-flex items-center space-x-1.5 px-3.5 sm:px-4 py-2 rounded-lg bg-gold-500 hover:bg-gold-400 text-navy-950 text-xs font-bold shadow-sm transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
@@ -73,67 +90,67 @@
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
 
-    <!-- Cards de Métricas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+    <!-- Cards de Métricas Responsivos -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total de Clientes</span>
-          <h3 id="stat-total" class="text-3xl font-extrabold text-navy-950 font-serif mt-1">0</h3>
+          <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Total Clientes</span>
+          <h3 id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-navy-950 font-serif mt-0.5 sm:mt-1">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
           </svg>
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Novos Contatos</span>
-          <h3 id="stat-novos" class="text-3xl font-extrabold text-emerald-700 font-serif mt-1">0</h3>
+          <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Novos</span>
+          <h3 id="stat-novos" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-serif mt-0.5 sm:mt-1">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Em Atendimento</span>
-          <h3 id="stat-andamento" class="text-3xl font-extrabold text-amber-700 font-serif mt-1">0</h3>
+          <span class="text-[10px] sm:text-xs font-bold text-amber-600 uppercase tracking-wider">Em Atendimento</span>
+          <h3 id="stat-andamento" class="text-2xl sm:text-3xl font-extrabold text-amber-700 font-serif mt-0.5 sm:mt-1">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Documentos Guardados</span>
-          <h3 id="stat-docs" class="text-3xl font-extrabold text-indigo-700 font-serif mt-1">0</h3>
+          <span class="text-[10px] sm:text-xs font-bold text-indigo-600 uppercase tracking-wider">Ficheiros / Docs</span>
+          <h3 id="stat-docs" class="text-2xl sm:text-3xl font-extrabold text-indigo-700 font-serif mt-0.5 sm:mt-1">0</h3>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
       </div>
     </div>
 
-    <!-- Barra de Filtros e Busca -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+    <!-- Barra de Filtros e Busca Responsiva -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 sm:gap-4 justify-between items-center">
       <div class="relative w-full md:w-96">
         <input 
           type="text" 
           id="search-input" 
           placeholder="Buscar por ID (#JA-...), Nome ou Telefone..." 
-          class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
           oninput="filterLeads()"
         />
         <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,8 +158,8 @@
         </svg>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-        <select id="filter-area" onchange="filterLeads()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:outline-none focus:border-gold-500">
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+        <select id="filter-area" onchange="filterLeads()" class="w-full sm:w-auto px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:outline-none focus:border-gold-500">
           <option value="">Todas as Áreas</option>
           <option value="Direito dos Transportes e Trânsito">Transportes & Trânsito</option>
           <option value="Direito Civil e Contratos">Civil & Contratos</option>
@@ -152,8 +169,8 @@
           <option value="Direito Imobiliário">Imobiliário</option>
         </select>
 
-        <select id="filter-status" onchange="filterLeads()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:outline-none focus:border-gold-500">
-          <option value="">Todos os Status</option>
+        <select id="filter-status" onchange="filterLeads()" class="w-full sm:w-auto px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:outline-none focus:border-gold-500">
+          <option value="">Todos Status</option>
           <option value="Novo">Novo</option>
           <option value="Em Atendimento">Em Atendimento</option>
           <option value="Concluído">Concluído</option>
@@ -161,26 +178,26 @@
       </div>
     </div>
 
-    <!-- Tabela / Lista de Clientes Cadastrados -->
+    <!-- Tabela / Lista de Clientes com Scroll e Adaptação Mobile -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-        <h2 class="font-serif font-bold text-lg text-navy-950">Ficheiro de Atendimentos</h2>
-        <span id="leads-count-badge" class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+      <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex justify-between items-center">
+        <h2 class="font-serif font-bold text-base sm:text-lg text-navy-950">Ficheiro de Atendimentos</h2>
+        <span id="leads-count-badge" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] sm:text-xs font-semibold">
           0 registros
         </span>
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-600">
-          <thead class="bg-slate-50 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
+        <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[700px]">
+          <thead class="bg-slate-50 text-[10px] sm:text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4">Protocolo / ID</th>
-              <th class="px-6 py-4">Data/Hora</th>
-              <th class="px-6 py-4">Cliente & Contato</th>
-              <th class="px-6 py-4">Área do Direito</th>
-              <th class="px-6 py-4">Documentos (Ficheiro)</th>
-              <th class="px-6 py-4">Status</th>
-              <th class="px-6 py-4 text-right">Ações</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4">Protocolo / ID</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4">Data/Hora</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4">Cliente & Contato</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4">Área do Direito</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4">Documentos (Ficheiro)</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4">Status</th>
+              <th class="px-4 sm:px-6 py-3 sm:py-4 text-right">Ações</th>
             </tr>
           </thead>
           <tbody id="leads-table-body" class="divide-y divide-slate-100">
@@ -196,14 +213,14 @@
 
   </main>
 
-  <!-- Modal para Visualização da Mensagem Completa -->
+  <!-- Modal para Visualização da Mensagem Completa Responsivo -->
   <div id="message-modal" class="hidden fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 id="modal-title" class="font-serif font-bold text-lg text-navy-950">Detalhes do Atendimento</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+        <h3 id="modal-title" class="font-serif font-bold text-base sm:text-lg text-navy-950">Detalhes do Atendimento</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       </div>
-      <div id="modal-content" class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
+      <div id="modal-content" class="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
       <div class="pt-3 border-t border-slate-100 flex justify-end">
         <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Fechar</button>
       </div>
@@ -273,38 +290,38 @@
 
         return `
           <tr class="hover:bg-slate-50/80 transition-colors">
-            <td class="px-6 py-4 font-mono font-bold text-navy-950 text-xs">
+            <td class="px-4 sm:px-6 py-3 sm:py-4 font-mono font-bold text-navy-950 text-xs whitespace-nowrap">
               <span class="px-2.5 py-1 rounded-md bg-gold-100 text-gold-700 border border-gold-300">
                 #${lead.id}
               </span>
             </td>
-            <td class="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">
+            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs text-slate-500 whitespace-nowrap">
               ${formattedDate}
             </td>
-            <td class="px-6 py-4">
+            <td class="px-4 sm:px-6 py-3 sm:py-4 min-w-[160px]">
               <div class="font-bold text-navy-950">${lead.name}</div>
-              <div class="flex items-center space-x-2 mt-1">
+              <div class="flex items-center space-x-2 mt-0.5">
                 <span class="text-xs text-slate-500">${lead.phone}</span>
-                <a href="https://wa.me/55${cleanPhone}?text=Ol%C3%A1%2C%20${encodeURIComponent(lead.name)}!%20Referente%20ao%20seu%20atendimento%20protocolo%20%23${lead.id}%20no%20escrit%C3%B3rio%20Jorge%20Alvim%20Advocacia." target="_blank" class="text-emerald-600 hover:text-emerald-500 text-xs font-bold" title="Conversar no WhatsApp">
+                <a href="https://wa.me/55${cleanPhone}?text=Ol%C3%A1%2C%20${encodeURIComponent(lead.name)}!%20Referente%20ao%20seu%20atendimento%20protocolo%20%23${lead.id}%20no%20escrit%C3%B3rio%20Jorge%20Alvim%20Advocacia." target="_blank" class="text-emerald-600 hover:text-emerald-500 text-xs font-bold whitespace-nowrap" title="Conversar no WhatsApp">
                   💬 WhatsApp
                 </a>
               </div>
             </td>
-            <td class="px-6 py-4 text-xs font-semibold text-slate-700">
+            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs font-semibold text-slate-700">
               ${lead.area}
             </td>
-            <td class="px-6 py-4">
+            <td class="px-4 sm:px-6 py-3 sm:py-4">
               ${filesHtml}
             </td>
-            <td class="px-6 py-4">
-              <select onchange="updateStatus('${lead.id}', this.value)" class="text-xs font-bold px-2.5 py-1 rounded-lg border focus:outline-none ${getStatusClass(lead.status)}">
+            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+              <select onchange="updateStatus('${lead.id}', this.value)" class="text-xs font-bold px-2 py-1 rounded-lg border focus:outline-none ${getStatusClass(lead.status)}">
                 <option value="Novo" ${lead.status === 'Novo' ? 'selected' : ''}>Novo</option>
                 <option value="Em Atendimento" ${lead.status === 'Em Atendimento' ? 'selected' : ''}>Em Atendimento</option>
                 <option value="Concluído" ${lead.status === 'Concluído' ? 'selected' : ''}>Concluído</option>
                 <option value="Arquivado" ${lead.status === 'Arquivado' ? 'selected' : ''}>Arquivado</option>
               </select>
             </td>
-            <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+            <td class="px-4 sm:px-6 py-3 sm:py-4 text-right space-x-1 sm:space-x-2 whitespace-nowrap">
               <button onclick="viewDetails('${lead.id}')" class="p-1.5 text-slate-500 hover:text-navy-950 hover:bg-slate-100 rounded-md" title="Ver Resumo da Mensagem">
                 👁️
               </button>

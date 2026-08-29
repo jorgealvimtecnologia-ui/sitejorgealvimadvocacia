@@ -2,14 +2,14 @@
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   
   <!-- SEO & Informações Primárias -->
   <title>Jorge Alvim Advocacia | Consultoria e Assessoria Jurídica em Juiz de Fora - MG</title>
   <meta name="description" content="Escritório de advocacia do Dr. Jorge Alvim em Juiz de Fora - MG. Especialista em Direito dos Transportes e Trânsito, Civil, Família, Trabalhista, Previdenciário e Imobiliário." />
   <meta name="keywords" content="advogado Juiz de Fora, advocacia Benfica, direito de transito, cnh suspensa, multas, direito civil, divórcio, inventário, direito do trabalho, aposentadoria inss, Jorge Alvim Advocacia" />
   <meta name="author" content="Jorge Alvim Advocacia" />
-  <meta name="theme-color" content="#ffffff" />
+  <meta name="theme-color" content="#0B192C" />
 
   <!-- Open Graph / Redes Sociais & WhatsApp Preview -->
   <meta property="og:type" content="website" />
@@ -26,11 +26,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS CDN com Suporte a Breakpoint Extra Pequeno (xs) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
+        screens: {
+          'xs': '375px',
+          'sm': '640px',
+          'md': '768px',
+          'lg': '1024px',
+          'xl': '1280px',
+          '2xl': '1536px',
+        },
         extend: {
           colors: {
             navy: {
@@ -74,13 +82,16 @@
     }
   </script>
 
-  <!-- Estilos Customizados Adicionais -->
+  <!-- Estilos Customizados & Otimização Responsiva -->
   <style>
     html {
       scroll-behavior: smooth;
       font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       background-color: #FDFBF7;
       color: #0F172A;
+      -webkit-text-size-adjust: 100%;
+      -moz-text-size-adjust: 100%;
+           text-size-adjust: 100%;
     }
     ::-moz-selection {
       background-color: #B8860B;
@@ -90,16 +101,17 @@
       background-color: #B8860B;
       color: #FFFFFF;
     }
+    /* Scrollbars suaves */
     ::-webkit-scrollbar {
-      width: 10px;
+      width: 8px;
+      height: 8px;
     }
     ::-webkit-scrollbar-track {
       background: #F1F5F9;
     }
     ::-webkit-scrollbar-thumb {
       background: #CBD5E1;
-      border-radius: 5px;
-      border: 2px solid #F1F5F9;
+      border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
       background: #B8860B;
@@ -111,10 +123,16 @@
     }
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
+      50% { transform: translateY(-6px); }
     }
     .animate-float {
-      animation: float 4s ease-in-out infinite;
+      animation: float 3.5s ease-in-out infinite;
+    }
+    /* Previne zoom acidental no iOS ao focar em inputs */
+    @media screen and (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
     }
   </style>
 
@@ -141,35 +159,36 @@
   </script>
 </head>
 
-<body class="bg-warm-50 text-slate-800 font-sans antialiased">
+<body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
 
-  <!-- ================= TOP BAR INFORMATIVA ================= -->
-  <aside aria-label="Informações de Contato Rápidas" class="bg-navy-900 text-slate-200 text-xs py-2.5 hidden md:block border-b border-navy-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-      <div class="flex items-center space-x-6">
-        <span class="flex items-center space-x-2">
-          <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- ================= TOP BAR INFORMATIVA RESPONSIVA ================= -->
+  <aside aria-label="Informações de Contato Rápidas" class="bg-navy-900 text-slate-200 text-[11px] sm:text-xs py-2 px-3 sm:px-6 border-b border-navy-800">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1.5 sm:gap-4 text-center sm:text-left">
+      <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-6">
+        <span class="inline-flex items-center space-x-1.5 truncate max-w-full">
+          <svg class="w-3.5 h-3.5 text-gold-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          <span>Rua Henrique Dias, 259 - Benfica, Juiz de Fora - MG</span>
+          <span class="truncate">Rua Henrique Dias, 259 - Benfica, Juiz de Fora - MG</span>
         </span>
-        <span class="flex items-center space-x-2">
+        <span class="hidden md:inline-flex items-center space-x-1.5 text-slate-300">
           <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           <span>Seg à Sex: 08h30 às 18h00</span>
         </span>
       </div>
-      <div class="flex items-center space-x-6">
-        <a href="mailto:jorgealvimadvocacia@gmail.com" class="hover:text-gold-300 transition-colors flex items-center space-x-1.5">
+      
+      <div class="flex items-center justify-center space-x-4">
+        <a href="mailto:jorgealvimadvocacia@gmail.com" class="hidden lg:inline-flex items-center space-x-1.5 hover:text-gold-300 transition-colors">
           <svg class="w-3.5 h-3.5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
           <span>jorgealvimadvocacia@gmail.com</span>
         </a>
-        <a href="https://wa.me/5532998153429" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1.5">
-          <span>WhatsApp: (32) 99815-3429</span>
+        <a href="https://wa.me/5532998153429" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-semibold inline-flex items-center space-x-1.5">
+          <span>WhatsApp: <strong>(32) 99815-3429</strong></span>
         </a>
       </div>
     </div>
@@ -178,42 +197,40 @@
   <!-- ================= HEADER / NAVEGAÇÃO ================= -->
   <header id="main-header" class="sticky top-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-24">
+      <div class="flex items-center justify-between h-20 sm:h-24">
         
-        <!-- LOGOTIPO AMPLIADO -->
-        <a href="#" class="flex items-center space-x-4 group">
-          <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950 border-2 border-gold-400 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:border-gold-500 transition-all">
-            <svg class="w-8 h-8 text-gold-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- LOGOTIPO AMPLIADO & RESPONSIVO -->
+        <a href="#" class="flex items-center space-x-3 sm:space-x-4 group min-w-0">
+          <div class="w-11 h-11 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-navy-900 via-navy-800 to-navy-950 border-2 border-gold-400 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:border-gold-500 transition-all flex-shrink-0">
+            <svg class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-gold-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
             </svg>
           </div>
-          <div>
-            <span class="block font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-navy-950 group-hover:text-gold-600 transition-colors">
+          <div class="truncate">
+            <span class="block font-serif text-lg xs:text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-navy-950 group-hover:text-gold-600 transition-colors truncate">
               JORGE ALVIM
             </span>
-            <span class="block text-xs uppercase tracking-[0.3em] text-gold-600 font-bold -mt-0.5">
+            <span class="block text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-gold-600 font-bold -mt-0.5 truncate">
               ADVOCACIA & CONSULTORIA
             </span>
           </div>
         </a>
 
         <!-- Menu Desktop -->
-        <nav class="hidden lg:flex items-center space-x-7 text-sm font-semibold text-slate-700">
+        <nav class="hidden lg:flex items-center space-x-5 xl:space-x-7 text-sm font-semibold text-slate-700">
           <a href="#inicio" class="hover:text-gold-600 transition-colors">Início</a>
           <a href="#sobre" class="hover:text-gold-600 transition-colors">Sobre Nós</a>
           <a href="#areas" class="hover:text-gold-600 transition-colors">Áreas de Atuação</a>
-          <a href="#diferenciais" class="hover:text-gold-600 transition-colors">Diferenciais</a>
           <a href="#como-funciona" class="hover:text-gold-600 transition-colors">Como Funciona</a>
-          <a href="#faq" class="hover:text-gold-600 transition-colors">Dúvidas (FAQ)</a>
           <a href="#contato" class="hover:text-gold-600 transition-colors">Contato & Envio</a>
-          <a href="/painel" target="_blank" class="text-xs text-gold-700 hover:text-gold-600 font-bold px-3 py-1.5 rounded-lg bg-gold-100 hover:bg-gold-200 transition-colors" title="Painel do Escritório">
+          <a href="/painel" target="_blank" class="text-xs text-gold-700 hover:text-gold-600 font-bold px-3 py-1.5 rounded-lg bg-gold-100 hover:bg-gold-200 transition-colors shadow-sm" title="Painel do Escritório">
             📊 Painel
           </a>
         </nav>
 
         <!-- CTA Header -->
-        <div class="hidden sm:flex items-center space-x-4">
-          <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20solicitar%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-500/50">
+        <div class="hidden sm:flex items-center space-x-3">
+          <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20solicitar%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-500/50">
             <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
               <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
             </svg>
@@ -223,7 +240,7 @@
 
         <!-- Botão Hambúrguer Mobile -->
         <div class="flex lg:hidden">
-          <button id="mobile-menu-toggle" type="button" aria-label="Abrir Menu Principal" class="p-2.5 rounded-lg text-slate-700 hover:text-gold-600 hover:bg-slate-100 focus:outline-none">
+          <button id="mobile-menu-toggle" type="button" aria-label="Abrir Menu Principal" class="p-2 rounded-xl text-slate-700 hover:text-gold-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-gold-500">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
             </svg>
@@ -233,54 +250,52 @@
       </div>
     </div>
 
-    <!-- Drawer Mobile Menu -->
-    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-white/98 backdrop-blur-2xl flex flex-col justify-between p-6">
+    <!-- Drawer Mobile Menu Fullscreen Otimizado -->
+    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-navy-950/98 backdrop-blur-2xl text-white flex flex-col justify-between p-6 overflow-y-auto min-h-[100dvh]">
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-slate-200">
-          <div class="flex items-center space-x-3.5">
-            <div class="w-12 h-12 rounded-xl bg-navy-900 border-2 border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center justify-between pb-6 border-b border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 rounded-xl bg-navy-900 border-2 border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
               </svg>
             </div>
             <div>
-              <span class="font-serif font-extrabold text-xl text-navy-950 block">Jorge Alvim</span>
-              <span class="text-[10px] uppercase tracking-widest text-gold-600 font-bold block">Advocacia • Juiz de Fora</span>
+              <span class="font-serif font-extrabold text-lg text-white block">Jorge Alvim</span>
+              <span class="text-[10px] uppercase tracking-widest text-gold-400 font-bold block">Advocacia • Juiz de Fora</span>
             </div>
           </div>
-          <button id="mobile-menu-close" type="button" aria-label="Fechar Menu" class="p-2 text-slate-500 hover:text-navy-950">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button id="mobile-menu-close" type="button" aria-label="Fechar Menu" class="p-2.5 rounded-xl bg-navy-900 border border-slate-700 text-slate-300 hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
           </button>
         </div>
 
-        <nav class="flex flex-col space-y-5 pt-8 text-lg font-semibold text-slate-800">
-          <a href="#inicio" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Início</a>
-          <a href="#sobre" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Sobre Nós</a>
-          <a href="#areas" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Áreas de Atuação</a>
-          <a href="#diferenciais" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Diferenciais</a>
-          <a href="#como-funciona" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Como Funciona</a>
-          <a href="#faq" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Dúvidas Frequentes</a>
-          <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-1 transition-colors">Contato & Envio</a>
-          <a href="/painel" target="_blank" class="mobile-nav-link text-gold-700 font-bold py-1">📊 Acessar Painel de Clientes</a>
+        <nav class="flex flex-col space-y-4 pt-8 text-base xs:text-lg font-semibold text-slate-200">
+          <a href="#inicio" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Início</a>
+          <a href="#sobre" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Sobre o Dr. Jorge Alvim</a>
+          <a href="#areas" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Áreas de Atuação</a>
+          <a href="#como-funciona" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Como Funciona</a>
+          <a href="#contato" class="mobile-nav-link hover:text-gold-400 py-2 border-b border-slate-800/60 transition-colors">Contato & Envio de Documentos</a>
+          <a href="/painel" target="_blank" class="mobile-nav-link text-gold-300 font-bold py-2 bg-navy-900/80 px-3 rounded-lg border border-gold-500/40">📊 Painel de Clientes (Restrito)</a>
         </nav>
       </div>
 
-      <div class="pt-6 border-t border-slate-200 space-y-3">
-        <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center space-x-2 py-3.5 rounded-xl bg-navy-900 text-white font-bold text-center shadow-lg border border-gold-500/50">
-          <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+      <div class="pt-6 border-t border-slate-800 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20uma%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center space-x-2 py-4 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 text-navy-950 font-extrabold text-center shadow-lg">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
           </svg>
-          <span>WhatsApp: (32) 99815-3429</span>
+          <span>Falar no WhatsApp: (32) 99815-3429</span>
         </a>
       </div>
     </div>
   </header>
 
   <main>
-    <!-- ================= HERO SECTION ================= -->
-    <section id="inicio" class="relative min-h-[85vh] flex items-center justify-center py-16 lg:py-24 overflow-hidden bg-gradient-to-b from-warm-100 via-white to-warm-50">
+    <!-- ================= HERO SECTION RESPONSIVO ================= -->
+    <section id="inicio" class="relative min-h-[85vh] flex items-center justify-center py-12 xs:py-16 sm:py-20 lg:py-24 overflow-hidden bg-gradient-to-b from-warm-100 via-white to-warm-50">
       <div class="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1920&q=80" 
@@ -291,27 +306,28 @@
       </div>
 
       <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="inline-flex items-center space-x-2.5 px-5 py-2 rounded-full bg-white border border-gold-400/60 text-navy-900 text-xs sm:text-sm font-semibold mb-6 shadow-sm">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Juiz de Fora - MG • Atendimento Presencial no Bairro Benfica & Online para Todo o Brasil</span>
+        
+        <div class="inline-flex items-center space-x-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white border border-gold-400/60 text-navy-900 text-[11px] xs:text-xs sm:text-sm font-semibold mb-5 sm:mb-6 shadow-sm max-w-full">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
+          <span class="truncate">Juiz de Fora - MG • Benfica & Atendimento Online em Todo o Brasil</span>
         </div>
 
-        <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-navy-950 max-w-4xl mx-auto leading-tight">
+        <h1 class="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-navy-950 max-w-4xl mx-auto leading-tight sm:leading-snug break-words">
           Soluções Jurídicas Estratégicas para <span class="gold-gradient-text">Defender Seus Direitos</span> e seu Patrimônio
         </h1>
 
-        <p class="mt-5 text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto font-normal leading-relaxed">
+        <p class="mt-4 sm:mt-5 text-sm xs:text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto font-normal leading-relaxed">
           Assessoria jurídica ágil e ética conduzida pelo Dr. Jorge Alvim. Atuação combativa e preventiva para solucionar o seu caso com total segurança.
         </p>
 
-        <div class="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
-          <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20agendar%20uma%20consulta%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center space-x-3 px-8 py-4 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-500 text-navy-950 font-bold text-base shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-300">
-            <svg class="w-5 h-5 text-navy-950" fill="currentColor" viewBox="0 0 24 24">
+        <div class="mt-7 sm:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full max-w-md sm:max-w-none mx-auto">
+          <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20agendar%20uma%20consulta%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-500 text-navy-950 font-bold text-sm sm:text-base shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-300 transform hover:-translate-y-0.5 border border-gold-300">
+            <svg class="w-5 h-5 text-navy-950 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
             </svg>
             <span>Falar no WhatsApp: (32) 99815-3429</span>
           </a>
-          <a href="#contato" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-base border border-slate-300 hover:border-gold-500 transition-all duration-300 shadow-sm">
+          <a href="#contato" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm sm:text-base border border-slate-300 hover:border-gold-500 transition-all duration-300 shadow-sm">
             <span>Anexar Documentos & Enviar</span>
             <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -320,35 +336,35 @@
         </div>
 
         <!-- 3 Pilares em Destaque no Hero -->
-        <div class="mt-14 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto text-left">
-          <div class="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
-            <div class="w-12 h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-4">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto text-left">
+          <div class="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-3 sm:mb-4">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </div>
-            <h2 class="text-lg font-bold text-navy-950 mb-2">Agilidade & Clareza</h2>
-            <p class="text-sm text-slate-600 leading-relaxed">Comunicação direta, relatórios claros sobre o andamento do seu processo e zero juridiquês desnecessário.</p>
+            <h2 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Agilidade & Clareza</h2>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">Comunicação direta, relatórios claros sobre o andamento do seu processo e zero juridiquês desnecessário.</p>
           </div>
 
-          <div class="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
-            <div class="w-12 h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-4">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-3 sm:mb-4">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
-            <h2 class="text-lg font-bold text-navy-950 mb-2">Sigilo & Segurança</h2>
-            <p class="text-sm text-slate-600 leading-relaxed">Confidencialidade absoluta em cada detalhe, tratando suas informações com a máxima segurança jurídica.</p>
+            <h2 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Sigilo & Segurança</h2>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">Confidencialidade absoluta em cada detalhe, tratando suas informações com a máxima segurança jurídica.</p>
           </div>
 
-          <div class="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
-            <div class="w-12 h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-4">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-card-light hover:shadow-card-hover hover:border-gold-400 transition-all duration-300">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 mb-3 sm:mb-4">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
             </div>
-            <h2 class="text-lg font-bold text-navy-950 mb-2">Atendimento Humanizado</h2>
-            <p class="text-sm text-slate-600 leading-relaxed">Cada caso é único. Estudamos minuciosamente sua situação para aplicar a solução jurídica mais assertiva.</p>
+            <h2 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Atendimento Humanizado</h2>
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">Cada caso é único. Estudamos minuciosamente sua situação para aplicar a solução jurídica mais assertiva.</p>
           </div>
         </div>
 
@@ -356,16 +372,16 @@
     </section>
 
     <!-- ================= SOBRE O ESCRITÓRIO ================= -->
-    <section id="sobre" class="py-20 bg-white border-t border-b border-slate-200 relative">
+    <section id="sobre" class="py-14 sm:py-20 bg-white border-t border-b border-slate-200 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           <div class="lg:col-span-5 relative">
             <div class="relative mx-auto max-w-md lg:max-w-none">
               <div class="relative rounded-2xl bg-warm-50 border border-slate-200 overflow-hidden shadow-card-hover">
                 
-                <div class="relative h-80 sm:h-96 w-full overflow-hidden">
+                <div class="relative h-72 xs:h-80 sm:h-96 w-full overflow-hidden">
                   <img 
                     src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80" 
                     alt="Dr. Jorge Alvim - Advogado" 
@@ -373,11 +389,11 @@
                   />
                   <div class="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/20 to-transparent"></div>
                   
-                  <div class="absolute bottom-4 left-6 right-6">
-                    <span class="inline-block px-3 py-1 rounded-md bg-gold-500 text-white text-xs font-bold uppercase tracking-wider mb-1 shadow-sm">
+                  <div class="absolute bottom-4 left-4 sm:left-6 right-4 sm:right-6">
+                    <span class="inline-block px-2.5 py-0.5 sm:py-1 rounded-md bg-gold-500 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 shadow-sm">
                       Advogado Titular
                     </span>
-                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-white">
+                    <h2 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-white">
                       Dr. Jorge Alvim
                     </h2>
                     <p class="text-gold-300 text-xs font-semibold tracking-wide">
@@ -386,41 +402,41 @@
                   </div>
                 </div>
 
-                <div class="p-6 space-y-3.5 text-sm text-slate-700 bg-white">
-                  <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 sm:p-6 space-y-3 text-xs sm:text-sm text-slate-700 bg-white">
+                  <div class="flex items-start space-x-2.5">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gold-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span>Especialista em Direito dos Transportes, Trânsito e Civil</span>
                   </div>
-                  <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="flex items-start space-x-2.5">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gold-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span>Foco em Resguardar Seu Patrimônio e Seus Direitos</span>
                   </div>
-                  <div class="flex items-center space-x-3">
-                    <svg class="w-5 h-5 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="flex items-start space-x-2.5">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gold-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span>Escritório Físico em Benfica (Juiz de Fora) e Atendimento Digital</span>
                   </div>
                 </div>
 
-                <div class="px-6 pb-6 pt-3 border-t border-slate-100 bg-warm-50 flex items-center justify-between">
+                <div class="px-4 sm:px-6 pb-4 sm:pb-6 pt-3 border-t border-slate-100 bg-warm-50 flex items-center justify-between text-center">
                   <div>
-                    <span class="block text-2xl font-bold font-serif text-navy-950">100%</span>
-                    <span class="text-xs text-slate-500">Dedicação</span>
+                    <span class="block text-xl sm:text-2xl font-bold font-serif text-navy-950">100%</span>
+                    <span class="text-[10px] sm:text-xs text-slate-500">Dedicação</span>
                   </div>
-                  <div class="h-8 w-px bg-slate-300"></div>
+                  <div class="h-7 w-px bg-slate-300"></div>
                   <div>
-                    <span class="block text-2xl font-bold font-serif text-gold-600">Ética</span>
-                    <span class="text-xs text-slate-500">Padrão OAB</span>
+                    <span class="block text-xl sm:text-2xl font-bold font-serif text-gold-600">Ética</span>
+                    <span class="text-[10px] sm:text-xs text-slate-500">Padrão OAB</span>
                   </div>
-                  <div class="h-8 w-px bg-slate-300"></div>
+                  <div class="h-7 w-px bg-slate-300"></div>
                   <div>
-                    <span class="block text-2xl font-bold font-serif text-navy-950">JF & Brasil</span>
-                    <span class="text-xs text-slate-500">Alcance Total</span>
+                    <span class="block text-xl sm:text-2xl font-bold font-serif text-navy-950">JF & Brasil</span>
+                    <span class="text-[10px] sm:text-xs text-slate-500">Alcance Total</span>
                   </div>
                 </div>
 
@@ -428,20 +444,20 @@
             </div>
           </div>
 
-          <div class="lg:col-span-7 space-y-6">
-            <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider">
+          <div class="lg:col-span-7 space-y-4 sm:space-y-6">
+            <div class="inline-block px-3 py-1 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
               Compromisso & Vocação
             </div>
             
-            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 leading-tight">
+            <h2 class="font-serif text-2xl xs:text-3xl sm:text-4xl font-bold text-navy-950 leading-tight">
               Uma advocacia moderna, focada em <span class="gold-gradient-text">soluções reais</span> para você.
             </h2>
 
-            <p class="text-slate-700 text-base sm:text-lg leading-relaxed">
+            <p class="text-slate-700 text-sm sm:text-base md:text-lg leading-relaxed">
               No escritório <strong>Jorge Alvim Advocacia</strong>, em Juiz de Fora - MG, acreditamos que o Direito deve ser exercido com excelência técnica, proximidade e absoluto respeito à história e aos anseios de cada cliente.
             </p>
 
-            <p class="text-slate-600 text-base leading-relaxed">
+            <p class="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed">
               Seja na defesa de seus direitos de trânsito e transporte (CNH, multas e acidentes), na resolução de conflitos familiares, na proteção do patrimônio, no resguardo dos direitos trabalhistas ou previdenciários, nossa atuação se destaca pelo planejamento estratégico personalizado e pela transparência em todas as etapas processuais.
             </p>
 
@@ -449,25 +465,25 @@
               <img 
                 src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80" 
                 alt="Sala de Consultoria Jurídica e Atendimento" 
-                class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-700"
+                class="w-full h-36 sm:h-44 object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/40 to-transparent p-5 flex flex-col justify-end">
-                <h3 class="font-serif text-lg font-bold text-white">Sede Própria em Benfica & Atendimento Seguro</h3>
-                <p class="text-xs text-slate-200">Localizado na Rua Henrique Dias, nº 259 (Galeria nº 259) em Juiz de Fora - MG.</p>
+              <div class="absolute inset-0 bg-gradient-to-t from-navy-950/90 via-navy-950/40 to-transparent p-4 sm:p-5 flex flex-col justify-end">
+                <h3 class="font-serif text-base sm:text-lg font-bold text-white">Sede Própria em Benfica & Atendimento Seguro</h3>
+                <p class="text-[11px] sm:text-xs text-slate-200">Localizado na Rua Henrique Dias, nº 259 (Galeria nº 259) em Juiz de Fora - MG.</p>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-              <div class="p-4 rounded-xl bg-warm-50 border border-slate-200">
-                <h3 class="font-bold text-navy-950 text-base mb-1 flex items-center space-x-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
+              <div class="p-3.5 sm:p-4 rounded-xl bg-warm-50 border border-slate-200">
+                <h3 class="font-bold text-navy-950 text-sm sm:text-base mb-1 flex items-center space-x-2">
                   <span class="w-2 h-2 rounded-full bg-gold-500"></span>
                   <span>Atuação Preventiva</span>
                 </h3>
                 <p class="text-xs text-slate-600">Evite litígios e prejuízos com análise prévia de riscos e consultoria estratégica.</p>
               </div>
 
-              <div class="p-4 rounded-xl bg-warm-50 border border-slate-200">
-                <h3 class="font-bold text-navy-950 text-base mb-1 flex items-center space-x-2">
+              <div class="p-3.5 sm:p-4 rounded-xl bg-warm-50 border border-slate-200">
+                <h3 class="font-bold text-navy-950 text-sm sm:text-base mb-1 flex items-center space-x-2">
                   <span class="w-2 h-2 rounded-full bg-gold-500"></span>
                   <span>Atuação Contenciosa</span>
                 </h3>
@@ -476,9 +492,9 @@
             </div>
 
             <div class="pt-2">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-gold-700 hover:text-gold-600 font-bold text-base group">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-gold-700 hover:text-gold-600 font-bold text-sm sm:text-base group">
                 <span>Agende uma conversa e conheça nossa forma de trabalhar</span>
-                <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
               </a>
@@ -492,72 +508,72 @@
     </section>
 
     <!-- ================= ÁREAS DE ATUAÇÃO ================= -->
-    <section id="areas" class="py-20 bg-warm-50 relative">
+    <section id="areas" class="py-14 sm:py-20 bg-warm-50 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="text-center max-w-3xl mx-auto mb-14">
-          <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+        <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+          <div class="inline-block px-3 py-1 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-3">
             Especialidades Jurídicas
           </div>
-          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+          <h2 class="font-serif text-2xl xs:text-3xl sm:text-4xl font-bold text-navy-950 mb-3 sm:mb-4">
             Áreas de Atuação com <span class="gold-gradient-text">Foco Estratégico</span>
           </h2>
-          <p class="text-slate-600 text-base">
+          <p class="text-slate-600 text-xs sm:text-sm md:text-base">
             Prestamos assessoria completa nas principais áreas do Direito, oferecendo soluções sob medida para defender seus interesses.
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           
           <!-- 1. Direito dos Transportes e do Trânsito -->
           <div class="rounded-2xl bg-white border-2 border-gold-400/80 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1.5 relative">
             <div class="absolute top-3 right-3 z-10">
-              <span class="px-2.5 py-1 rounded-md bg-gold-500 text-white text-[11px] font-bold uppercase tracking-wider shadow-sm">
+              <span class="px-2.5 py-1 rounded-md bg-gold-500 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-sm">
                 Especialidade
               </span>
             </div>
 
             <div>
-              <div class="relative h-48 w-full overflow-hidden">
+              <div class="relative h-44 sm:h-48 w-full overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80" 
                   alt="Direito dos Transportes e do Trânsito" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
-                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 5h8m-4 5v2m-6 2h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                   </svg>
                 </div>
               </div>
 
-              <div class="p-6">
-                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+              <div class="p-5 sm:p-6">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-600 transition-colors">
                   Direito dos Transportes e do Trânsito
                 </h3>
-                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
                   Defesa especializada contra penalidades indevidas, processos de suspensão/cassação de CNH, acidentes de trânsito e assessoria a transportadores.
                 </p>
                 <ul class="space-y-2 text-xs text-slate-700">
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Defesa em processos de suspensão e cassação de CNH</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Recursos contra multas graves, bafômetro e autuações indevidas</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
-                    <span>Indenizações por acidentes de trânsito e ações contra seguradoras</span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
+                    <span>Indenizações por acidentes de trânsito e seguradoras</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="p-6 pt-0">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+            <div class="p-5 sm:p-6 pt-0">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-600 pt-3 sm:pt-4 border-t border-slate-100 w-full">
                 <span>Anexar Notificação / Consultar</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -569,42 +585,42 @@
           <!-- 2. Direito Civil & Contratos -->
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
-              <div class="relative h-48 w-full overflow-hidden">
+              <div class="relative h-44 sm:h-48 w-full overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80" 
                   alt="Direito Civil e Assinatura de Contratos" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
-                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
                 </div>
               </div>
 
-              <div class="p-6">
-                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+              <div class="p-5 sm:p-6">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-600 transition-colors">
                   Direito Civil & Contratos
                 </h3>
-                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
                   Elaboração e revisão contratual minuciosa, ações de cobrança, recuperação de créditos e reparações por danos patrimoniais e morais.
                 </p>
                 <ul class="space-y-2 text-xs text-slate-700">
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Análise e blindagem de cláusulas contratuais</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Indenizações por danos materiais e morais</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="p-6 pt-0">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+            <div class="p-5 sm:p-6 pt-0">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-600 pt-3 sm:pt-4 border-t border-slate-100 w-full">
                 <span>Anexar Contrato / Consultar</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -616,42 +632,42 @@
           <!-- 3. Família & Sucessões -->
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
-              <div class="relative h-48 w-full overflow-hidden">
+              <div class="relative h-44 sm:h-48 w-full overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80" 
                   alt="Direito de Família e Proteção Patrimonial" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
-                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                   </svg>
                 </div>
               </div>
 
-              <div class="p-6">
-                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+              <div class="p-5 sm:p-6">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-600 transition-colors">
                   Família & Sucessões
                 </h3>
-                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
                   Condução sensível, rápida e estratégica de inventários, partilha de bens, divórcios consensuais e litigiosos, guarda e pensão.
                 </p>
                 <ul class="space-y-2 text-xs text-slate-700">
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Inventários judiciais e extrajudiciais em cartório</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Divórcio consensual e litigioso, partilha justa</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="p-6 pt-0">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+            <div class="p-5 sm:p-6 pt-0">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-600 pt-3 sm:pt-4 border-t border-slate-100 w-full">
                 <span>Consultar sobre esta área</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -663,42 +679,42 @@
           <!-- 4. Direito Trabalhista -->
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
-              <div class="relative h-48 w-full overflow-hidden">
+              <div class="relative h-44 sm:h-48 w-full overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80" 
                   alt="Direito do Trabalho e Relações Profissionais" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
-                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                   </svg>
                 </div>
               </div>
 
-              <div class="p-6">
-                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+              <div class="p-5 sm:p-6">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-600 transition-colors">
                   Direito Trabalhista
                 </h3>
-                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
                   Defesa intransigente de direitos em rescisões, horas extras, insalubridade, pejotização e acordos estratégicos.
                 </p>
                 <ul class="space-y-2 text-xs text-slate-700">
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Cálculo preciso e cobrança de verbas rescisórias</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Reconhecimento de vínculo de emprego e pejotização</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="p-6 pt-0">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+            <div class="p-5 sm:p-6 pt-0">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-600 pt-3 sm:pt-4 border-t border-slate-100 w-full">
                 <span>Consultar sobre esta área</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -710,42 +726,42 @@
           <!-- 5. Direito Previdenciário (INSS) -->
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
-              <div class="relative h-48 w-full overflow-hidden">
+              <div class="relative h-44 sm:h-48 w-full overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=800&q=80" 
                   alt="Direito Previdenciário e Aposentadoria INSS" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
-                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                   </svg>
                 </div>
               </div>
 
-              <div class="p-6">
-                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+              <div class="p-5 sm:p-6">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-600 transition-colors">
                   Direito Previdenciário (INSS)
                 </h3>
-                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
                   Planejamento previdenciário e concessão de benefícios: aposentadorias por idade/tempo/especial, auxílio por incapacidade e BPC/LOAS.
                 </p>
                 <ul class="space-y-2 text-xs text-slate-700">
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Planejamento da melhor aposentadoria</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Ações contra benefícios negados pelo INSS</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="p-6 pt-0">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+            <div class="p-5 sm:p-6 pt-0">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-600 pt-3 sm:pt-4 border-t border-slate-100 w-full">
                 <span>Consultar sobre esta área</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -757,42 +773,42 @@
           <!-- 6. Direito Imobiliário -->
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
-              <div class="relative h-48 w-full overflow-hidden">
+              <div class="relative h-44 sm:h-48 w-full overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80" 
                   alt="Direito Imobiliário e Propriedade" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div class="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/30 to-transparent"></div>
-                <div class="absolute top-4 left-4 w-10 h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+                <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                   </svg>
                 </div>
               </div>
 
-              <div class="p-6">
-                <h3 class="font-serif text-xl font-bold text-navy-950 mb-3 group-hover:text-gold-600 transition-colors">
+              <div class="p-5 sm:p-6">
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-600 transition-colors">
                   Direito Imobiliário
                 </h3>
-                <p class="text-sm text-slate-600 leading-relaxed mb-5">
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
                   Segurança jurídica na compra, venda e locação de imóveis, usucapião, regularização fundiária e defesas possessórias.
                 </p>
                 <ul class="space-y-2 text-xs text-slate-700">
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Usucapião judicial e extrajudicial em cartório</span>
                   </li>
-                  <li class="flex items-center space-x-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                  <li class="flex items-start space-x-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
                     <span>Regularização de escrituras e registros de imóveis</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            <div class="p-6 pt-0">
-              <a href="#contato" class="inline-flex items-center space-x-2 text-sm font-bold text-gold-700 hover:text-gold-600 pt-4 border-t border-slate-100 w-full">
+            <div class="p-5 sm:p-6 pt-0">
+              <a href="#contato" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-600 pt-3 sm:pt-4 border-t border-slate-100 w-full">
                 <span>Consultar sobre esta área</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -807,53 +823,53 @@
     </section>
 
     <!-- ================= COMO FUNCIONA O ATENDIMENTO ================= -->
-    <section id="como-funciona" class="py-20 bg-white border-t border-slate-200 relative">
+    <section id="como-funciona" class="py-14 sm:py-20 bg-white border-t border-slate-200 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="text-center max-w-3xl mx-auto mb-14">
-          <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+        <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+          <div class="inline-block px-3 py-1 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-3">
             Passo a Passo
           </div>
-          <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+          <h2 class="font-serif text-2xl xs:text-3xl sm:text-4xl font-bold text-navy-950 mb-3 sm:mb-4">
             Como Funciona o Nosso <span class="gold-gradient-text">Atendimento</span>
           </h2>
-          <p class="text-slate-600 text-base">
+          <p class="text-slate-600 text-xs sm:text-sm md:text-base">
             Um processo claro e descomplicado para você obter orientação jurídica segura desde o primeiro momento.
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+        <div class="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 relative">
           
-          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
-            <div class="w-12 h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-md border-2 border-gold-400">
+          <div class="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-lg sm:text-xl flex items-center justify-center mb-4 sm:mb-6 shadow-md border-2 border-gold-400">
               1
             </div>
-            <h3 class="text-lg font-bold text-navy-950 mb-2">Envio dos Dados & Anexos</h3>
-            <p class="text-sm text-slate-600">Você preenche o formulário e anexa seus documentos com segurança.</p>
+            <h3 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Envio dos Dados & Anexos</h3>
+            <p class="text-xs sm:text-sm text-slate-600">Você preenche o formulário e anexa seus documentos com segurança.</p>
           </div>
 
-          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
-            <div class="w-12 h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-md border-2 border-gold-400">
+          <div class="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-lg sm:text-xl flex items-center justify-center mb-4 sm:mb-6 shadow-md border-2 border-gold-400">
               2
             </div>
-            <h3 class="text-lg font-bold text-navy-950 mb-2">Geração de Protocolo</h3>
-            <p class="text-sm text-slate-600">O sistema gera seu ID exclusivo e salva os arquivos no seu ficheiro digital.</p>
+            <h3 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Geração de Protocolo</h3>
+            <p class="text-xs sm:text-sm text-slate-600">O sistema gera seu ID exclusivo e salva os arquivos no seu ficheiro digital.</p>
           </div>
 
-          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
-            <div class="w-12 h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-md border-2 border-gold-400">
+          <div class="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-navy-900 text-white font-bold font-serif text-lg sm:text-xl flex items-center justify-center mb-4 sm:mb-6 shadow-md border-2 border-gold-400">
               3
             </div>
-            <h3 class="text-lg font-bold text-navy-950 mb-2">Contato no WhatsApp</h3>
-            <p class="text-sm text-slate-600">O Dr. Jorge Alvim recebe seus dados e inicia o atendimento imediatamente.</p>
+            <h3 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Contato no WhatsApp</h3>
+            <p class="text-xs sm:text-sm text-slate-600">O Dr. Jorge Alvim recebe seus dados e inicia o atendimento imediatamente.</p>
           </div>
 
-          <div class="relative flex flex-col items-center text-center p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-white font-bold font-serif text-xl flex items-center justify-center mb-6 shadow-gold-glow">
+          <div class="relative flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl bg-warm-50 border border-slate-200 shadow-card-light">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-gold-500 to-gold-600 text-white font-bold font-serif text-lg sm:text-xl flex items-center justify-center mb-4 sm:mb-6 shadow-gold-glow">
               4
             </div>
-            <h3 class="text-lg font-bold text-navy-950 mb-2">Defesa dos seus Direitos</h3>
-            <p class="text-sm text-slate-600">Traçamos a melhor estratégia jurídica para a vitória do seu caso.</p>
+            <h3 class="text-base sm:text-lg font-bold text-navy-950 mb-1.5 sm:mb-2">Defesa dos seus Direitos</h3>
+            <p class="text-xs sm:text-sm text-slate-600">Traçamos a melhor estratégia jurídica para a vitória do seu caso.</p>
           </div>
 
         </div>
@@ -861,70 +877,70 @@
       </div>
     </section>
 
-    <!-- ================= CONTATO, FORMULÁRIO DUPLO & ANEXO DE DOCUMENTOS ================= -->
-    <section id="contato" class="py-20 bg-warm-50 border-t border-slate-200 relative">
+    <!-- ================= CONTATO, FORMULÁRIO DUPLO & ANEXO DE DOCUMENTOS RESPONSIVO ================= -->
+    <section id="contato" class="py-14 sm:py-20 bg-warm-50 border-t border-slate-200 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
           <!-- Informações de Contato Oficiais -->
-          <div class="lg:col-span-5 space-y-8">
+          <div class="lg:col-span-5 space-y-6 sm:space-y-8">
             <div>
-              <div class="inline-block px-3.5 py-1.5 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-xs font-bold uppercase tracking-wider mb-3">
+              <div class="inline-block px-3 py-1 rounded-md bg-gold-100 border border-gold-300 text-gold-700 text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-3">
                 Fale Conosco & Envie Documentos
               </div>
-              <h2 class="font-serif text-3xl sm:text-4xl font-bold text-navy-950 mb-4">
+              <h2 class="font-serif text-2xl xs:text-3xl sm:text-4xl font-bold text-navy-950 mb-3 sm:mb-4">
                 Agende Sua <span class="gold-gradient-text">Consulta Jurídica</span>
               </h2>
-              <p class="text-slate-600 text-base leading-relaxed">
+              <p class="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed">
                 Preencha os dados e anexe seus documentos (multas, notificações, CNH, contratos, certidões). Eles serão guardados com segurança no seu ficheiro e enviados diretamente ao Dr. Jorge Alvim.
               </p>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               
               <!-- Endereço Físico -->
-              <div class="flex items-start space-x-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex items-start space-x-3 sm:space-x-4 p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
+                  <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">Endereço do Escritório</h3>
-                  <p class="text-navy-950 font-bold text-sm leading-snug">
+                <div class="min-w-0">
+                  <h3 class="text-[10px] sm:text-xs uppercase font-bold text-slate-500 tracking-wider">Endereço do Escritório</h3>
+                  <p class="text-navy-950 font-bold text-xs sm:text-sm leading-snug truncate sm:whitespace-normal">
                     Rua Henrique Dias, nº 259, Galeria nº 259
                   </p>
-                  <p class="text-xs text-slate-600">Bairro Benfica, Juiz de Fora - MG</p>
+                  <p class="text-[11px] sm:text-xs text-slate-600">Bairro Benfica, Juiz de Fora - MG</p>
                 </div>
               </div>
 
               <!-- WhatsApp / Telefone -->
-              <div class="flex items-start space-x-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
-                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <div class="flex items-start space-x-3 sm:space-x-4 p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
+                  <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">WhatsApp & Telefone</h3>
-                  <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!" target="_blank" rel="noopener noreferrer" class="text-navy-950 hover:text-gold-600 font-bold text-base transition-colors">
+                <div class="min-w-0">
+                  <h3 class="text-[10px] sm:text-xs uppercase font-bold text-slate-500 tracking-wider">WhatsApp & Telefone</h3>
+                  <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!" target="_blank" rel="noopener noreferrer" class="text-navy-950 hover:text-gold-600 font-bold text-sm sm:text-base transition-colors truncate block">
                     (32) 99815-3429
                   </a>
                 </div>
               </div>
 
               <!-- E-mail -->
-              <div class="flex items-start space-x-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
-                <div class="w-11 h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex items-start space-x-3 sm:space-x-4 p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-navy-50 border border-gold-300 flex items-center justify-center text-gold-600 flex-shrink-0">
+                  <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 class="text-xs uppercase font-bold text-slate-500 tracking-wider">E-mail Profissional</h3>
-                  <a href="mailto:jorgealvimadvocacia@gmail.com" class="text-navy-950 hover:text-gold-600 font-bold text-base transition-colors">
+                <div class="min-w-0">
+                  <h3 class="text-[10px] sm:text-xs uppercase font-bold text-slate-500 tracking-wider">E-mail Profissional</h3>
+                  <a href="mailto:jorgealvimadvocacia@gmail.com" class="text-navy-950 hover:text-gold-600 font-bold text-xs sm:text-sm md:text-base transition-colors truncate block">
                     jorgealvimadvocacia@gmail.com
                   </a>
                 </div>
@@ -933,40 +949,40 @@
             </div>
 
             <!-- Card de Garantia de Sigilo -->
-            <div class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 space-y-1">
+            <div class="p-3.5 sm:p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 space-y-1">
               <div class="font-bold text-navy-950 flex items-center space-x-1.5">
-                <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-gold-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
                 <span>Ficheiro Digital Criptografado & Sigiloso</span>
               </div>
-              <p>Os documentos anexados são armazenados no servidor privado do escritório em pasta exclusiva do seu caso.</p>
+              <p class="text-[11px] sm:text-xs">Os documentos anexados são armazenados no servidor privado do escritório em pasta exclusiva do seu caso.</p>
             </div>
 
           </div>
 
-          <!-- Formulário com Upload de Arquivos e Função Dupla -->
+          <!-- Formulário Responsivo com Upload e Função Dupla -->
           <div class="lg:col-span-7">
-            <div class="rounded-2xl bg-white border border-slate-200 p-8 sm:p-10 shadow-card-hover relative">
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 xs:p-6 sm:p-8 md:p-10 shadow-card-hover relative">
               
-              <h3 class="font-serif text-2xl font-bold text-navy-950 mb-1">Envie Seus Dados & Documentos</h3>
-              <p class="text-sm text-slate-600 mb-6">Ao enviar, o sistema gera seu <strong>Protocolo Exclusivo</strong>, salva seus documentos no banco de dados e abre o WhatsApp do Dr. Jorge Alvim.</p>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-navy-950 mb-1">Envie Seus Dados & Documentos</h3>
+              <p class="text-xs sm:text-sm text-slate-600 mb-5 sm:mb-6">Ao enviar, o sistema gera seu <strong>Protocolo Exclusivo</strong>, salva seus documentos no banco de dados e abre o WhatsApp do Dr. Jorge Alvim.</p>
 
               <!-- Feedback de Sucesso com Protocolo -->
-              <div id="form-success-card" class="hidden mb-6 p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-950 shadow-sm space-y-3">
+              <div id="form-success-card" class="hidden mb-6 p-4 sm:p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-400 text-emerald-950 shadow-sm space-y-3">
                 <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl font-bold">
+                  <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
                     ✓
                   </div>
                   <div>
-                    <h4 class="font-serif font-bold text-lg text-emerald-900">Atendimento Registrado com Sucesso!</h4>
+                    <h4 class="font-serif font-bold text-base sm:text-lg text-emerald-900">Atendimento Registrado com Sucesso!</h4>
                     <p class="text-xs text-emerald-700">Seus dados e documentos foram arquivados com segurança.</p>
                   </div>
                 </div>
 
-                <div class="p-3 bg-white rounded-xl border border-emerald-200 flex items-center justify-between">
+                <div class="p-3 bg-white rounded-xl border border-emerald-200 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
                   <span class="text-xs font-bold uppercase text-slate-600">Seu Protocolo / ID do Cliente:</span>
-                  <span id="display-client-id" class="text-base font-extrabold font-mono text-emerald-800 bg-emerald-100 px-3 py-1 rounded-lg">#JA-2026-0001</span>
+                  <span id="display-client-id" class="text-sm sm:text-base font-extrabold font-mono text-emerald-800 bg-emerald-100 px-3 py-1 rounded-lg">#JA-2026-0001</span>
                 </div>
 
                 <p class="text-xs text-emerald-800 leading-relaxed">
@@ -976,37 +992,37 @@
               </div>
 
               <!-- Indicador de Carregamento -->
-              <div id="form-loading-card" class="hidden mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm flex items-center space-x-3">
-                <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+              <div id="form-loading-card" class="hidden mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs sm:text-sm flex items-center space-x-3">
+                <svg class="animate-spin h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <span>Salvando no banco de dados e gerando protocolo do cliente...</span>
               </div>
 
-              <form id="contact-form" class="space-y-6" enctype="multipart/form-data">
+              <form id="contact-form" class="space-y-4 sm:space-y-6" enctype="multipart/form-data">
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label for="form-name" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                    <label for="form-name" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
                       Nome Completo *
                     </label>
-                    <input type="text" id="form-name" required placeholder="Seu nome completo" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors" />
+                    <input type="text" id="form-name" required placeholder="Seu nome completo" class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-sm sm:text-base" />
                   </div>
 
                   <div>
-                    <label for="form-phone" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                    <label for="form-phone" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
                       Telefone / WhatsApp *
                     </label>
-                    <input type="tel" id="form-phone" required placeholder="(32) 99815-3429" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors" />
+                    <input type="tel" id="form-phone" required placeholder="(32) 99815-3429" class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-sm sm:text-base" />
                   </div>
                 </div>
 
                 <div>
-                  <label for="form-area" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                  <label for="form-area" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
                     Área de Interesse Jurídico
                   </label>
-                  <select id="form-area" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors">
+                  <select id="form-area" class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-xs sm:text-sm">
                     <option value="Direito dos Transportes e Trânsito">Direito dos Transportes e Trânsito (Multas / CNH / Acidentes)</option>
                     <option value="Direito Civil e Contratos">Direito Civil e Contratos</option>
                     <option value="Direito de Família e Sucessões">Direito de Família e Sucessões (Divórcio / Inventário)</option>
@@ -1018,19 +1034,19 @@
                 </div>
 
                 <div>
-                  <label for="form-message" class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                  <label for="form-message" class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
                     Breve Resumo da Sua Situação (Opcional)
                   </label>
-                  <textarea id="form-message" rows="3" placeholder="Descreva resumidamente sua dúvida ou necessidade..." class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors resize-none"></textarea>
+                  <textarea id="form-message" rows="3" placeholder="Descreva resumidamente sua dúvida ou necessidade..." class="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold-500 focus:bg-white focus:ring-1 focus:ring-gold-500 transition-colors text-xs sm:text-sm resize-none"></textarea>
                 </div>
 
-                <!-- CAMPO DE ANEXAR DOCUMENTOS (FICHEIRO DO CLIENTE) -->
+                <!-- CAMPO DE ANEXAR DOCUMENTOS RESPONSIVO -->
                 <div>
-                  <label class="block text-xs font-bold uppercase text-slate-700 tracking-wider mb-2">
+                  <label class="block text-[11px] sm:text-xs font-bold uppercase text-slate-700 tracking-wider mb-1.5 sm:mb-2">
                     Anexar Documentos (Opcional - Ficheiro do Cliente)
                   </label>
                   
-                  <div class="relative border-2 border-dashed border-slate-300 hover:border-gold-500 rounded-2xl p-5 text-center bg-slate-50 hover:bg-gold-50/20 transition-all cursor-pointer group">
+                  <div class="relative border-2 border-dashed border-slate-300 hover:border-gold-500 rounded-2xl p-4 sm:p-5 text-center bg-slate-50 hover:bg-gold-50/20 transition-all cursor-pointer group">
                     <input 
                       type="file" 
                       id="form-files" 
@@ -1039,16 +1055,16 @@
                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                       onchange="handleFilesSelect(this)"
                     />
-                    <div class="space-y-2">
-                      <div class="w-12 h-12 mx-auto rounded-full bg-white border border-slate-200 flex items-center justify-center text-gold-600 group-hover:scale-110 transition-transform shadow-sm">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="space-y-1.5 sm:space-y-2">
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-full bg-white border border-slate-200 flex items-center justify-center text-gold-600 group-hover:scale-110 transition-transform shadow-sm">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                         </svg>
                       </div>
-                      <div class="text-sm font-semibold text-slate-800">
+                      <div class="text-xs sm:text-sm font-semibold text-slate-800">
                         <span class="text-gold-600 underline">Clique para selecionar arquivos</span> ou arraste para cá
                       </div>
-                      <p class="text-xs text-slate-500">
+                      <p class="text-[11px] sm:text-xs text-slate-500">
                         PDFs, imagens (CNH, notificações, contratos, fotos). Até 25MB por arquivo.
                       </p>
                     </div>
@@ -1058,14 +1074,14 @@
                   <div id="selected-files-list" class="mt-3 space-y-2"></div>
                 </div>
 
-                <button type="submit" id="btn-submit-form" class="w-full inline-flex items-center justify-center space-x-2 py-4 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-base shadow-md hover:shadow-lg transition-all duration-300 border border-gold-500/50">
-                  <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+                <button type="submit" id="btn-submit-form" class="w-full inline-flex items-center justify-center space-x-2 py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all duration-300 border border-gold-500/50">
+                  <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                   </svg>
                   <span>Gravar no Servidor e Enviar para o WhatsApp</span>
                 </button>
 
-                <p class="text-[11px] text-slate-500 text-center leading-relaxed">
+                <p class="text-[10px] sm:text-[11px] text-slate-500 text-center leading-relaxed">
                   Seus dados estão protegidos por sigilo profissional e pela Lei Geral de Proteção de Dados (LGPD).
                 </p>
 
@@ -1080,22 +1096,22 @@
     </section>
   </main>
 
-  <!-- ================= RODAPÉ ================= -->
+  <!-- ================= RODAPÉ RESPONSIVO ================= -->
   <footer class="bg-navy-950 text-slate-300 text-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
       
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 mb-10 sm:mb-12">
         
         <div class="space-y-4">
-          <div class="flex items-center space-x-3.5">
-            <div class="w-12 h-12 rounded-xl bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md">
+          <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 rounded-xl bg-navy-900 border border-gold-400 flex items-center justify-center text-gold-400 shadow-md flex-shrink-0">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
               </svg>
             </div>
             <div>
-              <span class="block font-serif text-xl font-bold text-white">JORGE ALVIM</span>
-              <span class="block text-[10px] uppercase tracking-[0.25em] text-gold-400 font-bold">ADVOCACIA</span>
+              <span class="block font-serif text-lg sm:text-xl font-bold text-white">JORGE ALVIM</span>
+              <span class="block text-[9px] uppercase tracking-[0.25em] text-gold-400 font-bold">ADVOCACIA</span>
             </div>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
@@ -1107,8 +1123,8 @@
         </div>
 
         <div>
-          <h3 class="font-serif text-white text-base font-bold mb-4">Navegação Rápida</h3>
-          <ul class="space-y-2.5 text-xs text-slate-400">
+          <h3 class="font-serif text-white text-sm sm:text-base font-bold mb-3 sm:mb-4">Navegação Rápida</h3>
+          <ul class="space-y-2 text-xs text-slate-400">
             <li><a href="#inicio" class="hover:text-gold-400 transition-colors">Início</a></li>
             <li><a href="#sobre" class="hover:text-gold-400 transition-colors">Sobre o Dr. Jorge Alvim</a></li>
             <li><a href="#areas" class="hover:text-gold-400 transition-colors">Áreas de Atuação</a></li>
@@ -1118,8 +1134,8 @@
         </div>
 
         <div>
-          <h3 class="font-serif text-white text-base font-bold mb-4">Especialidades</h3>
-          <ul class="space-y-2.5 text-xs text-slate-400">
+          <h3 class="font-serif text-white text-sm sm:text-base font-bold mb-3 sm:mb-4">Especialidades</h3>
+          <ul class="space-y-2 text-xs text-slate-400">
             <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito dos Transportes e Trânsito</a></li>
             <li><a href="#areas" class="hover:text-gold-400 transition-colors">Direito Civil & Contratos</a></li>
             <li><a href="#areas" class="hover:text-gold-400 transition-colors">Família & Sucessões</a></li>
@@ -1130,7 +1146,7 @@
         </div>
 
         <div>
-          <h3 class="font-serif text-white text-base font-bold mb-4">Sede em Juiz de Fora</h3>
+          <h3 class="font-serif text-white text-sm sm:text-base font-bold mb-3 sm:mb-4">Sede em Juiz de Fora</h3>
           <p class="text-xs text-slate-300 font-semibold mb-1">Rua Henrique Dias, nº 259, Galeria 259</p>
           <p class="text-xs text-slate-400 mb-2">Bairro Benfica, Juiz de Fora - MG</p>
           <p class="text-xs text-slate-300 font-semibold mb-1">WhatsApp: (32) 99815-3429</p>
@@ -1142,15 +1158,15 @@
 
       </div>
 
-      <div class="pt-8 border-t border-slate-800/80 text-[11px] text-slate-500 space-y-3">
+      <div class="pt-6 sm:pt-8 border-t border-slate-800/80 text-[10px] sm:text-[11px] text-slate-500 space-y-3">
         <p class="leading-relaxed">
           <strong>Aviso Ético e Legal:</strong> Este site possui finalidade estritamente informativa e institucional, em total conformidade com o Provimento nº 205/2021 e o Código de Ética e Disciplina da Ordem dos Advogados do Brasil (OAB). Nenhuma informação veiculada neste endereço deve ser interpretada como consulta jurídica formal ou promessa de resultado garantido.
         </p>
-        <div class="flex flex-col sm:flex-row justify-between items-center pt-4 text-slate-500 text-xs">
+        <div class="flex flex-col sm:flex-row justify-between items-center pt-3 text-slate-500 text-xs gap-2">
           <div>
             &copy; 2026 Jorge Alvim Advocacia. Todos os direitos reservados.
           </div>
-          <div class="mt-2 sm:mt-0">
+          <div>
             Benfica • Juiz de Fora - MG
           </div>
         </div>
@@ -1159,20 +1175,20 @@
     </div>
   </footer>
 
-  <!-- ================= BOTÃO FLUTUANTE DE WHATSAPP ================= -->
-  <aside aria-label="Atendimento Rápido WhatsApp" class="fixed bottom-6 right-6 z-40">
-    <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" aria-label="Conversar pelo WhatsApp" class="group relative flex items-center justify-center w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xl transition-all duration-300 transform hover:scale-110 animate-float">
+  <!-- ================= BOTÃO FLUTUANTE DE WHATSAPP RESPONSIVO COM SAFE AREA ================= -->
+  <aside aria-label="Atendimento Rápido WhatsApp" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <a href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica." target="_blank" rel="noopener noreferrer" aria-label="Conversar pelo WhatsApp" class="group relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xl transition-all duration-300 transform hover:scale-110 animate-float">
       <span class="absolute inset-0 rounded-full bg-emerald-400 opacity-75 animate-ping pointer-events-none"></span>
-      <svg class="w-7 h-7 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+      <svg class="w-6 h-6 sm:w-7 sm:h-7 relative z-10" fill="currentColor" viewBox="0 0 24 24">
         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
       </svg>
-      <span class="absolute right-16 px-3 py-1.5 rounded-lg bg-navy-900 border border-gold-400 text-xs font-bold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg">
+      <span class="hidden md:inline-block absolute right-16 px-3 py-1.5 rounded-lg bg-navy-900 border border-gold-400 text-xs font-bold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-lg">
         Fale no WhatsApp (32) 99815-3429
       </span>
     </a>
   </aside>
 
-  <!-- Script com Função Dupla (API + WhatsApp) -->
+  <!-- Script com Função Dupla e Tratamento de UI -->
   <script>
     const SITE_CONFIG = {
       whatsappNumber: '5532998153429',
@@ -1190,6 +1206,7 @@
 
     function renderSelectedFiles() {
       const container = document.getElementById('selected-files-list');
+      if (!container) return;
       if (selectedFiles.length === 0) {
         container.innerHTML = '';
         return;
@@ -1200,11 +1217,11 @@
         return `
           <div class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs shadow-sm">
             <div class="flex items-center space-x-2 truncate pr-2">
-              <span class="text-gold-600 font-bold">📄</span>
+              <span class="text-gold-600 font-bold flex-shrink-0">📄</span>
               <span class="font-semibold text-slate-800 truncate">${file.name}</span>
-              <span class="text-slate-400">(${sizeMb} MB)</span>
+              <span class="text-slate-400 flex-shrink-0">(${sizeMb} MB)</span>
             </div>
-            <button type="button" onclick="removeFile(${index})" class="text-rose-500 hover:text-rose-700 font-bold p-1" title="Remover">
+            <button type="button" onclick="removeFile(${index})" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-base leading-none" title="Remover">
               &times;
             </button>
           </div>
