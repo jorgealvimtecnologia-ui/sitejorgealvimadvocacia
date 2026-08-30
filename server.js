@@ -5846,7 +5846,7 @@ app.use((err, req, res, next) => {
 });
 
 // Inicialização do Servidor
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
   console.log(`🏛️  Servidor Jorge Alvim Advocacia Ativo!`);
   console.log(`🌐  Site Oficial:    http://localhost:${PORT}`);
@@ -5856,3 +5856,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`📁  Ficheiros:       storage/clients/`);
   console.log(`====================================================`);
 });
+
+// Manter o loop de eventos ativo continuamente
+setInterval(() => {}, 1000 * 60 * 60);
