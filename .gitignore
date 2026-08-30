@@ -6,11 +6,13 @@ dist-ssr
 .env.*
 !.env.example
 
-# Backups e Uploads Locais
+# Backups e Uploads Locais / Servidor
 backups/*
 !backups/.gitkeep
 storage/clients/*
 !storage/clients/.gitkeep
+storage/office_drive/*
+!storage/office_drive/.gitkeep
 nginx/ssl/*.pem
 nginx/ssl/*.key
 
