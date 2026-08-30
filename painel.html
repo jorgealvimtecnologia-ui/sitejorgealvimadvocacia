@@ -283,7 +283,7 @@
           <span id="tab-finance-badge" class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Asaas ERP</span>
         </button>
 
-        <!-- Aba 6: Blog & Artigos (SEO & Marketing) -->
+        <!-- Aba 6: Blog & Artigos (Informativo & Educativo) -->
         <button 
           id="tab-btn-blog" 
           onclick="switchTab('blog')" 
@@ -1828,10 +1828,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       </section>
 
-      <!-- ================= ABA 6: BLOG & ARTIGOS JURÍDICOS (SEO & MARKETING) ================= -->
+      <!-- ================= ABA 6: BLOG & ARTIGOS JURÍDICOS (INFORMATIVO & EDUCATIVO) ================= -->
       <section id="tab-content-blog" class="hidden space-y-6">
         
-        <!-- Topo & Métricas de Marketing / SEO -->
+        <!-- Topo & Métricas Informativas de Artigos -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
             <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">Total de Artigos</span>
@@ -1853,8 +1853,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
           <div class="bg-gradient-to-br from-amber-50 to-gold-100/60 p-4 sm:p-5 rounded-2xl border border-gold-300 shadow-sm flex flex-col justify-between">
             <div>
-              <span class="text-[10px] sm:text-xs font-bold text-gold-900 uppercase tracking-wider block">SEO Juiz de Fora & MG</span>
-              <p class="text-xs text-slate-700 font-semibold mt-1">Captação Orgânica de Clientes</p>
+              <span class="text-[10px] sm:text-xs font-bold text-gold-900 uppercase tracking-wider block">Informativo Jurídico MG</span>
+              <p class="text-xs text-slate-700 font-semibold mt-1">Divulgação & Orientação Cidadã</p>
             </div>
             <a href="/blog" target="_blank" class="text-[11px] font-bold text-gold-800 hover:text-navy-950 flex items-center space-x-1 mt-2">
               <span>Abrir Blog no Site</span>
@@ -2136,11 +2136,11 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         <div class="bg-gradient-to-r from-amber-700 via-amber-900 to-navy-950 p-6 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold mb-2">
-              <span>👥 Captação de Pré-Clientes & Inteligência de Tráfego</span>
+              <span>👥 Registro de Pré-Clientes & Atendimento Inicial</span>
             </div>
             <h3 class="font-serif text-2xl font-bold text-white tracking-tight">Visitantes do Site, IPs e Pré-Clientes</h3>
             <p class="text-xs text-amber-100/90 max-w-2xl mt-1">
-              Painel de auditoria de acessos: contagem por dia, mês e ano, registro de endereços IP com horário e localidade, consentimento de geolocalização e captação de redes sociais e sites.
+              Painel de auditoria de acessos: contagem por dia, mês e ano, registro de endereços IP com horário e localidade, consentimento de geolocalização e origem de acessos.
             </p>
           </div>
           <div class="flex items-center space-x-3">
@@ -4347,8 +4347,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             ✍️
           </div>
           <div>
-            <h3 id="blog-modal-title" class="font-serif font-bold text-lg sm:text-xl text-navy-950">Novo Artigo Jurídico (SEO & Marketing)</h3>
-            <p class="text-xs text-slate-500">Escreva artigos explicativos para rankear o escritório no Google em Juiz de Fora e atrair novos clientes.</p>
+            <h3 id="blog-modal-title" class="font-serif font-bold text-lg sm:text-xl text-navy-950">Novo Artigo Jurídico (Informativo & Educativo)</h3>
+            <p class="text-xs text-slate-500">Escreva artigos explicativos para orientar cidadãos no Google em Juiz de Fora e prestar assessoria transparente.</p>
           </div>
         </div>
         <button onclick="closeBlogEditorModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none cursor-pointer">&times;</button>
@@ -7950,7 +7950,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       'Certificado Digital (Token)',
       'Softwares / Sistemas / Hospedagem',
       'Custas Processuais / Diligências',
-      'Marketing / Publicidade Jurídica',
+      'Divulgação & Artigos Jurídicos',
       'Material de Escritório / Impressão',
       'Impostos / Contador / DAS',
       'Outras Despesas'
@@ -8995,7 +8995,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       }
     }
 
-    // ================= GESTÃO DO BLOG JURÍDICO & ARTIGOS (SEO & MARKETING) =================
+    // ================= GESTÃO DO BLOG JURÍDICO & ARTIGOS INFORMATIVOS =================
     let adminBlogPosts = [];
 
     async function loadAdminBlogPosts() {
@@ -9129,7 +9129,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     }
 
     function openNewBlogPostModal() {
-      document.getElementById('blog-modal-title').textContent = 'Novo Artigo Jurídico (SEO & Marketing)';
+      document.getElementById('blog-modal-title').textContent = 'Novo Artigo Jurídico (Informativo & Educativo)';
       document.getElementById('blog-edit-id').value = '';
       document.getElementById('blog-edit-title').value = '';
       document.getElementById('blog-edit-category').value = 'Direito de Trânsito & CNH';

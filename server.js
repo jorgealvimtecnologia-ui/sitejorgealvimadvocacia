@@ -341,7 +341,7 @@ db.exec(`
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
   );
 
-  -- 7. Tabela de Artigos e Informativos Jurídicos (Blog / SEO & Marketing)
+  -- 7. Tabela de Artigos e Informativos Jurídicos (Blog / Informativo & Educativo)
   CREATE TABLE IF NOT EXISTS blog_posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     slug TEXT UNIQUE NOT NULL,
@@ -4561,7 +4561,7 @@ app.patch('/api/client-portal/email-notifications', requireClientAuth, (req, res
   }
 });
 
-// ================= ROTAS DO BLOG JURÍDICO (SEO & MARKETING) =================
+// ================= ROTAS DO BLOG JURÍDICO (INFORMATIVO & EDUCATIVO) =================
 
 // Helper para gerar slugs limpos para URLs amigáveis
 function slugify(text) {
