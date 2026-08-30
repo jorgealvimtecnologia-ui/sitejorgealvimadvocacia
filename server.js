@@ -773,17 +773,26 @@ function generateNextClientId() {
   const currentYear = new Date().getFullYear();
   const prefix = `JA-${currentYear}-`;
   
-  const records = db.prepare(`SELECT id FROM leads WHERE id LIKE ?`).all(`${prefix}%`);
-  if (!records || records.length === 0) {
-    return `${prefix}0001`;
+  const records = db.prepare(`SELECT id FROM leads`).all();
+  let maxNum = 0;
+  if (records && records.length > 0) {
+    records.forEach(r => {
+      const match = (r.id || '').match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
   }
   
-  const maxNum = records.reduce((max, r) => {
-    const numPart = parseInt(r.id.replace(prefix, ''), 10);
-    return !isNaN(numPart) && numPart > max ? numPart : max;
-  }, 0);
-  
-  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+  let nextNum = maxNum + 1;
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const checkStmt = db.prepare(`SELECT id FROM leads WHERE id = ?`);
+  while (checkStmt.get(candidate)) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  }
+  return candidate;
 }
 
 // Gerador de ID para Cadastro de Clientes Completos: JA-CLI-2026-0001
@@ -791,17 +800,26 @@ function generateNextClientFullId() {
   const currentYear = new Date().getFullYear();
   const prefix = `JA-CLI-${currentYear}-`;
   
-  const records = db.prepare(`SELECT id FROM clients WHERE id LIKE ?`).all(`${prefix}%`);
-  if (!records || records.length === 0) {
-    return `${prefix}0001`;
+  const records = db.prepare(`SELECT id FROM clients`).all();
+  let maxNum = 0;
+  if (records && records.length > 0) {
+    records.forEach(r => {
+      const match = (r.id || '').match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
   }
   
-  const maxNum = records.reduce((max, r) => {
-    const numPart = parseInt(r.id.replace(prefix, ''), 10);
-    return !isNaN(numPart) && numPart > max ? numPart : max;
-  }, 0);
-  
-  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+  let nextNum = maxNum + 1;
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const checkStmt = db.prepare(`SELECT id FROM clients WHERE id = ?`);
+  while (checkStmt.get(candidate)) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  }
+  return candidate;
 }
 
 // Gerador de ID para Escritórios PJ: JA-ESC-2026-0001
@@ -809,17 +827,26 @@ function generateNextOfficeId() {
   const currentYear = new Date().getFullYear();
   const prefix = `JA-ESC-${currentYear}-`;
   
-  const records = db.prepare(`SELECT id FROM offices WHERE id LIKE ?`).all(`${prefix}%`);
-  if (!records || records.length === 0) {
-    return `${prefix}0001`;
+  const records = db.prepare(`SELECT id FROM offices`).all();
+  let maxNum = 0;
+  if (records && records.length > 0) {
+    records.forEach(r => {
+      const match = (r.id || '').match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
   }
   
-  const maxNum = records.reduce((max, r) => {
-    const numPart = parseInt(r.id.replace(prefix, ''), 10);
-    return !isNaN(numPart) && numPart > max ? numPart : max;
-  }, 0);
-  
-  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+  let nextNum = maxNum + 1;
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const checkStmt = db.prepare(`SELECT id FROM offices WHERE id = ?`);
+  while (checkStmt.get(candidate)) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  }
+  return candidate;
 }
 
 // Gerador de ID para Integrantes do Escritório: MEM-2026-0001
@@ -827,17 +854,26 @@ function generateNextOfficeMemberId() {
   const currentYear = new Date().getFullYear();
   const prefix = `MEM-${currentYear}-`;
   
-  const records = db.prepare(`SELECT id FROM office_members WHERE id LIKE ?`).all(`${prefix}%`);
-  if (!records || records.length === 0) {
-    return `${prefix}0001`;
+  const records = db.prepare(`SELECT id FROM office_members`).all();
+  let maxNum = 0;
+  if (records && records.length > 0) {
+    records.forEach(r => {
+      const match = (r.id || '').match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
   }
   
-  const maxNum = records.reduce((max, r) => {
-    const numPart = parseInt(r.id.replace(prefix, ''), 10);
-    return !isNaN(numPart) && numPart > max ? numPart : max;
-  }, 0);
-  
-  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+  let nextNum = maxNum + 1;
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const checkStmt = db.prepare(`SELECT id FROM office_members WHERE id = ?`);
+  while (checkStmt.get(candidate)) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  }
+  return candidate;
 }
 
 // Gerador de ID para Processos Judiciais: PROC-2026-0001
@@ -3589,7 +3625,7 @@ app.post('/api/client-portal/register', (req, res) => {
       );
     } else {
       // Novo cadastro do cliente
-      clientId = generateNextClientId();
+      clientId = generateNextClientFullId();
       db.prepare(`
         INSERT INTO clients (
           id, client_type, full_name, cpf, rg, cnpj, email, phone, password_hash, salt,
