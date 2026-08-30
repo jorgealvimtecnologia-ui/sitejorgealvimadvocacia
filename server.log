@@ -1,0 +1,10 @@
+(node:19) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+====================================================
+🏛️  Servidor Jorge Alvim Advocacia Ativo!
+🌐  Site Oficial:    http://localhost:3000
+📊  Painel Clientes: http://localhost:3000/painel
+🔐  Login Mestre:    jorgealvimtecnologia
+🗄️  Banco SQLite:    leads.db (tabelas: leads, users, clients)
+📁  Ficheiros:       storage/clients/
+====================================================

@@ -134,11 +134,11 @@
 
         <button 
           type="submit" 
-          id="login-submit-btn"
-          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all border border-gold-500/40 flex items-center justify-center space-x-2"
+          id="login-submit-btn" 
+          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all border border-gold-400/60 flex items-center justify-center space-x-2"
         >
           <span>Entrar no Painel</span>
-          <svg class="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
           </svg>
         </button>
@@ -564,9 +564,9 @@
 
             <button 
               onclick="openNewClientModal()" 
-              class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all border border-gold-500/40 cursor-pointer"
+              class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs sm:text-sm shadow-md transition-all border border-gold-400/60 cursor-pointer"
             >
-              <span class="text-gold-400 text-base">➕</span>
+              <span class="text-white text-base">➕</span>
               <span>Novo Cliente & Contrato</span>
             </button>
 
@@ -678,9 +678,9 @@
 
             <button 
               onclick="openNewLawsuitModal()" 
-              class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all border border-gold-500/40 cursor-pointer"
+              class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs sm:text-sm shadow-md transition-all border border-gold-400/60 cursor-pointer"
             >
-              <span class="text-gold-400 text-base">➕</span>
+              <span class="text-white text-base">➕</span>
               <span>Novo Processo Judicial</span>
             </button>
           </div>
@@ -1119,9 +1119,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
               <button 
                 onclick="openNewUserModal()" 
-                class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-navy-900 to-navy-800 hover:from-navy-800 hover:to-navy-700 text-white font-bold text-xs shadow-sm transition-all border border-gold-500/40 cursor-pointer"
+                class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs shadow-sm transition-all border border-gold-400/60 cursor-pointer"
               >
-                <span class="text-gold-400 font-extrabold text-sm">➕</span>
+                <span class="text-white font-extrabold text-sm">➕</span>
                 <span>Incluir Usuário</span>
               </button>
 
@@ -1229,20 +1229,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
 
         <!-- 2. Card de Integração Asaas API & Configurações de Cobrança -->
-        <div class="bg-gradient-to-r from-slate-900 to-navy-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800">
-          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-800 pb-4">
+        <div class="bg-gradient-to-br from-emerald-50/60 via-white to-amber-50/40 text-slate-800 rounded-3xl p-5 sm:p-6 shadow-card-light border-2 border-emerald-300">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-emerald-100 pb-4">
             <div class="flex items-center space-x-3">
-              <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center text-2xl font-bold flex-shrink-0 shadow-xs">
                 ⚡
               </div>
               <div>
                 <div class="flex items-center space-x-2">
-                  <h3 class="text-lg font-bold font-serif text-white">Integração Asaas Pagamentos & PIX</h3>
-                  <span id="asaas-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                  <h3 class="text-lg font-bold font-serif text-navy-950">Integração Asaas Pagamentos & PIX</h3>
+                  <span id="asaas-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
                     ⚪ Não Configurado
                   </span>
                 </div>
-                <p class="text-xs text-slate-300">Geração de PIX Dinâmico, Carnês de Boletos e Baixa Automática Instantânea.</p>
+                <p class="text-xs text-slate-600">Geração de PIX Dinâmico, Carnês de Boletos e Baixa Automática Instantânea.</p>
               </div>
             </div>
 
@@ -1250,14 +1250,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <button 
                 type="button"
                 onclick="testAsaasConnection()" 
-                class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center space-x-1.5"
+                class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-300 transition-all flex items-center space-x-1.5 shadow-xs"
               >
                 <span>🔄 Testar Conexão</span>
               </button>
               <button 
                 type="button"
                 onclick="toggleAsaasSettingsUI()" 
-                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition-all flex items-center space-x-1.5"
+                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center space-x-1.5"
               >
                 <span>⚙️ Configurações Asaas</span>
               </button>
@@ -1265,45 +1265,50 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
 
           <!-- Formulário Ocultável de Configurações Asaas -->
-          <div id="asaas-settings-panel" class="hidden mt-5 pt-4 border-t border-slate-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div id="asaas-settings-panel" class="hidden mt-5 pt-4 border-t border-emerald-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1">Chave de API Asaas (Access Token)</label>
-              <input 
-                type="password" 
-                id="cfg-asaas-key" 
-                placeholder="$aact_YTU5YTE0M2M6N2I4..." 
-                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"
-              />
+              <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Chave de API Asaas (Access Token)</label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="cfg-asaas-key" 
+                  placeholder="$aact_YTU5YTE0M2M6N2I4..." 
+                  class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 font-mono shadow-2xs"
+                />
+                <button type="button" onclick="togglePasswordVisibility('cfg-asaas-key')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar chave">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1">Ambiente de Operação</label>
-              <select id="cfg-asaas-env" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500">
+              <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Ambiente de Operação</label>
+              <select id="cfg-asaas-env" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 shadow-2xs">
                 <option value="sandbox">🧪 Sandbox (Ambiente de Testes)</option>
                 <option value="production">🚀 Produção (Cobrança Real)</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-300 uppercase mb-1">Chave PIX do Escritório (Opcional)</label>
+              <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Chave PIX do Escritório (Opcional)</label>
               <input 
                 type="text" 
                 id="cfg-office-pix" 
                 placeholder="Ex: CNPJ ou Chave Aleatória" 
-                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-emerald-500"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-emerald-600 shadow-2xs"
               />
             </div>
 
             <div class="md:col-span-2 lg:col-span-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2">
-              <div class="text-[11px] text-slate-400 flex items-center space-x-2">
+              <div class="text-[11px] text-slate-600 flex items-center space-x-2">
                 <span>Webhook do Asaas:</span>
-                <code id="cfg-webhook-url" class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono text-[10px]">https://localhost/api/webhooks/asaas</code>
-                <button type="button" onclick="copyWebhookUrl()" class="text-xs text-slate-300 hover:text-white underline">Copiar</button>
+                <code id="cfg-webhook-url" class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono text-[10px] border border-emerald-200">https://localhost/api/webhooks/asaas</code>
+                <button type="button" onclick="copyWebhookUrl()" class="text-xs text-gold-700 hover:text-gold-800 underline font-semibold">Copiar</button>
               </div>
               <button 
                 type="button"
                 onclick="saveFinancialSettings()" 
-                class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-navy-950 font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5"
+                class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5"
               >
                 <span>💾 Salvar Configurações</span>
               </button>
@@ -1317,7 +1322,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             type="button"
             id="subtab-btn-cashflow" 
             onclick="switchFinanceSubTab('cashflow')" 
-            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-navy-900 text-white shadow-sm transition-all"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm transition-all border border-gold-400/60"
           >
             <span>📊 Fluxo de Caixa (Lançamentos)</span>
           </button>
@@ -1427,7 +1432,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <button 
                 type="button"
                 onclick="generateInstallmentsForSelectedClient()" 
-                class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5"
+                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5"
               >
                 <span>⚡ Gerar / Recalcular Parcelas</span>
               </button>
@@ -1473,7 +1478,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <button 
               type="button"
               onclick="openNewAlvaraModal()" 
-              class="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 flex-shrink-0"
+              class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 flex-shrink-0 border border-gold-400/60"
             >
               <span>➕ Registrar Alvará</span>
             </button>
@@ -1515,7 +1520,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <button 
               type="button"
               onclick="printCashflowReport()" 
-              class="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5"
+              class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold text-xs shadow-xs transition-all flex items-center space-x-1.5"
             >
               <span>🖨️ Imprimir Livro Caixa</span>
             </button>
@@ -1717,7 +1722,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <span>Filtros de Auditoria & Busca</span>
             </h4>
             <div class="flex items-center space-x-2 w-full lg:w-auto">
-              <button onclick="loadAuditLogs(1)" class="flex-1 lg:flex-none px-4 py-2 rounded-xl bg-navy-950 text-white font-bold text-xs hover:bg-gold-600 transition-all flex items-center justify-center space-x-1.5 shadow-sm">
+              <button onclick="loadAuditLogs(1)" class="flex-1 lg:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs transition-all flex items-center justify-center space-x-1.5 shadow-sm border border-gold-400/60">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
@@ -2030,7 +2035,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <button onclick="clearVisitsFilters()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all">
               Limpar Filtros
             </button>
-            <button onclick="loadVisitsLogs(1)" class="px-5 py-2 rounded-xl bg-navy-950 hover:bg-gold-600 text-white font-bold text-xs transition-all shadow-sm">
+            <button onclick="loadVisitsLogs(1)" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs transition-all shadow-sm border border-gold-400/60">
               Filtrar Registros
             </button>
           </div>
@@ -2568,14 +2573,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         <div>
           <span class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Payload / Detalhamento Técnico (JSON):</span>
-          <pre id="audit-modal-json" class="p-3.5 rounded-xl bg-slate-900 text-emerald-400 font-mono text-[11px] overflow-x-auto max-h-48 border border-slate-800">
+          <pre id="audit-modal-json" class="p-3.5 rounded-xl bg-slate-100 text-slate-800 font-mono text-[11px] overflow-x-auto max-h-48 border border-slate-300">
 {}
           </pre>
         </div>
       </div>
 
       <div class="pt-3 border-t border-slate-100 flex justify-end">
-        <button onclick="closeAuditModal()" class="px-5 py-2 rounded-xl bg-navy-950 text-white font-bold text-xs hover:bg-gold-600 transition-all shadow-sm">
+        <button onclick="closeAuditModal()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs transition-all shadow-sm border border-gold-400/60">
           Fechar
         </button>
       </div>
@@ -2992,7 +2997,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
           <button type="button" onclick="closeNewUserModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Cancelar</button>
-          <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-navy-900 to-navy-800 text-white hover:from-navy-800 hover:to-navy-700 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5">
+          <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 border border-gold-400/60">
             <span>Salvar e Criar Acesso</span>
           </button>
         </div>
@@ -3892,7 +3897,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <button type="button" onclick="insertBlogTag('ul')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-white text-navy-950 hover:bg-slate-200 shadow-2xs">Lista</button>
               <button type="button" onclick="insertBlogTag('quote')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 shadow-2xs">💡 Dica Jurídica</button>
               <button type="button" onclick="insertBlogTag('b')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-white text-navy-950 hover:bg-slate-200 shadow-2xs"><b>B</b></button>
-              <button type="button" onclick="toggleBlogPreview()" id="btn-toggle-blog-preview" class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-navy-900 text-white shadow-2xs">👁️ Ver Prévia</button>
+              <button type="button" onclick="toggleBlogPreview()" id="btn-toggle-blog-preview" class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-gradient-to-r from-amber-500 to-gold-600 hover:from-amber-600 text-white shadow-2xs border border-gold-400/60">👁️ Ver Prévia</button>
             </div>
           </div>
 
@@ -4636,7 +4641,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 </button>
                 <button 
                   onclick="openClientFinancialTab('${client.id}')" 
-                  class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-emerald-500/30"
+                  class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-emerald-300"
                   title="Abrir carnê de parcelas e gerar cobranças Asaas para este cliente"
                 >
                   <span>⚡</span>
@@ -6437,7 +6442,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         }
         if (btn) {
           if (t === subTab) {
-            btn.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-navy-900 text-white shadow-sm transition-all';
+            btn.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm transition-all border border-gold-400/60';
           } else {
             btn.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all';
           }
@@ -6830,7 +6835,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <tr>
             <td colspan="6" class="text-center py-8 text-slate-400">
               Nenhuma parcela cadastrada para este cliente.<br/>
-              <button onclick="generateInstallmentsForSelectedClient()" class="mt-2 px-3 py-1.5 rounded-lg bg-navy-900 text-white font-bold text-xs">
+              <button onclick="generateInstallmentsForSelectedClient()" class="mt-2 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors">
                 ⚡ Gerar Grade de Parcelas Agora
               </button>
             </td>

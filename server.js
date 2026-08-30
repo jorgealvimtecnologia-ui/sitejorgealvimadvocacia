@@ -703,21 +703,17 @@ function generateNextClientId() {
   const currentYear = new Date().getFullYear();
   const prefix = `JA-${currentYear}-`;
   
-  const stmt = db.prepare(`
-    SELECT id FROM leads 
-    WHERE id LIKE ? 
-    ORDER BY id DESC 
-    LIMIT 1
-  `);
-  
-  const lastRecord = stmt.get(`${prefix}%`);
-  if (!lastRecord || !lastRecord.id) {
+  const records = db.prepare(`SELECT id FROM leads WHERE id LIKE ?`).all(`${prefix}%`);
+  if (!records || records.length === 0) {
     return `${prefix}0001`;
   }
   
-  const lastNumberStr = lastRecord.id.replace(prefix, '');
-  const nextNum = parseInt(lastNumberStr, 10) + 1;
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const maxNum = records.reduce((max, r) => {
+    const numPart = parseInt(r.id.replace(prefix, ''), 10);
+    return !isNaN(numPart) && numPart > max ? numPart : max;
+  }, 0);
+  
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 // Gerador de ID para Cadastro de Clientes Completos: JA-CLI-2026-0001
@@ -725,21 +721,17 @@ function generateNextClientFullId() {
   const currentYear = new Date().getFullYear();
   const prefix = `JA-CLI-${currentYear}-`;
   
-  const stmt = db.prepare(`
-    SELECT id FROM clients 
-    WHERE id LIKE ? 
-    ORDER BY id DESC 
-    LIMIT 1
-  `);
-  
-  const lastRecord = stmt.get(`${prefix}%`);
-  if (!lastRecord || !lastRecord.id) {
+  const records = db.prepare(`SELECT id FROM clients WHERE id LIKE ?`).all(`${prefix}%`);
+  if (!records || records.length === 0) {
     return `${prefix}0001`;
   }
   
-  const lastNumberStr = lastRecord.id.replace(prefix, '');
-  const nextNum = parseInt(lastNumberStr, 10) + 1;
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const maxNum = records.reduce((max, r) => {
+    const numPart = parseInt(r.id.replace(prefix, ''), 10);
+    return !isNaN(numPart) && numPart > max ? numPart : max;
+  }, 0);
+  
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 // Gerador de ID para Processos Judiciais: PROC-2026-0001
@@ -747,21 +739,17 @@ function generateNextLawsuitId() {
   const currentYear = new Date().getFullYear();
   const prefix = `PROC-${currentYear}-`;
   
-  const stmt = db.prepare(`
-    SELECT id FROM lawsuits 
-    WHERE id LIKE ? 
-    ORDER BY id DESC 
-    LIMIT 1
-  `);
-  
-  const lastRecord = stmt.get(`${prefix}%`);
-  if (!lastRecord || !lastRecord.id) {
+  const records = db.prepare(`SELECT id FROM lawsuits WHERE id LIKE ?`).all(`${prefix}%`);
+  if (!records || records.length === 0) {
     return `${prefix}0001`;
   }
   
-  const lastNumberStr = lastRecord.id.replace(prefix, '');
-  const nextNum = parseInt(lastNumberStr, 10) + 1;
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const maxNum = records.reduce((max, r) => {
+    const numPart = parseInt(r.id.replace(prefix, ''), 10);
+    return !isNaN(numPart) && numPart > max ? numPart : max;
+  }, 0);
+  
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 // Gerador de ID para Lançamentos Financeiros: LAN-2026-0001
@@ -769,21 +757,17 @@ function generateNextTransactionId() {
   const currentYear = new Date().getFullYear();
   const prefix = `LAN-${currentYear}-`;
   
-  const stmt = db.prepare(`
-    SELECT id FROM financial_transactions 
-    WHERE id LIKE ? 
-    ORDER BY id DESC 
-    LIMIT 1
-  `);
-  
-  const lastRecord = stmt.get(`${prefix}%`);
-  if (!lastRecord || !lastRecord.id) {
+  const records = db.prepare(`SELECT id FROM financial_transactions WHERE id LIKE ?`).all(`${prefix}%`);
+  if (!records || records.length === 0) {
     return `${prefix}0001`;
   }
   
-  const lastNumberStr = lastRecord.id.replace(prefix, '');
-  const nextNum = parseInt(lastNumberStr, 10) + 1;
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const maxNum = records.reduce((max, r) => {
+    const numPart = parseInt(r.id.replace(prefix, ''), 10);
+    return !isNaN(numPart) && numPart > max ? numPart : max;
+  }, 0);
+  
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 // Gerador de ID para Alvarás Judiciais: ALV-2026-0001
@@ -791,21 +775,17 @@ function generateNextAlvaraId() {
   const currentYear = new Date().getFullYear();
   const prefix = `ALV-${currentYear}-`;
   
-  const stmt = db.prepare(`
-    SELECT id FROM alvaras 
-    WHERE id LIKE ? 
-    ORDER BY id DESC 
-    LIMIT 1
-  `);
-  
-  const lastRecord = stmt.get(`${prefix}%`);
-  if (!lastRecord || !lastRecord.id) {
+  const records = db.prepare(`SELECT id FROM alvaras WHERE id LIKE ?`).all(`${prefix}%`);
+  if (!records || records.length === 0) {
     return `${prefix}0001`;
   }
   
-  const lastNumberStr = lastRecord.id.replace(prefix, '');
-  const nextNum = parseInt(lastNumberStr, 10) + 1;
-  return `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const maxNum = records.reduce((max, r) => {
+    const numPart = parseInt(r.id.replace(prefix, ''), 10);
+    return !isNaN(numPart) && numPart > max ? numPart : max;
+  }, 0);
+  
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 // ================= SERVIÇO DE INTEGRAÇÃO DA API ASAAS =================
@@ -896,15 +876,17 @@ const storage = multer.diskStorage({
     cb(null, clientFolder);
   },
   filename: (req, file, cb) => {
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const ext = path.extname(file.originalname).toLowerCase() || '.bin';
+    const baseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_') || 'doc';
     const timestamp = Date.now();
-    cb(null, `${timestamp}_${safeName}`);
+    const randHex = crypto.randomBytes(3).toString('hex');
+    cb(null, `${timestamp}_${randHex}_${baseName}${ext}`);
   }
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB por arquivo
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB por arquivo (suporta fotos de alta resolução de smartphones)
 });
 
 // Configuração de Proxy Reverso e Confiança
@@ -1417,16 +1399,79 @@ app.post('/api/clients', requireAuth, (req, res, next) => {
       details: { clientId, client_type, full_name: full_name.trim(), cpf, cnpj, email, phone, social_media, website, google_business, contract_value: cValue, installments_count: instCount, filesCount: filesInfo.length }
     });
 
+    // =====================================================================
+    // CRIAÇÃO AUTOMÁTICA DE USUÁRIO NO PAINEL (aba Usuários e Senhas)
+    // Login  = dígitos do CPF (PF) ou CNPJ (PJ)
+    // Senha  = 8 primeiros dígitos do telefone
+    // Role   = 'cliente'
+    // =====================================================================
+    let autoUserCreated = false;
+    let autoUsername = '';
+    let autoPassword = '';
+
+    try {
+      const docSource = client_type === 'PJ' ? (cnpj || cpf) : (cpf || cnpj);
+      const phoneSource = phone ? phone.replace(/\D/g, '') : '';
+
+      // Login: apenas dígitos do CPF/CNPJ
+      autoUsername = docSource ? docSource.replace(/\D/g, '') : '';
+      // Senha: primeiros 8 dígitos do telefone (fallback: primeiros 8 dígitos do CPF/CNPJ)
+      autoPassword = phoneSource.length >= 8
+        ? phoneSource.slice(0, 8)
+        : (autoUsername.length >= 8 ? autoUsername.slice(0, 8) : autoUsername);
+
+      if (autoUsername && autoPassword && autoPassword.length >= 4) {
+        const { hash, salt } = hashPassword(autoPassword);
+        const userId = 'USR-CLI-' + Date.now();
+
+        // INSERT OR IGNORE: ignora silenciosamente se o username já existir (evita unique constraint)
+        const result = db.prepare(`
+          INSERT OR IGNORE INTO users (id, username, password_hash, salt, name, role, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          userId,
+          autoUsername,
+          hash,
+          salt,
+          full_name.trim(),
+          'cliente',
+          now
+        );
+
+        // result.changes === 1 significa que foi inserido (0 = ignorado por conflito)
+        if (result.changes === 1) {
+          logAudit(req, {
+            event_type: 'CRIACAO',
+            event_name: 'CRIAR_USUARIO',
+            module: 'USUARIOS',
+            resource_id: userId,
+            description: `Usuário criado automaticamente para o cliente '${full_name.trim()}' (login: ${autoUsername}) ao cadastrá-lo no sistema.`,
+            details: { userId, username: autoUsername, name: full_name.trim(), role: 'cliente', clientId, origem: 'auto-cadastro-cliente' }
+          });
+          autoUserCreated = true;
+          console.log(`[USERS] Usuário criado automaticamente para cliente #${clientId}: login=${autoUsername}`);
+        } else {
+          console.log(`[USERS] Login '${autoUsername}' já existe — usuário não duplicado para cliente #${clientId}`);
+        }
+      }
+    } catch (userErr) {
+      // Nunca interrompe o cadastro do cliente por falha na criação do usuário
+      console.warn(`[USERS] Falha ao criar usuário automático para cliente #${clientId}:`, userErr.message);
+    }
+
     return res.status(201).json({
       success: true,
       clientId,
       message: 'Cliente e contrato cadastrados com sucesso!',
-      filesCount: filesInfo.length
+      filesCount: filesInfo.length,
+      autoUser: autoUserCreated
+        ? { created: true, username: autoUsername, password: autoPassword, message: `Acesso criado: login=${autoUsername} / senha=${autoPassword}` }
+        : { created: false }
     });
 
   } catch (error) {
     console.error('[ERRO] Falha ao cadastrar cliente:', error);
-    return res.status(500).json({ error: 'Erro interno ao salvar dados do cliente.' });
+    return res.status(500).json({ error: error.message || 'Erro interno ao salvar dados do cliente.' });
   }
 });
 
@@ -5275,6 +5320,25 @@ app.post('/api/judicial/import-to-office', requireAuth, (req, res) => {
     console.error('[ERRO] Falha ao importar processo:', error);
     return res.status(500).json({ error: 'Erro ao importar processo: ' + error.message });
   }
+});
+
+// Middleware Global de Tratamento de Erros (Multer e Servidor)
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    console.warn('[AVISO UPLOAD] Erro Multer:', err.message, err.code);
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Arquivo excede o limite de tamanho permitido (máximo 50MB por anexo).' });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ error: 'Limite máximo de arquivos excedido (máximo 10 anexos por envio).' });
+    }
+    return res.status(400).json({ error: `Erro no upload: ${err.message}` });
+  }
+  if (err) {
+    console.error('[ERRO NÃO TRATADO]', err);
+    return res.status(500).json({ error: err.message || 'Erro interno no servidor.' });
+  }
+  next();
 });
 
 // Inicialização do Servidor

@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="14" fill="#0B192C"/>
+  <rect width="64" height="64" rx="14" fill="#FCF9F0" stroke="#E1CB8F" stroke-width="2"/>
   <!-- Base e Coluna Central -->
-  <path d="M32 10V52M20 54H44M26 50H38" stroke="#C89D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 10V52M20 54H44M26 50H38" stroke="#B0842B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Braço da Balança -->
-  <path d="M14 20L32 16L50 20" stroke="#C89D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M14 20L32 16L50 20" stroke="#B0842B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Prato Esquerdo -->
-  <path d="M14 20L8 34M14 20L20 34" stroke="#C89D4D" stroke-width="2" stroke-linecap="round"/>
-  <path d="M6 34C6 38 22 38 22 34H6Z" fill="#C89D4D" fill-opacity="0.2" stroke="#C89D4D" stroke-width="2"/>
+  <path d="M14 20L8 34M14 20L20 34" stroke="#B0842B" stroke-width="2" stroke-linecap="round"/>
+  <path d="M6 34C6 38 22 38 22 34H6Z" fill="#C59B3F" fill-opacity="0.25" stroke="#B0842B" stroke-width="2"/>
   <!-- Prato Direito -->
-  <path d="M50 20L44 34M50 20L56 34" stroke="#C89D4D" stroke-width="2" stroke-linecap="round"/>
-  <path d="M42 34C42 38 58 38 58 34H42Z" fill="#C89D4D" fill-opacity="0.2" stroke="#C89D4D" stroke-width="2"/>
+  <path d="M50 20L44 34M50 20L56 34" stroke="#B0842B" stroke-width="2" stroke-linecap="round"/>
+  <path d="M42 34C42 38 58 38 58 34H42Z" fill="#C59B3F" fill-opacity="0.25" stroke="#B0842B" stroke-width="2"/>
   <!-- Detalhe do Topo -->
-  <circle cx="32" cy="12" r="3" fill="#C89D4D"/>
+  <circle cx="32" cy="12" r="3" fill="#B0842B"/>
 </svg>

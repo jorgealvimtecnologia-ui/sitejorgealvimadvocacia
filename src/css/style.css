@@ -8,62 +8,52 @@
   html {
     scroll-behavior: smooth;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    color: #1e293b;
-    background-color: #060D17;
+    color: #0F172A;
+    background-color: #FDFBF7;
   }
 
   body {
     overflow-x: hidden;
+    background-color: #FDFBF7;
+    color: #0F172A;
   }
 
   ::selection {
-    background-color: #C89D4D;
-    color: #0B192C;
+    background-color: #B8860B;
+    color: #FFFFFF;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar Suave e Claro */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #060D17;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #162C4B;
-  border-radius: 5px;
-  border: 2px solid #060D17;
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C89D4D;
+  background: #B8860B;
 }
 
 /* Custom Utility Classes & Animations */
 @layer components {
   .gold-gradient-text {
-    background: linear-gradient(135deg, #FBF5E8 0%, #DDB569 50%, #B0883C 100%);
+    background: linear-gradient(135deg, #855E1C 0%, #B8860B 50%, #D4AF37 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .gold-gradient-bg {
-    background: linear-gradient(135deg, #C89D4D 0%, #B0883C 50%, #95712E 100%);
+    background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #855E1C 100%);
   }
 
   .gold-gradient-border {
-    border-image: linear-gradient(135deg, #DDB569, rgba(200, 157, 77, 0.2), #95712E) 1;
-  }
-
-  .glass-card-dark {
-    background: rgba(16, 34, 59, 0.65);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(200, 157, 77, 0.18);
-  }
-
-  .glass-card-dark:hover {
-    border-color: rgba(200, 157, 77, 0.45);
-    box-shadow: 0 12px 35px -8px rgba(200, 157, 77, 0.15);
+    border-image: linear-gradient(135deg, #D4AF37, rgba(184, 134, 11, 0.4), #855E1C) 1;
   }
 
   .glass-card-light {
@@ -72,25 +62,32 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(226, 232, 240, 0.8);
   }
+
+  .glass-card-gold {
+    background: rgba(253, 251, 244, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+  }
 }
 
 /* Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes pulseSlow {
-  0%, 100% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.25; transform: scale(1.05); }
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.04); }
 }
 
 .animate-float {
-  animation: float 4s ease-in-out infinite;
+  animation: float 3.5s ease-in-out infinite;
 }
 
 .animate-pulse-slow {
-  animation: pulseSlow 6s ease-in-out infinite;
+  animation: pulseSlow 5s ease-in-out infinite;
 }
 
 /* Accordion Transition */
