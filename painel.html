@@ -1074,7 +1074,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       <section id="tab-content-drive" class="hidden space-y-6">
 
         <!-- Top Control Bar: Estatísticas do Drive + Botão Novo Upload -->
-        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-md space-y-4">
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-md space-y-5">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-slate-100">
             <div class="flex items-center space-x-3">
               <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
@@ -1094,7 +1094,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
 
           <!-- Cards de Estatísticas e Resumo de Armazenamento -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center text-lg">📄</div>
               <div>
@@ -1125,31 +1125,148 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
           </div>
 
-          <!-- Barra de Filtros por Categoria/Pasta e Campo de Pesquisa -->
-          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
-            <div class="flex items-center space-x-1 overflow-x-auto pb-1 md:pb-0 scrollbar-thin">
-              <button onclick="selectDriveCategory('Todas')" id="drive-cat-Todas" class="drive-cat-btn px-3 py-1.5 rounded-xl font-bold text-xs bg-navy-950 text-amber-400 border border-navy-950 transition-all cursor-pointer whitespace-nowrap">Todas as Pastas</button>
-              <button onclick="selectDriveCategory('Modelos de Peças & Minutas')" id="drive-cat-Modelos" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">📝 Peças & Minutas</button>
-              <button onclick="selectDriveCategory('Documentos Institucionais (PJ)')" id="drive-cat-PJ" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">🏢 Sociedade (PJ)</button>
-              <button onclick="selectDriveCategory('Documentos da Equipe (PF)')" id="drive-cat-PF" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">👤 Equipe & OABs (PF)</button>
-              <button onclick="selectDriveCategory('Contratos & Modelos Financeiros')" id="drive-cat-Contratos" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">💼 Contratos & Caixa</button>
-              <button onclick="selectDriveCategory('Geral')" id="drive-cat-Geral" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">📂 Geral</button>
+          <!-- SEÇÃO VISUAL: GRADE DE PASTAS DO ESCRITÓRIO -->
+          <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between">
+              <h4 class="font-serif font-bold text-sm text-navy-950 flex items-center space-x-2">
+                <span>📁 Pastas do Escritório</span>
+              </h4>
+              <span class="text-[11px] text-slate-500 font-medium">Clique em uma pasta para abrir seus arquivos</span>
             </div>
 
-            <div class="relative w-full md:w-72">
-              <input 
-                type="text" 
-                id="drive-search-input" 
-                placeholder="Buscar documento..." 
-                class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
-                oninput="filterDriveFiles()"
-              />
-              <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              
+              <!-- Pasta 1: Peças & Minutas -->
+              <div 
+                onclick="selectDriveCategory('Modelos de Peças & Minutas')" 
+                id="folder-card-Modelos" 
+                class="drive-folder-card bg-amber-50/70 hover:bg-amber-100/90 p-4 rounded-2xl border border-amber-300 shadow-sm transition-all cursor-pointer space-y-2.5 group"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-800 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    📝
+                  </div>
+                  <span id="folder-count-Modelos" class="px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-950 font-extrabold text-[10px]">0 arq</span>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-900 text-xs truncate">Peças & Minutas</h5>
+                  <p class="text-[10px] text-slate-500 truncate">Procurações & Petições</p>
+                </div>
+              </div>
+
+              <!-- Pasta 2: Sociedade (PJ) -->
+              <div 
+                onclick="selectDriveCategory('Documentos Institucionais (PJ)')" 
+                id="folder-card-PJ" 
+                class="drive-folder-card bg-blue-50/70 hover:bg-blue-100/90 p-4 rounded-2xl border border-blue-300 shadow-sm transition-all cursor-pointer space-y-2.5 group"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-800 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    🏢
+                  </div>
+                  <span id="folder-count-PJ" class="px-2 py-0.5 rounded-full bg-blue-200/90 text-blue-950 font-extrabold text-[10px]">0 arq</span>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-900 text-xs truncate">Sociedade (PJ)</h5>
+                  <p class="text-[10px] text-slate-500 truncate">CNPJ, OAB & Atos Sociais</p>
+                </div>
+              </div>
+
+              <!-- Pasta 3: Equipe (PF) -->
+              <div 
+                onclick="selectDriveCategory('Documentos da Equipe (PF)')" 
+                id="folder-card-PF" 
+                class="drive-folder-card bg-purple-50/70 hover:bg-purple-100/90 p-4 rounded-2xl border border-purple-300 shadow-sm transition-all cursor-pointer space-y-2.5 group"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-800 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    👤
+                  </div>
+                  <span id="folder-count-PF" class="px-2 py-0.5 rounded-full bg-purple-200/90 text-purple-950 font-extrabold text-[10px]">0 arq</span>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-900 text-xs truncate">Equipe & OABs (PF)</h5>
+                  <p class="text-[10px] text-slate-500 truncate">Carteiras OAB, RG & CPFs</p>
+                </div>
+              </div>
+
+              <!-- Pasta 4: Contratos & Caixa -->
+              <div 
+                onclick="selectDriveCategory('Contratos & Modelos Financeiros')" 
+                id="folder-card-Contratos" 
+                class="drive-folder-card bg-emerald-50/70 hover:bg-emerald-100/90 p-4 rounded-2xl border border-emerald-300 shadow-sm transition-all cursor-pointer space-y-2.5 group"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-800 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    💼
+                  </div>
+                  <span id="folder-count-Contratos" class="px-2 py-0.5 rounded-full bg-emerald-200/90 text-emerald-950 font-extrabold text-[10px]">0 arq</span>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-900 text-xs truncate">Contratos & Caixa</h5>
+                  <p class="text-[10px] text-slate-500 truncate">Honorários & Minutas</p>
+                </div>
+              </div>
+
+              <!-- Pasta 5: Geral -->
+              <div 
+                onclick="selectDriveCategory('Geral')" 
+                id="folder-card-Geral" 
+                class="drive-folder-card bg-slate-100/80 hover:bg-slate-200/90 p-4 rounded-2xl border border-slate-300 shadow-sm transition-all cursor-pointer space-y-2.5 group"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-10 h-10 rounded-xl bg-slate-300 text-slate-800 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+                    📂
+                  </div>
+                  <span id="folder-count-Geral" class="px-2 py-0.5 rounded-full bg-slate-300 text-slate-950 font-extrabold text-[10px]">0 arq</span>
+                </div>
+                <div>
+                  <h5 class="font-bold text-slate-900 text-xs truncate">Geral / Outros</h5>
+                  <p class="text-[10px] text-slate-500 truncate">Arquivos diversos</p>
+                </div>
+              </div>
+
             </div>
           </div>
+
+          <!-- BREADCRUMB & BARRA DE CAMINHO DA PASTA ATIVA -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+            <div class="flex items-center space-x-2 flex-wrap">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Localização:</span>
+              <button onclick="selectDriveCategory('Todas')" class="text-xs font-bold text-navy-950 hover:underline flex items-center space-x-1 cursor-pointer">
+                <span>📁 Raiz do Drive</span>
+              </button>
+              <span class="text-slate-400 text-xs">/</span>
+              <span id="drive-current-folder-title" class="text-xs font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300">
+                Todas as Pastas (6 documentos)
+              </span>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <button 
+                onclick="selectDriveCategory('Todas')" 
+                id="btn-show-all-drive" 
+                class="hidden text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 transition-all cursor-pointer"
+              >
+                ⬅️ Ver Todas as Pastas
+              </button>
+
+              <div class="relative w-full sm:w-64">
+                <input 
+                  type="text" 
+                  id="drive-search-input" 
+                  placeholder="Buscar arquivo..." 
+                  class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-emerald-500"
+                  oninput="filterDriveFiles()"
+                />
+                <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Contêiner de Lista/Grid dos Documentos do Drive -->
+        <!-- Contêiner de Lista/Grid dos Documentos da Pasta Selecionada -->
         <div id="drive-files-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Renderizado dinamicamente pelo JavaScript -->
         </div>
@@ -4591,6 +4708,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           loadClients();
           loadLawsuits();
           loadOffices();
+          loadDriveFiles();
         } else {
           showLoginScreen();
         }
@@ -6447,21 +6565,53 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (!container) return;
 
       try {
-        let url = '/api/drive/files';
-        const params = new URLSearchParams();
-        if (folder && folder !== 'Todas') params.append('folder', folder);
-        if (search && search.trim()) params.append('search', search.trim());
-        if (params.toString()) url += `?${params.toString()}`;
-
-        const res = await fetch(url, { headers: getAuthHeaders() });
+        const res = await fetch('/api/drive/files', { headers: getAuthHeaders() });
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success) return;
 
         allDriveFiles = data.files || [];
-        renderDriveFiles(allDriveFiles);
 
-        // Atualizar badges estatísticos
+        // Atualizar contadores em cada Pasta Visual
+        updateFolderCounts(allDriveFiles);
+
+        // Filtrar a exibição com base na pasta selecionada e termo de busca
+        let displayedFiles = allDriveFiles;
+        if (folder && folder !== 'Todas') {
+          displayedFiles = displayedFiles.filter(f => f.folder === folder);
+        }
+
+        if (search && search.trim()) {
+          const term = search.trim().toLowerCase();
+          displayedFiles = displayedFiles.filter(f => 
+            (f.title || '').toLowerCase().includes(term) ||
+            (f.filename || '').toLowerCase().includes(term) ||
+            (f.notes || '').toLowerCase().includes(term) ||
+            (f.uploaded_by || '').toLowerCase().includes(term)
+          );
+        }
+
+        renderDriveFiles(displayedFiles);
+
+        // Atualizar Breadcrumb e Título da Localização
+        const folderTitleElem = document.getElementById('drive-current-folder-title');
+        const showAllBtn = document.getElementById('btn-show-all-drive');
+        if (folderTitleElem) {
+          if (folder === 'Todas') {
+            folderTitleElem.textContent = `Todas as Pastas (${displayedFiles.length} documento(s))`;
+            folderTitleElem.className = 'text-xs font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-300';
+            if (showAllBtn) showAllBtn.classList.add('hidden');
+          } else {
+            folderTitleElem.textContent = `📂 ${folder} (${displayedFiles.length} documento(s))`;
+            folderTitleElem.className = 'text-xs font-extrabold text-navy-950 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300';
+            if (showAllBtn) showAllBtn.classList.remove('hidden');
+          }
+        }
+
+        // Destaque visual do Card da Pasta Ativa
+        highlightActiveFolderCard(folder);
+
+        // Atualizar badges estatísticos no topo
         const countBadge = document.getElementById('tab-drive-count');
         if (countBadge) countBadge.textContent = allDriveFiles.length;
 
@@ -6474,7 +6624,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         const statFolders = document.getElementById('drive-stat-folders');
         if (statFolders) {
           const folderCount = data.foldersCount ? data.foldersCount.length : 0;
-          statFolders.textContent = `${folderCount} pasta(s) ativa(s)`;
+          statFolders.textContent = `${folderCount} pasta(s) com arquivos`;
         }
       } catch (err) {
         console.error('Erro ao carregar arquivos do Drive:', err);
@@ -6486,37 +6636,57 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       }
     }
 
-    function selectDriveCategory(catName) {
-      selectedDriveCategory = catName;
+    function updateFolderCounts(files) {
+      const counts = {
+        'Modelos': 0,
+        'PJ': 0,
+        'PF': 0,
+        'Contratos': 0,
+        'Geral': 0
+      };
 
-      // Atualiza estática das pílulas de categorias
-      document.querySelectorAll('.drive-cat-btn').forEach(btn => {
-        btn.className = 'drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap';
+      files.forEach(f => {
+        const fold = f.folder || '';
+        if (fold.includes('Peças')) counts['Modelos']++;
+        else if (fold.includes('Institucionais')) counts['PJ']++;
+        else if (fold.includes('Equipe')) counts['PF']++;
+        else if (fold.includes('Financeiros') || fold.includes('Contratos')) counts['Contratos']++;
+        else counts['Geral']++;
       });
 
-      const catId = catName === 'Todas' ? 'Todas' : (catName.includes('Peças') ? 'Modelos' : (catName.includes('Institucionais') ? 'PJ' : (catName.includes('Equipe') ? 'PF' : (catName.includes('Financeiros') ? 'Contratos' : 'Geral'))));
-      const activeBtn = document.getElementById(`drive-cat-${catId}`);
-      if (activeBtn) {
-        activeBtn.className = 'drive-cat-btn px-3 py-1.5 rounded-xl font-bold text-xs bg-navy-950 text-amber-400 border border-navy-950 transition-all cursor-pointer whitespace-nowrap';
-      }
+      Object.keys(counts).forEach(key => {
+        const elem = document.getElementById(`folder-count-${key}`);
+        if (elem) elem.textContent = `${counts[key]} arq`;
+      });
+    }
 
+    function highlightActiveFolderCard(folder) {
+      document.querySelectorAll('.drive-folder-card').forEach(card => {
+        card.classList.remove('ring-2', 'ring-emerald-500', 'shadow-lg', 'bg-white');
+      });
+
+      let catId = 'Geral';
+      if (folder.includes('Peças')) catId = 'Modelos';
+      else if (folder.includes('Institucionais')) catId = 'PJ';
+      else if (folder.includes('Equipe')) catId = 'PF';
+      else if (folder.includes('Financeiros') || folder.includes('Contratos')) catId = 'Contratos';
+      else if (folder === 'Geral') catId = 'Geral';
+      else return;
+
+      const activeCard = document.getElementById(`folder-card-${catId}`);
+      if (activeCard) {
+        activeCard.classList.add('ring-2', 'ring-emerald-500', 'shadow-lg', 'bg-white');
+      }
+    }
+
+    function selectDriveCategory(catName) {
+      selectedDriveCategory = catName;
       loadDriveFiles(catName);
     }
 
     function filterDriveFiles() {
       const term = (document.getElementById('drive-search-input')?.value || '').toLowerCase().trim();
-      if (!term) {
-        renderDriveFiles(allDriveFiles);
-        return;
-      }
-      const filtered = allDriveFiles.filter(f => 
-        (f.title || '').toLowerCase().includes(term) ||
-        (f.filename || '').toLowerCase().includes(term) ||
-        (f.folder || '').toLowerCase().includes(term) ||
-        (f.notes || '').toLowerCase().includes(term) ||
-        (f.uploaded_by || '').toLowerCase().includes(term)
-      );
-      renderDriveFiles(filtered);
+      loadDriveFiles(selectedDriveCategory, term);
     }
 
     function formatFileSize(bytes) {
