@@ -164,12 +164,32 @@ db.exec(`
     phone TEXT,
     position_title TEXT,
     admission_date TEXT,
+    street TEXT,
+    number TEXT,
+    complement TEXT,
+    neighborhood TEXT,
+    city TEXT,
+    state TEXT DEFAULT 'MG',
+    cep TEXT,
     status TEXT DEFAULT 'Ativo',
     notes TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
 `);
+
+try {
+  const memCols = db.prepare(`PRAGMA table_info(office_members)`).all().map(c => c.name);
+  if (!memCols.includes('street')) db.exec(`ALTER TABLE office_members ADD COLUMN street TEXT DEFAULT ''`);
+  if (!memCols.includes('number')) db.exec(`ALTER TABLE office_members ADD COLUMN number TEXT DEFAULT ''`);
+  if (!memCols.includes('complement')) db.exec(`ALTER TABLE office_members ADD COLUMN complement TEXT DEFAULT ''`);
+  if (!memCols.includes('neighborhood')) db.exec(`ALTER TABLE office_members ADD COLUMN neighborhood TEXT DEFAULT ''`);
+  if (!memCols.includes('city')) db.exec(`ALTER TABLE office_members ADD COLUMN city TEXT DEFAULT ''`);
+  if (!memCols.includes('state')) db.exec(`ALTER TABLE office_members ADD COLUMN state TEXT DEFAULT 'MG'`);
+  if (!memCols.includes('cep')) db.exec(`ALTER TABLE office_members ADD COLUMN cep TEXT DEFAULT ''`);
+} catch (e) {
+  console.warn('Verificação de migração de office_members:', e);
+}
 
 // 4. Tabelas de Processos Judiciais, Tribunais, Instâncias e Andamentos (CNJ)
 db.exec(`
@@ -1937,9 +1957,10 @@ app.post('/api/offices', requireAuth, (req, res) => {
       const insertMemStmt = db.prepare(`
         INSERT INTO office_members (
           id, office_id, role_type, name, cpf, rg, oab_number, oab_uf,
-          email, phone, position_title, admission_date, status, notes,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          email, phone, position_title, admission_date,
+          street, number, complement, neighborhood, city, state, cep,
+          status, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const m of members) {
@@ -1958,6 +1979,13 @@ app.post('/api/offices', requireAuth, (req, res) => {
           m.phone ? m.phone.trim() : '',
           m.position_title ? m.position_title.trim() : '',
           m.admission_date || '',
+          m.street ? m.street.trim() : '',
+          m.number ? m.number.trim() : '',
+          m.complement ? m.complement.trim() : '',
+          m.neighborhood ? m.neighborhood.trim() : '',
+          m.city ? m.city.trim() : '',
+          m.state ? m.state.trim() : 'MG',
+          m.cep ? m.cep.trim() : '',
           m.status || 'Ativo',
           m.notes ? m.notes.trim() : '',
           now,
@@ -2068,9 +2096,10 @@ app.put('/api/offices/:id', requireAuth, (req, res) => {
       const insertMemStmt = db.prepare(`
         INSERT INTO office_members (
           id, office_id, role_type, name, cpf, rg, oab_number, oab_uf,
-          email, phone, position_title, admission_date, status, notes,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          email, phone, position_title, admission_date,
+          street, number, complement, neighborhood, city, state, cep,
+          status, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const m of members) {
@@ -2089,6 +2118,13 @@ app.put('/api/offices/:id', requireAuth, (req, res) => {
           m.phone ? m.phone.trim() : '',
           m.position_title ? m.position_title.trim() : '',
           m.admission_date || '',
+          m.street ? m.street.trim() : '',
+          m.number ? m.number.trim() : '',
+          m.complement ? m.complement.trim() : '',
+          m.neighborhood ? m.neighborhood.trim() : '',
+          m.city ? m.city.trim() : '',
+          m.state ? m.state.trim() : 'MG',
+          m.cep ? m.cep.trim() : '',
           m.status || 'Ativo',
           m.notes ? m.notes.trim() : '',
           now,
