@@ -348,7 +348,20 @@
           <span id="tab-offices-count" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">0</span>
         </button>
 
-        <!-- Aba 11: Usuários e Senhas -->
+        <!-- Aba 11: Drive do Escritório (Arquivo Digital & Documentos) -->
+        <button 
+          id="tab-btn-drive" 
+          onclick="switchTab('drive')" 
+          class="flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50 cursor-pointer"
+        >
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
+          <span>📁 Drive do Escritório</span>
+          <span id="tab-drive-count" class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-bold">0</span>
+        </button>
+
+        <!-- Aba 12: Usuários e Senhas -->
         <button 
           id="tab-btn-users" 
           onclick="switchTab('users')" 
@@ -1057,9 +1070,160 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         </div>
 
+      <!-- ================= ABA 11: DRIVE DO ESCRITÓRIO (ARQUIVO DIGITAL & DOCUMENTOS) ================= -->
+      <section id="tab-content-drive" class="hidden space-y-6">
+
+        <!-- Top Control Bar: Estatísticas do Drive + Botão Novo Upload -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-md space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-slate-100">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
+                📁
+              </div>
+              <div>
+                <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950">Drive do Escritório & Arquivo Digital</h3>
+                <p class="text-xs text-slate-500">Central de documentos internos, modelos de peças, minutas contratuais, atos da sociedade e certidões.</p>
+              </div>
+            </div>
+            <button 
+              onclick="openDriveUploadModal()" 
+              class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer border border-emerald-500/60"
+            >
+              <span>➕ Fazer Upload de Documento</span>
+            </button>
+          </div>
+
+          <!-- Cards de Estatísticas e Resumo de Armazenamento -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center text-lg">📄</div>
+              <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Arquivos</p>
+                <p id="drive-stat-total" class="text-sm font-extrabold text-slate-900">0 documentos</p>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center text-lg">📁</div>
+              <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Categorias</p>
+                <p id="drive-stat-folders" class="text-sm font-extrabold text-slate-900">5 pastas</p>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-lg">💾</div>
+              <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Espaço Ocupado</p>
+                <p id="drive-stat-size" class="text-sm font-extrabold text-slate-900">0 MB</p>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg">🔒</div>
+              <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Segurança</p>
+                <p class="text-xs font-extrabold text-emerald-700">100% Criptografado</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Filtros por Categoria/Pasta e Campo de Pesquisa -->
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
+            <div class="flex items-center space-x-1 overflow-x-auto pb-1 md:pb-0 scrollbar-thin">
+              <button onclick="selectDriveCategory('Todas')" id="drive-cat-Todas" class="drive-cat-btn px-3 py-1.5 rounded-xl font-bold text-xs bg-navy-950 text-amber-400 border border-navy-950 transition-all cursor-pointer whitespace-nowrap">Todas as Pastas</button>
+              <button onclick="selectDriveCategory('Modelos de Peças & Minutas')" id="drive-cat-Modelos" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">📝 Peças & Minutas</button>
+              <button onclick="selectDriveCategory('Documentos Institucionais (PJ)')" id="drive-cat-PJ" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">🏢 Sociedade (PJ)</button>
+              <button onclick="selectDriveCategory('Documentos da Equipe (PF)')" id="drive-cat-PF" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">👤 Equipe & OABs (PF)</button>
+              <button onclick="selectDriveCategory('Contratos & Modelos Financeiros')" id="drive-cat-Contratos" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">💼 Contratos & Caixa</button>
+              <button onclick="selectDriveCategory('Geral')" id="drive-cat-Geral" class="drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap">📂 Geral</button>
+            </div>
+
+            <div class="relative w-full md:w-72">
+              <input 
+                type="text" 
+                id="drive-search-input" 
+                placeholder="Buscar documento..." 
+                class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
+                oninput="filterDriveFiles()"
+              />
+              <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contêiner de Lista/Grid dos Documentos do Drive -->
+        <div id="drive-files-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Renderizado dinamicamente pelo JavaScript -->
+        </div>
+
       </section>
 
-      <!-- ================= ABA 5: USUÁRIOS & SENHAS ================= -->
+      <!-- ================= MODAL DE UPLOAD DE DOCUMENTO PARA O DRIVE ================= -->
+      <div id="drive-upload-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden animate-fadeIn">
+          <!-- Cabeçalho -->
+          <div class="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-navy-950 text-white flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                📁
+              </div>
+              <div>
+                <h4 id="drive-modal-title" class="font-serif font-bold text-base text-amber-400">Fazer Upload para o Drive</h4>
+                <p class="text-[11px] text-slate-300">Selecione a categoria e adicione os arquivos desejados ao arquivo digital do escritório.</p>
+              </div>
+            </div>
+            <button onclick="closeDriveUploadModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all cursor-pointer">✕</button>
+          </div>
+
+          <!-- Formulário -->
+          <form id="drive-upload-form" onsubmit="handleSaveDriveUpload(event)" class="p-6 space-y-4">
+            <input type="hidden" id="drive-edit-id" value="" />
+
+            <!-- Categoria / Pasta -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pasta / Categoria *</label>
+              <select id="drive-upload-folder" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500">
+                <option value="Modelos de Peças & Minutas">📝 Modelos de Peças & Minutas (Procurações, Contratos, Declarações)</option>
+                <option value="Documentos Institucionais (PJ)">🏢 Documentos Institucionais da Sociedade (PJ)</option>
+                <option value="Documentos da Equipe (PF)">👤 Documentos da Equipe & OABs (PF)</option>
+                <option value="Contratos & Modelos Financeiros">💼 Contratos & Modelos Financeiros</option>
+                <option value="Geral" selected>📂 Geral / Outros Documentos</option>
+              </select>
+            </div>
+
+            <!-- Título do Documento -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Título do Documento / Descrição Curta *</label>
+              <input type="text" id="drive-upload-title" placeholder="Ex: Modelo de Procuração Ad Judicia 2026.docx" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-emerald-500" />
+            </div>
+
+            <!-- Seleção de Arquivo(s) -->
+            <div id="drive-file-input-wrapper">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Arquivo(s) para Upload (PDF, Word, Excel, Imagens) *</label>
+              <input type="file" id="drive-upload-files" multiple required class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-800 hover:file:bg-emerald-100 cursor-pointer border border-slate-300 rounded-xl bg-slate-50 p-1" />
+              <p class="text-[10px] text-slate-500 pt-1">Suporta arquivos PDF, DOCX, XLSX, PNG, JPG de até 100MB por anexo.</p>
+            </div>
+
+            <!-- Observações / Notas -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Observações / Notas Internas</label>
+              <textarea id="drive-upload-notes" rows="2" placeholder="Notas opcionais sobre a utilidade ou versão deste documento..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-emerald-500"></textarea>
+            </div>
+
+            <div id="drive-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+              <span id="drive-error-text">Erro ao realizar upload.</span>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+              <button type="button" onclick="closeDriveUploadModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer">Cancelar</button>
+              <button type="submit" id="drive-save-btn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1 cursor-pointer">
+                <span>💾 Enviar Documento para o Drive</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ================= ABA 12: USUÁRIOS & SENHAS ================= -->
       <section id="tab-content-users" class="hidden space-y-6">
         
         <!-- Banner Informativo Superior com Destaques Claros -->
@@ -4315,6 +4479,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const tabPreClients = document.getElementById('tab-content-pre-clients');
       const tabJudicial = document.getElementById('tab-content-judicial');
       const tabOffices = document.getElementById('tab-content-offices');
+      const tabDrive = document.getElementById('tab-content-drive');
       const tabUsers = document.getElementById('tab-content-users');
 
       const btnLeads = document.getElementById('tab-btn-leads');
@@ -4327,6 +4492,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const btnPreClients = document.getElementById('tab-btn-pre-clients');
       const btnJudicial = document.getElementById('tab-btn-judicial');
       const btnOffices = document.getElementById('tab-btn-offices');
+      const btnDrive = document.getElementById('tab-btn-drive');
       const btnUsers = document.getElementById('tab-btn-users');
 
       const activeClass = "flex items-center space-x-2 px-4 py-2 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-b-2 border-gold-500 bg-amber-50/80 text-gold-900 shadow-sm";
@@ -4342,6 +4508,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (tabPreClients) tabPreClients.classList.add('hidden');
       if (tabJudicial) tabJudicial.classList.add('hidden');
       if (tabOffices) tabOffices.classList.add('hidden');
+      if (tabDrive) tabDrive.classList.add('hidden');
       tabUsers.classList.add('hidden');
 
       btnLeads.className = inactiveClass;
@@ -4354,6 +4521,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (btnPreClients) btnPreClients.className = inactiveClass;
       if (btnJudicial) btnJudicial.className = inactiveClass;
       if (btnOffices) btnOffices.className = inactiveClass;
+      if (btnDrive) btnDrive.className = inactiveClass;
       btnUsers.className = inactiveClass;
 
       if (tab === 'leads') {
@@ -4396,6 +4564,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         if (tabOffices) tabOffices.classList.remove('hidden');
         if (btnOffices) btnOffices.className = activeClass;
         initOfficesTab();
+      } else if (tab === 'drive') {
+        if (tabDrive) tabDrive.classList.remove('hidden');
+        if (btnDrive) btnDrive.className = activeClass;
+        initDriveTab();
       } else if (tab === 'users') {
         tabUsers.classList.remove('hidden');
         btnUsers.className = activeClass;
@@ -6256,6 +6428,316 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           alert('🗑️ Usuário excluído com sucesso.');
         } else {
           alert(data.error || 'Erro ao excluir usuário.');
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    // ================= 4.2 MÓDULO DO DRIVE DO ESCRITÓRIO (ARQUIVO DIGITAL) =================
+    let allDriveFiles = [];
+    let selectedDriveCategory = 'Todas';
+
+    function initDriveTab() {
+      loadDriveFiles();
+    }
+
+    async function loadDriveFiles(folder = selectedDriveCategory, search = '') {
+      const container = document.getElementById('drive-files-container');
+      if (!container) return;
+
+      try {
+        let url = '/api/drive/files';
+        const params = new URLSearchParams();
+        if (folder && folder !== 'Todas') params.append('folder', folder);
+        if (search && search.trim()) params.append('search', search.trim());
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+
+        allDriveFiles = data.files || [];
+        renderDriveFiles(allDriveFiles);
+
+        // Atualizar badges estatísticos
+        const countBadge = document.getElementById('tab-drive-count');
+        if (countBadge) countBadge.textContent = allDriveFiles.length;
+
+        const statTotal = document.getElementById('drive-stat-total');
+        if (statTotal) statTotal.textContent = `${allDriveFiles.length} documento(s)`;
+
+        const statSize = document.getElementById('drive-stat-size');
+        if (statSize) statSize.textContent = formatFileSize(data.totalSize || 0);
+
+        const statFolders = document.getElementById('drive-stat-folders');
+        if (statFolders) {
+          const folderCount = data.foldersCount ? data.foldersCount.length : 0;
+          statFolders.textContent = `${folderCount} pasta(s) ativa(s)`;
+        }
+      } catch (err) {
+        console.error('Erro ao carregar arquivos do Drive:', err);
+        container.innerHTML = `
+          <div class="col-span-full bg-white p-8 rounded-3xl border border-slate-200 text-center text-rose-600 text-xs">
+            Erro ao conectar com o servidor para listar documentos do Drive.
+          </div>
+        `;
+      }
+    }
+
+    function selectDriveCategory(catName) {
+      selectedDriveCategory = catName;
+
+      // Atualiza estática das pílulas de categorias
+      document.querySelectorAll('.drive-cat-btn').forEach(btn => {
+        btn.className = 'drive-cat-btn px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap';
+      });
+
+      const catId = catName === 'Todas' ? 'Todas' : (catName.includes('Peças') ? 'Modelos' : (catName.includes('Institucionais') ? 'PJ' : (catName.includes('Equipe') ? 'PF' : (catName.includes('Financeiros') ? 'Contratos' : 'Geral'))));
+      const activeBtn = document.getElementById(`drive-cat-${catId}`);
+      if (activeBtn) {
+        activeBtn.className = 'drive-cat-btn px-3 py-1.5 rounded-xl font-bold text-xs bg-navy-950 text-amber-400 border border-navy-950 transition-all cursor-pointer whitespace-nowrap';
+      }
+
+      loadDriveFiles(catName);
+    }
+
+    function filterDriveFiles() {
+      const term = (document.getElementById('drive-search-input')?.value || '').toLowerCase().trim();
+      if (!term) {
+        renderDriveFiles(allDriveFiles);
+        return;
+      }
+      const filtered = allDriveFiles.filter(f => 
+        (f.title || '').toLowerCase().includes(term) ||
+        (f.filename || '').toLowerCase().includes(term) ||
+        (f.folder || '').toLowerCase().includes(term) ||
+        (f.notes || '').toLowerCase().includes(term) ||
+        (f.uploaded_by || '').toLowerCase().includes(term)
+      );
+      renderDriveFiles(filtered);
+    }
+
+    function formatFileSize(bytes) {
+      const b = parseInt(bytes, 10) || 0;
+      if (b === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(b) / Math.log(k));
+      return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function renderDriveFiles(list) {
+      const container = document.getElementById('drive-files-container');
+      if (!container) return;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
+            <div class="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center text-3xl mx-auto">
+              📁
+            </div>
+            <h5 class="font-serif font-bold text-base text-navy-950">Nenhum documento nesta pasta</h5>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Clique no botão "➕ Fazer Upload de Documento" acima para armazenar modelos de peças, procurações, contratos ou documentos institucionais.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(doc => {
+        const ext = (doc.file_type || doc.filename.split('.').pop() || '').toLowerCase();
+        let icon = '📄';
+        let badgeColor = 'bg-blue-100 text-blue-900 border-blue-200';
+
+        if (['pdf'].includes(ext)) { icon = '📕'; badgeColor = 'bg-rose-100 text-rose-900 border-rose-200'; }
+        else if (['doc', 'docx'].includes(ext)) { icon = '📝'; badgeColor = 'bg-blue-100 text-blue-900 border-blue-200'; }
+        else if (['xls', 'xlsx', 'csv'].includes(ext)) { icon = '📊'; badgeColor = 'bg-emerald-100 text-emerald-900 border-emerald-200'; }
+        else if (['png', 'jpg', 'jpeg', 'svg', 'webp'].includes(ext)) { icon = '🖼️'; badgeColor = 'bg-purple-100 text-purple-900 border-purple-200'; }
+        else if (['zip', 'rar', '7z'].includes(ext)) { icon = '📦'; badgeColor = 'bg-amber-100 text-amber-900 border-amber-200'; }
+
+        return `
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-md hover:shadow-lg transition-all space-y-3 flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                  <div class="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xl shadow-sm flex-shrink-0">
+                    ${icon}
+                  </div>
+                  <div class="min-w-0">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">${doc.folder}</span>
+                    <h5 class="font-bold text-slate-900 text-xs sm:text-sm truncate pt-1" title="${doc.title}">${doc.title}</h5>
+                  </div>
+                </div>
+              </div>
+
+              ${doc.notes ? `<p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 italic" title="${doc.notes}">${doc.notes}</p>` : ''}
+
+              <div class="text-[11px] text-slate-500 pt-1 space-y-0.5 font-medium border-t border-slate-100">
+                <div class="flex justify-between">
+                  <span>Tamanho: <strong class="text-slate-800 font-mono">${formatFileSize(doc.file_size)}</strong></span>
+                  <span>Extensão: <strong class="text-slate-800 font-mono uppercase">${ext}</strong></span>
+                </div>
+                <div class="flex justify-between text-[10px]">
+                  <span>Enviado por: <strong class="text-slate-700">${doc.uploaded_by || 'Admin'}</strong></span>
+                  <span>Data: <strong class="text-slate-700">${formatDate(doc.created_at)}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-100">
+              <a 
+                href="${doc.file_path}" 
+                target="_blank" 
+                class="px-2 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] text-center transition-all flex items-center justify-center space-x-1"
+                title="Visualizar ou Abrir arquivo"
+              >
+                <span>👁️ Ver</span>
+              </a>
+
+              <a 
+                href="${doc.file_path}" 
+                download 
+                class="px-2 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] text-center transition-all flex items-center justify-center space-x-1"
+                title="Baixar arquivo para seu computador"
+              >
+                <span>⬇️ Baixar</span>
+              </a>
+
+              <button 
+                onclick="deleteDriveFile('${doc.id}', '${encodeURIComponent(doc.title)}')" 
+                class="px-2 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-900 font-bold text-[11px] text-center transition-all flex items-center justify-center space-x-1 cursor-pointer"
+                title="Excluir documento do Drive"
+              >
+                <span>🗑️ Excluir</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openDriveUploadModal(editId = null) {
+      const modal = document.getElementById('drive-upload-modal');
+      if (!modal) return;
+      document.getElementById('drive-upload-form').reset();
+      document.getElementById('drive-edit-id').value = editId || '';
+      document.getElementById('drive-error-msg').classList.add('hidden');
+
+      if (selectedDriveCategory && selectedDriveCategory !== 'Todas') {
+        document.getElementById('drive-upload-folder').value = selectedDriveCategory;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeDriveUploadModal() {
+      const modal = document.getElementById('drive-upload-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleSaveDriveUpload(e) {
+      e.preventDefault();
+      const editId = document.getElementById('drive-edit-id').value;
+      const folder = document.getElementById('drive-upload-folder').value;
+      const title = document.getElementById('drive-upload-title').value;
+      const notes = document.getElementById('drive-upload-notes').value;
+
+      const errorDiv = document.getElementById('drive-error-msg');
+      const errorText = document.getElementById('drive-error-text');
+      const saveBtn = document.getElementById('drive-save-btn');
+
+      errorDiv.classList.add('hidden');
+
+      if (editId) {
+        try {
+          saveBtn.disabled = true;
+          const res = await fetch(`/api/drive/files/${editId}`, {
+            method: 'PUT',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, folder, notes })
+          });
+          const data = await res.json();
+          saveBtn.disabled = false;
+          if (res.ok && data.success) {
+            closeDriveUploadModal();
+            loadDriveFiles();
+            alert('✅ Dados do documento atualizados com sucesso!');
+          } else {
+            errorText.textContent = data.error || 'Erro ao atualizar documento.';
+            errorDiv.classList.remove('hidden');
+          }
+        } catch (err) {
+          saveBtn.disabled = false;
+          errorText.textContent = 'Erro de conexão com o servidor.';
+          errorDiv.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const filesInput = document.getElementById('drive-upload-files');
+      if (!filesInput.files || filesInput.files.length === 0) {
+        errorText.textContent = 'Selecione ao menos um arquivo para envio.';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('folder', folder);
+      formData.append('title', title);
+      formData.append('notes', notes);
+      for (let i = 0; i < filesInput.files.length; i++) {
+        formData.append('drive_files', filesInput.files[i]);
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span>Enviando...</span>';
+
+      try {
+        const res = await fetch('/api/drive/upload', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: formData
+        });
+
+        const data = await res.json();
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<span>💾 Enviar Documento para o Drive</span>';
+
+        if (res.ok && data.success) {
+          closeDriveUploadModal();
+          loadDriveFiles();
+          alert('✅ Documento(s) adicionado(s) ao Drive com sucesso!');
+        } else {
+          errorText.textContent = data.error || 'Erro ao realizar upload.';
+          errorDiv.classList.remove('hidden');
+        }
+      } catch (err) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<span>💾 Enviar Documento para o Drive</span>';
+        errorText.textContent = 'Erro ao comunicar com o servidor.';
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    async function deleteDriveFile(id, titleEncoded) {
+      const title = decodeURIComponent(titleEncoded);
+      if (!confirm(`⚠️ Tem certeza que deseja excluir permanentemente o documento "${title}" (#${id}) do Drive?`)) return;
+
+      try {
+        const res = await fetch(`/api/drive/files/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadDriveFiles();
+          alert('🗑️ Documento excluído do Drive com sucesso.');
+        } else {
+          alert(data.error || 'Erro ao excluir documento.');
         }
       } catch (err) {
         alert('Erro ao comunicar com o servidor.');
