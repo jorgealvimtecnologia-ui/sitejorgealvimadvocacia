@@ -915,6 +915,44 @@ function generateNextOfficeMemberId() {
   return candidate;
 }
 
+// ================= MOTOR DE NOTIFICAÇÃO POR WHATSAPP AO ADVOGADO =================
+const LAWYER_WHATSAPP_NUMBER = process.env.LAWYER_WHATSAPP_NUMBER || '5532998153429';
+const WHATSAPP_GATEWAY_URL = process.env.WHATSAPP_GATEWAY_URL || '';
+const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY || '';
+
+async function sendLawyerWhatsAppNotification(messageText, metadata = {}) {
+  const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  console.log(`\n[📲 MOTOR WHATSAPP ADVOGADO] ${timestamp}`);
+  console.log(` Destinatário: ${LAWYER_WHATSAPP_NUMBER}`);
+  console.log(` Mensagem:\n${messageText}\n`);
+
+  const encodedMsg = encodeURIComponent(messageText);
+  const waDirectUrl = `https://wa.me/${LAWYER_WHATSAPP_NUMBER}?text=${encodedMsg}`;
+
+  if (WHATSAPP_GATEWAY_URL && WHATSAPP_GATEWAY_URL.trim().length > 0) {
+    try {
+      const response = await fetch(WHATSAPP_GATEWAY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Client-Token': WHATSAPP_API_KEY,
+          'apikey': WHATSAPP_API_KEY
+        },
+        body: JSON.stringify({
+          phone: LAWYER_WHATSAPP_NUMBER,
+          number: LAWYER_WHATSAPP_NUMBER,
+          message: messageText
+        })
+      });
+      console.log(` [📲 WHATSAPP] Notificação enviada via Gateway API (Status: ${response.status})`);
+    } catch (err) {
+      console.error(` [❌ WHATSAPP API ERRO] Falha no Gateway:`, err.message);
+    }
+  }
+
+  return { success: true, waDirectUrl, lawyerPhone: LAWYER_WHATSAPP_NUMBER };
+}
+
 // Gerador de ID para Documentos do Drive: DOC-2026-0001
 function generateNextDriveDocId() {
   const currentYear = new Date().getFullYear();
@@ -2942,6 +2980,23 @@ app.post('/api/leads', (req, res, next) => {
       details: { clientId, name: name.trim(), phone: phone.trim(), email, area, city, social_media, website, google_business, filesCount: filesInfo.length }
     });
 
+    // 📲 Dispara notificação por WhatsApp ao Advogado (Dr. Jorge Alvim)
+    const cleanClientPhone = phone.trim().replace(/\D/g, '');
+    const dateStr = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+    const leadNotifyMsg = 
+      `🚨 *NOVO ATENDIMENTO SOLICITADO NO SITE!*\n\n` +
+      `👤 *Nome:* ${name.trim()}\n` +
+      `🆔 *Código:* #${clientId}\n` +
+      `📱 *WhatsApp:* ${phone.trim()}\n` +
+      `⚖️ *Área:* ${area || 'Geral'}\n` +
+      `💬 *Mensagem:* ${message ? message.trim() : 'Sem mensagem'}\n` +
+      `📍 *Cidade:* ${city ? city.trim() : 'Juiz de Fora'}\n` +
+      `📅 *Data:* ${dateStr}\n\n` +
+      `📲 *Falar com o Cliente:* https://wa.me/55${cleanClientPhone}`;
+
+    sendLawyerWhatsAppNotification(leadNotifyMsg, { clientId, type: 'PUBLIC_LEAD' });
+
     return res.status(201).json({
       success: true,
       clientId,
@@ -3976,6 +4031,25 @@ app.post('/api/client-portal/register', (req, res) => {
       description: `Novo cadastro pelo Portal do Cliente: ${clientRow.full_name} (${clientRow.client_type === 'PJ' ? 'CNPJ: ' + clientRow.cnpj : 'CPF: ' + clientRow.cpf}).`
     });
 
+    // 📲 Dispara notificação por WhatsApp ao Advogado (Dr. Jorge Alvim)
+    const clientTypeLabel = clientRow.client_type === 'PJ' ? 'Pessoa Jurídica (PJ)' : 'Pessoa Física (PF)';
+    const docInfo = clientRow.client_type === 'PJ' ? `🏢 CNPJ: ${clientRow.cnpj}` : `👤 CPF: ${clientRow.cpf}`;
+    const dateStr = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+    const notifyMsg = 
+      `🔔 *NOVO CLIENTE CADASTRADO NO PORTAL!*\n\n` +
+      `👤 *Nome:* ${clientRow.full_name}\n` +
+      `🆔 *Código:* #${clientRow.id}\n` +
+      `🏷️ *Tipo:* ${clientTypeLabel}\n` +
+      `${docInfo}\n` +
+      `📱 *WhatsApp:* ${clientRow.phone}\n` +
+      `✉️ *E-mail:* ${clientRow.email}\n` +
+      `📍 *Cidade/UF:* ${clientRow.city || 'Juiz de Fora'} / ${clientRow.state || 'MG'}\n` +
+      `📅 *Data:* ${dateStr}\n\n` +
+      `👉 *Ver no Painel:* http://localhost:3000/painel`;
+
+    sendLawyerWhatsAppNotification(notifyMsg, { clientId: clientRow.id, type: 'PORTAL_REGISTER' });
+
     res.status(201).json({
       success: true,
       message: 'Cadastro realizado com sucesso! Bem-vindo(a) ao Portal do Cliente.',
@@ -3994,6 +4068,30 @@ app.post('/api/client-portal/register', (req, res) => {
   } catch (err) {
     console.error('Erro no cadastro do cliente:', err);
     res.status(500).json({ error: 'Erro ao processar cadastro do cliente: ' + err.message });
+  }
+});
+
+// Endpoint de Teste do Envio de Notificação de WhatsApp ao Advogado
+app.post('/api/admin/whatsapp/test', requireAuth, async (req, res) => {
+  try {
+    const { custom_message } = req.body || {};
+    const testMsg = custom_message || 
+      `🧪 *TESTE DE SISTEMA DE NOTIFICAÇÃO VIA WHATSAPP*\n\n` +
+      `📌 *Status:* Servidor Operacional\n` +
+      `📍 *Escritório:* Jorge Alvim Advocacia & Tecnologia\n` +
+      `📅 *Data/Hora:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n\n` +
+      `✅ O sistema de envio de alertas de novos clientes e atendimentos está ativo!`;
+
+    const result = await sendLawyerWhatsAppNotification(testMsg, { type: 'ADMIN_TEST' });
+
+    res.json({
+      success: true,
+      message: 'Notificação de teste gerada com sucesso!',
+      lawyerPhone: result.lawyerPhone,
+      waDirectUrl: result.waDirectUrl
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao testar envio de WhatsApp: ' + err.message });
   }
 });
 
