@@ -3973,7 +3973,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <label class="block text-xs font-bold text-slate-700 mb-1">Status *</label>
             <select id="ft-status" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold focus:outline-none focus:border-gold-500">
               <option value="Pago">🟢 Pago / Liquidado</option>
-              <option value="Pendente">🟡 Pendente</option>
+              <option value="Pendente">🟡 Pendente / A Vencer</option>
             </select>
           </div>
 
@@ -3982,6 +3982,46 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <select id="ft-client-id" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-gold-500">
               <option value="">Nenhum (Despesa/Geral)</option>
             </select>
+          </div>
+        </div>
+
+        <!-- BOX DE LANÇAMENTO RECORRENTE (ANUAL, MENSAL, DIÁRIO) -->
+        <div id="ft-recurring-container" class="p-3.5 rounded-2xl bg-amber-50/80 border border-gold-300 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-base">🔁</span>
+              <span class="text-xs font-bold text-navy-950">Lançamento Recorrente (Projeção Futura)</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="ft-is-recurring" onchange="toggleRecurringOptions()" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gold-600"></div>
+            </label>
+          </div>
+          <p class="text-[11px] text-slate-600 leading-snug">
+            Projeta automaticamente as receitas ou despesas futuras no Livro Caixa (ex: aluguel, internet, anuidade OAB, software, honorários mensais).
+          </p>
+
+          <div id="ft-recurring-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2.5 border-t border-gold-200">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Periodicidade *</label>
+              <select id="ft-recurrence-period" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-navy-950 focus:outline-none focus:border-gold-500">
+                <option value="monthly" selected>📅 Mensal (Ex: Todo mês)</option>
+                <option value="yearly">🗓️ Anual (Ex: Todo ano / Anuidade OAB)</option>
+                <option value="daily">📆 Diário (Ex: Dias úteis)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Qtd. de Repetições / Meses *</label>
+              <input 
+                type="number" 
+                id="ft-recurrence-count" 
+                min="2" 
+                max="60" 
+                value="12" 
+                class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-navy-950 focus:outline-none focus:border-gold-500"
+              />
+              <span class="text-[10px] text-slate-500 mt-0.5 block">Ex: 12 gera 12 parcelas futuras</span>
+            </div>
           </div>
         </div>
 
@@ -8268,15 +8308,17 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           ? `<span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[10px] border border-emerald-200">🟢 Entrada</span>`
           : `<span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 font-bold text-[10px] border border-rose-200">🔴 Saída</span>`;
 
-        const statusBadge = t.status === 'Pago'
-          ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">Liquidado</span>`
-          : `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">Pendente</span>`;
+        const isPendente = t.status === 'Pendente';
+        const statusBadge = isPendente
+          ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] border border-amber-300">🟡 Pendente</span>`
+          : `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] border border-emerald-300">🟢 Liquidado</span>`;
 
         const amountFormatted = isReceita 
           ? `<span class="font-bold text-emerald-600">+ ${formatMoney(t.amount)}</span>`
           : `<span class="font-bold text-rose-600">- ${formatMoney(t.amount)}</span>`;
 
         const clientInfo = t.client_name ? `<br/><span class="text-[10px] text-slate-400">Cliente: ${t.client_name}</span>` : '';
+        const isRecurrent = /\(\d+\/\d+\)/.test(t.description);
 
         return `
           <tr class="hover:bg-slate-50/80 transition-colors">
@@ -8286,28 +8328,53 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <div class="text-[11px] font-semibold text-slate-700 mt-0.5">${t.category}</div>
             </td>
             <td class="px-4 py-3">
-              <div class="font-medium text-slate-900">${t.description}</div>
+              <div class="font-medium text-slate-900 flex items-center space-x-1.5">
+                <span>${t.description}</span>
+                ${isRecurrent ? '<span class="px-1.5 py-0.5 rounded-md bg-amber-100 text-gold-900 font-bold text-[9px] border border-gold-300">🔁 Recorrente</span>' : ''}
+              </div>
               ${clientInfo}
             </td>
             <td class="px-4 py-3 text-sm font-serif">${amountFormatted}</td>
             <td class="px-4 py-3">
               <div class="text-slate-800 font-medium">${formatDate(t.payment_date || t.due_date)}</div>
-              ${t.payment_date ? '<span class="text-[10px] text-emerald-600 font-semibold">Pago</span>' : '<span class="text-[10px] text-slate-400">Vencimento</span>'}
+              ${t.payment_date ? '<span class="text-[10px] text-emerald-600 font-semibold">Pago</span>' : '<span class="text-[10px] text-slate-400">A vencer</span>'}
             </td>
             <td class="px-4 py-3 font-semibold text-slate-700 text-[11px]">${t.payment_method || 'PIX'}</td>
             <td class="px-4 py-3">${statusBadge}</td>
-            <td class="px-4 py-3 text-center">
-              <button 
-                onclick="deleteTransaction('${t.id}')" 
-                class="p-1 text-slate-400 hover:text-rose-600 transition-colors" 
-                title="Excluir lançamento"
-              >
-                🗑️
-              </button>
+            <td class="px-4 py-3 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center space-x-1.5">
+                ${isPendente ? `
+                  <button 
+                    onclick="quickPayTransaction('${t.id}')" 
+                    class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-300 transition-colors flex items-center space-x-1" 
+                    title="Liquidar / Marcar como Pago"
+                  >
+                    <span>✓</span>
+                    <span>Liquidar</span>
+                  </button>
+                ` : ''}
+                <button 
+                  onclick="deleteTransaction('${t.id}')" 
+                  class="p-1 text-slate-400 hover:text-rose-600 transition-colors" 
+                  title="Excluir lançamento"
+                >
+                  🗑️
+                </button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
+    }
+
+    function toggleRecurringOptions() {
+      const isChecked = document.getElementById('ft-is-recurring').checked;
+      const fields = document.getElementById('ft-recurring-fields');
+      if (isChecked) {
+        fields.classList.remove('hidden');
+      } else {
+        fields.classList.add('hidden');
+      }
     }
 
     function openNewTransactionModal() {
@@ -8320,6 +8387,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       document.getElementById('ft-status').value = 'Pago';
       document.getElementById('ft-notes').value = '';
       
+      const recCheck = document.getElementById('ft-is-recurring');
+      if (recCheck) {
+        recCheck.checked = false;
+        toggleRecurringOptions();
+      }
+
       populateFinanceClientDropdowns();
       handleTransTypeChange();
       document.getElementById('transaction-modal').classList.remove('hidden');
@@ -8350,6 +8423,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const payment_method = document.getElementById('ft-payment-method').value;
       const notes = document.getElementById('ft-notes').value.trim();
 
+      const is_recurring = document.getElementById('ft-is-recurring')?.checked || false;
+      const recurrence_period = document.getElementById('ft-recurrence-period')?.value || 'monthly';
+      const recurrence_count = parseInt(document.getElementById('ft-recurrence-count')?.value, 10) || 12;
+
       const url = id ? `/api/financial/transactions/${id}` : '/api/financial/transactions';
       const method = id ? 'PUT' : 'POST';
 
@@ -8357,19 +8434,43 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         const res = await fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-          body: JSON.stringify({ type, category, description, amount, due_date, payment_date, status, client_id, payment_method, notes })
+          body: JSON.stringify({ 
+            type, category, description, amount, due_date, payment_date, status, client_id, payment_method, notes,
+            is_recurring, recurrence_period, recurrence_count 
+          })
         });
         const data = await res.json();
         if (res.ok && data.success) {
           closeTransactionModal();
           loadFinancialTransactions();
           loadFinancialDashboard();
-          alert('✅ Lançamento financeiro registrado com sucesso!');
+          alert(data.message || '✅ Lançamento financeiro registrado com sucesso!');
         } else {
           alert('Erro ao salvar lançamento: ' + (data.error || 'Erro desconhecido.'));
         }
       } catch (err) {
         alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    async function quickPayTransaction(id) {
+      if (!confirm(`Deseja marcar o lançamento #${id} como PAGO / LIQUIDADO hoje?`)) return;
+      try {
+        const res = await fetch(`/api/financial/transactions/${id}/pay`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ payment_date: new Date().toISOString().split('T')[0] })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadFinancialTransactions();
+          loadFinancialDashboard();
+          alert('✅ Lançamento liquidado com sucesso!');
+        } else {
+          alert(data.error || 'Erro ao liquidar lançamento.');
+        }
+      } catch (err) {
+        alert('Erro de comunicação.');
       }
     }
 

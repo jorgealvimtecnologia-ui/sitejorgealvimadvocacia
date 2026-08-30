@@ -3417,51 +3417,148 @@ app.get('/api/financial/transactions', requireAuth, (req, res) => {
   }
 });
 
+// Helper para calcular datas futuras de recorrência (Diário, Mensal, Anual)
+function addRecurrenceInterval(baseDateStr, period, count) {
+  const baseDate = new Date(baseDateStr + 'T12:00:00');
+  if (isNaN(baseDate.getTime())) return baseDateStr;
+
+  if (period === 'monthly') {
+    const d = new Date(baseDate);
+    d.setMonth(d.getMonth() + count);
+    return d.toISOString().split('T')[0];
+  } else if (period === 'yearly') {
+    const d = new Date(baseDate);
+    d.setFullYear(d.getFullYear() + count);
+    return d.toISOString().split('T')[0];
+  } else if (period === 'daily') {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + count);
+    return d.toISOString().split('T')[0];
+  }
+  return baseDateStr;
+}
+
 app.post('/api/financial/transactions', requireAuth, (req, res) => {
   try {
-    const { type, category, description, amount, due_date, payment_date, status, client_id, payment_method, notes } = req.body;
+    const { 
+      type, category, description, amount, due_date, payment_date, status, 
+      client_id, payment_method, notes,
+      is_recurring, recurrence_period, recurrence_count 
+    } = req.body;
 
     if (!type || !category || !description || !amount) {
       return res.status(400).json({ error: 'Tipo, categoria, descrição e valor são obrigatórios.' });
     }
 
-    const id = generateNextTransactionId();
     const now = new Date().toISOString();
     const numAmount = parseFloat(amount) || 0;
+    const initialDueDate = due_date || payment_date || now.split('T')[0];
 
-    db.prepare(`
-      INSERT INTO financial_transactions (
-        id, type, category, description, amount, due_date, payment_date, status, client_id, payment_method, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
-      type,
-      category.trim(),
-      description.trim(),
-      numAmount,
-      due_date || '',
-      payment_date || (status === 'Pago' ? now.split('T')[0] : ''),
-      status || 'Pago',
-      client_id || null,
-      payment_method || 'PIX',
-      notes ? notes.trim() : '',
-      now,
-      now
-    );
+    const totalRepeats = (is_recurring && parseInt(recurrence_count, 10) > 1) 
+      ? Math.min(60, parseInt(recurrence_count, 10)) 
+      : 1;
+
+    const createdIds = [];
+
+    for (let i = 1; i <= totalRepeats; i++) {
+      const transId = generateNextTransactionId();
+      let targetDueDate = initialDueDate;
+      let targetPaymentDate = '';
+      let targetStatus = status || 'Pago';
+      let targetDesc = description.trim();
+
+      if (totalRepeats > 1) {
+        targetDueDate = addRecurrenceInterval(initialDueDate, recurrence_period || 'monthly', i - 1);
+        targetDesc = `${description.trim()} (${i}/${totalRepeats})`;
+        
+        if (i === 1) {
+          targetPaymentDate = (status === 'Pago') ? (payment_date || now.split('T')[0]) : '';
+          targetStatus = status || 'Pago';
+        } else {
+          targetPaymentDate = '';
+          targetStatus = 'Pendente';
+        }
+      } else {
+        targetPaymentDate = payment_date || (status === 'Pago' ? now.split('T')[0] : '');
+      }
+
+      db.prepare(`
+        INSERT INTO financial_transactions (
+          id, type, category, description, amount, due_date, payment_date, status, client_id, payment_method, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        transId,
+        type,
+        category.trim(),
+        targetDesc,
+        numAmount,
+        targetDueDate,
+        targetPaymentDate,
+        targetStatus,
+        client_id || null,
+        payment_method || 'PIX',
+        notes ? notes.trim() : (totalRepeats > 1 ? `Recorrência ${recurrence_period || 'monthly'} (${i}/${totalRepeats})` : ''),
+        now,
+        now
+      );
+
+      createdIds.push(transId);
+    }
 
     logAudit(req, {
       event_type: 'CRIACAO',
       event_name: 'LANCAR_TRANSACAO',
       module: 'FINANCEIRO',
-      resource_id: id,
-      description: `Lançamento financeiro de ${type}: '${description.trim()}' no valor de R$ ${numAmount.toFixed(2)} (${category.trim()}).`,
-      details: { id, type, category: category.trim(), description: description.trim(), amount: numAmount, status: status || 'Pago', payment_method }
+      resource_id: createdIds[0],
+      description: `Lançamento financeiro de ${type}: '${description.trim()}' (R$ ${numAmount.toFixed(2)})${totalRepeats > 1 ? ' com ' + totalRepeats + ' repetições ' + (recurrence_period || 'mensais') : ''}.`,
+      details: { ids: createdIds, count: totalRepeats, type, category, amount: numAmount }
     });
 
-    return res.status(201).json({ success: true, message: 'Lançamento financeiro cadastrado com sucesso!', id });
+    const periodLabels = { 'monthly': 'mensais', 'yearly': 'anuais', 'daily': 'diárias' };
+    const labelPeriod = periodLabels[recurrence_period] || 'recorrentes';
+
+    const msg = totalRepeats > 1 
+      ? `Lançamento e ${totalRepeats} repetições ${labelPeriod} futuras criados com sucesso no Livro Caixa!` 
+      : 'Lançamento financeiro cadastrado com sucesso!';
+
+    return res.status(201).json({ success: true, message: msg, id: createdIds[0], count: totalRepeats });
   } catch (error) {
     console.error('[FINANCEIRO] Erro ao criar lançamento:', error);
     return res.status(500).json({ error: 'Erro ao cadastrar lançamento financeiro.' });
+  }
+});
+
+// Baixa rápida / liquidação de lançamento pendente
+app.patch('/api/financial/transactions/:id/pay', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { payment_date, payment_method } = req.body || {};
+    const existing = db.prepare(`SELECT * FROM financial_transactions WHERE id = ?`).get(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Lançamento não encontrado.' });
+    }
+
+    const now = new Date().toISOString();
+    const payDate = payment_date || now.split('T')[0];
+
+    db.prepare(`
+      UPDATE financial_transactions 
+      SET status = 'Pago', payment_date = ?, payment_method = COALESCE(?, payment_method), updated_at = ? 
+      WHERE id = ?
+    `).run(payDate, payment_method || null, now, id);
+
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'LIQUIDAR_TRANSACAO',
+      module: 'FINANCEIRO',
+      resource_id: id,
+      description: `Baixa/Liquidação do lançamento #${id} (${existing.description} - R$ ${existing.amount.toFixed(2)}).`
+    });
+
+    return res.json({ success: true, message: 'Lançamento marcado como Pago / Liquidado com sucesso!' });
+  } catch (err) {
+    console.error('Erro ao liquidar transação:', err);
+    res.status(500).json({ error: 'Erro ao liquidar transação.' });
   }
 });
 
