@@ -5170,45 +5170,96 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
               </div>
 
-            <!-- BARRA DE GERAÇÃO RÁPIDA DE DOCUMENTOS JURÍDICOS EM 1 CLIQUE -->
-            <div class="px-5 py-3.5 bg-gradient-to-r from-amber-50/70 via-indigo-50/40 to-emerald-50/50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+            <!-- BARRA DE DOCUMENTOS ASSINADOS E AÇÕES DO CLIENTE -->
+            <div class="px-5 py-3.5 bg-gradient-to-r from-slate-50 via-amber-50/50 to-indigo-50/30 border-t border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <div class="flex items-center space-x-2 text-xs font-bold text-navy-950">
-                <span class="text-base">📄</span>
-                <span>Gerar Documentos Deste Cliente (PDF Timbrado):</span>
+                <span class="text-base">📁</span>
+                <span>Documentos Assinados & Contrato do Cliente:</span>
               </div>
-              <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
+              <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
+                
+                <!-- 1. Procuração Assinada -->
                 <button 
-                  onclick="generateDocForClient('${client.id}', 'procuracao')" 
-                  class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1"
-                  title="Gerar Procuração Ad Judicia preenchida com os dados deste cliente"
+                  onclick="triggerClientDocUpload('${client.id}', 'procuracao')" 
+                  class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1.5 border border-indigo-200"
+                  title="Anexar ou atualizar a Procuração Ad Judicia física/PDF assinada pelo cliente"
                 >
-                  <span>📄</span>
-                  <span>Gerar Procuração</span>
+                  <span>📎</span>
+                  <span>Anexar Procuração Assinada</span>
                 </button>
+                ${(() => {
+                  const procFile = (client.files || []).find(f => f.docType === 'procuracao_assinada' || (f.originalName || '').toLowerCase().includes('procura'));
+                  return procFile ? `
+                    <a 
+                      href="${procFile.url}" 
+                      target="_blank" 
+                      class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition-colors flex items-center space-x-1"
+                      title="Visualizar / Imprimir Procuração Assinada do Cliente"
+                    >
+                      <span>🖨️</span>
+                      <span>Imprimir Procuração</span>
+                    </a>
+                  ` : '';
+                })()}
+
+                <!-- 2. Contrato Assinado -->
                 <button 
-                  onclick="generateDocForClient('${client.id}', 'contrato')" 
-                  class="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-gold-600"
-                  title="Gerar Contrato de Honorários com os valores e dados deste cliente"
+                  onclick="triggerClientDocUpload('${client.id}', 'contrato')" 
+                  class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-gold-900 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1.5 border border-gold-300"
+                  title="Anexar ou atualizar o Contrato de Honorários assinado pelo cliente"
                 >
-                  <span>📑</span>
-                  <span>Gerar Contrato</span>
+                  <span>📎</span>
+                  <span>Anexar Contrato Assinado</span>
                 </button>
+                ${(() => {
+                  const contFile = (client.files || []).find(f => f.docType === 'contrato_assinado' || (f.originalName || '').toLowerCase().includes('contrat'));
+                  return contFile ? `
+                    <a 
+                      href="${contFile.url}" 
+                      target="_blank" 
+                      class="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-xs transition-colors flex items-center space-x-1 border border-gold-600"
+                      title="Visualizar / Imprimir Contrato de Honorários Assinado"
+                    >
+                      <span>🖨️</span>
+                      <span>Imprimir Contrato</span>
+                    </a>
+                  ` : '';
+                })()}
+
+                <!-- 3. Declaração Assinada -->
                 <button 
-                  onclick="generateDocForClient('${client.id}', 'hipossuficiencia')" 
-                  class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1"
-                  title="Gerar Declaração de Hipossuficiência (Gratuidade de Justiça)"
+                  onclick="triggerClientDocUpload('${client.id}', 'declaracao')" 
+                  class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1.5 border border-emerald-300"
+                  title="Anexar a Declaração de Hipossuficiência assinada pelo cliente"
                 >
-                  <span>📜</span>
-                  <span>Gerar Hipossuficiência</span>
+                  <span>📎</span>
+                  <span>Anexar Declaração Assinada</span>
                 </button>
+                ${(() => {
+                  const decFile = (client.files || []).find(f => f.docType === 'declaracao_assinada' || (f.originalName || '').toLowerCase().includes('declar') || (f.originalName || '').toLowerCase().includes('hipo'));
+                  return decFile ? `
+                    <a 
+                      href="${decFile.url}" 
+                      target="_blank" 
+                      class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition-colors flex items-center space-x-1"
+                      title="Visualizar / Imprimir Declaração de Hipossuficiência Assinada"
+                    >
+                      <span>🖨️</span>
+                      <span>Imprimir Declaração</span>
+                    </a>
+                  ` : '';
+                })()}
+
+                <!-- Carnê Asaas -->
                 <button 
                   onclick="openClientFinancialTab('${client.id}')" 
-                  class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-emerald-300"
+                  class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-slate-700"
                   title="Abrir carnê de parcelas e gerar cobranças Asaas para este cliente"
                 >
                   <span>⚡</span>
                   <span>Carnê & PIX Asaas</span>
                 </button>
+
               </div>
             </div>
 
@@ -5324,6 +5375,46 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           saveBtn.disabled = false;
         }
       }
+    }
+
+    // Função para Anexar Documentos Assinados no Box do Cliente
+    function triggerClientDocUpload(clientId, docType) {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'application/pdf,image/*';
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('documents', file);
+        formData.append('doc_type', docType);
+
+        const docTypeNames = {
+          'procuracao': 'Procuração Assinada',
+          'contrato': 'Contrato Assinado',
+          'declaracao': 'Declaração Assinada'
+        };
+        const labelName = docTypeNames[docType] || 'Documento Assinado';
+
+        try {
+          const res = await fetch(`/api/clients/${clientId}/upload-document`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: formData
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(`✅ ${labelName} anexada com sucesso à ficha do cliente!`);
+            loadClients();
+          } else {
+            alert(data.error || 'Erro ao anexar arquivo.');
+          }
+        } catch (err) {
+          alert('Erro de comunicação ao anexar documento.');
+        }
+      };
+      fileInput.click();
     }
 
     // Modal Cliente: Inclusão e Edição

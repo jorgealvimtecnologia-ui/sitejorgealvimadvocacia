@@ -1920,6 +1920,61 @@ app.put('/api/clients/:id', requireAuth, upload.array('documents', 20), (req, re
 });
 
 /**
+ * 3.1 POST /api/clients/:id/upload-document - Anexar documento assinado (Procuração, Contrato ou Declaração)
+ */
+app.post('/api/clients/:id/upload-document', requireAuth, upload.array('documents', 10), (req, res) => {
+  try {
+    const { id } = req.params;
+    const { doc_type } = req.body;
+    const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(id);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+
+    let existingFiles = [];
+    try {
+      existingFiles = client.files ? JSON.parse(client.files) : [];
+    } catch (e) {
+      existingFiles = [];
+    }
+
+    const docTypeLabel = doc_type === 'procuracao' ? 'procuracao_assinada' : 
+                         doc_type === 'contrato' ? 'contrato_assinado' : 
+                         doc_type === 'declaracao' ? 'declaracao_assinada' : 'outro_documento';
+
+    const newFiles = (req.files || []).map(file => ({
+      originalName: file.originalname,
+      filename: file.filename,
+      size: file.size,
+      mimetype: file.mimetype,
+      docType: docTypeLabel,
+      url: `/storage/clients/${id}/${file.filename}`,
+      savedAt: new Date().toISOString()
+    }));
+
+    const allFiles = [...existingFiles, ...newFiles];
+    const now = new Date().toISOString();
+
+    db.prepare(`UPDATE clients SET files = ?, updated_at = ? WHERE id = ?`)
+      .run(JSON.stringify(allFiles), now, id);
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'ANEXAR_DOCUMENTO_CLIENTE',
+      module: 'CLIENTES',
+      resource_id: id,
+      description: `Anexado documento assinado (${docTypeLabel}) para o cliente ${client.full_name}.`
+    });
+
+    return res.json({ success: true, message: 'Documento assinado anexado com sucesso!', files: allFiles });
+  } catch (err) {
+    console.error('Erro ao anexar documento do cliente:', err);
+    res.status(500).json({ error: 'Erro ao anexar documento do cliente.' });
+  }
+});
+
+/**
  * 4. DELETE /api/clients/:id - Excluir cliente, contrato e arquivos físicos
  */
 app.delete('/api/clients/:id', requireAuth, (req, res) => {
