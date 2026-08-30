@@ -1119,6 +1119,42 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/storage/clients', express.static(STORAGE_DIR));
 app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
 
+// Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
+app.get('/sitemap.xml', (req, res) => {
+  try {
+    const domain = req.protocol + '://' + req.get('host');
+    const posts = db.prepare(`SELECT slug, updated_at FROM blog_posts WHERE is_published = 1`).all();
+    
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    
+    // Páginas estáticas principais
+    xml += `  <url><loc>${domain}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n`;
+    xml += `  <url><loc>${domain}/blog</loc><changefreq>daily</changefreq><priority>0.8</priority></url>\n`;
+    xml += `  <url><loc>${domain}/cliente</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>\n`;
+    
+    // URLs dinâmicas dos artigos do Blog
+    posts.forEach(p => {
+      const lastMod = p.updated_at ? p.updated_at.split('T')[0] : new Date().toISOString().split('T')[0];
+      xml += `  <url><loc>${domain}/blog/${p.slug}</loc><lastmod>${lastMod}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n`;
+    });
+    
+    xml += `</urlset>`;
+    res.header('Content-Type', 'application/xml');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('Erro ao gerar sitemap.');
+  }
+});
+
+// Rota de Instruções para Robôs de Busca do Google (/robots.txt)
+app.get('/robots.txt', (req, res) => {
+  const domain = req.protocol + '://' + req.get('host');
+  const txt = `User-agent: *\nAllow: /\nDisallow: /painel\nDisallow: /api/\n\nSitemap: ${domain}/sitemap.xml`;
+  res.header('Content-Type', 'text/plain');
+  return res.send(txt);
+});
+
 // Rota da Página Principal e Painel de Controle
 app.use(express.static(__dirname));
 
