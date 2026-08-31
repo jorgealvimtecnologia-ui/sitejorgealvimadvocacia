@@ -6794,7 +6794,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
           loadClients();
+          loadLawsuits();
           loadOffices();
+          loadDriveFiles();
+          loadCalendarSummary();
+          loadPublicationsStats();
+          loadHrDashboard();
         } else {
           errorText.textContent = data.error || 'Credenciais inválidas.';
           errorMsg.classList.remove('hidden');
@@ -14952,6 +14957,11 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
           </div>
         `;
+      } catch (err) {
+        console.error('Erro ao carregar benefícios:', err);
+      }
+    }
+
     // 9. FICHA FINANCEIRA GERAL CONSOLIDADA DO ESCRITÓRIO
     async function loadHrAnnualOfficeReport(year = 2026) {
       try {
