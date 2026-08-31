@@ -59,6 +59,9 @@ async function runTests() {
   // 2.3 Portal do Cliente
   await checkUrl('/cliente', 200, 'Portal do Cliente (/cliente)');
 
+  // 2.3.1 Portal do Colaborador
+  await checkUrl('/colaborador', 200, 'Portal do Colaborador (/colaborador)');
+
   // 2.4 Google Sitemap XML
   await checkUrl('/sitemap.xml', 200, 'Google Sitemap XML (/sitemap.xml)');
 
@@ -210,6 +213,32 @@ async function runTests() {
       const hrBenRes = await fetch(`${baseUrl}/api/hr/benefits`, { headers });
       const hrBenData = await hrBenRes.json();
       logTestResult('API RH - Benefícios VT & VA (/api/hr/benefits)', hrBenRes.status === 200 && hrBenData.success, `Total VT: R$ ${hrBenData.benefits?.total_vt_cost?.toFixed(2)} | Total VA: R$ ${hrBenData.benefits?.total_va_amount?.toFixed(2)}`);
+
+      // 10. Login do Colaborador / Autoatendimento
+      const empLoginRes = await fetch(`${baseUrl}/api/hr/employee/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: '321.654.987-33', password: '32165498733' })
+      });
+      const empLoginData = await empLoginRes.json();
+      logTestResult('API RH - Login do Colaborador (/api/hr/employee/login)', empLoginRes.status === 200 && empLoginData.success, `Token gerado para ${empLoginData.employee?.name || 'Colaborador'}`);
+
+      // 11. Perfil e Autoatendimento do Colaborador Logado
+      let empTokenHeader = { 'Authorization': `Bearer ${empLoginData.token || ''}`, 'x-employee-token': empLoginData.token || '' };
+      const empMeRes = await fetch(`${baseUrl}/api/hr/employee/me`, { headers: empTokenHeader });
+      const empMeData = await empMeRes.json();
+      logTestResult('API RH - Autoatendimento do Trabalhador (/api/hr/employee/me)', empMeRes.status === 200 && empMeData.success, `Ficha, Contratos (${empMeData.contracts?.length || 0}), Holerites (${empMeData.payrolls?.length || 0}) e Pontos carregados`);
+
+      // 12. Ficha Financeira Resumo Anual Individual
+      const targetEmpId = hrEmpData.employees?.[0]?.id || 'EMP-2026-0001';
+      const annualEmpRes = await fetch(`${baseUrl}/api/hr/reports/annual-financial/employee/${targetEmpId}?year=2026`, { headers });
+      const annualEmpData = await annualEmpRes.json();
+      logTestResult('API RH - Ficha Financeira Anual Individual (/api/hr/reports/annual-financial/employee/:id)', annualEmpRes.status === 200 && annualEmpData.success, `${annualEmpData.employee?.name}: Bruto Anual R$ ${annualEmpData.totals?.annual_gross_total?.toFixed(2)} | Líquido R$ ${annualEmpData.totals?.annual_net_total?.toFixed(2)}`);
+
+      // 13. Ficha Financeira Geral Consolidada do Escritório
+      const annualOfficeRes = await fetch(`${baseUrl}/api/hr/reports/annual-financial/office?year=2026`, { headers });
+      const annualOfficeData = await annualOfficeRes.json();
+      logTestResult('API RH - Ficha Financeira Geral Consolidada do Escritório (/api/hr/reports/annual-financial/office)', annualOfficeRes.status === 200 && annualOfficeData.success, `${annualOfficeData.summary?.total_active_employees} colaboradores | Custo Global Anual: R$ ${annualOfficeData.summary?.total_annual_personnel_global_cost?.toFixed(2)}`);
     }
   } catch (err) {
     logTestResult('Teste de APIs do Servidor', false, err.message);

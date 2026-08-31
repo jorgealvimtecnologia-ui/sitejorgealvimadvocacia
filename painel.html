@@ -3225,6 +3225,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <span>🚌</span>
             <span>Vale Transporte & Alimentação</span>
           </button>
+
+          <button 
+            id="hr-subtab-btn-annual-office" 
+            onclick="switchHrSubTab('annual-office')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-amber-50 text-amber-900 border border-amber-300 shadow-sm flex items-center space-x-1.5 cursor-pointer hover:bg-amber-100"
+          >
+            <span>📊</span>
+            <span>Ficha Financeira Geral (Escritório)</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-annual-employee" 
+            onclick="switchHrSubTab('annual-employee')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>👤</span>
+            <span>Ficha Financeira Individual</span>
+          </button>
         </div>
 
         <!-- ================= SUB-ABA 1: QUADRO DE COLABORADORES ================= -->
@@ -3496,6 +3514,100 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
 
             <div id="hr-benefits-summary-container" class="space-y-4">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 9: FICHA FINANCEIRA GERAL CONSOLIDADA DO ESCRITÓRIO ================= -->
+        <div id="hr-pane-annual-office" class="hidden space-y-4">
+          <div class="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+              <div>
+                <h4 class="font-serif font-bold text-base sm:text-lg text-navy-950 flex items-center space-x-2">
+                  <span>📊 Ficha Financeira Geral Consolidada do Escritório</span>
+                  <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 rounded-full font-bold text-[10px]">Exercício Anual 2026</span>
+                </h4>
+                <p class="text-xs text-slate-500">Resumo gerencial e contábil anual da folha de pagamento, encargos sociais e benefícios de todos os trabalhadores.</p>
+              </div>
+
+              <div class="flex items-center space-x-2 w-full sm:w-auto">
+                <select id="hr-annual-office-year" onchange="loadHrAnnualOfficeReport(this.value)" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950 font-mono">
+                  <option value="2026" selected>Ano-Base 2026</option>
+                  <option value="2025">Ano-Base 2025</option>
+                </select>
+
+                <button onclick="printAnnualOfficeReport()" class="px-4 py-2 bg-navy-900 hover:bg-navy-800 text-gold-400 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer">
+                  <span>🖨️</span>
+                  <span>Imprimir Relatório Anual</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Cards Consolidadores do Ano -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs" id="hr-annual-office-cards">
+              <!-- Renderizado via JS -->
+            </div>
+
+            <!-- Tabela Consolidada de Colaboradores no Ano -->
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-navy-900 text-gold-300 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-3 px-3">Colaborador / Cargo</th>
+                    <th class="py-3 px-2 text-center">Regime</th>
+                    <th class="py-3 px-3 text-right">Total Bruto Anual</th>
+                    <th class="py-3 px-3 text-right text-rose-300">INSS Recolhido</th>
+                    <th class="py-3 px-3 text-right text-amber-300">IRRF na Fonte</th>
+                    <th class="py-3 px-3 text-right text-sky-300">Desc. VT (6%)</th>
+                    <th class="py-3 px-3 text-right text-emerald-300 font-bold">Líquido Pago</th>
+                    <th class="py-3 px-3 text-right text-blue-300">FGTS Patronal</th>
+                    <th class="py-3 px-3 text-right text-purple-300">VT Custeio + VA</th>
+                    <th class="py-3 px-3 text-right text-amber-400 font-bold">Custo Global Pessoal</th>
+                  </tr>
+                </thead>
+                <tbody id="hr-annual-office-tbody" class="divide-y divide-slate-200 font-mono text-[11px]">
+                  <!-- Renderizado via JS -->
+                </tbody>
+                <tfoot id="hr-annual-office-tfoot" class="bg-slate-100 font-bold font-mono text-xs border-t-2 border-slate-300">
+                  <!-- Renderizado via JS -->
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 10: FICHA FINANCEIRA INDIVIDUAL DO TRABALHADOR ================= -->
+        <div id="hr-pane-annual-employee" class="hidden space-y-4">
+          <div class="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+              <div>
+                <h4 class="font-serif font-bold text-base sm:text-lg text-navy-950 flex items-center space-x-2">
+                  <span>👤 Ficha Financeira Anual Individual (Informe de Rendimentos)</span>
+                  <span class="px-2.5 py-0.5 bg-teal-100 text-teal-900 rounded-full font-bold text-[10px]">CLT / Previdência / IRPF</span>
+                </h4>
+                <p class="text-xs text-slate-500">Discriminação detalhada mês a mês de proventos, descontos legais de INSS, IRRF, vale-transporte e depósitos de FGTS.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <select id="hr-annual-emp-select" onchange="loadHrAnnualEmployeeReport(this.value, document.getElementById('hr-annual-emp-year').value)" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950">
+                  <!-- Preenchido via JS com lista de empregados -->
+                </select>
+
+                <select id="hr-annual-emp-year" onchange="loadHrAnnualEmployeeReport(document.getElementById('hr-annual-emp-select').value, this.value)" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950 font-mono">
+                  <option value="2026" selected>Ano 2026</option>
+                  <option value="2025">Ano 2025</option>
+                </select>
+
+                <button onclick="printAnnualEmployeeReport()" class="px-4 py-2 bg-navy-900 hover:bg-navy-800 text-gold-400 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer">
+                  <span>🖨️</span>
+                  <span>Imprimir Ficha</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Ficha Individual Timbrada -->
+            <div id="hr-annual-emp-container" class="space-y-4">
               <!-- Renderizado via JS -->
             </div>
           </div>
@@ -13946,7 +14058,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     function switchHrSubTab(subTab) {
       hrState.activeSubTab = subTab;
       
-      const subTabs = ['employees', 'time', 'payroll', 'vacations', 'thirteenth', 'exams', 'contracts', 'benefits'];
+      const subTabs = ['employees', 'time', 'payroll', 'vacations', 'thirteenth', 'exams', 'contracts', 'benefits', 'annual-office', 'annual-employee'];
       
       subTabs.forEach(tab => {
         const pane = document.getElementById(`hr-pane-${tab}`);
@@ -13973,6 +14085,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       else if (subTab === 'exams') loadHrExams();
       else if (subTab === 'contracts') loadHrContracts();
       else if (subTab === 'benefits') loadHrBenefits();
+      else if (subTab === 'annual-office') loadHrAnnualOfficeReport(document.getElementById('hr-annual-office-year')?.value || 2026);
+      else if (subTab === 'annual-employee') {
+        const empSelect = document.getElementById('hr-annual-emp-select');
+        const targetId = hrState.selectedAnnualEmployeeId || empSelect?.value || hrState.employees?.[0]?.id;
+        if (empSelect && targetId) empSelect.value = targetId;
+        loadHrAnnualEmployeeReport(targetId, document.getElementById('hr-annual-emp-year')?.value || 2026);
+      }
     }
 
     // 1. QUADRO DE COLABORADORES
@@ -13983,7 +14102,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         const data = await res.json();
         hrState.employees = data.employees || [];
 
-        // Preenche selects de colaboradores nos modais
+        // Preenche selects de colaboradores nos modais e filtros
         populateEmployeeSelects(hrState.employees);
 
         // Filtra por texto e regime
@@ -14009,7 +14128,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         document.getElementById('hr-time-select-emp'),
         document.getElementById('hr-punch-emp-id'),
         document.getElementById('hr-vac-emp-id'),
-        document.getElementById('hr-exam-emp-id')
+        document.getElementById('hr-exam-emp-id'),
+        document.getElementById('hr-annual-emp-select')
       ];
 
       selects.forEach(sel => {
@@ -14095,24 +14215,36 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <div class="flex items-center justify-between pt-3 border-t border-slate-100 gap-2">
               <button 
                 onclick="openEditEmployeeModal('${emp.id}')" 
-                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center space-x-1"
+                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer"
               >
                 <span>✏️</span>
-                <span>Editar Ficha</span>
+                <span>Editar</span>
               </button>
               <div class="flex space-x-1.5">
                 <button 
                   onclick="selectEmployeeForTime('${emp.id}')" 
-                  class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold transition-all flex items-center space-x-1"
+                  class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer"
                   title="Ver Cartão de Ponto"
                 >
                   <span>⏱️ Ponto</span>
+                </button>
+                <button 
+                  onclick="openEmployeeAnnualFinancial('${emp.id}')" 
+                  class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all flex items-center space-x-1 border border-amber-200 cursor-pointer"
+                  title="Ver Ficha Financeira Anual"
+                >
+                  <span>📊 Ficha Anual</span>
                 </button>
               </div>
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    function openEmployeeAnnualFinancial(empId) {
+      hrState.selectedAnnualEmployeeId = empId;
+      switchHrSubTab('annual-employee');
     }
 
     function selectEmployeeForTime(empId) {
@@ -14820,9 +14952,248 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
           </div>
         `;
+    // 9. FICHA FINANCEIRA GERAL CONSOLIDADA DO ESCRITÓRIO
+    async function loadHrAnnualOfficeReport(year = 2026) {
+      try {
+        const res = await fetch(`/api/hr/reports/annual-financial/office?year=${year}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const s = data.summary || {};
+        const employees = data.employees || [];
+
+        // 1. Cards de Resumo Anual
+        const cardsContainer = document.getElementById('hr-annual-office-cards');
+        if (cardsContainer) {
+          cardsContainer.innerHTML = `
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-amber-800 block">Folha Bruta Total do Ano</span>
+              <p class="text-xl font-black text-amber-950 font-mono">${formatBRL(s.total_annual_gross || 0)}</p>
+              <p class="text-[11px] text-amber-700">${s.total_active_employees} colaboradores (${s.clt_employees} CLT)</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-rose-800 block">Retenções Tributárias (INSS + IRRF)</span>
+              <p class="text-xl font-black text-rose-950 font-mono">${formatBRL((s.total_annual_inss_collected || 0) + (s.total_annual_irrf_withheld || 0))}</p>
+              <p class="text-[11px] text-rose-700">INSS: ${formatBRL(s.total_annual_inss_collected || 0)} | IRRF: ${formatBRL(s.total_annual_irrf_withheld || 0)}</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-emerald-800 block">Líquido Anual Pago à Equipe</span>
+              <p class="text-xl font-black text-emerald-950 font-mono">${formatBRL(s.total_annual_net_salaries_paid || 0)}</p>
+              <p class="text-[11px] text-emerald-700">Total creditado via PIX/Bancário</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-indigo-800 block">Custo Global Anual de Pessoal</span>
+              <p class="text-xl font-black text-indigo-950 font-mono">${formatBRL(s.total_annual_personnel_global_cost || 0)}</p>
+              <p class="text-[11px] text-indigo-700">Bruto + FGTS + VT Custeio + VA (PAT)</p>
+            </div>
+          `;
+        }
+
+        // 2. Tabela de Colaboradores no Ano
+        const tbody = document.getElementById('hr-annual-office-tbody');
+        if (tbody) {
+          tbody.innerHTML = employees.map(e => `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="py-2.5 px-3 font-sans font-bold text-navy-950">
+                ${e.name}
+                <span class="block text-[10px] text-slate-400 font-normal font-sans">${e.position} • ${e.department}</span>
+              </td>
+              <td class="py-2.5 px-2 text-center">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${e.contract_type === 'CLT' ? 'bg-emerald-100 text-emerald-800' : (e.contract_type === 'ESTAGIO' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800')}">
+                  ${e.contract_type}
+                </span>
+              </td>
+              <td class="py-2.5 px-3 text-right font-bold text-navy-950">${formatBRL(e.annual_gross)}</td>
+              <td class="py-2.5 px-3 text-right text-rose-600">-${formatBRL(e.annual_inss_retained)}</td>
+              <td class="py-2.5 px-3 text-right text-amber-600">-${formatBRL(e.annual_irrf_retained)}</td>
+              <td class="py-2.5 px-3 text-right text-sky-600">-${formatBRL(e.annual_vt_discount)}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-emerald-700">${formatBRL(e.annual_net_paid)}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${formatBRL(e.annual_fgts_provision)}</td>
+              <td class="py-2.5 px-3 text-right text-purple-700">${formatBRL(e.annual_vt_office_subsidy + e.annual_va_cost)}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-indigo-900">${formatBRL(e.annual_global_cost)}</td>
+            </tr>
+          `).join('');
+        }
+
+        // 3. Rodapé da Tabela com Totais
+        const tfoot = document.getElementById('hr-annual-office-tfoot');
+        if (tfoot) {
+          tfoot.innerHTML = `
+            <tr>
+              <td class="py-3 px-3 font-sans uppercase">TOTAIS CONSOLIDADOS DO ESCRITÓRIO</td>
+              <td class="py-3 px-2 text-center font-sans">${s.total_active_employees} Colab.</td>
+              <td class="py-3 px-3 text-right text-navy-950">${formatBRL(s.total_annual_gross)}</td>
+              <td class="py-3 px-3 text-right text-rose-700">-${formatBRL(s.total_annual_inss_collected)}</td>
+              <td class="py-3 px-3 text-right text-amber-700">-${formatBRL(s.total_annual_irrf_withheld)}</td>
+              <td class="py-3 px-3 text-right text-sky-700">-${formatBRL(s.total_annual_vt_employee_discount)}</td>
+              <td class="py-3 px-3 text-right text-emerald-800 text-sm">${formatBRL(s.total_annual_net_salaries_paid)}</td>
+              <td class="py-3 px-3 text-right text-blue-900">${formatBRL(s.total_annual_fgts_deposited)}</td>
+              <td class="py-3 px-3 text-right text-purple-900">${formatBRL(s.total_annual_vt_employer_subsidy + s.total_annual_va_amount)}</td>
+              <td class="py-3 px-3 text-right text-indigo-950 text-sm font-black">${formatBRL(s.total_annual_personnel_global_cost)}</td>
+            </tr>
+          `;
+        }
       } catch (err) {
-        console.error('Erro ao carregar benefícios:', err);
+        console.error('Erro ao carregar Ficha Financeira Geral:', err);
       }
+    }
+
+    function printAnnualOfficeReport() {
+      window.print();
+    }
+
+    // 10. FICHA FINANCEIRA ANUAL INDIVIDUAL
+    async function loadHrAnnualEmployeeReport(employeeId, year = 2026) {
+      if (!employeeId) return;
+      const container = document.getElementById('hr-annual-emp-container');
+      if (!container) return;
+
+      try {
+        const res = await fetch(`/api/hr/reports/annual-financial/employee/${employeeId}?year=${year}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const emp = data.employee || {};
+        const off = data.office_info || {};
+        const totals = data.totals || {};
+        const breakdown = data.monthly_breakdown || [];
+        const thirteenth = data.thirteenth_items || [];
+
+        container.innerHTML = `
+          <div class="border border-slate-200 rounded-3xl p-6 sm:p-8 bg-white space-y-6">
+            
+            <!-- Cabeçalho Timbrado -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b-2 border-slate-200">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-navy-900 text-gold-400 rounded-xl flex items-center justify-center font-serif font-bold text-xl border border-gold-500/40">
+                  JA
+                </div>
+                <div>
+                  <h3 class="font-serif font-bold text-lg text-navy-950">${off.name}</h3>
+                  <p class="text-xs text-slate-600 font-medium">${off.company_type} • ${off.oab_register} • CNPJ ${off.cnpj}</p>
+                  <p class="text-[11px] text-slate-400">${off.address}</p>
+                </div>
+              </div>
+
+              <div class="text-right">
+                <span class="inline-block px-3 py-1 bg-teal-50 border border-teal-200 rounded-full text-xs font-bold text-teal-900 uppercase tracking-wider mb-1">
+                  Ficha Financeira Anual • ${year}
+                </span>
+                <p class="text-[11px] text-slate-400 font-mono">Emissão: ${new Date().toLocaleDateString('pt-BR')}</p>
+              </div>
+            </div>
+
+            <!-- Dados do Colaborador -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+              <div>
+                <span class="text-slate-400 font-bold uppercase text-[10px] block">Colaborador(a)</span>
+                <p class="font-bold text-navy-950">${emp.name}</p>
+              </div>
+              <div>
+                <span class="text-slate-400 font-bold uppercase text-[10px] block">CPF / PIS</span>
+                <p class="font-mono text-slate-800">${emp.cpf} • ${emp.pis_pasep || '-'}</p>
+              </div>
+              <div>
+                <span class="text-slate-400 font-bold uppercase text-[10px] block">Cargo / Regime</span>
+                <p class="font-medium text-slate-800">${emp.position} (${emp.contract_type})</p>
+              </div>
+              <div>
+                <span class="text-slate-400 font-bold uppercase text-[10px] block">Admissão</span>
+                <p class="font-medium text-slate-800">${formatDateBR(emp.admission_date)}</p>
+              </div>
+            </div>
+
+            <!-- Tabela Mês a Mês -->
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-navy-900 text-gold-300 font-bold uppercase tracking-wider text-[11px]">
+                    <th class="py-2.5 px-3">Mês de Referência</th>
+                    <th class="py-2.5 px-3 text-right">Salário Base</th>
+                    <th class="py-2.5 px-3 text-right">Total Bruto</th>
+                    <th class="py-2.5 px-3 text-right text-rose-300">INSS Retido</th>
+                    <th class="py-2.5 px-3 text-right text-amber-300">IRRF Retido</th>
+                    <th class="py-2.5 px-3 text-right text-sky-300">Desc. VT (6%)</th>
+                    <th class="py-2.5 px-3 text-right text-emerald-300 font-bold">Líquido Pago</th>
+                    <th class="py-2.5 px-3 text-right text-slate-300">FGTS (8%)</th>
+                    <th class="py-2.5 px-3 text-center">Data Pgto</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 font-mono text-[11px]">
+                  ${breakdown.map(m => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2 px-3 font-sans font-bold text-navy-950">${m.month_label}</td>
+                      <td class="py-2 px-3 text-right">${formatBRL(m.base_salary)}</td>
+                      <td class="py-2 px-3 text-right font-bold text-navy-950">${formatBRL(m.gross_total)}</td>
+                      <td class="py-2 px-3 text-right text-rose-600">-${formatBRL(m.inss_deduction)}</td>
+                      <td class="py-2 px-3 text-right text-amber-600">-${formatBRL(m.irrf_deduction)}</td>
+                      <td class="py-2 px-3 text-right text-sky-600">-${formatBRL(m.vt_deduction)}</td>
+                      <td class="py-2 px-3 text-right font-bold text-emerald-700">${formatBRL(m.net_total)}</td>
+                      <td class="py-2 px-3 text-right text-slate-500">${formatBRL(m.fgts_deposit)}</td>
+                      <td class="py-2 px-3 text-center text-[10px] text-slate-400 font-sans">${formatDateBR(m.payment_date)}</td>
+                    </tr>
+                  `).join('')}
+
+                  ${thirteenth.map(t => `
+                    <tr class="bg-gold-50/60 hover:bg-gold-50">
+                      <td class="py-2 px-3 font-sans font-bold text-gold-950">${t.label}</td>
+                      <td class="py-2 px-3 text-right">${formatBRL(t.gross_total)}</td>
+                      <td class="py-2 px-3 text-right font-bold text-gold-950">${formatBRL(t.gross_total)}</td>
+                      <td class="py-2 px-3 text-right text-rose-600">-${formatBRL(t.inss_deduction)}</td>
+                      <td class="py-2 px-3 text-right text-amber-600">-${formatBRL(t.irrf_deduction)}</td>
+                      <td class="py-2 px-3 text-right text-slate-400">-</td>
+                      <td class="py-2 px-3 text-right font-bold text-emerald-700">${formatBRL(t.net_total)}</td>
+                      <td class="py-2 px-3 text-right text-slate-500">${formatBRL(t.fgts_deposit)}</td>
+                      <td class="py-2 px-3 text-center text-[10px] text-slate-400 font-sans">${formatDateBR(t.payment_date)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+                <tfoot class="bg-slate-100 font-bold font-mono text-xs border-t-2 border-slate-300">
+                  <tr>
+                    <td class="py-3 px-3 font-sans uppercase">TOTAIS ANUAIS ACUMULADOS (${year})</td>
+                    <td class="py-3 px-3 text-right">-</td>
+                    <td class="py-3 px-3 text-right text-navy-950">${formatBRL(totals.annual_gross_total)}</td>
+                    <td class="py-3 px-3 text-right text-rose-700">-${formatBRL(totals.annual_inss_total)}</td>
+                    <td class="py-3 px-3 text-right text-amber-700">-${formatBRL(totals.annual_irrf_total)}</td>
+                    <td class="py-3 px-3 text-right text-sky-700">-${formatBRL(totals.annual_vt_total)}</td>
+                    <td class="py-3 px-3 text-right text-emerald-800 text-sm">${formatBRL(totals.annual_net_total)}</td>
+                    <td class="py-3 px-3 text-right text-blue-900">${formatBRL(totals.annual_fgts_total)}</td>
+                    <td class="py-3 px-3 text-center font-sans text-[10px] text-slate-500">Média: ${formatBRL(totals.monthly_average_net)}/mês</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Resumo Final em Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Total Bruto</span>
+                <span class="text-sm font-bold text-navy-950 font-mono">${formatBRL(totals.annual_gross_total)}</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Deduções Tributárias</span>
+                <span class="text-sm font-bold text-rose-700 font-mono">${formatBRL(totals.annual_inss_total + totals.annual_irrf_total)}</span>
+              </div>
+              <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                <span class="text-[10px] font-bold uppercase text-emerald-700 block">Líquido Recebido</span>
+                <span class="text-sm font-bold text-emerald-800 font-mono">${formatBRL(totals.annual_net_total)}</span>
+              </div>
+              <div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <span class="text-[10px] font-bold uppercase text-blue-700 block">Depósitos FGTS (8%)</span>
+                <span class="text-sm font-bold text-blue-900 font-mono">${formatBRL(totals.annual_fgts_total)}</span>
+              </div>
+            </div>
+
+          </div>
+        `;
+      } catch (err) {
+        console.error('Erro ao carregar Ficha Financeira Individual:', err);
+      }
+    }
+
+    function printAnnualEmployeeReport() {
+      window.print();
     }
 
     // Inicialização ao Carregar
