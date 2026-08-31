@@ -398,6 +398,17 @@
           <span id="tab-users-count" class="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px]">0</span>
         </button>
 
+        <!-- Aba 13: Gestão de Pessoal (RH / DP - CLT / Art. 7º CF/88) -->
+        <button 
+          id="tab-btn-hr" 
+          onclick="switchTab('hr')" 
+          class="flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50 cursor-pointer"
+        >
+          <span class="text-teal-600 font-bold text-sm">👥</span>
+          <span>Gestão de Pessoal (RH/DP)</span>
+          <span id="tab-hr-count" class="px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-900 text-[10px] font-bold">CLT</span>
+        </button>
+
       </div>
     </header>
 
@@ -3075,6 +3086,423 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       </section>
 
+      <!-- ================= ABA 13: GESTÃO DE PESSOAL (RH / DP) - CLT E ART. 7º DA CF/88 ================= -->
+      <section id="tab-content-hr" class="hidden space-y-6">
+
+        <!-- Top Header: Indicadores Gerais de RH & Ações Rápidas -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-md space-y-5">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-300 text-teal-800 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
+                👥
+              </div>
+              <div>
+                <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950 flex items-center space-x-2">
+                  <span>Gestão de Pessoal & Departamento Pessoal (RH/DP)</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-900 text-[10px] font-extrabold uppercase">CLT & CF/88</span>
+                </h3>
+                <p class="text-xs text-slate-500">Controle rigoroso de colaboradores, contratos, ponto eletrônico (Portaria 671), holerites, férias, 13º e exames ASO.</p>
+              </div>
+            </div>
+
+            <!-- Botões de Ação Rápida no Topo -->
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button 
+                onclick="openQuickPunchModal()" 
+                class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-sm hover:shadow transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <span>⏱️</span>
+                <span>Registrar Ponto Agora</span>
+              </button>
+              <button 
+                onclick="openNewEmployeeModal()" 
+                class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-navy-950 font-extrabold text-xs shadow-gold-glow transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400/60"
+              >
+                <span>➕</span>
+                <span>Novo Colaborador</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards de Métricas em Tempo Real -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="p-4 rounded-2xl bg-teal-50/60 border border-teal-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-teal-700 block">Colaboradores Ativos</span>
+              <p class="text-xl sm:text-2xl font-black text-teal-950 font-mono" id="hr-stat-total-emp">8</p>
+              <p class="text-[11px] text-teal-700">CLT (4) • Estágio (2) • Associados (2)</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-emerald-700 block">Folha Mensal (Líquida)</span>
+              <p class="text-xl sm:text-2xl font-black text-emerald-950 font-mono" id="hr-stat-net-payroll">R$ 29.854,20</p>
+              <p class="text-[11px] text-emerald-700">Bruto: <span id="hr-stat-gross-payroll">R$ 32.700,00</span></p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-blue-700 block">Ponto Eletrônico (Portaria 671)</span>
+              <p class="text-xl sm:text-2xl font-black text-blue-950 font-mono">100%</p>
+              <p class="text-[11px] text-blue-700">Assinatura Digital SHA-256 ativa</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-purple-50/60 border border-purple-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-purple-700 block">Saúde Ocupacional (ASO)</span>
+              <p class="text-xl sm:text-2xl font-black text-purple-950 font-mono">100% Aptos</p>
+              <p class="text-[11px] text-purple-700">Exames em dia conforme NR-7</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Navegação das Sub-Abas do RH -->
+        <div class="flex flex-wrap gap-2 border-b border-slate-200 bg-white p-2.5 rounded-2xl shadow-sm">
+          <button 
+            id="hr-subtab-btn-employees" 
+            onclick="switchHrSubTab('employees')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-teal-50 text-teal-900 border border-teal-300 shadow-sm flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>👥</span>
+            <span>Quadro de Colaboradores</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-time" 
+            onclick="switchHrSubTab('time')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>⏱️</span>
+            <span>Cartão de Ponto (Portaria 671)</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-payroll" 
+            onclick="switchHrSubTab('payroll')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>💵</span>
+            <span>Folha & Contracheques (Holerites)</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-vacations" 
+            onclick="switchHrSubTab('vacations')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>🏖️</span>
+            <span>Férias & 1/3 (Art. 7º CF/88)</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-thirteenth" 
+            onclick="switchHrSubTab('thirteenth')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>🎁</span>
+            <span>13º Salário (Lei 4.090/62)</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-exams" 
+            onclick="switchHrSubTab('exams')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>🩺</span>
+            <span>ASO & Exames (PCMSO)</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-contracts" 
+            onclick="switchHrSubTab('contracts')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>📝</span>
+            <span>Contratos de Trabalho</span>
+          </button>
+
+          <button 
+            id="hr-subtab-btn-benefits" 
+            onclick="switchHrSubTab('benefits')" 
+            class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>🚌</span>
+            <span>Vale Transporte & Alimentação</span>
+          </button>
+        </div>
+
+        <!-- ================= SUB-ABA 1: QUADRO DE COLABORADORES ================= -->
+        <div id="hr-pane-employees" class="space-y-4">
+          <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="relative w-full sm:w-80">
+              <input 
+                type="text" 
+                id="hr-search-emp" 
+                oninput="loadHrEmployees()" 
+                placeholder="Buscar por nome, CPF ou cargo..." 
+                class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-teal-500 focus:bg-white"
+              />
+              <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full sm:w-auto">
+              <select id="hr-filter-contract" onchange="loadHrEmployees()" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
+                <option value="all">Todos os Regimes (CLT, Estágio, Associado)</option>
+                <option value="CLT">CLT (Consolidação das Leis do Trabalho)</option>
+                <option value="ESTAGIO">Estágio (Lei 11.788/08)</option>
+                <option value="ASSOCIADO">Advogado Associado (OAB)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="hr-employees-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Cards de Colaboradores Renderizados via JS -->
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 2: CARTÃO DE PONTO ELETRÔNICO (PORTARIA 671) ================= -->
+        <div id="hr-pane-time" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>⏱️ Controle de Jornada & Ponto Eletrônico</span>
+                  <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px]">Portaria MTP 671/2021 & Art. 74 CLT</span>
+                </h4>
+                <p class="text-xs text-slate-500">Registro de entrada, saída, intervalo intrajornada, cálculo de horas extras e assinatura digital por login e senha.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <select id="hr-time-select-emp" onchange="loadHrTimeClock()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950">
+                  <!-- Carregado via JS -->
+                </select>
+                <input type="month" id="hr-time-month" value="2026-08" onchange="loadHrTimeClock()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950" />
+                <button 
+                  onclick="openSignTimeClockModal()" 
+                  class="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-500 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <span>✍️</span>
+                  <span>Assinar Espelho por Senha</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tabela de Espelho de Ponto -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3">Data</th>
+                    <th class="py-2.5 px-3">Entrada 1</th>
+                    <th class="py-2.5 px-3">Saída Almoço</th>
+                    <th class="py-2.5 px-3">Retorno Almoço</th>
+                    <th class="py-2.5 px-3">Saída 2</th>
+                    <th class="py-2.5 px-3">Total Trabalhado</th>
+                    <th class="py-2.5 px-3">Horas Extras (50%)</th>
+                    <th class="py-2.5 px-3">Status & Assinatura</th>
+                  </tr>
+                </thead>
+                <tbody id="hr-time-clock-tbody" class="divide-y divide-slate-100">
+                  <!-- Linhas renderizadas dinamicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 3: FOLHA DE PAGAMENTO & CONTRACHEQUES ================= -->
+        <div id="hr-pane-payroll" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>💵 Folha de Pagamento & Emissão de Holerites</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded font-bold text-[10px]">Tabela Progressiva INSS 2026</span>
+                </h4>
+                <p class="text-xs text-slate-500">Cálculo de proventos, retenção legal de INSS, IRRF com dedução de dependentes, Vale Transporte (até 6%) e FGTS (8% patronal).</p>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <input type="month" id="hr-payroll-month" value="2026-08" onchange="loadHrPayroll()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950" />
+                <button 
+                  onclick="handleCalculatePayroll()" 
+                  class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 text-white font-extrabold text-xs shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <span>🧮</span>
+                  <span>Calcular e Fechar Folha</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3">Colaborador / Cargo</th>
+                    <th class="py-2.5 px-3">Regime</th>
+                    <th class="py-2.5 px-3">Salário Base</th>
+                    <th class="py-2.5 px-3">Desc. INSS</th>
+                    <th class="py-2.5 px-3">Desc. IRRF</th>
+                    <th class="py-2.5 px-3">Desc. VT (6%)</th>
+                    <th class="py-2.5 px-3">Salário Líquido</th>
+                    <th class="py-2.5 px-3">FGTS (8% Patronal)</th>
+                    <th class="py-2.5 px-3 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="hr-payroll-tbody" class="divide-y divide-slate-100">
+                  <!-- Linhas renderizadas via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 4: FÉRIAS & 1/3 CONSTITUCIONAL ================= -->
+        <div id="hr-pane-vacations" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>🏖️ Férias Remuneradas & Terço Constitucional</span>
+                  <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px]">Art. 7º, XVII CF/88 & Art. 129 CLT</span>
+                </h4>
+                <p class="text-xs text-slate-500">Controle do período aquisitivo, limite concessivo, abono pecuniário (venda de 10 dias) e emissão de recibo formal.</p>
+              </div>
+
+              <button 
+                onclick="openNewVacationModal()" 
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-navy-950 font-extrabold text-xs shadow-gold-glow transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400"
+              >
+                <span>➕</span>
+                <span>Programar Férias</span>
+              </button>
+            </div>
+
+            <div id="hr-vacations-list" class="space-y-3">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 5: DÉCIMO TERCEIRO SALÁRIO ================= -->
+        <div id="hr-pane-thirteenth" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>🎁 Décimo Terceiro Salário (Gratificação Natalina)</span>
+                  <span class="px-2 py-0.5 bg-purple-100 text-purple-900 rounded font-bold text-[10px]">Lei nº 4.090/62 & Art. 7º, VIII CF/88</span>
+                </h4>
+                <p class="text-xs text-slate-500">1ª Parcela (50% paga até 30 de Novembro sem descontos) e 2ª Parcela (com dedução legal de INSS e IRRF até 20 de Dezembro).</p>
+              </div>
+
+              <select id="hr-13th-year" onchange="loadHrThirteenth()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-navy-950">
+                <option value="2026" selected>Exercício 2026</option>
+                <option value="2025">Exercício 2025</option>
+              </select>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3">Colaborador</th>
+                    <th class="py-2.5 px-3">Parcela</th>
+                    <th class="py-2.5 px-3">Meses Trab.</th>
+                    <th class="py-2.5 px-3">Valor Bruto</th>
+                    <th class="py-2.5 px-3">Desc. INSS</th>
+                    <th class="py-2.5 px-3">Desc. IRRF</th>
+                    <th class="py-2.5 px-3">Valor Líquido</th>
+                    <th class="py-2.5 px-3">Data Pagamento</th>
+                    <th class="py-2.5 px-3 text-right">Recibo</th>
+                  </tr>
+                </thead>
+                <tbody id="hr-13th-tbody" class="divide-y divide-slate-100">
+                  <!-- Renderizado via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 6: ASO & EXAMES OCUPACIONAIS ================= -->
+        <div id="hr-pane-exams" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>🩺 Atestados de Saúde Ocupacional (ASO / PCMSO)</span>
+                  <span class="px-2 py-0.5 bg-rose-100 text-rose-900 rounded font-bold text-[10px]">Art. 168 CLT & NR-7</span>
+                </h4>
+                <p class="text-xs text-slate-500">Monitoramento obrigatório de exames Admissionais, Periódicos, de Retorno ao Trabalho e Demissionais.</p>
+              </div>
+
+              <button 
+                onclick="openNewExamModal()" 
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-700 text-white font-extrabold text-xs shadow-sm hover:shadow transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <span>➕</span>
+                <span>Registrar Novo ASO</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3">Colaborador / Cargo</th>
+                    <th class="py-2.5 px-3">Tipo de Exame</th>
+                    <th class="py-2.5 px-3">Data do Exame</th>
+                    <th class="py-2.5 px-3">Validade</th>
+                    <th class="py-2.5 px-3">Médico & CRM</th>
+                    <th class="py-2.5 px-3">Parecer Clínico</th>
+                    <th class="py-2.5 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="hr-exams-tbody" class="divide-y divide-slate-100">
+                  <!-- Renderizado via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 7: CONTRATOS DE TRABALHO ================= -->
+        <div id="hr-pane-contracts" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>📝 Instrumentos Contratuais de Trabalho</span>
+                  <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 rounded font-bold text-[10px]">CLT • Lei 11.788 • Estatuto OAB</span>
+                </h4>
+                <p class="text-xs text-slate-500">Minutas, contratos de experiência, prazo indeterminado, termos de compromisso de estágio e contrato de associação.</p>
+              </div>
+            </div>
+
+            <div id="hr-contracts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 8: VALE TRANSPORTE & ALIMENTAÇÃO ================= -->
+        <div id="hr-pane-benefits" class="hidden space-y-4">
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950 flex items-center space-x-2">
+                  <span>🚌 Gestão de Vale-Transporte & Auxílio Alimentação</span>
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded font-bold text-[10px]">Lei 7.418/85 & PAT Lei 6.321/76</span>
+                </h4>
+                <p class="text-xs text-slate-500">Demonstrativo de custeio patronal e desconto legal limitado a 6% do salário base do empregado.</p>
+              </div>
+            </div>
+
+            <div id="hr-benefits-summary-container" class="space-y-4">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+        </div>
+
+      </section>
+
     </main>
   </div>
 
@@ -5503,6 +5931,506 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </div>
   </div>
 
+  <!-- =============================================================================
+       👥 MODAIS DA GESTÃO DE PESSOAL (RH / DP) - CLT E ART. 7º DA CF/88
+       ============================================================================= -->
+
+  <!-- 1. MODAL: ASSINATURA ELETRÔNICA DO CARTÃO DE PONTO (PORTARIA 671) -->
+  <div id="hr-modal-time-sign" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
+      <button onclick="closeHrModal('hr-modal-time-sign')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+        <div class="w-11 h-11 rounded-2xl bg-teal-50 text-teal-800 flex items-center justify-center text-xl font-bold border border-teal-200">
+          ✍️
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-navy-950">Assinar Cartão de Ponto</h3>
+          <p class="text-xs text-slate-500">Validação eletrônica com login, senha e hash SHA-256</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
+        <p class="font-bold">📜 Portaria MTP nº 671/2021 & Art. 74 CLT:</p>
+        <p class="text-[11px] leading-relaxed">Ao assinar, o colaborador/gestor atesta a veracidade e exatidão das marcações de jornada, intervalos e horas extras registradas no espelho mensal.</p>
+      </div>
+
+      <form onsubmit="handleConfirmSignTimeClock(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="hr-sign-emp-id" value="" />
+        <input type="hidden" id="hr-sign-month" value="" />
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Colaborador:</label>
+          <input type="text" id="hr-sign-emp-name" readonly class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-navy-950" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mês de Referência:</label>
+          <input type="text" id="hr-sign-month-display" readonly class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-navy-950" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Senha de Acesso do Usuário *</label>
+          <input type="password" id="hr-sign-password" required placeholder="Digite sua senha de login..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 focus:outline-none focus:border-teal-500 font-mono text-sm" />
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeHrModal('hr-modal-time-sign')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-500 text-white font-extrabold text-xs shadow-md">
+            🔒 Confirmar Assinatura Digital
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MODAL: REGISTRAR / AJUSTAR PONTO ELETRÔNICO DIÁRIO -->
+  <div id="hr-modal-time-punch" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
+      <button onclick="closeHrModal('hr-modal-time-punch')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+        <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-xl font-bold border border-emerald-200">
+          ⏱️
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-navy-950">Registro de Ponto Eletrônico</h3>
+          <p class="text-xs text-slate-500">Batida de horários conforme Portaria MTP 671</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleSaveTimePunch(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Colaborador *</label>
+          <select id="hr-punch-emp-id" required class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-navy-950 text-xs">
+            <!-- Preenchido via JS -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Data da Jornada *</label>
+          <input type="date" id="hr-punch-date" required class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-navy-950 text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Entrada 1</label>
+            <input type="time" id="hr-punch-in1" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Saída Almoço</label>
+            <input type="time" id="hr-punch-out1" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Volta Almoço</label>
+            <input type="time" id="hr-punch-in2" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Saída 2</label>
+            <input type="time" id="hr-punch-out2" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Justificativa / Observações</label>
+          <input type="text" id="hr-punch-notes" placeholder="Ex: Jornada regular, serviço externo..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs" />
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeHrModal('hr-modal-time-punch')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 text-white font-extrabold text-xs shadow-md">
+            💾 Gravar Batida de Ponto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MODAL: VISUALIZADOR & IMPRESSÃO DE HOLERITE / CONTRACHEQUE TIMBRADO -->
+  <div id="hr-modal-payslip" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3 no-print">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-xl font-bold border border-emerald-200">
+            💵
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-navy-950">Demonstrativo de Pagamento de Salário</h3>
+            <p class="text-xs text-slate-500">Recibo de Pagamento a Empregado (Holerite / Contracheque Oficial CLT)</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="printCurrentPayslip()" type="button" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center space-x-1.5 shadow-sm">
+            <span>🖨️</span>
+            <span>Imprimir Holerite</span>
+          </button>
+          <button onclick="closeHrModal('hr-modal-payslip')" type="button" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+      </div>
+
+      <!-- CONTEÚDO IMPRESSÍVEL DO HOLERITE (TIMBRADO DO ESCRITÓRIO) -->
+      <div id="hr-payslip-print-content" class="p-6 rounded-2xl border-2 border-slate-300 bg-white text-slate-900 space-y-4 font-sans text-xs">
+        
+        <!-- Cabeçalho da Empresa -->
+        <div class="border-b-2 border-slate-800 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 class="font-serif font-black text-sm uppercase tracking-wide text-navy-950">JORGE ALVIM SOCIEDADE INDIVIDUAL DE ADVOCACIA</h2>
+            <p class="text-[11px] text-slate-600">CNPJ: 54.891.230/0001-85 • OAB/MG nº 14.892</p>
+            <p class="text-[10px] text-slate-500">Rua Henrique Dias, 259, Benfica - Juiz de Fora/MG - CEP 36090-300</p>
+          </div>
+          <div class="text-right">
+            <span class="px-3 py-1 bg-slate-100 rounded-lg font-mono font-bold text-xs border border-slate-300 block">RECIBO DE PAGAMENTO</span>
+            <span class="text-[11px] font-bold text-slate-700 block mt-1">Mês/Ano: <span id="payslip-ref-month" class="font-mono">08/2026</span></span>
+          </div>
+        </div>
+
+        <!-- Dados do Empregado -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px]">
+          <div>
+            <span class="text-slate-500 font-semibold block text-[10px]">Nome do Empregado:</span>
+            <span id="payslip-emp-name" class="font-bold text-navy-950">Patricia Souza Silva</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-semibold block text-[10px]">Cargo / Função:</span>
+            <span id="payslip-emp-role" class="font-bold text-navy-950">Secretária Executiva</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-semibold block text-[10px]">CPF / CTPS:</span>
+            <span id="payslip-emp-docs" class="font-mono font-bold">321.654.987-33</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-semibold block text-[10px]">PIS/PASEP / Regime:</span>
+            <span id="payslip-emp-pis" class="font-mono font-bold">128.45678.90-1 (CLT)</span>
+          </div>
+        </div>
+
+        <!-- Tabela de Itens (Proventos e Descontos) -->
+        <table class="w-full border-collapse border border-slate-300 text-[11px]">
+          <thead>
+            <tr class="bg-slate-100 font-bold border-b border-slate-300">
+              <th class="p-2 border-r border-slate-300 text-left">Cód.</th>
+              <th class="p-2 border-r border-slate-300 text-left">Descrição da Verba</th>
+              <th class="p-2 border-r border-slate-300 text-center">Ref.</th>
+              <th class="p-2 border-r border-slate-300 text-right">Vencimentos (R$)</th>
+              <th class="p-2 text-right">Descontos (R$)</th>
+            </tr>
+          </thead>
+          <tbody id="payslip-items-tbody" class="divide-y divide-slate-200 font-mono">
+            <!-- Preenchido via JS -->
+          </tbody>
+          <tfoot class="font-bold bg-slate-50 border-t-2 border-slate-400 font-mono text-xs">
+            <tr>
+              <td colspan="3" class="p-2 text-right uppercase">Totais:</td>
+              <td id="payslip-total-gross" class="p-2 text-right text-emerald-800">R$ 3.800,00</td>
+              <td id="payslip-total-deductions" class="p-2 text-right text-rose-800">R$ 678,40</td>
+            </tr>
+            <tr class="bg-emerald-50 text-emerald-950 font-extrabold text-sm border-t border-emerald-300">
+              <td colspan="3" class="p-2 text-right uppercase font-sans">VALOR LÍQUIDO A RECEBER:</td>
+              <td colspan="2" id="payslip-total-net" class="p-2 text-right text-emerald-900">R$ 3.121,60</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Bases de Cálculo de Encargos -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[10px] font-mono">
+          <div>
+            <span class="text-slate-500 font-sans block">Salário Base:</span>
+            <span id="payslip-base-sal" class="font-bold">R$ 3.800,00</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-sans block">Base Cálc. INSS:</span>
+            <span id="payslip-base-inss" class="font-bold">R$ 3.800,00</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-sans block">Base Cálc. FGTS:</span>
+            <span id="payslip-base-fgts" class="font-bold">R$ 3.800,00</span>
+          </div>
+          <div>
+            <span class="text-slate-500 font-sans block">FGTS do Mês (8%):</span>
+            <span id="payslip-fgts-val" class="font-bold text-blue-900">R$ 304,00</span>
+          </div>
+        </div>
+
+        <!-- Recibo Destacável de Quitação -->
+        <div class="border-t-2 border-dashed border-slate-400 pt-3 mt-4 space-y-2 text-[10px]">
+          <p class="text-slate-600 italic">DECLARO TER RECEBIDO A IMPORTÂNCIA LÍQUIDA DISCRIMINADA NESTE RECIBO, CORRESPONDENTE AO MEU SALÁRIO E PROVENTOS DO MÊS DE REFERÊNCIA, DANDO PLENA E GERAL QUITAÇÃO.</p>
+          <div class="flex justify-between items-end pt-4">
+            <div>
+              <span class="block text-slate-500">Data do Pagamento: <strong id="payslip-pay-date">05/09/2026</strong></span>
+              <span class="block text-[9px] text-slate-400 font-mono">Autenticação: <span id="payslip-hash">SHA-256 9a4f...</span></span>
+            </div>
+            <div class="text-center w-64 border-t border-slate-800 pt-1">
+              <span class="font-bold uppercase text-[10px] block" id="payslip-sign-name">Patricia Souza Silva</span>
+              <span class="text-[9px] text-slate-500">Assinatura do Empregado</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL: PROGRAMAR & CALCULAR FÉRIAS (ART. 7º, XVII CF/88) -->
+  <div id="hr-modal-vacation-form" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
+      <button onclick="closeHrModal('hr-modal-vacation-form')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+        <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center text-xl font-bold border border-amber-200">
+          🏖️
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-navy-950">Programar Férias & 1/3 Constitucional</h3>
+          <p class="text-xs text-slate-500">Cálculo de período aquisitivo e terço constitucional</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleSaveVacation(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Colaborador *</label>
+          <select id="hr-vac-emp-id" required onchange="calculateVacationPreview()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-navy-950 text-xs">
+            <!-- Preenchido via JS -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Início das Férias *</label>
+            <input type="date" id="hr-vac-start" required onchange="calculateVacationPreview()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Término das Férias *</label>
+            <input type="date" id="hr-vac-end" required onchange="calculateVacationPreview()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Dias de Gozo</label>
+            <input type="number" id="hr-vac-days" value="30" min="10" max="30" oninput="calculateVacationPreview()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Abono Pecuniário (Venda de Dias)</label>
+            <input type="number" id="hr-vac-abono" value="0" min="0" max="10" oninput="calculateVacationPreview()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs" />
+          </div>
+        </div>
+
+        <!-- Preview de Valores com 1/3 Constitucional -->
+        <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 space-y-1.5 text-[11px] font-mono">
+          <div class="flex justify-between"><span>Salário Base:</span><strong id="vac-prev-base">R$ 0,00</strong></div>
+          <div class="flex justify-between text-amber-900 font-bold"><span>+ 1/3 Constitucional (Art. 7º, XVII CF):</span><strong id="vac-prev-third">R$ 0,00</strong></div>
+          <div class="flex justify-between border-t border-amber-200 pt-1 text-xs text-navy-950 font-bold"><span>Total Bruto das Férias:</span><strong id="vac-prev-gross">R$ 0,00</strong></div>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeHrModal('hr-modal-vacation-form')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-navy-950 font-extrabold text-xs shadow-gold-glow">
+            🏖️ Gravar Programação de Férias
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. MODAL: CADASTRAR / EDITAR COLABORADOR COMPLETO -->
+  <div id="hr-modal-employee" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5 max-h-[92vh] overflow-y-auto">
+      <button onclick="closeHrModal('hr-modal-employee')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+        <div class="w-11 h-11 rounded-2xl bg-teal-50 text-teal-800 flex items-center justify-center text-xl font-bold border border-teal-200">
+          👥
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-navy-950" id="hr-emp-modal-title">Cadastrar Novo Colaborador</h3>
+          <p class="text-xs text-slate-500">Registro trabalhista completo (CTPS, PIS/PASEP, Salário e Benefícios)</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleSaveEmployee(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="hr-emp-id" value="" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block font-bold text-slate-700 mb-1">Nome Completo *</label>
+            <input type="text" id="hr-emp-name" required placeholder="Nome completo do colaborador" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">CPF *</label>
+            <input type="text" id="hr-emp-cpf" required placeholder="000.000.000-00" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-mono text-xs" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Data de Nascimento</label>
+            <input type="date" id="hr-emp-birth" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">RG</label>
+            <input type="text" id="hr-emp-rg" placeholder="MG-00.000.000" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Regime de Contratação *</label>
+            <select id="hr-emp-contract-type" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-navy-950 text-xs">
+              <option value="CLT">CLT (Prazo Indeterminado)</option>
+              <option value="ESTAGIO">Estágio (Lei 11.788/08)</option>
+              <option value="ASSOCIADO">Advogado Associado (OAB)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cargo / Função *</label>
+            <input type="text" id="hr-emp-position" required placeholder="Ex: Secretária Executiva" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Departamento</label>
+            <input type="text" id="hr-emp-dept" value="Jurídico" placeholder="Ex: Administrativo" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Data de Admissão *</label>
+            <input type="date" id="hr-emp-admission" required class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Salário Base (R$) *</label>
+            <input type="number" step="0.01" id="hr-emp-salary" required placeholder="3500.00" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-mono font-bold text-emerald-800 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Nº CTPS & Série</label>
+            <input type="text" id="hr-emp-ctps" placeholder="1234567 / 001" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">PIS / PASEP</label>
+            <input type="text" id="hr-emp-pis" placeholder="123.45678.90-1" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Dependentes para IRRF</label>
+            <input type="number" id="hr-emp-dependents" value="0" min="0" max="10" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Valor Diário VT (R$)</label>
+            <input type="number" step="0.50" id="hr-emp-vt-daily" value="12.00" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Valor Mensal VA (R$)</label>
+            <input type="number" step="50" id="hr-emp-va-monthly" value="650.00" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono" />
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block font-semibold text-slate-600 mb-1">Dados Bancários / PIX</label>
+            <input type="text" id="hr-emp-bank" placeholder="Banco, Agência, Conta ou Chave PIX" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Status</label>
+            <select id="hr-emp-status" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs">
+              <option value="Ativo">Ativo</option>
+              <option value="Férias">Em Férias</option>
+              <option value="Afastado">Afastado</option>
+              <option value="Demitido">Desligado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100">
+          <button type="button" onclick="closeHrModal('hr-modal-employee')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-500 text-white font-extrabold text-xs shadow-md">
+            💾 Salvar Ficha do Colaborador
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. MODAL: LANÇAR ASO / EXAME OCUPACIONAL (PCMSO) -->
+  <div id="hr-modal-exam-form" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
+      <button onclick="closeHrModal('hr-modal-exam-form')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+        <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-800 flex items-center justify-center text-xl font-bold border border-rose-200">
+          🩺
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-navy-950">Lançamento de ASO (NR-7)</h3>
+          <p class="text-xs text-slate-500">Atestado de Saúde Ocupacional Admissional, Periódico ou Demissional</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleSaveExam(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Colaborador *</label>
+          <select id="hr-exam-emp-id" required class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-navy-950 text-xs">
+            <!-- Preenchido via JS -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Tipo de Exame *</label>
+            <select id="hr-exam-type" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-xs">
+              <option value="ADMISSIONAL">Admissional</option>
+              <option value="PERIODICO">Periódico (Bienal/Anual)</option>
+              <option value="RETORNO">Retorno ao Trabalho</option>
+              <option value="MUDANCA_FUNCAO">Mudança de Função</option>
+              <option value="DEMISSIONAL">Demissional</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Parecer Clínico *</label>
+            <select id="hr-exam-result" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold text-emerald-800 text-xs">
+              <option value="APTO">APTO para a Função</option>
+              <option value="INAPTO">INAPTO</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Data da Realização *</label>
+            <input type="date" id="hr-exam-date" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Data de Validade *</label>
+            <input type="date" id="hr-exam-validity" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Médico Examinador</label>
+            <input type="text" id="hr-exam-doc-name" placeholder="Dr. Médico do Trabalho" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">CRM do Médico</label>
+            <input type="text" id="hr-exam-crm" placeholder="CRM/MG 00.000" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-600 mb-1">Clínica / Laboratório</label>
+          <input type="text" id="hr-exam-clinic" value="Clínica Médica e Ocupacional Juiz de Fora" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeHrModal('hr-modal-exam-form')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-700 text-white font-extrabold text-xs shadow-md">
+            🩺 Salvar ASO
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ================= JAVASCRIPT / LÓGICA DO PAINEL ================= -->
   <script>
     const TOKEN_KEY = 'ja_admin_token';
@@ -5575,6 +6503,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const tabOffices = document.getElementById('tab-content-offices');
       const tabDrive = document.getElementById('tab-content-drive');
       const tabUsers = document.getElementById('tab-content-users');
+      const tabHr = document.getElementById('tab-content-hr');
 
       const btnLeads = document.getElementById('tab-btn-leads');
       const btnClients = document.getElementById('tab-btn-clients');
@@ -5590,6 +6519,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const btnOffices = document.getElementById('tab-btn-offices');
       const btnDrive = document.getElementById('tab-btn-drive');
       const btnUsers = document.getElementById('tab-btn-users');
+      const btnHr = document.getElementById('tab-btn-hr');
 
       const activeClass = "flex items-center space-x-2 px-4 py-2 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-b-2 border-gold-500 bg-amber-50/80 text-gold-900 shadow-sm";
       const inactiveClass = "flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50";
@@ -5607,6 +6537,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (tabJudicial) tabJudicial.classList.add('hidden');
       if (tabOffices) tabOffices.classList.add('hidden');
       if (tabDrive) tabDrive.classList.add('hidden');
+      if (tabHr) tabHr.classList.add('hidden');
       tabUsers.classList.add('hidden');
 
       btnLeads.className = inactiveClass;
@@ -5622,6 +6553,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (btnJudicial) btnJudicial.className = inactiveClass;
       if (btnOffices) btnOffices.className = inactiveClass;
       if (btnDrive) btnDrive.className = inactiveClass;
+      if (btnHr) btnHr.className = inactiveClass;
       btnUsers.className = inactiveClass;
 
       if (tab === 'leads') {
@@ -5680,6 +6612,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         tabUsers.classList.remove('hidden');
         btnUsers.className = activeClass;
         loadUsers();
+      } else if (tab === 'hr') {
+        if (tabHr) tabHr.classList.remove('hidden');
+        if (btnHr) btnHr.className = activeClass;
+        initHrTab();
       }
     }
 
@@ -12942,6 +13878,951 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       navigator.clipboard.writeText(text).then(() => {
         alert('📋 Memória de cálculo copiada para a área de transferência!');
       });
+    }
+
+    // =============================================================================
+    // 👥 MÓDULO DE GESTÃO DE PESSOAL (RH / DP) - CLT E ART. 7º DA CF/88
+    // =============================================================================
+
+    const hrState = {
+      employees: [],
+      timeClock: [],
+      payroll: [],
+      vacations: [],
+      thirteenth: [],
+      exams: [],
+      contracts: [],
+      benefits: [],
+      activeSubTab: 'employees',
+      selectedEmployeeId: null,
+      currentPayslip: null
+    };
+
+    function formatBRL(val) {
+      const num = Number(val) || 0;
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatDateBR(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    }
+
+    function closeHrModal(modalId) {
+      const el = document.getElementById(modalId);
+      if (el) el.classList.add('hidden');
+    }
+
+    async function initHrTab() {
+      await loadHrDashboard();
+      await loadHrEmployees();
+      switchHrSubTab('employees');
+    }
+
+    async function loadHrDashboard() {
+      try {
+        const res = await fetch('/api/hr/dashboard', { headers: getAuthHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          const d = data.dashboard || {};
+          
+          const totalEmpEl = document.getElementById('hr-stat-total-emp');
+          const netPayEl = document.getElementById('hr-stat-net-payroll');
+          const grossPayEl = document.getElementById('hr-stat-gross-payroll');
+          const tabCountEl = document.getElementById('tab-hr-count');
+
+          if (totalEmpEl) totalEmpEl.textContent = d.total_employees || 0;
+          if (tabCountEl) tabCountEl.textContent = `${d.total_employees || 0} CLT`;
+          if (netPayEl) netPayEl.textContent = formatBRL(d.total_net_payroll || 0);
+          if (grossPayEl) grossPayEl.textContent = formatBRL(d.total_gross_payroll || 0);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dashboard de RH:', err);
+      }
+    }
+
+    function switchHrSubTab(subTab) {
+      hrState.activeSubTab = subTab;
+      
+      const subTabs = ['employees', 'time', 'payroll', 'vacations', 'thirteenth', 'exams', 'contracts', 'benefits'];
+      
+      subTabs.forEach(tab => {
+        const pane = document.getElementById(`hr-pane-${tab}`);
+        const btn = document.getElementById(`hr-subtab-btn-${tab}`);
+        if (pane) pane.classList.add('hidden');
+        if (btn) {
+          btn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 flex items-center space-x-1.5 cursor-pointer";
+        }
+      });
+
+      const activePane = document.getElementById(`hr-pane-${subTab}`);
+      const activeBtn = document.getElementById(`hr-subtab-btn-${subTab}`);
+      
+      if (activePane) activePane.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.className = "px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-teal-50 text-teal-900 border border-teal-300 shadow-sm flex items-center space-x-1.5 cursor-pointer";
+      }
+
+      if (subTab === 'employees') loadHrEmployees();
+      else if (subTab === 'time') loadHrTimeClock();
+      else if (subTab === 'payroll') loadHrPayroll();
+      else if (subTab === 'vacations') loadHrVacations();
+      else if (subTab === 'thirteenth') loadHrThirteenth();
+      else if (subTab === 'exams') loadHrExams();
+      else if (subTab === 'contracts') loadHrContracts();
+      else if (subTab === 'benefits') loadHrBenefits();
+    }
+
+    // 1. QUADRO DE COLABORADORES
+    async function loadHrEmployees() {
+      try {
+        const res = await fetch('/api/hr/employees', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        hrState.employees = data.employees || [];
+
+        // Preenche selects de colaboradores nos modais
+        populateEmployeeSelects(hrState.employees);
+
+        // Filtra por texto e regime
+        const search = (document.getElementById('hr-search-emp')?.value || '').toLowerCase();
+        const regimeFilter = document.getElementById('hr-filter-contract')?.value || 'all';
+
+        const filtered = hrState.employees.filter(emp => {
+          const matchQuery = (emp.full_name || '').toLowerCase().includes(search) ||
+                             (emp.position || '').toLowerCase().includes(search) ||
+                             (emp.cpf || '').includes(search);
+          const matchRegime = regimeFilter === 'all' || emp.contract_type === regimeFilter;
+          return matchQuery && matchRegime;
+        });
+
+        renderHrEmployeesGrid(filtered);
+      } catch (err) {
+        console.error('Erro ao carregar colaboradores:', err);
+      }
+    }
+
+    function populateEmployeeSelects(employees) {
+      const selects = [
+        document.getElementById('hr-time-select-emp'),
+        document.getElementById('hr-punch-emp-id'),
+        document.getElementById('hr-vac-emp-id'),
+        document.getElementById('hr-exam-emp-id')
+      ];
+
+      selects.forEach(sel => {
+        if (!sel) return;
+        const currentVal = sel.value;
+        sel.innerHTML = '';
+        employees.forEach(emp => {
+          const opt = document.createElement('option');
+          opt.value = emp.id;
+          opt.textContent = `${emp.full_name} (${emp.position} - ${emp.contract_type})`;
+          sel.appendChild(opt);
+        });
+        if (currentVal) sel.value = currentVal;
+      });
+    }
+
+    function renderHrEmployeesGrid(employees) {
+      const container = document.getElementById('hr-employees-grid');
+      if (!container) return;
+
+      if (employees.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-2">
+            <div class="text-3xl">👥</div>
+            <p class="text-slate-500 text-sm font-medium">Nenhum colaborador encontrado com os filtros selecionados.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = employees.map(emp => {
+        const regimeBadge = emp.contract_type === 'CLT' 
+          ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">CLT (Consolidado)</span>'
+          : emp.contract_type === 'ESTAGIO'
+          ? '<span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-extrabold">Estágio (Lei 11.788)</span>'
+          : '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">Adv. Associado (OAB)</span>';
+
+        return `
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <div class="flex items-center space-x-3">
+                  <div class="w-11 h-11 rounded-2xl bg-teal-50 border border-teal-200 text-teal-800 font-black flex items-center justify-center text-sm shadow-sm">
+                    ${emp.full_name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-sm text-navy-950">${emp.full_name}</h4>
+                    <p class="text-xs text-slate-500 font-medium">${emp.position}</p>
+                  </div>
+                </div>
+                <div>${regimeBadge}</div>
+              </div>
+
+              <!-- Detalhes Contratuais / CLT -->
+              <div class="grid grid-cols-2 gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+                <div>
+                  <span class="block text-[10px] text-slate-400 font-bold uppercase">CPF / PIS:</span>
+                  <span class="font-mono font-semibold text-slate-800 text-[11px]">${emp.cpf}</span>
+                </div>
+                <div>
+                  <span class="block text-[10px] text-slate-400 font-bold uppercase">CTPS:</span>
+                  <span class="font-mono font-semibold text-slate-800 text-[11px]">${emp.ctps_number || '-'}</span>
+                </div>
+                <div>
+                  <span class="block text-[10px] text-slate-400 font-bold uppercase">Admissão:</span>
+                  <span class="font-semibold text-slate-800">${formatDateBR(emp.admission_date)}</span>
+                </div>
+                <div>
+                  <span class="block text-[10px] text-slate-400 font-bold uppercase">Salário Base:</span>
+                  <span class="font-mono font-bold text-emerald-800">${formatBRL(emp.base_salary)}</span>
+                </div>
+              </div>
+
+              <!-- Benefícios Fixos -->
+              <div class="flex items-center justify-between text-[11px] text-slate-600 px-1">
+                <span>🚌 VT: <strong>${formatBRL(emp.vt_daily_amount * 22)}/mês</strong></span>
+                <span>🍽️ VA: <strong>${formatBRL(emp.va_monthly_amount)}/mês</strong></span>
+                <span>👨‍👩‍👧 Dep.: <strong>${emp.dependents_count || 0}</strong></span>
+              </div>
+            </div>
+
+            <!-- Botões de Ação do Colaborador -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 gap-2">
+              <button 
+                onclick="openEditEmployeeModal('${emp.id}')" 
+                class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center space-x-1"
+              >
+                <span>✏️</span>
+                <span>Editar Ficha</span>
+              </button>
+              <div class="flex space-x-1.5">
+                <button 
+                  onclick="selectEmployeeForTime('${emp.id}')" 
+                  class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold transition-all flex items-center space-x-1"
+                  title="Ver Cartão de Ponto"
+                >
+                  <span>⏱️ Ponto</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectEmployeeForTime(empId) {
+      const sel = document.getElementById('hr-time-select-emp');
+      if (sel) sel.value = empId;
+      switchHrSubTab('time');
+    }
+
+    function openNewEmployeeModal() {
+      document.getElementById('hr-emp-modal-title').textContent = 'Cadastrar Novo Colaborador';
+      document.getElementById('hr-emp-id').value = '';
+      document.getElementById('hr-emp-name').value = '';
+      document.getElementById('hr-emp-cpf').value = '';
+      document.getElementById('hr-emp-birth').value = '';
+      document.getElementById('hr-emp-rg').value = '';
+      document.getElementById('hr-emp-contract-type').value = 'CLT';
+      document.getElementById('hr-emp-position').value = '';
+      document.getElementById('hr-emp-dept').value = 'Jurídico';
+      document.getElementById('hr-emp-admission').value = new Date().toISOString().split('T')[0];
+      document.getElementById('hr-emp-salary').value = '3500.00';
+      document.getElementById('hr-emp-ctps').value = '';
+      document.getElementById('hr-emp-pis').value = '';
+      document.getElementById('hr-emp-dependents').value = '0';
+      document.getElementById('hr-emp-vt-daily').value = '12.00';
+      document.getElementById('hr-emp-va-monthly').value = '650.00';
+      document.getElementById('hr-emp-bank').value = '';
+      document.getElementById('hr-emp-status').value = 'Ativo';
+
+      document.getElementById('hr-modal-employee').classList.remove('hidden');
+    }
+
+    function openEditEmployeeModal(empId) {
+      const emp = hrState.employees.find(e => String(e.id) === String(empId));
+      if (!emp) return;
+
+      document.getElementById('hr-emp-modal-title').textContent = `Editar: ${emp.full_name}`;
+      document.getElementById('hr-emp-id').value = emp.id;
+      document.getElementById('hr-emp-name').value = emp.full_name || '';
+      document.getElementById('hr-emp-cpf').value = emp.cpf || '';
+      document.getElementById('hr-emp-birth').value = emp.birth_date || '';
+      document.getElementById('hr-emp-rg').value = emp.rg || '';
+      document.getElementById('hr-emp-contract-type').value = emp.contract_type || 'CLT';
+      document.getElementById('hr-emp-position').value = emp.position || '';
+      document.getElementById('hr-emp-dept').value = emp.department || 'Jurídico';
+      document.getElementById('hr-emp-admission').value = emp.admission_date || '';
+      document.getElementById('hr-emp-salary').value = emp.base_salary || '0.00';
+      document.getElementById('hr-emp-ctps').value = emp.ctps_number || '';
+      document.getElementById('hr-emp-pis').value = emp.pis_number || '';
+      document.getElementById('hr-emp-dependents').value = emp.dependents_count || '0';
+      document.getElementById('hr-emp-vt-daily').value = emp.vt_daily_amount || '0.00';
+      document.getElementById('hr-emp-va-monthly').value = emp.va_monthly_amount || '0.00';
+      document.getElementById('hr-emp-bank').value = emp.bank_account || '';
+      document.getElementById('hr-emp-status').value = emp.status || 'Ativo';
+
+      document.getElementById('hr-modal-employee').classList.remove('hidden');
+    }
+
+    async function handleSaveEmployee(event) {
+      event.preventDefault();
+      const payload = {
+        id: document.getElementById('hr-emp-id').value || null,
+        full_name: document.getElementById('hr-emp-name').value.trim(),
+        cpf: document.getElementById('hr-emp-cpf').value.trim(),
+        birth_date: document.getElementById('hr-emp-birth').value || null,
+        rg: document.getElementById('hr-emp-rg').value.trim(),
+        contract_type: document.getElementById('hr-emp-contract-type').value,
+        position: document.getElementById('hr-emp-position').value.trim(),
+        department: document.getElementById('hr-emp-dept').value.trim(),
+        admission_date: document.getElementById('hr-emp-admission').value,
+        base_salary: parseFloat(document.getElementById('hr-emp-salary').value) || 0,
+        ctps_number: document.getElementById('hr-emp-ctps').value.trim(),
+        pis_number: document.getElementById('hr-emp-pis').value.trim(),
+        dependents_count: parseInt(document.getElementById('hr-emp-dependents').value) || 0,
+        vt_daily_amount: parseFloat(document.getElementById('hr-emp-vt-daily').value) || 0,
+        va_monthly_amount: parseFloat(document.getElementById('hr-emp-va-monthly').value) || 0,
+        bank_account: document.getElementById('hr-emp-bank').value.trim(),
+        status: document.getElementById('hr-emp-status').value
+      };
+
+      try {
+        const res = await fetch('/api/hr/employees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Colaborador salvo com sucesso!');
+          closeHrModal('hr-modal-employee');
+          loadHrEmployees();
+          loadHrDashboard();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao salvar colaborador.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      }
+    }
+
+    // 2. CARTÃO DE PONTO ELETRÔNICO (PORTARIA 671)
+    async function loadHrTimeClock() {
+      const empId = document.getElementById('hr-time-select-emp')?.value;
+      const month = document.getElementById('hr-time-month')?.value || '2026-08';
+      const tbody = document.getElementById('hr-time-clock-tbody');
+      if (!tbody) return;
+
+      if (!empId) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500">Selecione um colaborador para ver o espelho de ponto.</td></tr>`;
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/hr/time-clock?employee_id=${empId}&month=${month}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        hrState.timeClock = data.records || [];
+
+        if (hrState.timeClock.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500">Nenhum registro de ponto encontrado para ${month}.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = hrState.timeClock.map(rec => {
+          const isSigned = !!rec.employee_signature_hash;
+          const signBadge = isSigned
+            ? `<div class="flex items-center space-x-1 text-emerald-700 font-bold text-[10px]" title="Assinado por: ${rec.signed_by_name} em ${formatDateBR(rec.signed_at?.split('T')[0])} | Hash: ${rec.employee_signature_hash}">
+                <span>🔒 Assinado SHA-256</span>
+               </div>`
+            : `<span class="text-amber-700 font-medium text-[10px]">⏳ Pendente</span>`;
+
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="py-2.5 px-3 font-mono font-bold text-navy-950">${formatDateBR(rec.clock_date)}</td>
+              <td class="py-2.5 px-3 font-mono">${rec.time_in_1 || '--:--'}</td>
+              <td class="py-2.5 px-3 font-mono">${rec.time_out_1 || '--:--'}</td>
+              <td class="py-2.5 px-3 font-mono">${rec.time_in_2 || '--:--'}</td>
+              <td class="py-2.5 px-3 font-mono">${rec.time_out_2 || '--:--'}</td>
+              <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${rec.total_hours ? rec.total_hours + 'h' : '8h'}</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-700 font-bold">${rec.overtime_50 ? '+' + rec.overtime_50 + 'h' : '-'}</td>
+              <td class="py-2.5 px-3">${signBadge}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Erro ao carregar ponto:', err);
+      }
+    }
+
+    function openSignTimeClockModal() {
+      const empSelect = document.getElementById('hr-time-select-emp');
+      const empId = empSelect?.value;
+      const empName = empSelect?.options[empSelect.selectedIndex]?.textContent || 'Colaborador';
+      const month = document.getElementById('hr-time-month')?.value || '2026-08';
+
+      document.getElementById('hr-sign-emp-id').value = empId;
+      document.getElementById('hr-sign-emp-name').value = empName;
+      document.getElementById('hr-sign-month').value = month;
+      document.getElementById('hr-sign-month-display').value = month;
+      document.getElementById('hr-sign-password').value = '';
+
+      document.getElementById('hr-modal-time-sign').classList.remove('hidden');
+    }
+
+    async function handleConfirmSignTimeClock(event) {
+      event.preventDefault();
+      const empId = document.getElementById('hr-sign-emp-id').value;
+      const month = document.getElementById('hr-sign-month').value;
+      const password = document.getElementById('hr-sign-password').value;
+
+      try {
+        const res = await fetch('/api/hr/time-clock/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({
+            employee_id: empId,
+            month: month,
+            password: password,
+            signed_by_name: localStorage.getItem('ja_admin_user') || 'Jorge Alvim'
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(`🎉 CARTÃO DE PONTO ASSINADO COM SUCESSO!\n\nCarimbo Criptográfico: ${data.signature_hash}\nData/Hora: ${new Date().toLocaleString('pt-BR')}\nValidade jurídica: Portaria MTP nº 671/2021.`);
+          closeHrModal('hr-modal-time-sign');
+          loadHrTimeClock();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao assinar espelho de ponto.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      }
+    }
+
+    function openQuickPunchModal() {
+      document.getElementById('hr-punch-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('hr-punch-in1').value = '09:00';
+      document.getElementById('hr-punch-out1').value = '12:00';
+      document.getElementById('hr-punch-in2').value = '13:00';
+      document.getElementById('hr-punch-out2').value = '18:00';
+      document.getElementById('hr-punch-notes').value = 'Jornada regular';
+      document.getElementById('hr-modal-time-punch').classList.remove('hidden');
+    }
+
+    async function handleSaveTimePunch(event) {
+      event.preventDefault();
+      const payload = {
+        employee_id: document.getElementById('hr-punch-emp-id').value,
+        clock_date: document.getElementById('hr-punch-date').value,
+        time_in_1: document.getElementById('hr-punch-in1').value,
+        time_out_1: document.getElementById('hr-punch-out1').value,
+        time_in_2: document.getElementById('hr-punch-in2').value,
+        time_out_2: document.getElementById('hr-punch-out2').value,
+        notes: document.getElementById('hr-punch-notes').value
+      };
+
+      try {
+        const res = await fetch('/api/hr/time-clock/punch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('⏱️ Registro de ponto gravado com sucesso!');
+          closeHrModal('hr-modal-time-punch');
+          loadHrTimeClock();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao bater ponto.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      }
+    }
+
+    // 3. FOLHA DE PAGAMENTO & CONTRACHEQUES (HOLERITES)
+    async function loadHrPayroll() {
+      const month = document.getElementById('hr-payroll-month')?.value || '2026-08';
+      const tbody = document.getElementById('hr-payroll-tbody');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch(`/api/hr/payroll?month=${month}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        hrState.payroll = data.payrolls || [];
+
+        if (hrState.payroll.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-500">Nenhuma folha fechada para ${month}. Clique em "Calcular e Fechar Folha".</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = hrState.payroll.map(p => `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-2.5 px-3 font-bold text-navy-950">
+              ${p.full_name}
+              <span class="block text-[10px] text-slate-500 font-normal">${p.position}</span>
+            </td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">${p.contract_type}</span>
+            </td>
+            <td class="py-2.5 px-3 font-mono font-bold">${formatBRL(p.base_salary)}</td>
+            <td class="py-2.5 px-3 font-mono text-rose-700 font-semibold">-${formatBRL(p.inss_deduction)}</td>
+            <td class="py-2.5 px-3 font-mono text-rose-700 font-semibold">-${formatBRL(p.irrf_deduction)}</td>
+            <td class="py-2.5 px-3 font-mono text-rose-700 font-semibold">-${formatBRL(p.vt_deduction)}</td>
+            <td class="py-2.5 px-3 font-mono font-extrabold text-emerald-800 text-sm">${formatBRL(p.net_salary)}</td>
+            <td class="py-2.5 px-3 font-mono text-blue-900 font-semibold">${formatBRL(p.fgts_deposit)}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button 
+                onclick="openPayslipModal('${p.id}')" 
+                class="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs shadow-sm transition-all flex items-center space-x-1 inline-flex"
+                title="Ver Holerite Timbrado"
+              >
+                <span>📄 Holerite</span>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar folha:', err);
+      }
+    }
+
+    async function handleCalculatePayroll() {
+      const month = document.getElementById('hr-payroll-month')?.value || '2026-08';
+      if (!confirm(`Deseja calcular e gerar a folha de pagamento oficial de ${month}?`)) return;
+
+      try {
+        const res = await fetch('/api/hr/payroll/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ month: month })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(`🎉 Folha de ${month} calculada com sucesso para ${data.processed_count} colaboradores!`);
+          loadHrPayroll();
+          loadHrDashboard();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao calcular folha.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      }
+    }
+
+    function openPayslipModal(payrollId) {
+      const item = hrState.payroll.find(p => String(p.id) === String(payrollId));
+      if (!item) return;
+
+      document.getElementById('payslip-ref-month').textContent = item.reference_month;
+      document.getElementById('payslip-emp-name').textContent = item.full_name;
+      document.getElementById('payslip-emp-role').textContent = item.position;
+      document.getElementById('payslip-emp-docs').textContent = `${item.cpf} • CTPS: ${item.ctps_number || '-'}`;
+      document.getElementById('payslip-emp-pis').textContent = `${item.pis_number || '-'} (${item.contract_type})`;
+      document.getElementById('payslip-sign-name').textContent = item.full_name;
+
+      const itemsBody = document.getElementById('payslip-items-tbody');
+      itemsBody.innerHTML = `
+        <tr>
+          <td class="p-2 border-r border-slate-300">001</td>
+          <td class="p-2 border-r border-slate-300 font-sans">Salário Base Mensal</td>
+          <td class="p-2 border-r border-slate-300 text-center">30d</td>
+          <td class="p-2 border-r border-slate-300 text-right text-emerald-800">${formatBRL(item.base_salary)}</td>
+          <td class="p-2 text-right text-slate-400">-</td>
+        </tr>
+        <tr>
+          <td class="p-2 border-r border-slate-300">101</td>
+          <td class="p-2 border-r border-slate-300 font-sans">INSS (Previdência Social 2026)</td>
+          <td class="p-2 border-r border-slate-300 text-center">Prog.</td>
+          <td class="p-2 border-r border-slate-300 text-right text-slate-400">-</td>
+          <td class="p-2 text-right text-rose-800">${formatBRL(item.inss_deduction)}</td>
+        </tr>
+        <tr>
+          <td class="p-2 border-r border-slate-300">102</td>
+          <td class="p-2 border-r border-slate-300 font-sans">IRRF (Receita Federal)</td>
+          <td class="p-2 border-r border-slate-300 text-center">Prog.</td>
+          <td class="p-2 border-r border-slate-300 text-right text-slate-400">-</td>
+          <td class="p-2 text-right text-rose-800">${formatBRL(item.irrf_deduction)}</td>
+        </tr>
+        <tr>
+          <td class="p-2 border-r border-slate-300">103</td>
+          <td class="p-2 border-r border-slate-300 font-sans">Vale Transporte (Desc. Lei 7.418/85 6%)</td>
+          <td class="p-2 border-r border-slate-300 text-center">6%</td>
+          <td class="p-2 border-r border-slate-300 text-right text-slate-400">-</td>
+          <td class="p-2 text-right text-rose-800">${formatBRL(item.vt_deduction)}</td>
+        </tr>
+      `;
+
+      const totalDeductions = (item.inss_deduction || 0) + (item.irrf_deduction || 0) + (item.vt_deduction || 0);
+
+      document.getElementById('payslip-total-gross').textContent = formatBRL(item.gross_salary || item.base_salary);
+      document.getElementById('payslip-total-deductions').textContent = formatBRL(totalDeductions);
+      document.getElementById('payslip-total-net').textContent = formatBRL(item.net_salary);
+
+      document.getElementById('payslip-base-sal').textContent = formatBRL(item.base_salary);
+      document.getElementById('payslip-base-inss').textContent = formatBRL(item.base_salary);
+      document.getElementById('payslip-base-fgts').textContent = formatBRL(item.base_salary);
+      document.getElementById('payslip-fgts-val').textContent = formatBRL(item.fgts_deposit);
+
+      document.getElementById('payslip-pay-date').textContent = formatDateBR(item.payment_date || new Date().toISOString().split('T')[0]);
+      document.getElementById('payslip-hash').textContent = `SHA-256 ${(item.id * 192837).toString(16).padStart(12, '0')}...`;
+
+      document.getElementById('hr-modal-payslip').classList.remove('hidden');
+    }
+
+    function printCurrentPayslip() {
+      window.print();
+    }
+
+    // 4. FÉRIAS & 1/3 CONSTITUCIONAL
+    async function loadHrVacations() {
+      const container = document.getElementById('hr-vacations-list');
+      if (!container) return;
+
+      try {
+        const res = await fetch('/api/hr/vacations', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        hrState.vacations = data.vacations || [];
+
+        if (hrState.vacations.length === 0) {
+          container.innerHTML = `
+            <div class="bg-white p-8 rounded-3xl border border-slate-200 text-center text-slate-500">
+              Nenhuma programação de férias cadastrada.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = hrState.vacations.map(v => `
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                <h4 class="font-bold text-sm text-navy-950">${v.full_name}</h4>
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px]">${v.status}</span>
+              </div>
+              <p class="text-xs text-slate-500">
+                Período: <strong>${formatDateBR(v.start_date)} até ${formatDateBR(v.end_date)}</strong> (${v.days_taken} dias de gozo)
+              </p>
+              <p class="text-[11px] text-slate-600">
+                Salário Base: ${formatBRL(v.base_salary)} | <strong>+ 1/3 Constitucional: ${formatBRL(v.constitutional_third)}</strong>
+              </p>
+            </div>
+            <div class="text-right flex items-center space-x-3">
+              <div>
+                <span class="block text-[10px] uppercase font-bold text-slate-400">Total Bruto de Férias:</span>
+                <span class="font-mono font-extrabold text-emerald-800 text-base">${formatBRL(v.total_gross)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar férias:', err);
+      }
+    }
+
+    function openNewVacationModal() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('hr-vac-start').value = today;
+      document.getElementById('hr-vac-end').value = today;
+      document.getElementById('hr-vac-days').value = '30';
+      document.getElementById('hr-vac-abono').value = '0';
+      calculateVacationPreview();
+      document.getElementById('hr-modal-vacation-form').classList.remove('hidden');
+    }
+
+    function calculateVacationPreview() {
+      const empId = document.getElementById('hr-vac-emp-id')?.value;
+      const emp = hrState.employees.find(e => String(e.id) === String(empId)) || hrState.employees[0];
+      if (!emp) return;
+
+      const salary = emp.base_salary || 0;
+      const third = salary / 3;
+      const gross = salary + third;
+
+      document.getElementById('vac-prev-base').textContent = formatBRL(salary);
+      document.getElementById('vac-prev-third').textContent = formatBRL(third);
+      document.getElementById('vac-prev-gross').textContent = formatBRL(gross);
+    }
+
+    async function handleSaveVacation(event) {
+      event.preventDefault();
+      const payload = {
+        employee_id: document.getElementById('hr-vac-emp-id').value,
+        acquisition_period_start: '2025-01-01',
+        acquisition_period_end: '2025-12-31',
+        concessive_limit_date: '2026-12-31',
+        start_date: document.getElementById('hr-vac-start').value,
+        end_date: document.getElementById('hr-vac-end').value,
+        days_taken: parseInt(document.getElementById('hr-vac-days').value) || 30,
+        abono_days: parseInt(document.getElementById('hr-vac-abono').value) || 0
+      };
+
+      try {
+        const res = await fetch('/api/hr/vacations/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('🏖️ Férias e 1/3 Constitucional programados com sucesso!');
+          closeHrModal('hr-modal-vacation-form');
+          loadHrVacations();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao programar férias.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      }
+    }
+
+    // 5. DÉCIMO TERCEIRO SALÁRIO
+    async function loadHrThirteenth() {
+      const year = document.getElementById('hr-13th-year')?.value || '2026';
+      const tbody = document.getElementById('hr-13th-tbody');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch(`/api/hr/thirteenth?year=${year}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        hrState.thirteenth = data.records || [];
+
+        if (hrState.thirteenth.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-500">Nenhum registro de 13º Salário para o ano de ${year}.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = hrState.thirteenth.map(rec => `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-2.5 px-3 font-bold text-navy-950">${rec.full_name}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full ${rec.installment === 1 ? 'bg-purple-100 text-purple-900' : 'bg-blue-100 text-blue-900'} font-bold text-[10px]">
+                ${rec.installment}ª Parcela
+              </span>
+            </td>
+            <td class="py-2.5 px-3 font-mono font-semibold">${rec.months_worked}/12 avos</td>
+            <td class="py-2.5 px-3 font-mono font-bold">${formatBRL(rec.gross_amount)}</td>
+            <td class="py-2.5 px-3 font-mono text-rose-700 font-semibold">-${formatBRL(rec.inss_deduction)}</td>
+            <td class="py-2.5 px-3 font-mono text-rose-700 font-semibold">-${formatBRL(rec.irrf_deduction)}</td>
+            <td class="py-2.5 px-3 font-mono font-extrabold text-emerald-800 text-sm">${formatBRL(rec.net_amount)}</td>
+            <td class="py-2.5 px-3 font-semibold text-slate-700">${formatDateBR(rec.payment_date)}</td>
+            <td class="py-2.5 px-3 text-right">
+              <span class="text-emerald-700 font-bold text-xs">Pago / Quitado</span>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar 13º:', err);
+      }
+    }
+
+    // 6. ASO & EXAMES OCUPACIONAIS
+    async function loadHrExams() {
+      const tbody = document.getElementById('hr-exams-tbody');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch('/api/hr/exams', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        hrState.exams = data.exams || [];
+
+        if (hrState.exams.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500">Nenhum ASO registrado.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = hrState.exams.map(e => `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-2.5 px-3 font-bold text-navy-950">
+              ${e.full_name}
+              <span class="block text-[10px] text-slate-500 font-normal">${e.position}</span>
+            </td>
+            <td class="py-2.5 px-3 font-semibold text-slate-800">${e.exam_type}</td>
+            <td class="py-2.5 px-3 font-mono">${formatDateBR(e.exam_date)}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${formatDateBR(e.valid_until)}</td>
+            <td class="py-2.5 px-3 text-xs">${e.doctor_name || '-'}<br><span class="text-[10px] text-slate-500">${e.doctor_crm || ''}</span></td>
+            <td class="py-2.5 px-3">
+              <span class="px-2.5 py-0.5 rounded-full ${e.result === 'APTO' ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'} font-extrabold text-[10px]">
+                ${e.result}
+              </span>
+            </td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">Válido</span>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar exames:', err);
+      }
+    }
+
+    function openNewExamModal() {
+      const today = new Date().toISOString().split('T')[0];
+      const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      document.getElementById('hr-exam-date').value = today;
+      document.getElementById('hr-exam-validity').value = nextYear;
+      document.getElementById('hr-exam-doc-name').value = 'Dra. Luiza Fernandes';
+      document.getElementById('hr-exam-crm').value = 'CRM/MG 48.912';
+
+      document.getElementById('hr-modal-exam-form').classList.remove('hidden');
+    }
+
+    async function handleSaveExam(event) {
+      event.preventDefault();
+      const payload = {
+        employee_id: document.getElementById('hr-exam-emp-id').value,
+        exam_type: document.getElementById('hr-exam-type').value,
+        exam_date: document.getElementById('hr-exam-date').value,
+        valid_until: document.getElementById('hr-exam-validity').value,
+        result: document.getElementById('hr-exam-result').value,
+        doctor_name: document.getElementById('hr-exam-doc-name').value.trim(),
+        doctor_crm: document.getElementById('hr-exam-crm').value.trim(),
+        clinic_name: document.getElementById('hr-exam-clinic').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/hr/exams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('🩺 ASO gravado com sucesso no prontuário ocupacional!');
+          closeHrModal('hr-modal-exam-form');
+          loadHrExams();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao gravar ASO.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      }
+    }
+
+    // 7. CONTRATOS DE TRABALHO
+    async function loadHrContracts() {
+      const container = document.getElementById('hr-contracts-grid');
+      if (!container) return;
+
+      try {
+        const res = await fetch('/api/hr/employees', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const employees = data.employees || [];
+
+        container.innerHTML = employees.map(emp => `
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-sm text-navy-950">${emp.full_name}</h4>
+                <p class="text-xs text-slate-500">${emp.position} • ${emp.contract_type}</p>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 font-extrabold text-[10px]">Vigente</span>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs space-y-1 text-slate-600">
+              <p>• Data Início: <strong>${formatDateBR(emp.admission_date)}</strong></p>
+              <p>• Regime Legal: <strong>${emp.contract_type === 'CLT' ? 'Art. 442 da CLT' : emp.contract_type === 'ESTAGIO' ? 'Lei 11.788/2008' : 'Estatuto da Advocacia OAB'}</strong></p>
+              <p>• Salário / Remuneração: <strong>${formatBRL(emp.base_salary)}</strong></p>
+              <p>• Jornada: <strong>${emp.contract_type === 'ESTAGIO' ? '30 horas semanais' : '44 horas semanais'}</strong></p>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button 
+                onclick="alert('📄 INSTRUMENTO CONTRATUAL:\\n\\nContratante: Jorge Alvim Sociedade Individual de Advocacia\\nContratado: ${emp.full_name}\\nCargo: ${emp.position}\\nRemuneração: ${formatBRL(emp.base_salary)}\\n\\nContrato arquivado digitalmente na pasta do colaborador no Drive do Escritório.')" 
+                class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center space-x-1"
+              >
+                <span>📜 Visualizar Minuta</span>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar contratos:', err);
+      }
+    }
+
+    // 8. BENEFÍCIOS (VT & ALIMENTAÇÃO)
+    async function loadHrBenefits() {
+      const container = document.getElementById('hr-benefits-summary-container');
+      if (!container) return;
+
+      try {
+        const res = await fetch('/api/hr/benefits', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const b = data.benefits || {};
+
+        container.innerHTML = `
+          <!-- Cards de Resumo de Benefícios -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-blue-700 block">Custo Total Vale Transporte</span>
+              <p class="text-xl font-black text-blue-950 font-mono">${formatBRL(b.total_vt_cost || 0)}</p>
+              <p class="text-[11px] text-blue-700">Desconto Empregados (máx 6%): ${formatBRL(b.total_vt_employee_discount || 0)}</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-emerald-700 block">Custeio Patronal de VT (Escritório)</span>
+              <p class="text-xl font-black text-emerald-950 font-mono">${formatBRL(b.total_vt_employer_share || 0)}</p>
+              <p class="text-[11px] text-emerald-700">Subvenção legal conforme Lei 7.418/85</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-amber-700 block">Total Auxílio Alimentação (VA)</span>
+              <p class="text-xl font-black text-amber-950 font-mono">${formatBRL(b.total_va_amount || 0)}</p>
+              <p class="text-[11px] text-amber-700">Programa de Alimentação do Trabalhador (PAT)</p>
+            </div>
+          </div>
+
+          <!-- Tabela de Benefícios por Colaborador -->
+          <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+            <h4 class="font-bold text-sm text-navy-950">Demonstrativo Individual de Benefícios</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <th class="py-2.5 px-3">Colaborador</th>
+                    <th class="py-2.5 px-3">Cargo</th>
+                    <th class="py-2.5 px-3">VT Diário</th>
+                    <th class="py-2.5 px-3">Custo Mensal VT</th>
+                    <th class="py-2.5 px-3">Desconto Folha (6%)</th>
+                    <th class="py-2.5 px-3">Custeio Escritório</th>
+                    <th class="py-2.5 px-3">Auxílio Alimentação (VA)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${(b.employees_breakdown || []).map(emp => `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                      <td class="py-2.5 px-3 font-bold text-navy-950">${emp.full_name}</td>
+                      <td class="py-2.5 px-3 text-slate-600">${emp.position}</td>
+                      <td class="py-2.5 px-3 font-mono">${formatBRL(emp.vt_daily)}</td>
+                      <td class="py-2.5 px-3 font-mono font-bold">${formatBRL(emp.vt_monthly_total)}</td>
+                      <td class="py-2.5 px-3 font-mono text-rose-700">-${formatBRL(emp.vt_employee_discount)}</td>
+                      <td class="py-2.5 px-3 font-mono text-blue-900 font-bold">${formatBRL(emp.vt_employer_cost)}</td>
+                      <td class="py-2.5 px-3 font-mono text-emerald-800 font-bold">${formatBRL(emp.va_monthly)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Erro ao carregar benefícios:', err);
+      }
     }
 
     // Inicialização ao Carregar

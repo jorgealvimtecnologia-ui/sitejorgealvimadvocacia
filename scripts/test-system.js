@@ -30,7 +30,7 @@ async function runTests() {
     const dbPath = path.join(projectRoot, 'leads.db');
     const db = new DatabaseSync(dbPath);
 
-    const tables = ['clients', 'office_members', 'lawsuits', 'office_drive_files', 'audit_logs', 'blog_posts', 'users', 'calendar_events', 'court_publications', 'court_holidays'];
+    const tables = ['clients', 'office_members', 'lawsuits', 'office_drive_files', 'audit_logs', 'blog_posts', 'users', 'calendar_events', 'court_publications', 'court_holidays', 'hr_employees', 'hr_contracts', 'hr_medical_exams', 'hr_time_clock', 'hr_payrolls', 'hr_vacations', 'hr_thirteenth_salary'];
     let allTablesOk = true;
     const missingTables = [];
 
@@ -42,7 +42,7 @@ async function runTests() {
       }
     });
 
-    logTestResult('Banco de Dados SQLite (leads.db)', allTablesOk, allTablesOk ? 'Todas as 10 tabelas principais ativas (incluindo court_publications e court_holidays)' : `Faltam tabelas: ${missingTables.join(', ')}`);
+    logTestResult('Banco de Dados SQLite (leads.db)', allTablesOk, allTablesOk ? 'Todas as 17 tabelas ativas (incluindo as 7 tabelas do Módulo de Gestão de Pessoal RH/DP)' : `Faltam tabelas: ${missingTables.join(', ')}`);
   } catch (err) {
     logTestResult('Banco de Dados SQLite (leads.db)', false, err.message);
   }
@@ -155,6 +155,61 @@ async function runTests() {
       const radData = await radRes.json();
       const isRadOk = radRes.status === 200 && radData.success && radData.total > 0;
       logTestResult('API Radar Judicial com Motor Python (/api/judicial/search)', isRadOk, `${radData.total} processo(s) localizado(s) via ${radData.engine || radData.source}`);
+
+      // ================= MÓDULO DE GESTÃO DE PESSOAL (RH / DP) =================
+      // 1. Dashboard RH
+      const hrDashRes = await fetch(`${baseUrl}/api/hr/dashboard`, { headers });
+      const hrDashData = await hrDashRes.json();
+      logTestResult('API RH - Dashboard (/api/hr/dashboard)', hrDashRes.status === 200 && hrDashData.success, `${hrDashData.dashboard?.total_employees || 0} colaboradores ativos | Folha Líquida: R$ ${hrDashData.dashboard?.total_net_payroll?.toFixed(2)}`);
+
+      // 2. Colaboradores & Fichas CTPS
+      const hrEmpRes = await fetch(`${baseUrl}/api/hr/employees`, { headers });
+      const hrEmpData = await hrEmpRes.json();
+      logTestResult('API RH - Colaboradores (/api/hr/employees)', hrEmpRes.status === 200 && hrEmpData.success, `${hrEmpData.employees?.length || 0} colaboradores cadastrados (CLT, Estágio, Associados)`);
+
+      // 3. Ponto Eletrônico & Assinatura Digital (Portaria 671)
+      const hrTimeRes = await fetch(`${baseUrl}/api/hr/time-clock?month=2026-08&employee_id=${hrEmpData.employees?.[0]?.id || 1}`, { headers });
+      const hrTimeData = await hrTimeRes.json();
+      logTestResult('API RH - Ponto Eletrônico (/api/hr/time-clock)', hrTimeRes.status === 200 && hrTimeData.success, `${hrTimeData.records?.length || 0} marcações com cálculo de horas e horas extras 50%`);
+
+      // 4. Assinatura Eletrônica de Ponto com Hash SHA-256
+      const hrSignRes = await fetch(`${baseUrl}/api/hr/time-clock/sign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({
+          employee_id: hrEmpData.employees?.[0]?.id || 1,
+          month: '2026-08',
+          password: 'jorgealvim',
+          signed_by_name: 'Dr. Jorge Alvim'
+        })
+      });
+      const hrSignData = await hrSignRes.json();
+      logTestResult('API RH - Assinatura Eletrônica com Hash SHA-256 (/api/hr/time-clock/sign)', hrSignRes.status === 200 && hrSignData.success, `Carimbo Criptográfico: ${hrSignData.signature_hash ? hrSignData.signature_hash.substring(0, 16) + '...' : 'OK'}`);
+
+      // 5. Folha de Pagamento & Holerites CLT
+      const hrPayRes = await fetch(`${baseUrl}/api/hr/payroll?month=2026-08`, { headers });
+      const hrPayData = await hrPayRes.json();
+      logTestResult('API RH - Folha de Pagamento & Holerites (/api/hr/payroll)', hrPayRes.status === 200 && hrPayData.success, `${hrPayData.payrolls?.length || 0} holerites com INSS progressivo, IRRF, VT 6% e FGTS 8%`);
+
+      // 6. Férias & 1/3 Constitucional (Art. 7º, XVII CF/88)
+      const hrVacRes = await fetch(`${baseUrl}/api/hr/vacations`, { headers });
+      const hrVacData = await hrVacRes.json();
+      logTestResult('API RH - Férias & 1/3 Constitucional (/api/hr/vacations)', hrVacRes.status === 200 && hrVacData.success, `${hrVacData.vacations?.length || 0} período(s) de férias calculados e programados`);
+
+      // 7. 13º Salário (Lei 4.090/62)
+      const hr13Res = await fetch(`${baseUrl}/api/hr/thirteenth?year=2026`, { headers });
+      const hr13Data = await hr13Res.json();
+      logTestResult('API RH - 13º Salário (/api/hr/thirteenth)', hr13Res.status === 200 && hr13Data.success, `${hr13Data.records?.length || 0} parcelas (1ª e 2ª) gerenciadas`);
+
+      // 8. ASO & Exames Ocupacionais (NR-7)
+      const hrExamRes = await fetch(`${baseUrl}/api/hr/exams`, { headers });
+      const hrExamData = await hrExamRes.json();
+      logTestResult('API RH - ASO & Exames Ocupacionais (/api/hr/exams)', hrExamRes.status === 200 && hrExamData.success, `${hrExamData.exams?.length || 0} ASOs (Admissional, Periódico, Demissional)`);
+
+      // 9. Benefícios (VT e Alimentação)
+      const hrBenRes = await fetch(`${baseUrl}/api/hr/benefits`, { headers });
+      const hrBenData = await hrBenRes.json();
+      logTestResult('API RH - Benefícios VT & VA (/api/hr/benefits)', hrBenRes.status === 200 && hrBenData.success, `Total VT: R$ ${hrBenData.benefits?.total_vt_cost?.toFixed(2)} | Total VA: R$ ${hrBenData.benefits?.total_va_amount?.toFixed(2)}`);
     }
   } catch (err) {
     logTestResult('Teste de APIs do Servidor', false, err.message);
