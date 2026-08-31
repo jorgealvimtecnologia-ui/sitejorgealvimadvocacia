@@ -1,6 +1,9 @@
 # Imagem oficial do Node.js 22 (Alpine Linux - leve, segura e rápida)
 FROM node:22-alpine
 
+# Instala Python 3 e bibliotecas necessárias para o robô do Radar Judicial
+RUN apk add --no-cache python3 py3-pip py3-requests py3-urllib3
+
 # Diretório de trabalho dentro do contêiner
 WORKDIR /app
 

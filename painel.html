@@ -257,6 +257,30 @@
           <span id="tab-lawsuits-count" class="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px]">0</span>
         </button>
 
+        <!-- Aba 3.1: Agenda Geral & Calendário dos Advogados -->
+        <button 
+          id="tab-btn-calendar" 
+          onclick="switchTab('calendar')" 
+          class="flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50"
+        >
+          <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <span>Agenda & Prazos</span>
+          <span id="tab-calendar-count" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">0</span>
+        </button>
+
+        <!-- Aba 3.2: Intimações, Citações & DJEN (ComunicaAPI) -->
+        <button 
+          id="tab-btn-publications" 
+          onclick="switchTab('publications')" 
+          class="flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50"
+        >
+          <span class="text-rose-600 font-bold text-sm">📢</span>
+          <span>Intimações & DJEN</span>
+          <span id="tab-publications-count" class="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold">0</span>
+        </button>
+
         <!-- Aba 4: Gerador de Documentos (Procuração, Contrato & Hipossuficiência) -->
         <button 
           id="tab-btn-docs" 
@@ -717,6 +741,392 @@
         <div id="lawsuits-global-container" class="space-y-6">
           <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
             Carregando processos judiciais...
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= ABA 3.1: AGENDA GERAL & CALENDÁRIO DOS ADVOGADOS (iCal & Google Calendar) ================= -->
+      <section id="tab-content-calendar" class="hidden space-y-6">
+
+        <!-- Topo & Controles Inteligentes -->
+        <div class="bg-gradient-to-r from-amber-50 via-white to-gold-50/50 p-5 sm:p-6 rounded-3xl border border-amber-200/80 shadow-sm">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            
+            <!-- Título e Subtítulo -->
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-gold-500 text-navy-950 font-extrabold text-[10px] uppercase tracking-wider">
+                  Controle Processual & Pautas
+                </span>
+                <span class="text-xs text-slate-500 font-medium hidden sm:inline">• Sincronização Google Calendar & iCal Ativa</span>
+              </div>
+              <h2 class="font-serif font-bold text-xl sm:text-2xl text-navy-950">
+                Agenda Geral & Calendário dos Advogados
+              </h2>
+              <p class="text-xs text-slate-600">
+                Gestão centralizada de audiências, prazos fatais, consultas de clientes e pautas individuais de cada profissional.
+              </p>
+            </div>
+
+            <!-- Botões de Ação do Topo -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+              <button 
+                onclick="openCalendarSyncModal()" 
+                type="button" 
+                class="flex-1 sm:flex-none inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:border-gold-400 hover:bg-gold-50/50 text-slate-700 font-bold text-xs shadow-xs transition-all cursor-pointer"
+                title="Sincronizar com Google Agenda, iPhone e Outlook via feed iCal"
+              >
+                <span>📱</span>
+                <span>Sincronizar Google Agenda / Celular</span>
+              </button>
+              
+              <button 
+                onclick="openCalendarEventModal()" 
+                type="button" 
+                class="flex-1 sm:flex-none inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-amber-600 hover:from-gold-700 hover:to-amber-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <span>➕</span>
+                <span>Novo Compromisso / Prazo</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Barra de Filtros e Seletores de Visão -->
+          <div class="mt-6 pt-5 border-t border-amber-200/60 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            
+            <!-- 1. Filtro por Advogado / Geral -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Advogado / Pauta:</label>
+              <select id="cal-filter-lawyer" onchange="handleCalendarFilterChange()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-semibold text-slate-800 focus:outline-none focus:border-gold-500 shadow-2xs">
+                <option value="all">🏢 Geral do Escritório (Todos)</option>
+              </select>
+            </div>
+
+            <!-- 2. Filtro por Tipo de Evento -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Tipo de Compromisso:</label>
+              <select id="cal-filter-type" onchange="handleCalendarFilterChange()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-semibold text-slate-800 focus:outline-none focus:border-gold-500 shadow-2xs">
+                <option value="all">Todos os Tipos</option>
+                <option value="audiencia">🔴 Audiências Judiciais</option>
+                <option value="prazo_fatal">⚠️ Prazos Fatais</option>
+                <option value="consulta">🔵 Consultas de Clientes</option>
+                <option value="reuniao">🟢 Reuniões do Escritório</option>
+                <option value="diligencia">🟡 Diligências & Cartórios</option>
+                <option value="outro">⚪ Outros</option>
+              </select>
+            </div>
+
+            <!-- 3. Filtro por Status -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Status:</label>
+              <select id="cal-filter-status" onchange="handleCalendarFilterChange()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-semibold text-slate-800 focus:outline-none focus:border-gold-500 shadow-2xs">
+                <option value="all">Todos os Status</option>
+                <option value="agendado" selected>Pendentes / Agendados</option>
+                <option value="concluido">Concluídos / Cumpridos</option>
+                <option value="cancelado">Cancelados</option>
+              </select>
+            </div>
+
+            <!-- 4. Modo de Exibição -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Visualização:</label>
+              <div class="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                <button id="cal-view-btn-month" onclick="setCalendarViewMode('month')" type="button" class="flex-1 py-1 rounded-lg font-bold text-[11px] bg-white text-navy-950 shadow-xs transition-all">Mês</button>
+                <button id="cal-view-btn-week" onclick="setCalendarViewMode('week')" type="button" class="flex-1 py-1 rounded-lg font-semibold text-[11px] text-slate-600 hover:text-slate-900 transition-all">Semana</button>
+                <button id="cal-view-btn-list" onclick="setCalendarViewMode('list')" type="button" class="flex-1 py-1 rounded-lg font-semibold text-[11px] text-slate-600 hover:text-slate-900 transition-all">Lista</button>
+                <button id="cal-view-btn-kanban" onclick="setCalendarViewMode('kanban')" type="button" class="flex-1 py-1 rounded-lg font-semibold text-[11px] text-slate-600 hover:text-slate-900 transition-all">Prazos</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Cards de Resumo & Alertas Rápidos -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-3.5">
+            <div class="w-11 h-11 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl font-bold">
+              ⚖️
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Audiências no Mês</div>
+              <div id="cal-stat-hearings" class="text-lg font-extrabold text-navy-950">0</div>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-3.5">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl font-bold">
+              ⚠️
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Prazos Fatais no Mês</div>
+              <div id="cal-stat-deadlines" class="text-lg font-extrabold text-amber-900">0</div>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-3.5">
+            <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-xl font-bold">
+              📅
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total de Eventos</div>
+              <div id="cal-stat-total" class="text-lg font-extrabold text-navy-950">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Navegação do Mês / Semana -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div class="flex items-center space-x-2">
+            <button onclick="navigateCalendarMonth(-1)" type="button" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Mês Anterior">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h3 id="cal-current-month-title" class="font-serif font-extrabold text-base sm:text-lg text-navy-950 min-w-[200px] text-center">
+              Carregando...
+            </h3>
+            <button onclick="navigateCalendarMonth(1)" type="button" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Próximo Mês">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button onclick="goToCurrentCalendarMonth()" type="button" class="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-colors">
+              Hoje
+            </button>
+            <span id="cal-active-lawyer-badge" class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200">
+              🏢 Geral do Escritório
+            </span>
+          </div>
+        </div>
+
+        <!-- Grade de Visualização do Calendário (Mês) -->
+        <div id="cal-view-month-container" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <!-- Cabeçalho dos Dias da Semana -->
+          <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-bold text-slate-600 py-3">
+            <div class="text-rose-600">DOM</div>
+            <div>SEG</div>
+            <div>TER</div>
+            <div>QUA</div>
+            <div>QUI</div>
+            <div>SEX</div>
+            <div class="text-slate-500">SÁB</div>
+          </div>
+          <!-- Grade dos 35 ou 42 Dias -->
+          <div id="cal-month-days-grid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 bg-slate-50/40">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Visualização Semanal -->
+        <div id="cal-view-week-container" class="hidden bg-white rounded-3xl border border-slate-200 shadow-sm p-4 overflow-x-auto">
+          <div id="cal-week-days-grid" class="grid grid-cols-7 gap-3 min-w-[700px]">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Visualização em Lista / Pauta -->
+        <div id="cal-view-list-container" class="hidden bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div id="cal-list-events" class="divide-y divide-slate-100 p-2 sm:p-4">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Visualização Kanban de Prazos Fatais -->
+        <div id="cal-view-kanban-container" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Coluna 1: Prazos Hoje -->
+          <div class="bg-rose-50/60 rounded-2xl border border-rose-200 p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-rose-200">
+              <span class="font-bold text-xs text-rose-900 flex items-center space-x-1">
+                <span>🚨</span>
+                <span>Vencem Hoje</span>
+              </span>
+              <span id="kanban-count-today" class="px-2 py-0.5 rounded-full bg-rose-200 text-rose-900 font-extrabold text-[10px]">0</span>
+            </div>
+            <div id="kanban-col-today" class="space-y-2.5 min-h-[150px]"></div>
+          </div>
+
+          <!-- Coluna 2: Próximos 7 Dias -->
+          <div class="bg-amber-50/60 rounded-2xl border border-amber-200 p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-amber-200">
+              <span class="font-bold text-xs text-amber-900 flex items-center space-x-1">
+                <span>⚠️</span>
+                <span>Próximos 7 Dias</span>
+              </span>
+              <span id="kanban-count-week" class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[10px]">0</span>
+            </div>
+            <div id="kanban-col-week" class="space-y-2.5 min-h-[150px]"></div>
+          </div>
+
+          <!-- Coluna 3: Próximos 30 Dias -->
+          <div class="bg-blue-50/60 rounded-2xl border border-blue-200 p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-blue-200">
+              <span class="font-bold text-xs text-blue-900 flex items-center space-x-1">
+                <span>⏳</span>
+                <span>Próximos 30 Dias</span>
+              </span>
+              <span id="kanban-count-month" class="px-2 py-0.5 rounded-full bg-blue-200 text-blue-900 font-extrabold text-[10px]">0</span>
+            </div>
+            <div id="kanban-col-month" class="space-y-2.5 min-h-[150px]"></div>
+          </div>
+
+          <!-- Coluna 4: Cumpridos -->
+          <div class="bg-emerald-50/60 rounded-2xl border border-emerald-200 p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-emerald-200">
+              <span class="font-bold text-xs text-emerald-900 flex items-center space-x-1">
+                <span>✅</span>
+                <span>Cumpridos / Arquivados</span>
+              </span>
+              <span id="kanban-count-done" class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-extrabold text-[10px]">0</span>
+            </div>
+            <div id="kanban-col-done" class="space-y-2.5 min-h-[150px]"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= ABA 3.2: INTIMAÇÕES, CITAÇÕES & DIÁRIO DA JUSTIÇA (COMUNICAAPI / DJEN / DATAJUD) ================= -->
+      <section id="tab-content-publications" class="hidden space-y-6">
+        
+        <!-- Cabeçalho Informativo & Métricas de Publicações -->
+        <div class="bg-gradient-to-r from-rose-900 via-navy-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-rose-800/40 relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-56 h-56 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative z-10">
+            <div>
+              <div class="flex items-center space-x-2.5 mb-2">
+                <span class="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 font-extrabold text-[10px] uppercase tracking-wider border border-rose-500/30 flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                  <span>ComunicaAPI • DJEN • DataJud CNJ</span>
+                </span>
+                <span class="text-xs text-slate-300 font-semibold">• Monitoramento Oficial</span>
+              </div>
+              <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                📢 Central de Intimações, Citações & Diário da Justiça
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-2xl mt-1 leading-relaxed">
+                Varredura contínua no Diário de Justiça Eletrônico Nacional (DJEN / PJe) para todas as OABs dos advogados da banca e cálculo automático de prazos fatais.
+              </p>
+            </div>
+
+            <!-- Botões de Ação Rápida -->
+            <div class="flex flex-wrap items-center gap-3">
+              <button 
+                onclick="openDeadlineCalculator()" 
+                type="button" 
+                class="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-black text-xs shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
+              >
+                <span>🧮</span>
+                <span>Calculadora de Prazos</span>
+              </button>
+
+              <button 
+                onclick="syncPublicationsNow()" 
+                id="pub-sync-btn"
+                type="button" 
+                class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-black text-xs shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer"
+              >
+                <span>🔄</span>
+                <span>Sincronizar DJEN Agora</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards de Métricas -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-6 pt-6 border-t border-white/10">
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
+              <div class="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Total Capturadas</div>
+              <div id="pub-stat-total" class="text-2xl font-black text-white mt-0.5">0</div>
+            </div>
+
+            <div class="bg-rose-500/20 backdrop-blur-sm rounded-2xl p-3.5 border border-rose-500/30">
+              <div class="text-[11px] font-extrabold text-rose-200 uppercase tracking-wider flex items-center space-x-1">
+                <span>🔴</span>
+                <span>Não Lidas</span>
+              </div>
+              <div id="pub-stat-unread" class="text-2xl font-black text-rose-300 mt-0.5">0</div>
+            </div>
+
+            <div class="bg-emerald-500/10 backdrop-blur-sm rounded-2xl p-3.5 border border-emerald-500/20">
+              <div class="text-[11px] font-bold text-emerald-200 uppercase tracking-wider">Prazos Lançados</div>
+              <div id="pub-stat-launched" class="text-2xl font-black text-emerald-300 mt-0.5">0</div>
+            </div>
+
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
+              <div class="text-[11px] font-bold text-amber-200 uppercase tracking-wider">Advogados Ativos</div>
+              <div id="pub-stat-lawyers" class="text-2xl font-black text-amber-300 mt-0.5">5 OABs</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Ferramentas, Filtros e Busca -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-slate-200 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            
+            <!-- Campo de Busca Textual -->
+            <div class="lg:col-span-2 relative">
+              <input 
+                type="text" 
+                id="pub-search-input" 
+                placeholder="Buscar por Processo CNJ, Texto, Vara ou Advogado..." 
+                oninput="handlePublicationFilterChange()"
+                class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-rose-500 focus:bg-white text-xs sm:text-sm"
+              />
+              <span class="absolute left-3 top-3 text-slate-400 text-sm">🔍</span>
+            </div>
+
+            <!-- Filtro por Advogado -->
+            <div>
+              <select 
+                id="pub-filter-lawyer" 
+                onchange="handlePublicationFilterChange()"
+                class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-rose-500 focus:bg-white text-xs"
+              >
+                <option value="all">🏢 Todos os Advogados</option>
+              </select>
+            </div>
+
+            <!-- Filtro por Tribunal -->
+            <div>
+              <select 
+                id="pub-filter-tribunal" 
+                onchange="handlePublicationFilterChange()"
+                class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-rose-500 focus:bg-white text-xs"
+              >
+                <option value="all">🏛️ Todos os Tribunais</option>
+                <option value="TJMG">TJMG (Minas Gerais)</option>
+                <option value="TRT3">TRT 3ª Região (Trabalhista)</option>
+                <option value="TRF6">TRF 6ª Região (Federal MG)</option>
+                <option value="STJ">STJ (Superior Tribunal de Justiça)</option>
+                <option value="STF">STF (Supremo Tribunal Federal)</option>
+                <option value="TST">TST (Tribunal Superior do Trabalho)</option>
+              </select>
+            </div>
+
+            <!-- Filtro por Status -->
+            <div>
+              <select 
+                id="pub-filter-status" 
+                onchange="handlePublicationFilterChange()"
+                class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-rose-500 focus:bg-white text-xs"
+              >
+                <option value="all">Status: Todas</option>
+                <option value="nao_lido" selected>🔴 Não Lidas (Pendentes)</option>
+                <option value="prazo_lancado">✅ Prazo Lançado na Agenda</option>
+                <option value="lido">👁️ Lidas</option>
+                <option value="arquivado">📦 Arquivadas</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Lista de Publicações e Intimações -->
+        <div id="pub-cards-list" class="space-y-4">
+          <!-- Carregado dinamicamente via JS -->
+          <div class="py-16 text-center text-slate-400 space-y-3 bg-white rounded-3xl border border-slate-200">
+            <div class="text-4xl animate-bounce">📢</div>
+            <p class="text-sm font-semibold text-slate-600">Carregando intimações do Diário da Justiça...</p>
           </div>
         </div>
 
@@ -4569,6 +4979,530 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     }
   </style>
 
+  <!-- ================= MODAL: CADASTRAR / EDITAR COMPROMISSO NA AGENDA ================= -->
+  <div id="modal-calendar-event" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto max-h-[92vh] overflow-y-auto">
+      <button onclick="closeCalendarEventModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 pb-4 border-b border-slate-100 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-300 text-amber-700 flex items-center justify-center text-xl font-bold shadow-xs">
+          📅
+        </div>
+        <div>
+          <h3 id="cal-modal-title" class="font-serif font-bold text-lg text-navy-950">Novo Compromisso / Prazo</h3>
+          <p class="text-xs text-slate-500">Agende audiências, prazos fatais, reuniões ou consultas vinculadas ao escritório.</p>
+        </div>
+      </div>
+
+      <form id="cal-event-form" onsubmit="handleCalendarEventSubmit(event)" class="space-y-4 text-xs sm:text-sm">
+        <input type="hidden" id="cal-event-id" />
+
+        <!-- Título do Compromisso -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Título do Compromisso / Prazo *</label>
+          <input type="text" id="cal-input-title" required placeholder="Ex: Audiência de Instrução - 2ª Vara Cível TJMG" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Tipo de Evento -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Evento *</label>
+            <select id="cal-input-type" required onchange="handleEventTypeChange()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm">
+              <option value="audiencia">🔴 Audiência Judicial (Presencial / Telepresencial)</option>
+              <option value="prazo_fatal">⚠️ Prazo Processual Fatal (Contestação / Recurso)</option>
+              <option value="consulta">🔵 Consulta / Atendimento de Cliente</option>
+              <option value="reuniao">🟢 Reunião Interna do Escritório</option>
+              <option value="diligencia">🟡 Diligência / Cartório / Fórum</option>
+              <option value="outro">⚪ Outro Compromisso</option>
+            </select>
+          </div>
+
+          <!-- Advogado Responsável -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Advogado Responsável *</label>
+            <select id="cal-input-lawyer" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm">
+              <!-- Preenchido dinamicamente via JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Datas e Horários -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs text-slate-800 uppercase tracking-wider">Data & Horário</span>
+            <label class="inline-flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="cal-input-allday" onchange="toggleCalendarAllDay(this.checked)" class="rounded text-gold-600 focus:ring-gold-500 w-4 h-4" />
+              <span class="text-xs font-semibold text-slate-700">Dia Inteiro (Prazo Fatal)</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Início / Vencimento *</label>
+              <input type="datetime-local" id="cal-input-start" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 text-xs sm:text-sm" />
+            </div>
+
+            <div id="cal-end-container">
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">Término Previsto</label>
+              <input type="datetime-local" id="cal-input-end" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 text-xs sm:text-sm" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Vínculos: Cliente & Processo -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Vincular Cliente (Opcional)</label>
+            <select id="cal-input-client" onchange="handleCalendarClientSelect(this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm">
+              <option value="">Nenhum cliente vinculado</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Vincular Processo CNJ (Opcional)</label>
+            <select id="cal-input-lawsuit" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm">
+              <option value="">Nenhum processo vinculado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Localização & Link de Videoconferência (Audiência Virtual) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Local / Foro / Vara</label>
+            <input type="text" id="cal-input-location" placeholder="Ex: Fórum Benjamin Colucci - 2ª Vara Cível" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Link de Videoconferência (TJMG / Teams / Meet)</label>
+            <input type="url" id="cal-input-meeting-url" placeholder="https://tjmg.jus.br/audiencia/..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Prioridade -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Prioridade</label>
+            <select id="cal-input-priority" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm">
+              <option value="normal">Normal</option>
+              <option value="alta">Alta</option>
+              <option value="fatal">🚨 Fatal / Improrrogável</option>
+              <option value="baixa">Baixa</option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status Inicial</label>
+            <select id="cal-input-status" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm">
+              <option value="agendado">Pendente / Agendado</option>
+              <option value="concluido">Concluído / Cumprido</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Descrição / Observações -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Observações & Instruções</label>
+          <textarea id="cal-input-desc" rows="3" placeholder="Informações relevantes para a audiência ou para cumprimento do prazo..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-normal focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm"></textarea>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeCalendarEventModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" id="cal-submit-btn" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-amber-600 hover:from-gold-700 hover:to-amber-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer">
+            <span>💾 Salvar Compromisso</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: VISUALIZADOR DE COMPROMISSO DA AGENDA ================= -->
+  <div id="modal-calendar-view" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
+      <button onclick="closeCalendarViewModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-start space-x-3">
+        <div id="cal-view-icon-box" class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-xl font-bold flex-shrink-0 border border-amber-200">
+          📅
+        </div>
+        <div class="pr-6">
+          <div class="flex flex-wrap items-center gap-1.5 mb-1">
+            <span id="cal-view-type-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-slate-100 text-slate-800">Tipo</span>
+            <span id="cal-view-priority-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">Prioridade</span>
+            <span id="cal-view-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900">Status</span>
+          </div>
+          <h3 id="cal-view-title" class="font-serif font-bold text-lg text-navy-950 leading-snug"></h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2.5">
+        <div class="flex items-center space-x-2 text-slate-800 font-semibold">
+          <span>🕒</span>
+          <span id="cal-view-datetime"></span>
+        </div>
+        <div class="flex items-center space-x-2 text-slate-800">
+          <span>👤</span>
+          <span>Advogado: <strong id="cal-view-lawyer" class="text-navy-950"></strong></span>
+        </div>
+        <div id="cal-view-client-row" class="hidden flex items-center space-x-2 text-slate-800">
+          <span>👥</span>
+          <span>Cliente: <strong id="cal-view-client" class="text-navy-950"></strong></span>
+        </div>
+        <div id="cal-view-lawsuit-row" class="hidden flex items-center space-x-2 text-slate-800">
+          <span>⚖️</span>
+          <span>Processo: <strong id="cal-view-lawsuit" class="text-navy-950 font-mono"></strong></span>
+        </div>
+        <div id="cal-view-location-row" class="hidden flex items-center space-x-2 text-slate-800">
+          <span>📍</span>
+          <span id="cal-view-location"></span>
+        </div>
+      </div>
+
+      <div id="cal-view-desc-box" class="hidden bg-amber-50/50 p-3.5 rounded-xl border border-amber-100 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap"></div>
+
+      <!-- Links & Ações Rápidas -->
+      <div class="space-y-2 pt-2 border-t border-slate-100">
+        <a id="cal-view-meeting-btn" href="#" target="_blank" class="hidden w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-sm transition-all">
+          <span>🎥</span>
+          <span>Entrar na Sala Virtual da Audiência</span>
+        </a>
+
+        <a id="cal-view-google-btn" href="#" target="_blank" class="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs flex items-center justify-center space-x-2 shadow-2xs transition-all">
+          <span>📅</span>
+          <span>Adicionar ao meu Google Agenda</span>
+        </a>
+
+        <div class="flex items-center space-x-2 pt-2">
+          <button id="cal-view-toggle-status-btn" onclick="toggleCurrentEventStatus()" type="button" class="flex-1 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs transition-colors">
+            ✅ Marcar como Cumprido
+          </button>
+          <button onclick="editCurrentCalendarEvent()" type="button" class="py-2 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors">
+            ✏️ Editar
+          </button>
+          <button onclick="deleteCurrentCalendarEvent()" type="button" class="py-2 px-3.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-colors">
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SINCRONIZAÇÃO GOOGLE CALENDAR & iCAL (.ICS) ================= -->
+  <div id="modal-calendar-sync" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5 max-h-[92vh] overflow-y-auto">
+      <button onclick="closeCalendarSyncModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3 pb-3 border-b border-slate-100">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-50 to-gold-100 border border-gold-300 text-gold-800 flex items-center justify-center text-2xl font-bold shadow-xs">
+          📱
+        </div>
+        <div>
+          <h3 class="font-serif font-bold text-lg text-navy-950">Sincronizar com Google Agenda & Celular</h3>
+          <p class="text-xs text-slate-500">Receba audiências e prazos no seu smartphone automaticamente.</p>
+        </div>
+      </div>
+
+      <!-- Feed Geral do Escritório -->
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-navy-950">🏢 Feed iCal Geral do Escritório</span>
+          <span class="px-2 py-0.5 rounded-full bg-gold-100 text-gold-900 text-[10px] font-bold">Todos os Advogados</span>
+        </div>
+        <p class="text-[11px] text-slate-600">Copie o link abaixo para assinar no Google Agenda, iPhone ou Outlook:</p>
+        <div class="flex items-center space-x-2">
+          <input type="text" id="sync-office-url" readonly class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono text-[11px] text-slate-700 select-all" />
+          <button onclick="copyToClipboard('sync-office-url', 'Link Geral Copiado!')" type="button" class="px-3.5 py-2 rounded-xl bg-gold-600 hover:bg-gold-700 text-white font-bold text-xs shadow-xs transition-colors">
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Feed Individual do Advogado Selecionado -->
+      <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-200 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-amber-950">👤 Feed iCal do Advogado Selecionado</span>
+          <span id="sync-selected-lawyer-name" class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-[10px] font-bold">Dr. Jorge Alvim</span>
+        </div>
+        <p class="text-[11px] text-slate-600">Link exclusivo para o celular particular do advogado:</p>
+        <div class="flex items-center space-x-2">
+          <input type="text" id="sync-lawyer-url" readonly class="flex-1 px-3 py-2 rounded-xl bg-white border border-amber-300 font-mono text-[11px] text-slate-700 select-all" />
+          <button onclick="copyToClipboard('sync-lawyer-url', 'Link do Advogado Copiado!')" type="button" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors">
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Passo a Passo Rápido -->
+      <div class="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-700">
+        <h4 class="font-bold text-navy-950">Como Adicionar no seu Aplicativo:</h4>
+        <ul class="space-y-1.5 list-disc list-inside text-[11px] text-slate-600">
+          <li><strong>Google Agenda (Android/Web):</strong> Abra o Google Agenda no computador, clique em <em>"+" ao lado de Outras Agendas</em> &gt; <em>"Do URL"</em> e cole o link copiado.</li>
+          <li><strong>iPhone / iPad (Apple Calendar):</strong> Acesse <em>Ajustes &gt; Calendário &gt; Contas &gt; Adicionar Conta &gt; Outra &gt; Adicionar Calendário Assinado</em> e cole o link.</li>
+          <li><strong>Outlook:</strong> Clique em <em>Adicionar Calendário &gt; Da Internet</em> e insira a URL.</li>
+        </ul>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-slate-100">
+        <button onclick="closeCalendarSyncModal()" type="button" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition-colors">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CALCULADORA DE PRAZOS PROCESSUAIS JUDICIAIS ================= -->
+  <div id="modal-deadline-calculator" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5">
+      <button onclick="closeDeadlineCalculator()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-start space-x-3.5 border-b border-slate-100 pb-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-800 flex items-center justify-center text-2xl font-bold flex-shrink-0 border border-amber-300">
+          🧮
+        </div>
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold uppercase">Motor Jurídico</span>
+          <h3 class="text-lg sm:text-xl font-extrabold text-navy-950 mt-0.5">Calculadora de Prazos Processuais</h3>
+          <p class="text-xs text-slate-500">Contagem automatizada segundo CPC/15 (art. 219 e 224), CLT, CPP e Recesso Forense.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Coluna da Esquerda: Parâmetros de Entrada -->
+        <div class="space-y-4 bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200">
+          <h4 class="font-extrabold text-xs text-navy-950 uppercase tracking-wider">1. Parâmetros da Publicação</h4>
+
+          <!-- Data de Disponibilização -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Data da Disponibilização no DJe (D0)</label>
+            <input 
+              type="date" 
+              id="calc-input-start-date" 
+              onchange="handleCalculateDeadline()"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-amber-500 text-xs sm:text-sm" 
+            />
+          </div>
+
+          <!-- Regime Legal -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Regime Processual</label>
+            <select 
+              id="calc-input-regime" 
+              onchange="handleCalculateDeadline()"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-amber-500 text-xs"
+            >
+              <option value="cpc">CPC/15 • Cível / Família / Tributário (Dias Úteis)</option>
+              <option value="clt">CLT • Trabalhista (Dias Úteis - Art. 775)</option>
+              <option value="cpp">CPP • Penal (Dias Corridos - Art. 798)</option>
+              <option value="jef">Juizados Especiais Cíveis / Federais (Dias Úteis)</option>
+            </select>
+          </div>
+
+          <!-- Tipo de Prazo / Quantidade de Dias -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Prazo Processual</label>
+            <select 
+              id="calc-input-preset" 
+              onchange="handlePresetChange()"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:border-amber-500 text-xs mb-2"
+            >
+              <option value="15">Apelação Cível (15 Dias Úteis)</option>
+              <option value="15">Agravo de Instrumento (15 Dias Úteis)</option>
+              <option value="15">Contestação Cível (15 Dias Úteis)</option>
+              <option value="15">Réplica / Impugnação à Contestação (15 Dias Úteis)</option>
+              <option value="5">Embargos de Declaração (5 Dias Úteis)</option>
+              <option value="8">Recurso Ordinário Trabalhista - ROT (8 Dias Úteis)</option>
+              <option value="15">Recurso Especial / Extraordinário (15 Dias Úteis)</option>
+              <option value="10">Recurso Inominado no JEF (10 Dias Úteis)</option>
+              <option value="custom">Prazo Personalizado (Informar dias)...</option>
+            </select>
+
+            <div id="calc-custom-days-box" class="hidden">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Número de Dias:</label>
+              <input 
+                type="number" 
+                id="calc-input-custom-days" 
+                min="1" 
+                max="365" 
+                value="15" 
+                oninput="handleCalculateDeadline()"
+                class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-xs" 
+              />
+            </div>
+          </div>
+
+          <!-- Vínculos Opcionais (Advogado, Cliente, Processo) -->
+          <div class="border-t border-slate-200 pt-3 space-y-3">
+            <h4 class="font-extrabold text-xs text-navy-950 uppercase tracking-wider">2. Vínculo para a Agenda</h4>
+            
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Advogado Responsável</label>
+              <select id="calc-input-lawyer" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold text-xs">
+                <!-- Preenchido via JS -->
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Processo CNJ</label>
+                <input type="text" id="calc-input-lawsuit-number" placeholder="0000000-00.2026.8.13.0145" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono text-xs" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">Cliente</label>
+                <input type="text" id="calc-input-client-name" placeholder="Nome do Cliente" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Título do Compromisso na Agenda</label>
+              <input type="text" id="calc-input-title" value="Prazo Fatal: Apelação Cível" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-xs" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna da Direita: Resultado do Cálculo & Memória Temporal -->
+        <div class="space-y-4 flex flex-col justify-between">
+          <div class="space-y-4">
+            <h4 class="font-extrabold text-xs text-navy-950 uppercase tracking-wider">3. Memória de Cálculo Oficial</h4>
+
+            <!-- Card Destaque de Data Fatal -->
+            <div class="bg-gradient-to-br from-amber-500 to-rose-600 rounded-2xl p-5 text-white shadow-lg space-y-1 relative overflow-hidden">
+              <div class="text-[11px] font-black uppercase tracking-wider text-amber-100 flex items-center space-x-1.5">
+                <span>🚨</span>
+                <span>Data Fatal do Prazo (Vencimento)</span>
+              </div>
+              <div id="calc-result-fatal-date" class="text-2xl sm:text-3xl font-black tracking-tight">
+                --/--/----
+              </div>
+              <div id="calc-result-fatal-weekday" class="text-xs font-bold text-amber-100">
+                Aguardando parâmetros...
+              </div>
+            </div>
+
+            <!-- Etapas Temporais (D0, D1, D2) -->
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
+              <div class="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span class="text-slate-500 font-semibold">📅 D0 • Disponibilização (DJe):</span>
+                <span id="calc-result-d0" class="font-bold text-navy-950">--/--/----</span>
+              </div>
+              <div class="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span class="text-slate-500 font-semibold">📰 D1 • Publicação Oficial:</span>
+                <span id="calc-result-d1" class="font-bold text-navy-950">--/--/----</span>
+              </div>
+              <div class="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span class="text-slate-500 font-semibold">⏳ D2 • Início da Contagem:</span>
+                <span id="calc-result-d2" class="font-bold text-navy-950">--/--/----</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-semibold">📊 Dias Contados:</span>
+                <span id="calc-result-days-summary" class="font-extrabold text-amber-900">--</span>
+              </div>
+            </div>
+
+            <!-- Feriados / Suspensões Detectadas -->
+            <div id="calc-holidays-box" class="space-y-1 text-xs">
+              <span class="font-bold text-slate-700 text-[11px] uppercase tracking-wider">Feriados & Finais de Semana Compensados:</span>
+              <div id="calc-holidays-list" class="max-h-24 overflow-y-auto no-scrollbar space-y-1 text-[11px] text-slate-600 bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
+                <span>Nenhum feriado interveniente.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões de Ação Final -->
+          <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
+            <button 
+              onclick="copyDeadlineCalculation()" 
+              type="button" 
+              class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <span>📋</span>
+              <span>Copiar Memória</span>
+            </button>
+
+            <button 
+              onclick="launchCalculatedDeadlineToCalendar()" 
+              id="calc-launch-btn"
+              type="button" 
+              class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+            >
+              <span>📅</span>
+              <span>Lançar na Agenda</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: VISUALIZADOR DE INTIMAÇÃO / DJEN ================= -->
+  <div id="modal-publication-view" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
+      <button onclick="closePublicationViewModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-start space-x-3.5 border-b border-slate-100 pb-3">
+        <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center text-xl font-bold flex-shrink-0 border border-rose-200">
+          📢
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+            <span id="pub-view-tribunal-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100 text-rose-900">TJMG</span>
+            <span id="pub-view-type-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">Intimação</span>
+            <span id="pub-view-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">Não Lido</span>
+          </div>
+          <h3 id="pub-view-orgao" class="text-base font-extrabold text-navy-950">Órgão Julgador</h3>
+          <p id="pub-view-advogado" class="text-xs text-slate-500">Destinatário: Dr. Jorge Alvim (OAB/MG 222.943)</p>
+        </div>
+      </div>
+
+      <!-- Dados Chave da Publicação -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+        <div>
+          <span class="text-slate-500 font-semibold">Processo CNJ:</span>
+          <div id="pub-view-processo" class="font-bold font-mono text-navy-950 select-all">0000000-00.2026.8.13.0145</div>
+        </div>
+        <div>
+          <span class="text-slate-500 font-semibold">Data da Disponibilização:</span>
+          <div id="pub-view-data" class="font-bold text-navy-950">31/08/2026</div>
+        </div>
+      </div>
+
+      <!-- Inteiro Teor da Publicação -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Inteiro Teor da Publicação / Despacho:</label>
+        <div id="pub-view-texto" class="w-full p-4 rounded-2xl bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm font-serif leading-relaxed max-h-64 overflow-y-auto shadow-inner select-text">
+          Texto da publicação...
+        </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+        <button 
+          onclick="toggleCurrentPublicationReadStatus()" 
+          id="pub-view-toggle-read-btn"
+          type="button" 
+          class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+        >
+          👁️ Marcar como Lido
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <button 
+            onclick="calculateDeadlineToCurrentPublication()" 
+            type="button" 
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>🧮</span>
+            <span>Calcular Prazo Desta Intimação</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= JAVASCRIPT / LÓGICA DO PAINEL ================= -->
   <script>
     const TOKEN_KEY = 'ja_admin_token';
@@ -4630,6 +5564,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const tabLeads = document.getElementById('tab-content-leads');
       const tabClients = document.getElementById('tab-content-clients');
       const tabLawsuits = document.getElementById('tab-content-lawsuits');
+      const tabCalendar = document.getElementById('tab-content-calendar');
+      const tabPublications = document.getElementById('tab-content-publications');
       const tabDocs = document.getElementById('tab-content-docs');
       const tabFinance = document.getElementById('tab-content-finance');
       const tabBlog = document.getElementById('tab-content-blog');
@@ -4643,6 +5579,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const btnLeads = document.getElementById('tab-btn-leads');
       const btnClients = document.getElementById('tab-btn-clients');
       const btnLawsuits = document.getElementById('tab-btn-lawsuits');
+      const btnCalendar = document.getElementById('tab-btn-calendar');
+      const btnPublications = document.getElementById('tab-btn-publications');
       const btnDocs = document.getElementById('tab-btn-docs');
       const btnFinance = document.getElementById('tab-btn-finance');
       const btnBlog = document.getElementById('tab-btn-blog');
@@ -4659,6 +5597,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       tabLeads.classList.add('hidden');
       tabClients.classList.add('hidden');
       tabLawsuits.classList.add('hidden');
+      if (tabCalendar) tabCalendar.classList.add('hidden');
+      if (tabPublications) tabPublications.classList.add('hidden');
       tabDocs.classList.add('hidden');
       if (tabFinance) tabFinance.classList.add('hidden');
       if (tabBlog) tabBlog.classList.add('hidden');
@@ -4672,6 +5612,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       btnLeads.className = inactiveClass;
       btnClients.className = inactiveClass;
       btnLawsuits.className = inactiveClass;
+      if (btnCalendar) btnCalendar.className = inactiveClass;
+      if (btnPublications) btnPublications.className = inactiveClass;
       btnDocs.className = inactiveClass;
       if (btnFinance) btnFinance.className = inactiveClass;
       if (btnBlog) btnBlog.className = inactiveClass;
@@ -4694,6 +5636,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         tabLawsuits.classList.remove('hidden');
         btnLawsuits.className = activeClass;
         loadLawsuits();
+      } else if (tab === 'calendar') {
+        if (tabCalendar) tabCalendar.classList.remove('hidden');
+        if (btnCalendar) btnCalendar.className = activeClass;
+        initCalendarTab();
+      } else if (tab === 'publications') {
+        if (tabPublications) tabPublications.classList.remove('hidden');
+        if (btnPublications) btnPublications.className = activeClass;
+        initPublicationsTab();
       } else if (tab === 'docs') {
         tabDocs.classList.remove('hidden');
         btnDocs.className = activeClass;
@@ -4750,6 +5700,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           loadLawsuits();
           loadOffices();
           loadDriveFiles();
+          loadCalendarSummary();
+          loadPublicationsStats();
         } else {
           showLoginScreen();
         }
@@ -10468,7 +11420,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Processo Ativo', date: p.distribution_date };
         const poloAtivoName = p.polo_ativo?.[0]?.name || 'Parte Autora';
         const poloPassivoName = p.polo_passivo?.[0]?.name || 'Parte Ré';
-        const formattedDate = lastMov.date ? new Date(lastMov.date).toLocaleDateString('pt-BR') : '-';
+        const formattedDate = lastMov.date ? (lastMov.date.includes('-') ? lastMov.date.split('-').reverse().join('/') : lastMov.date) : '-';
+        const numDisplay = p.numero_formatado || p.numero_processo;
+        const courtDisplay = p.orgao_julgador || p.court_branch || 'Vara Cível / Juízo';
 
         return `
           <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
@@ -10476,24 +11430,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <!-- Cabeçalho do Card -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
               <div>
-                <div class="flex items-center space-x-2 mb-1">
-                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 font-bold text-[10px] uppercase">
-                    ${p.tribunal_code ? p.tribunal_code.toUpperCase() : 'TJ'}
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 font-extrabold text-[10px] uppercase">
+                    ${p.tribunal_code ? p.tribunal_code.toUpperCase() : 'TJMG'}
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
-                    ${p.court_system || 'PJe'}
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px]">
+                    🐍 ${p.source || 'Python Radar'}
                   </span>
                   <span class="text-xs text-slate-400">•</span>
-                  <span class="text-xs font-semibold text-slate-500">${p.tribunal_name}</span>
+                  <span class="text-xs font-semibold text-slate-500">${p.tribunal_name || 'Tribunal de Justiça'}</span>
                 </div>
-                <h4 class="font-mono font-bold text-base sm:text-lg text-navy-950 hover:text-blue-700 cursor-pointer" onclick="openJudicialProcessModal('${p.id}')">
-                  ${p.numero_processo}
+                <h4 class="font-mono font-black text-base sm:text-lg text-navy-950 hover:text-blue-700 cursor-pointer select-all" onclick="openJudicialProcessModal('${p.id}')">
+                  ⚖️ ${numDisplay}
                 </h4>
               </div>
 
               <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center space-x-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Em Tramitação</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>${p.status || 'Em Tramitação'}</span>
               </span>
             </div>
 
@@ -10501,8 +11455,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
               <div class="space-y-1">
                 <span class="text-[10px] font-bold uppercase text-slate-400 block">Classe & Assunto:</span>
-                <p class="font-bold text-slate-800">${p.class_name}</p>
-                <p class="text-slate-500 text-[11px]">${p.subject}</p>
+                <p class="font-bold text-slate-800">${p.class_name || 'Ação Judicial'}</p>
+                <p class="text-slate-500 text-[11px]">${p.subject || 'Direito Civil e Empresarial'}</p>
               </div>
 
               <div class="space-y-1">
@@ -10513,47 +11467,49 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
               <div class="space-y-1">
                 <span class="text-[10px] font-bold uppercase text-slate-400 block">Comarca / Juízo:</span>
-                <p class="font-bold text-slate-800">${p.court_branch}</p>
-                <p class="text-slate-500 text-[11px]">Distribuído em: ${p.distribution_date}</p>
+                <p class="font-bold text-slate-800">${courtDisplay}</p>
+                <p class="text-slate-500 text-[11px]">Distribuído em: ${p.distribution_date || '—'}</p>
               </div>
             </div>
 
             <!-- Última Movimentação -->
-            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between gap-2">
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div class="flex items-center space-x-2 overflow-hidden">
                 <span class="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px] whitespace-nowrap">Último Andamento (${formattedDate})</span>
-                <span class="text-slate-700 font-medium truncate">${lastMov.title} ${lastMov.details ? '- ' + lastMov.details : ''}</span>
+                <span class="text-slate-700 font-medium truncate">${lastMov.title || lastMov.description || 'Movimentação Registrada'}</span>
               </div>
             </div>
 
             <!-- Ações do Processo -->
             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
-              <a 
-                href="${p.direct_portal_url}" 
-                target="_blank" 
-                class="inline-flex items-center space-x-1.5 text-xs font-bold text-blue-700 hover:text-blue-900 hover:underline"
-              >
-                <span>🌐 Acessar Portal do Tribunal</span>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                </svg>
-              </a>
-
               <div class="flex items-center space-x-2">
                 <button 
                   onclick="openJudicialProcessModal('${p.id}')" 
-                  class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center space-x-1.5"
+                  type="button"
+                  class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer"
                 >
-                  <span>📄 Ver Autos & Movimentações</span>
+                  <span>📄</span>
+                  <span>Ver Autos & Movimentações</span>
                 </button>
 
                 <button 
-                  onclick="quickImportJudicialProcess('${p.id}')" 
-                  class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-sm hover:shadow transition-all flex items-center space-x-1.5"
+                  onclick="openDeadlineCalculator({ lawsuit_number: '${numDisplay}', client_name: '${poloAtivoName}', title: 'Prazo: ${numDisplay}' })" 
+                  type="button"
+                  class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer"
                 >
-                  <span>📥 Importar para o Escritório</span>
+                  <span>🧮</span>
+                  <span>Calcular Prazo</span>
                 </button>
               </div>
+
+              <button 
+                onclick="quickImportJudicialProcess('${p.id}')" 
+                type="button"
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-sm hover:shadow transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <span>📥</span>
+                <span>Importar para o Escritório</span>
+              </button>
             </div>
 
           </div>
@@ -10677,6 +11633,1315 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           importBtn.innerHTML = '<span>📥 Importar para o Escritório</span>';
         }
       }
+    }
+
+    // =========================================================================
+    // 📅 CONTROLLER DA AGENDA GERAL & CALENDÁRIOS INDIVIDUAIS (iCal / Google)
+    // =========================================================================
+    let calendarState = {
+      currentYear: new Date().getFullYear(),
+      currentMonth: new Date().getMonth(), // 0-11
+      currentView: 'month', // 'month', 'week', 'list', 'kanban'
+      selectedLawyer: 'all',
+      selectedType: 'all',
+      selectedStatus: 'agendado',
+      events: [],
+      lawyers: [],
+      activeEvent: null
+    };
+
+    const MONTH_NAMES_PT = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    async function initCalendarTab() {
+      await loadCalendarLawyers();
+      await loadCalendarClientsAndLawsuits();
+      await loadCalendarEvents();
+      await loadCalendarSummary();
+    }
+
+    async function loadCalendarLawyers() {
+      try {
+        const res = await fetch('/api/calendar/lawyers', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          calendarState.lawyers = data.lawyers || [];
+          
+          // Preencher dropdown de filtro
+          const filterSel = document.getElementById('cal-filter-lawyer');
+          if (filterSel) {
+            const currentVal = filterSel.value;
+            filterSel.innerHTML = `
+              <option value="all">🏢 Geral do Escritório (Todos)</option>
+              ${calendarState.lawyers.map(l => `<option value="${l.id}">${l.name} (${l.role})</option>`).join('')}
+            `;
+            if (currentVal) filterSel.value = currentVal;
+          }
+
+          // Preencher dropdown do modal de cadastro
+          const inputSel = document.getElementById('cal-input-lawyer');
+          if (inputSel) {
+            inputSel.innerHTML = calendarState.lawyers.map(l => `<option value="${l.id}" data-name="${l.name}">${l.name} - ${l.role}</option>`).join('');
+          }
+        }
+      } catch (err) {
+        console.warn('Falha ao carregar advogados para a agenda:', err);
+      }
+    }
+
+    function loadCalendarClientsAndLawsuits() {
+      try {
+        // Preencher clientes no modal de evento
+        const clientSel = document.getElementById('cal-input-client');
+        if (clientSel && allClients && allClients.length > 0) {
+          clientSel.innerHTML = `
+            <option value="">Nenhum cliente vinculado</option>
+            ${allClients.map(c => `<option value="${c.id}" data-name="${c.full_name}">${c.full_name} (${c.cpf || c.cnpj || 'S/ Doc'})</option>`).join('')}
+          `;
+        }
+
+        // Preencher processos no modal de evento
+        const lawsuitSel = document.getElementById('cal-input-lawsuit');
+        if (lawsuitSel && allLawsuits && allLawsuits.length > 0) {
+          lawsuitSel.innerHTML = `
+            <option value="">Nenhum processo vinculado</option>
+            ${allLawsuits.map(l => `<option value="${l.id}" data-number="${l.lawsuit_number}">${l.lawsuit_number} - ${l.client_name || ''}</option>`).join('')}
+          `;
+        }
+      } catch (e) {}
+    }
+
+    async function loadCalendarEvents() {
+      try {
+        const { currentYear, currentMonth, selectedLawyer, selectedType, selectedStatus } = calendarState;
+        const padM = String(currentMonth + 1).padStart(2, '0');
+        
+        let url = `/api/calendar/events?year=${currentYear}&month=${padM}`;
+        if (selectedLawyer && selectedLawyer !== 'all') url += `&lawyer_id=${encodeURIComponent(selectedLawyer)}`;
+        if (selectedType && selectedType !== 'all') url += `&event_type=${encodeURIComponent(selectedType)}`;
+        if (selectedStatus && selectedStatus !== 'all') url += `&status=${encodeURIComponent(selectedStatus)}`;
+
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          calendarState.events = data.events || [];
+          renderCalendar();
+        }
+      } catch (err) {
+        console.error('Erro ao buscar eventos:', err);
+      }
+    }
+
+    async function loadCalendarSummary() {
+      try {
+        const res = await fetch('/api/calendar/summary', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const stats = data.stats || {};
+          const statHearings = document.getElementById('cal-stat-hearings');
+          const statDeadlines = document.getElementById('cal-stat-deadlines');
+          const statTotal = document.getElementById('cal-stat-total');
+          const tabBadge = document.getElementById('tab-calendar-count');
+
+          if (statHearings) statHearings.textContent = stats.total_hearings || 0;
+          if (statDeadlines) statDeadlines.textContent = stats.total_deadlines || 0;
+          if (statTotal) statTotal.textContent = stats.total_month || 0;
+          if (tabBadge) {
+            const todayCount = (data.today_events || []).length;
+            tabBadge.textContent = todayCount;
+            if (todayCount > 0) {
+              tabBadge.className = 'px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold animate-pulse';
+            } else {
+              tabBadge.className = 'px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold';
+            }
+          }
+        }
+      } catch (err) {}
+    }
+
+    function renderCalendar() {
+      const titleEl = document.getElementById('cal-current-month-title');
+      if (titleEl) {
+        titleEl.textContent = `${MONTH_NAMES_PT[calendarState.currentMonth]} de ${calendarState.currentYear}`;
+      }
+
+      const badgeEl = document.getElementById('cal-active-lawyer-badge');
+      if (badgeEl) {
+        if (calendarState.selectedLawyer === 'all') {
+          badgeEl.textContent = '🏢 Geral do Escritório (Todos)';
+        } else {
+          const found = calendarState.lawyers.find(l => l.id === calendarState.selectedLawyer);
+          badgeEl.textContent = `👤 ${found ? found.name : calendarState.selectedLawyer}`;
+        }
+      }
+
+      if (calendarState.currentView === 'month') {
+        renderMonthlyGrid();
+      } else if (calendarState.currentView === 'week') {
+        renderWeeklyGrid();
+      } else if (calendarState.currentView === 'list') {
+        renderListView();
+      } else if (calendarState.currentView === 'kanban') {
+        renderKanbanView();
+      }
+    }
+
+    function renderMonthlyGrid() {
+      const grid = document.getElementById('cal-month-days-grid');
+      if (!grid) return;
+
+      const year = calendarState.currentYear;
+      const month = calendarState.currentMonth;
+
+      const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Domingo
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+
+      const today = new Date();
+      const isCurrentMonthYear = today.getFullYear() === year && today.getMonth() === month;
+      const todayDateNum = isCurrentMonthYear ? today.getDate() : -1;
+
+      let html = '';
+
+      // Dias do mês anterior
+      for (let x = firstDayIndex; x > 0; x--) {
+        const dayNum = prevMonthDays - x + 1;
+        html += `
+          <div class="min-h-[110px] p-2 bg-slate-50/70 text-slate-300 select-none">
+            <span class="text-xs font-semibold">${dayNum}</span>
+          </div>
+        `;
+      }
+
+      // Dias do mês atual
+      for (let day = 1; day <= daysInMonth; day++) {
+        const padDay = String(day).padStart(2, '0');
+        const padM = String(month + 1).padStart(2, '0');
+        const dateKey = `${year}-${padM}-${padDay}`;
+
+        const isToday = day === todayDateNum;
+        const dayEvents = calendarState.events.filter(e => {
+          return e.start_datetime && e.start_datetime.startsWith(dateKey);
+        });
+
+        html += `
+          <div 
+            onclick="handleDayClick('${dateKey}', event)" 
+            class="min-h-[115px] p-1.5 sm:p-2 bg-white hover:bg-amber-50/30 transition-all cursor-pointer flex flex-col justify-between group relative ${isToday ? 'ring-2 ring-inset ring-gold-500 bg-amber-50/20' : ''}"
+          >
+            <div class="flex items-center justify-between">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-extrabold ${isToday ? 'bg-gold-600 text-white shadow-xs' : 'text-slate-700 group-hover:text-navy-950'}">
+                ${day}
+              </span>
+              ${dayEvents.length > 0 ? `<span class="text-[10px] font-extrabold text-slate-400 font-mono">${dayEvents.length} evt</span>` : ''}
+            </div>
+
+            <!-- Lista de Eventos do Dia -->
+            <div class="space-y-1 mt-1 overflow-y-auto max-h-[85px] no-scrollbar">
+              ${dayEvents.slice(0, 3).map(e => renderEventPill(e)).join('')}
+              ${dayEvents.length > 3 ? `<div class="text-[10px] text-center font-bold text-gold-700 hover:underline">+ ${dayEvents.length - 3} mais</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Preencher final da grade para fechar 35 ou 42 células
+      const totalCells = firstDayIndex + daysInMonth;
+      const nextDays = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+      for (let i = 1; i <= nextDays; i++) {
+        html += `
+          <div class="min-h-[110px] p-2 bg-slate-50/70 text-slate-300 select-none">
+            <span class="text-xs font-semibold">${i}</span>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function renderEventPill(evt) {
+      let icon = '📅';
+      let bgClass = 'bg-blue-50 text-blue-900 border-blue-200';
+      if (evt.event_type === 'audiencia') {
+        icon = '⚖️';
+        bgClass = 'bg-rose-50 text-rose-900 border-rose-200';
+      } else if (evt.event_type === 'prazo_fatal') {
+        icon = '⚠️';
+        bgClass = 'bg-amber-50 text-amber-900 border-amber-300 font-bold';
+      } else if (evt.event_type === 'consulta') {
+        icon = '👤';
+        bgClass = 'bg-emerald-50 text-emerald-900 border-emerald-200';
+      } else if (evt.event_type === 'reuniao') {
+        icon = '🟢';
+        bgClass = 'bg-indigo-50 text-indigo-900 border-indigo-200';
+      }
+
+      const timeStr = evt.all_day ? 'Prazo' : (evt.start_datetime.split('T')[1] || '').slice(0, 5);
+      const isDone = evt.status === 'concluido';
+
+      return `
+        <div 
+          onclick="openCalendarViewModal('${evt.id}', event)" 
+          class="p-1 rounded-lg border text-[10px] leading-tight truncate shadow-2xs hover:scale-[1.02] transition-transform cursor-pointer ${bgClass} ${isDone ? 'opacity-50 line-through' : ''}"
+          title="${evt.title} - ${evt.lawyer_name || ''}"
+        >
+          <div class="flex items-center space-x-1">
+            <span>${icon}</span>
+            <span class="font-extrabold font-mono">${timeStr}</span>
+            <span class="truncate font-semibold">${evt.title}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderWeeklyGrid() {
+      const grid = document.getElementById('cal-week-days-grid');
+      if (!grid) return;
+
+      const year = calendarState.currentYear;
+      const month = calendarState.currentMonth;
+      const today = new Date();
+      
+      // Montar 7 dias da semana atual
+      const dayOfWeek = today.getDay();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+      const daysOfWeekNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+      let html = '';
+
+      for (let i = 0; i < 7; i++) {
+        const cur = new Date(startOfWeek);
+        cur.setDate(startOfWeek.getDate() + i);
+
+        const padDay = String(cur.getDate()).padStart(2, '0');
+        const padM = String(cur.getMonth() + 1).padStart(2, '0');
+        const dateKey = `${cur.getFullYear()}-${padM}-${padDay}`;
+        const isToday = cur.toDateString() === today.toDateString();
+
+        const dayEvents = calendarState.events.filter(e => e.start_datetime && e.start_datetime.startsWith(dateKey));
+
+        html += `
+          <div class="bg-slate-50/50 rounded-2xl border ${isToday ? 'border-gold-400 ring-2 ring-gold-200 bg-amber-50/20' : 'border-slate-200'} p-3 space-y-3 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
+                <div>
+                  <div class="text-[11px] uppercase font-bold text-slate-500">${daysOfWeekNames[i]}</div>
+                  <div class="text-base font-extrabold text-navy-950">${padDay}/${padM}</div>
+                </div>
+                ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-gold-500 text-navy-950 text-[10px] font-extrabold">HOJE</span>' : ''}
+              </div>
+
+              <div class="space-y-2 min-h-[140px]">
+                ${dayEvents.length === 0 ? '<div class="text-[11px] text-slate-400 text-center py-6">Sem compromissos</div>' : dayEvents.map(e => `
+                  <div onclick="openCalendarViewModal('${e.id}', event)" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs hover:border-gold-400 transition-all cursor-pointer text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="font-extrabold text-[10px] text-gold-700">${e.all_day ? 'DIA INTEIRO' : (e.start_datetime.split('T')[1] || '').slice(0, 5)}</span>
+                      <span class="px-1.5 py-0.2 rounded text-[9px] font-bold ${e.event_type === 'audiencia' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-800'}">${e.event_type.toUpperCase()}</span>
+                    </div>
+                    <div class="font-bold text-navy-950 truncate">${e.title}</div>
+                    <div class="text-[10px] text-slate-500 truncate">👤 ${e.lawyer_name || 'Geral'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <button onclick="handleDayClick('${dateKey}', event)" type="button" class="w-full py-1.5 rounded-lg bg-white hover:bg-gold-50 border border-slate-200 text-slate-600 hover:text-gold-800 font-bold text-[10px] transition-colors">
+              + Adicionar
+            </button>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function renderListView() {
+      const container = document.getElementById('cal-list-events');
+      if (!container) return;
+
+      if (calendarState.events.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-400 space-y-2">
+            <div class="text-3xl">📅</div>
+            <p class="text-sm font-semibold">Nenhum compromisso ou prazo cadastrado para este período.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = calendarState.events.map(evt => {
+        const dt = new Date(evt.start_datetime);
+        const dateStr = dt.toLocaleDateString('pt-BR');
+        const timeStr = evt.all_day ? 'Dia Inteiro' : (evt.start_datetime.split('T')[1] || '').slice(0, 5);
+
+        return `
+          <div class="p-4 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div class="flex items-start space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center text-lg font-bold flex-shrink-0 border border-amber-200">
+                ${evt.event_type === 'audiencia' ? '⚖️' : evt.event_type === 'prazo_fatal' ? '⚠️' : '📅'}
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${evt.event_type === 'audiencia' ? 'bg-rose-100 text-rose-800' : evt.event_type === 'prazo_fatal' ? 'bg-amber-100 text-amber-900' : 'bg-blue-100 text-blue-900'}">${evt.event_type.toUpperCase()}</span>
+                  <span class="text-xs text-slate-500 font-mono">📅 ${dateStr} às ${timeStr}</span>
+                  ${evt.status === 'concluido' ? '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 text-[10px] font-bold">CONCLUÍDO</span>' : ''}
+                </div>
+                <h4 class="font-bold text-sm text-navy-950">${evt.title}</h4>
+                <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
+                  <span>👤 Advogado: <strong class="text-slate-700">${evt.lawyer_name || 'Geral'}</strong></span>
+                  ${evt.client_name ? `<span>👥 Cliente: <strong class="text-slate-700">${evt.client_name}</strong></span>` : ''}
+                  ${evt.lawsuit_number ? `<span>⚖️ Proc: <strong class="text-slate-700 font-mono">${evt.lawsuit_number}</strong></span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-2 self-end sm:self-center">
+              ${evt.meeting_url ? `<a href="${evt.meeting_url}" target="_blank" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold text-xs border border-blue-200" title="Sala Virtual">🎥 Sala Virtual</a>` : ''}
+              <button onclick="openCalendarViewModal('${evt.id}', event)" type="button" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">Ver Detalhes</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderKanbanView() {
+      const colToday = document.getElementById('kanban-col-today');
+      const colWeek = document.getElementById('kanban-col-week');
+      const colMonth = document.getElementById('kanban-col-month');
+      const colDone = document.getElementById('kanban-col-done');
+
+      const countToday = document.getElementById('kanban-count-today');
+      const countWeek = document.getElementById('kanban-count-week');
+      const countMonth = document.getElementById('kanban-count-month');
+      const countDone = document.getElementById('kanban-count-done');
+
+      if (!colToday) return;
+
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+      const next7 = new Date(now);
+      next7.setDate(now.getDate() + 7);
+      const next7Str = `${next7.getFullYear()}-${pad(next7.getMonth() + 1)}-${pad(next7.getDate())}`;
+
+      const todayList = [];
+      const weekList = [];
+      const monthList = [];
+      const doneList = [];
+
+      calendarState.events.forEach(e => {
+        if (e.status === 'concluido') {
+          doneList.push(e);
+        } else {
+          const dateOnly = (e.start_datetime || '').slice(0, 10);
+          if (dateOnly === todayStr) {
+            todayList.push(e);
+          } else if (dateOnly > todayStr && dateOnly <= next7Str) {
+            weekList.push(e);
+          } else {
+            monthList.push(e);
+          }
+        }
+      });
+
+      if (countToday) countToday.textContent = todayList.length;
+      if (countWeek) countWeek.textContent = weekList.length;
+      if (countMonth) countMonth.textContent = monthList.length;
+      if (countDone) countDone.textContent = doneList.length;
+
+      const renderKanbanCard = (e) => `
+        <div onclick="openCalendarViewModal('${e.id}', event)" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-gold-400 transition-all cursor-pointer text-xs space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-[10px] text-amber-800 font-mono">📅 ${(e.start_datetime || '').slice(0, 10)}</span>
+            <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold ${e.priority === 'fatal' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700'}">${(e.priority || 'normal').toUpperCase()}</span>
+          </div>
+          <div class="font-bold text-navy-950 line-clamp-2">${e.title}</div>
+          <div class="text-[10px] text-slate-500 truncate">👤 ${e.lawyer_name || 'Geral'}</div>
+          ${e.lawsuit_number ? `<div class="text-[10px] text-slate-400 font-mono truncate">⚖️ ${e.lawsuit_number}</div>` : ''}
+        </div>
+      `;
+
+      colToday.innerHTML = todayList.length === 0 ? '<div class="text-xs text-slate-400 text-center py-6">Nenhum prazo hoje</div>' : todayList.map(renderKanbanCard).join('');
+      colWeek.innerHTML = weekList.length === 0 ? '<div class="text-xs text-slate-400 text-center py-6">Nenhum prazo nesta semana</div>' : weekList.map(renderKanbanCard).join('');
+      colMonth.innerHTML = monthList.length === 0 ? '<div class="text-xs text-slate-400 text-center py-6">Nenhum prazo futuro</div>' : monthList.map(renderKanbanCard).join('');
+      colDone.innerHTML = doneList.length === 0 ? '<div class="text-xs text-slate-400 text-center py-6">Nenhum prazo concluído</div>' : doneList.map(renderKanbanCard).join('');
+    }
+
+    function setCalendarViewMode(mode) {
+      calendarState.currentView = mode;
+      
+      const views = ['month', 'week', 'list', 'kanban'];
+      views.forEach(v => {
+        const btn = document.getElementById(`cal-view-btn-${v}`);
+        const cont = document.getElementById(`cal-view-${v}-container`);
+        if (btn) {
+          if (v === mode) {
+            btn.className = 'flex-1 py-1 rounded-lg font-bold text-[11px] bg-white text-navy-950 shadow-xs transition-all';
+          } else {
+            btn.className = 'flex-1 py-1 rounded-lg font-semibold text-[11px] text-slate-600 hover:text-slate-900 transition-all';
+          }
+        }
+        if (cont) {
+          if (v === mode) cont.classList.remove('hidden');
+          else cont.classList.add('hidden');
+        }
+      });
+
+      renderCalendar();
+    }
+
+    function handleCalendarFilterChange() {
+      const lawyerSel = document.getElementById('cal-filter-lawyer');
+      const typeSel = document.getElementById('cal-filter-type');
+      const statusSel = document.getElementById('cal-filter-status');
+
+      if (lawyerSel) calendarState.selectedLawyer = lawyerSel.value;
+      if (typeSel) calendarState.selectedType = typeSel.value;
+      if (statusSel) calendarState.selectedStatus = statusSel.value;
+
+      loadCalendarEvents();
+    }
+
+    function navigateCalendarMonth(step) {
+      calendarState.currentMonth += step;
+      if (calendarState.currentMonth < 0) {
+        calendarState.currentMonth = 11;
+        calendarState.currentYear -= 1;
+      } else if (calendarState.currentMonth > 11) {
+        calendarState.currentMonth = 0;
+        calendarState.currentYear += 1;
+      }
+      loadCalendarEvents();
+    }
+
+    function goToCurrentCalendarMonth() {
+      const today = new Date();
+      calendarState.currentYear = today.getFullYear();
+      calendarState.currentMonth = today.getMonth();
+      loadCalendarEvents();
+    }
+
+    function handleDayClick(dateKey, e) {
+      if (e) e.stopPropagation();
+      openCalendarEventModal(null, dateKey);
+    }
+
+    function openCalendarEventModal(eventId = null, defaultDate = null) {
+      const modal = document.getElementById('modal-calendar-event');
+      const form = document.getElementById('cal-event-form');
+      const titleEl = document.getElementById('cal-modal-title');
+      if (form) form.reset();
+
+      loadCalendarClientsAndLawsuits();
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const now = new Date();
+      const defaultStart = defaultDate ? `${defaultDate}T09:00` : `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours() + 1)}:00`;
+
+      if (eventId) {
+        const evt = calendarState.events.find(e => e.id === eventId);
+        if (evt) {
+          titleEl.textContent = 'Editar Compromisso / Prazo';
+          document.getElementById('cal-event-id').value = evt.id;
+          document.getElementById('cal-input-title').value = evt.title;
+          document.getElementById('cal-input-type').value = evt.event_type;
+          document.getElementById('cal-input-lawyer').value = evt.lawyer_id || 'dr-jorge-alvim';
+          document.getElementById('cal-input-start').value = (evt.start_datetime || '').slice(0, 16);
+          document.getElementById('cal-input-end').value = evt.end_datetime ? evt.end_datetime.slice(0, 16) : '';
+          document.getElementById('cal-input-allday').checked = evt.all_day === 1;
+          document.getElementById('cal-input-client').value = evt.client_id || '';
+          document.getElementById('cal-input-lawsuit').value = evt.lawsuit_id || '';
+          document.getElementById('cal-input-location').value = evt.location || '';
+          document.getElementById('cal-input-meeting-url').value = evt.meeting_url || '';
+          document.getElementById('cal-input-priority').value = evt.priority || 'normal';
+          document.getElementById('cal-input-status').value = evt.status || 'agendado';
+          document.getElementById('cal-input-desc').value = evt.description || '';
+        }
+      } else {
+        titleEl.textContent = 'Novo Compromisso / Prazo';
+        document.getElementById('cal-event-id').value = '';
+        document.getElementById('cal-input-start').value = defaultStart;
+        document.getElementById('cal-input-lawyer').value = calendarState.selectedLawyer !== 'all' ? calendarState.selectedLawyer : 'dr-jorge-alvim';
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeCalendarEventModal() {
+      const modal = document.getElementById('modal-calendar-event');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleCalendarEventSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('cal-event-id').value;
+      const lawyerSel = document.getElementById('cal-input-lawyer');
+      const clientSel = document.getElementById('cal-input-client');
+      const lawsuitSel = document.getElementById('cal-input-lawsuit');
+
+      const lawyerOpt = lawyerSel.options[lawyerSel.selectedIndex];
+      const clientOpt = clientSel.options[clientSel.selectedIndex];
+      const lawsuitOpt = lawsuitSel.options[lawsuitSel.selectedIndex];
+
+      const payload = {
+        title: document.getElementById('cal-input-title').value.trim(),
+        event_type: document.getElementById('cal-input-type').value,
+        lawyer_id: lawyerSel.value,
+        lawyer_name: lawyerOpt ? (lawyerOpt.getAttribute('data-name') || lawyerOpt.textContent.split(' - ')[0]) : '',
+        start_datetime: document.getElementById('cal-input-start').value,
+        end_datetime: document.getElementById('cal-input-end').value || document.getElementById('cal-input-start').value,
+        all_day: document.getElementById('cal-input-allday').checked ? 1 : 0,
+        client_id: clientSel.value || null,
+        client_name: clientOpt && clientSel.value ? clientOpt.getAttribute('data-name') : '',
+        lawsuit_id: lawsuitSel.value || null,
+        lawsuit_number: lawsuitOpt && lawsuitSel.value ? lawsuitOpt.getAttribute('data-number') : '',
+        location: document.getElementById('cal-input-location').value.trim(),
+        meeting_url: document.getElementById('cal-input-meeting-url').value.trim(),
+        priority: document.getElementById('cal-input-priority').value,
+        status: document.getElementById('cal-input-status').value,
+        description: document.getElementById('cal-input-desc').value.trim()
+      };
+
+      const btn = document.getElementById('cal-submit-btn');
+      if (btn) btn.disabled = true;
+
+      try {
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/calendar/events/${id}` : '/api/calendar/events';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(`✅ ${data.message}`);
+          closeCalendarEventModal();
+          await loadCalendarEvents();
+          await loadCalendarSummary();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao salvar compromisso.'}`);
+        }
+      } catch (err) {
+        alert('Falha de comunicação com o servidor.');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function openCalendarViewModal(eventId, e) {
+      if (e) e.stopPropagation();
+      const evt = calendarState.events.find(x => x.id === eventId);
+      if (!evt) return;
+
+      calendarState.activeEvent = evt;
+      const modal = document.getElementById('modal-calendar-view');
+
+      document.getElementById('cal-view-title').textContent = evt.title;
+      document.getElementById('cal-view-type-badge').textContent = evt.event_type.toUpperCase();
+      document.getElementById('cal-view-priority-badge').textContent = (evt.priority || 'normal').toUpperCase();
+      document.getElementById('cal-view-status-badge').textContent = (evt.status || 'agendado').toUpperCase();
+
+      const dt = new Date(evt.start_datetime);
+      const dateStr = dt.toLocaleDateString('pt-BR');
+      const timeStr = evt.all_day ? 'Dia Inteiro' : (evt.start_datetime.split('T')[1] || '').slice(0, 5);
+      document.getElementById('cal-view-datetime').textContent = `${dateStr} às ${timeStr}`;
+      document.getElementById('cal-view-lawyer').textContent = evt.lawyer_name || 'Geral do Escritório';
+
+      const clientRow = document.getElementById('cal-view-client-row');
+      if (clientRow) {
+        if (evt.client_name) {
+          clientRow.classList.remove('hidden');
+          document.getElementById('cal-view-client').textContent = evt.client_name;
+        } else {
+          clientRow.classList.add('hidden');
+        }
+      }
+
+      const lawsuitRow = document.getElementById('cal-view-lawsuit-row');
+      if (lawsuitRow) {
+        if (evt.lawsuit_number) {
+          lawsuitRow.classList.remove('hidden');
+          document.getElementById('cal-view-lawsuit').textContent = evt.lawsuit_number;
+        } else {
+          lawsuitRow.classList.add('hidden');
+        }
+      }
+
+      const locRow = document.getElementById('cal-view-location-row');
+      if (locRow) {
+        if (evt.location) {
+          locRow.classList.remove('hidden');
+          document.getElementById('cal-view-location').textContent = evt.location;
+        } else {
+          locRow.classList.add('hidden');
+        }
+      }
+
+      const descBox = document.getElementById('cal-view-desc-box');
+      if (descBox) {
+        if (evt.description) {
+          descBox.classList.remove('hidden');
+          descBox.textContent = evt.description;
+        } else {
+          descBox.classList.add('hidden');
+        }
+      }
+
+      // Link da Sala Virtual
+      const meetBtn = document.getElementById('cal-view-meeting-btn');
+      if (meetBtn) {
+        if (evt.meeting_url) {
+          meetBtn.classList.remove('hidden');
+          meetBtn.href = evt.meeting_url;
+        } else {
+          meetBtn.classList.add('hidden');
+        }
+      }
+
+      // Link do Google Calendar
+      const googleBtn = document.getElementById('cal-view-google-btn');
+      if (googleBtn) {
+        const startClean = (evt.start_datetime || '').replace(/[-:]/g, '').slice(0, 15) + (evt.all_day ? '' : '00');
+        const endClean = (evt.end_datetime || evt.start_datetime || '').replace(/[-:]/g, '').slice(0, 15) + (evt.all_day ? '' : '00');
+        const details = encodeURIComponent(`Advogado: ${evt.lawyer_name || ''}\nCliente: ${evt.client_name || ''}\nProcesso: ${evt.lawsuit_number || ''}\n\n${evt.description || ''}`);
+        googleBtn.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(evt.title)}&dates=${startClean}/${endClean}&details=${details}&location=${encodeURIComponent(evt.meeting_url || evt.location || 'Juiz de Fora')}`;
+      }
+
+      const toggleStatusBtn = document.getElementById('cal-view-toggle-status-btn');
+      if (toggleStatusBtn) {
+        if (evt.status === 'concluido') {
+          toggleStatusBtn.textContent = '🔄 Reabrir / Marcar Pendente';
+          toggleStatusBtn.className = 'flex-1 py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition-colors';
+        } else {
+          toggleStatusBtn.textContent = '✅ Marcar como Cumprido';
+          toggleStatusBtn.className = 'flex-1 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs transition-colors';
+        }
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeCalendarViewModal() {
+      const modal = document.getElementById('modal-calendar-view');
+      if (modal) modal.classList.add('hidden');
+      calendarState.activeEvent = null;
+    }
+
+    async function toggleCurrentEventStatus() {
+      if (!calendarState.activeEvent) return;
+      const newStatus = calendarState.activeEvent.status === 'concluido' ? 'agendado' : 'concluido';
+
+      try {
+        const res = await fetch(`/api/calendar/events/${calendarState.activeEvent.id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          closeCalendarViewModal();
+          await loadCalendarEvents();
+          await loadCalendarSummary();
+        }
+      } catch (err) {
+        alert('Erro ao atualizar status do compromisso.');
+      }
+    }
+
+    function editCurrentCalendarEvent() {
+      if (!calendarState.activeEvent) return;
+      const id = calendarState.activeEvent.id;
+      closeCalendarViewModal();
+      openCalendarEventModal(id);
+    }
+
+    async function deleteCurrentCalendarEvent() {
+      if (!calendarState.activeEvent) return;
+      if (!confirm(`Tem certeza que deseja excluir o compromisso "${calendarState.activeEvent.title}"?`)) return;
+
+      try {
+        const res = await fetch(`/api/calendar/events/${calendarState.activeEvent.id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          closeCalendarViewModal();
+          await loadCalendarEvents();
+          await loadCalendarSummary();
+        } else {
+          alert(data.error || 'Erro ao excluir compromisso.');
+        }
+      } catch (e) {
+        alert('Falha ao excluir compromisso.');
+      }
+    }
+
+    function openCalendarSyncModal() {
+      const modal = document.getElementById('modal-calendar-sync');
+      const origin = window.location.origin;
+
+      const officeUrlInput = document.getElementById('sync-office-url');
+      const lawyerUrlInput = document.getElementById('sync-lawyer-url');
+      const selectedLawyerSpan = document.getElementById('sync-selected-lawyer-name');
+
+      if (officeUrlInput) officeUrlInput.value = `${origin}/api/calendar/feed/office.ics`;
+
+      const lawyerId = calendarState.selectedLawyer !== 'all' ? calendarState.selectedLawyer : 'dr-jorge-alvim';
+      const lawyerObj = calendarState.lawyers.find(l => l.id === lawyerId) || { name: 'Dr. Jorge Alvim' };
+
+      if (selectedLawyerSpan) selectedLawyerSpan.textContent = lawyerObj.name;
+      if (lawyerUrlInput) lawyerUrlInput.value = `${origin}/api/calendar/feed/lawyer/${lawyerId}.ics`;
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeCalendarSyncModal() {
+      const modal = document.getElementById('modal-calendar-sync');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function toggleCalendarAllDay(checked) {
+      const endContainer = document.getElementById('cal-end-container');
+      if (endContainer) {
+        if (checked) endContainer.classList.add('opacity-40', 'pointer-events-none');
+        else endContainer.classList.remove('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function handleEventTypeChange() {
+      const type = document.getElementById('cal-input-type').value;
+      const prioritySel = document.getElementById('cal-input-priority');
+      const allDayCheck = document.getElementById('cal-input-allday');
+      if (type === 'prazo_fatal') {
+        if (prioritySel) prioritySel.value = 'fatal';
+        if (allDayCheck) {
+          allDayCheck.checked = true;
+          toggleCalendarAllDay(true);
+        }
+      }
+    }
+
+    function handleCalendarClientSelect(clientId) {
+      const lawsuitSel = document.getElementById('cal-input-lawsuit');
+      if (!lawsuitSel) return;
+
+      if (!clientId) {
+        lawsuitSel.innerHTML = '<option value="">Nenhum processo vinculado</option>' + (allLawsuits || []).map(l => `<option value="${l.id}" data-number="${l.lawsuit_number}">${l.lawsuit_number} - ${l.client_name || ''}</option>`).join('');
+        return;
+      }
+
+      const clientLawsuits = (allLawsuits || []).filter(l => l.client_id === clientId);
+      if (clientLawsuits.length > 0) {
+        lawsuitSel.innerHTML = '<option value="">Selecione o processo...</option>' + clientLawsuits.map(l => `<option value="${l.id}" data-number="${l.lawsuit_number}">${l.lawsuit_number}</option>`).join('');
+      } else {
+        lawsuitSel.innerHTML = '<option value="">Nenhum processo cadastrado para este cliente</option>';
+      }
+    }
+
+    // =========================================================================
+    // 📢 CONTROLLER DE INTIMAÇÕES (COMUNICAAPI/DJEN) & CALCULADORA DE PRAZOS
+    // =========================================================================
+    let publicationsState = {
+      publications: [],
+      stats: { total: 0, unread: 0, deadline_launched: 0 },
+      selectedLawyer: 'all',
+      selectedTribunal: 'all',
+      selectedStatus: 'nao_lido',
+      searchTerm: '',
+      activePublication: null,
+      calculatedResult: null
+    };
+
+    async function initPublicationsTab() {
+      await loadPublicationsLawyers();
+      await loadPublications();
+    }
+
+    async function loadPublicationsLawyers() {
+      try {
+        const filterSel = document.getElementById('pub-filter-lawyer');
+        const calcLawyerSel = document.getElementById('calc-input-lawyer');
+
+        if (!calendarState.lawyers || calendarState.lawyers.length === 0) {
+          const res = await fetch('/api/calendar/lawyers', { headers: getAuthHeaders() });
+          const data = await res.json();
+          if (res.ok && data.success) calendarState.lawyers = data.lawyers || [];
+        }
+
+        if (filterSel && calendarState.lawyers) {
+          const currentVal = filterSel.value;
+          filterSel.innerHTML = `
+            <option value="all">🏢 Todos os Advogados</option>
+            ${calendarState.lawyers.map(l => `<option value="${l.id}">${l.name} (${l.role})</option>`).join('')}
+          `;
+          if (currentVal) filterSel.value = currentVal;
+        }
+
+        if (calcLawyerSel && calendarState.lawyers) {
+          calcLawyerSel.innerHTML = calendarState.lawyers.map(l => `<option value="${l.id}" data-name="${l.name}">${l.name} - ${l.role}</option>`).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function loadPublications() {
+      try {
+        const { selectedLawyer, selectedTribunal, selectedStatus, searchTerm } = publicationsState;
+        let url = `/api/court/publications?`;
+        if (selectedStatus && selectedStatus !== 'all') url += `&status=${encodeURIComponent(selectedStatus)}`;
+        if (selectedLawyer && selectedLawyer !== 'all') url += `&lawyer_id=${encodeURIComponent(selectedLawyer)}`;
+        if (selectedTribunal && selectedTribunal !== 'all') url += `&tribunal=${encodeURIComponent(selectedTribunal)}`;
+        if (searchTerm && searchTerm.trim()) url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          publicationsState.publications = data.publications || [];
+          publicationsState.stats = data.stats || { total: 0, unread: 0, deadline_launched: 0 };
+          updatePublicationsStatsDisplay();
+          renderPublicationsCards();
+        }
+      } catch (err) {
+        console.error('Erro ao buscar publicações:', err);
+      }
+    }
+
+    async function loadPublicationsStats() {
+      try {
+        const res = await fetch('/api/court/publications?status=nao_lido', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const stats = data.stats || {};
+          const badge = document.getElementById('tab-publications-count');
+          if (badge) {
+            badge.textContent = stats.unread || 0;
+            if (stats.unread > 0) {
+              badge.className = 'px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold animate-pulse';
+            } else {
+              badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold';
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    function updatePublicationsStatsDisplay() {
+      const statTotal = document.getElementById('pub-stat-total');
+      const statUnread = document.getElementById('pub-stat-unread');
+      const statLaunched = document.getElementById('pub-stat-launched');
+      const badge = document.getElementById('tab-publications-count');
+
+      if (statTotal) statTotal.textContent = publicationsState.stats.total || 0;
+      if (statUnread) statUnread.textContent = publicationsState.stats.unread || 0;
+      if (statLaunched) statLaunched.textContent = publicationsState.stats.deadline_launched || 0;
+
+      if (badge) {
+        badge.textContent = publicationsState.stats.unread || 0;
+        if (publicationsState.stats.unread > 0) {
+          badge.className = 'px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold animate-pulse';
+        } else {
+          badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold';
+        }
+      }
+    }
+
+    function renderPublicationsCards() {
+      const container = document.getElementById('pub-cards-list');
+      if (!container) return;
+
+      if (publicationsState.publications.length === 0) {
+        container.innerHTML = `
+          <div class="py-16 text-center text-slate-400 space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs">
+            <div class="text-4xl">📭</div>
+            <h4 class="font-bold text-slate-700 text-sm">Nenhuma publicação encontrada para este filtro.</h4>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">Clique em "Sincronizar DJEN Agora" para consultar publicações no Diário de Justiça Eletrônico Nacional.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = publicationsState.publications.map(pub => {
+        const isUnread = pub.status === 'nao_lido';
+        const isLaunched = pub.status === 'prazo_lancado';
+        const dateFmt = pub.data_disponibilizacao ? pub.data_disponibilizacao.split('-').reverse().join('/') : '—';
+        const cleanText = pub.texto ? pub.texto.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : 'Sem texto disponível.';
+
+        return `
+          <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xs border ${isUnread ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200'} transition-all hover:shadow-md space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 font-extrabold text-[10px] uppercase tracking-wider">
+                  ${pub.sigla_tribunal || 'TJMG'}
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-bold text-[10px]">
+                  ${pub.tipo_comunicacao || 'Intimação'}
+                </span>
+                ${isUnread ? '<span class="px-2.5 py-0.5 rounded-full bg-red-500 text-white font-extrabold text-[10px] animate-pulse">NOVA / NÃO LIDA</span>' : ''}
+                ${isLaunched ? '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-[10px]">✅ PRAZO NA AGENDA</span>' : ''}
+              </div>
+
+              <div class="text-xs font-mono text-slate-500 flex items-center space-x-1.5">
+                <span>📅 DJe:</span>
+                <strong class="text-slate-800 font-bold">${dateFmt}</strong>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h4 class="font-extrabold text-sm sm:text-base text-navy-950">${pub.nome_orgao || 'Vara / Órgão Julgador'}</h4>
+                <span class="font-mono text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 select-all">
+                  ⚖️ ${pub.numeroprocessocommascara || pub.numero_processo || 'Processo s/ número'}
+                </span>
+              </div>
+              
+              <div class="text-xs text-slate-500 flex flex-wrap items-center gap-3">
+                <span>👤 Advogado: <strong class="text-slate-800 font-semibold">${pub.advogado_nome || 'Banca Geral'}</strong></span>
+                <span>📌 OAB: <strong class="text-slate-700 font-mono">${pub.advogado_oab || '—'}</strong></span>
+                ${pub.nome_classe ? `<span>📁 Classe: <strong class="text-slate-700">${pub.nome_classe}</strong></span>` : ''}
+              </div>
+            </div>
+
+            <!-- Trecho do Texto da Intimação -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-serif leading-relaxed line-clamp-3 select-text">
+              ${cleanText}
+            </div>
+
+            <!-- Botões de Ação do Card -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+              <div class="flex items-center space-x-2">
+                <button 
+                  onclick="openPublicationViewModal('${pub.id}')" 
+                  type="button" 
+                  class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <span>📄</span>
+                  <span>Ver Inteiro Teor</span>
+                </button>
+
+                <button 
+                  onclick="togglePublicationStatus('${pub.id}', '${isUnread ? 'lido' : 'nao_lido'}')" 
+                  type="button" 
+                  class="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  ${isUnread ? '👁️ Marcar como Lido' : '🔴 Marcar Não Lido'}
+                </button>
+              </div>
+
+              <button 
+                onclick="calculateDeadlineToPublication('${pub.id}')" 
+                type="button" 
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white font-extrabold text-xs shadow-sm hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+              >
+                <span>🧮</span>
+                <span>Calcular Prazo com 1 Clique</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handlePublicationFilterChange() {
+      const searchInput = document.getElementById('pub-search-input');
+      const lawyerSel = document.getElementById('pub-filter-lawyer');
+      const tribunalSel = document.getElementById('pub-filter-tribunal');
+      const statusSel = document.getElementById('pub-filter-status');
+
+      if (searchInput) publicationsState.searchTerm = searchInput.value;
+      if (lawyerSel) publicationsState.selectedLawyer = lawyerSel.value;
+      if (tribunalSel) publicationsState.selectedTribunal = tribunalSel.value;
+      if (statusSel) publicationsState.selectedStatus = statusSel.value;
+
+      loadPublications();
+    }
+
+    async function syncPublicationsNow() {
+      const btn = document.getElementById('pub-sync-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Sincronizando DJEN...</span>';
+      }
+
+      try {
+        const res = await fetch('/api/court/publications/sync', {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          alert(`🎉 ${data.message}`);
+          await loadPublications();
+          await loadPublicationsStats();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao sincronizar com a ComunicaAPI.'}`);
+        }
+      } catch (e) {
+        alert('Falha ao comunicar com o servidor para sincronização.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔄</span><span>Sincronizar DJEN Agora</span>';
+        }
+      }
+    }
+
+    async function togglePublicationStatus(pubId, newStatus) {
+      try {
+        const res = await fetch(`/api/court/publications/${pubId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          await loadPublications();
+          await loadPublicationsStats();
+        }
+      } catch (e) {}
+    }
+
+    function openPublicationViewModal(pubId) {
+      const pub = publicationsState.publications.find(p => p.id === pubId);
+      if (!pub) return;
+
+      publicationsState.activePublication = pub;
+      const modal = document.getElementById('modal-publication-view');
+
+      document.getElementById('pub-view-tribunal-badge').textContent = pub.sigla_tribunal || 'TJMG';
+      document.getElementById('pub-view-type-badge').textContent = pub.tipo_comunicacao || 'Intimação';
+      document.getElementById('pub-view-status-badge').textContent = pub.status.toUpperCase();
+      document.getElementById('pub-view-orgao').textContent = pub.nome_orgao || 'Órgão Julgador';
+      document.getElementById('pub-view-advogado').textContent = `Destinatário: ${pub.advogado_nome} (${pub.advogado_oab || ''})`;
+      document.getElementById('pub-view-processo').textContent = pub.numeroprocessocommascara || pub.numero_processo || '—';
+      document.getElementById('pub-view-data').textContent = pub.data_disponibilizacao ? pub.data_disponibilizacao.split('-').reverse().join('/') : '—';
+      
+      const cleanText = pub.texto ? pub.texto.replace(/<br\s*[\/]?>/gi, '\n').replace(/<[^>]*>/g, ' ') : '';
+      document.getElementById('pub-view-texto').textContent = cleanText;
+
+      const toggleBtn = document.getElementById('pub-view-toggle-read-btn');
+      if (toggleBtn) {
+        toggleBtn.textContent = pub.status === 'nao_lido' ? '👁️ Marcar como Lido' : '🔴 Marcar Não Lido';
+      }
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closePublicationViewModal() {
+      const modal = document.getElementById('modal-publication-view');
+      if (modal) modal.classList.add('hidden');
+      publicationsState.activePublication = null;
+    }
+
+    async function toggleCurrentPublicationReadStatus() {
+      if (!publicationsState.activePublication) return;
+      const pub = publicationsState.activePublication;
+      const nextStatus = pub.status === 'nao_lido' ? 'lido' : 'nao_lido';
+      await togglePublicationStatus(pub.id, nextStatus);
+      closePublicationViewModal();
+    }
+
+    function calculateDeadlineToCurrentPublication() {
+      if (!publicationsState.activePublication) return;
+      const pub = publicationsState.activePublication;
+      closePublicationViewModal();
+      calculateDeadlineToPublication(pub.id);
+    }
+
+    function calculateDeadlineToPublication(pubId) {
+      const pub = publicationsState.publications.find(p => p.id === pubId);
+      if (!pub) return;
+
+      openDeadlineCalculator({
+        publication_id: pub.id,
+        start_date: pub.data_disponibilizacao,
+        lawsuit_number: pub.numeroprocessocommascara || pub.numero_processo,
+        lawyer_id: pub.lawyer_id,
+        lawyer_name: pub.advogado_nome,
+        title: `Prazo Fatal: Intimação ${pub.sigla_tribunal} (${pub.nome_orgao || ''})`
+      });
+    }
+
+    function openDeadlineCalculator(params = {}) {
+      const modal = document.getElementById('modal-deadline-calculator');
+      loadPublicationsLawyers();
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const now = new Date();
+      const defaultDate = params.start_date || `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+      document.getElementById('calc-input-start-date').value = defaultDate;
+      document.getElementById('calc-input-regime').value = params.regime || 'cpc';
+      document.getElementById('calc-input-preset').value = params.days || '15';
+      
+      const lawyerSel = document.getElementById('calc-input-lawyer');
+      if (lawyerSel && params.lawyer_id) lawyerSel.value = params.lawyer_id;
+
+      document.getElementById('calc-input-lawsuit-number').value = params.lawsuit_number || '';
+      document.getElementById('calc-input-client-name').value = params.client_name || '';
+      document.getElementById('calc-input-title').value = params.title || 'Prazo Fatal: Apelação Cível';
+
+      document.getElementById('modal-deadline-calculator').setAttribute('data-pub-id', params.publication_id || '');
+
+      handlePresetChange();
+      handleCalculateDeadline();
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDeadlineCalculator() {
+      const modal = document.getElementById('modal-deadline-calculator');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handlePresetChange() {
+      const preset = document.getElementById('calc-input-preset').value;
+      const customBox = document.getElementById('calc-custom-days-box');
+      if (preset === 'custom') {
+        customBox.classList.remove('hidden');
+      } else {
+        customBox.classList.add('hidden');
+      }
+      handleCalculateDeadline();
+    }
+
+    async function handleCalculateDeadline() {
+      const startDate = document.getElementById('calc-input-start-date').value;
+      if (!startDate) return;
+
+      const regime = document.getElementById('calc-input-regime').value;
+      const preset = document.getElementById('calc-input-preset').value;
+      const days = preset === 'custom' ? Number(document.getElementById('calc-input-custom-days').value) || 15 : Number(preset);
+
+      try {
+        const res = await fetch('/api/court/deadline/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ start_date: startDate, days, regime })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          publicationsState.calculatedResult = data;
+          
+          const fatalSplit = data.data_fatal.split('-');
+          const fatalDateObj = new Date(Number(fatalSplit[0]), Number(fatalSplit[1]) - 1, Number(fatalSplit[2]));
+          const weekdays = ['Domingo', 'Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado'];
+          const fatalWeekday = weekdays[fatalDateObj.getDay()];
+
+          document.getElementById('calc-result-fatal-date').textContent = data.data_fatal.split('-').reverse().join('/');
+          document.getElementById('calc-result-fatal-weekday').textContent = `${fatalWeekday} • Término às 23:59h`;
+          
+          document.getElementById('calc-result-d0').textContent = data.data_disponibilizacao.split('-').reverse().join('/');
+          document.getElementById('calc-result-d1').textContent = data.data_publicacao.split('-').reverse().join('/');
+          document.getElementById('calc-result-d2').textContent = data.data_inicio_prazo.split('-').reverse().join('/');
+          document.getElementById('calc-result-days-summary').textContent = `${data.prazo_dias} Dias ${data.tipo_dias} (${data.total_dias_corridos} dias corridos totais)`;
+
+          const holidaysList = document.getElementById('calc-holidays-list');
+          if (holidaysList) {
+            if (data.feriados_compensados && data.feriados_compensados.length > 0) {
+              holidaysList.innerHTML = data.feriados_compensados.map(f => `
+                <div class="flex items-center justify-between">
+                  <span class="font-mono font-bold">${f.date.split('-').reverse().join('/')}:</span>
+                  <span class="font-semibold text-slate-700">${f.reason}</span>
+                </div>
+              `).join('');
+            } else {
+              holidaysList.innerHTML = '<span class="text-slate-400">Nenhum feriado interveniente (somente dias úteis normais).</span>';
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao calcular prazo:', err);
+      }
+    }
+
+    async function launchCalculatedDeadlineToCalendar() {
+      if (!publicationsState.calculatedResult) {
+        alert('Realize o cálculo antes de lançar na agenda.');
+        return;
+      }
+
+      const modalEl = document.getElementById('modal-deadline-calculator');
+      const publicationId = modalEl ? modalEl.getAttribute('data-pub-id') : null;
+
+      const lawyerSel = document.getElementById('calc-input-lawyer');
+      const lawyerOpt = lawyerSel.options[lawyerSel.selectedIndex];
+
+      const payload = {
+        publication_id: publicationId,
+        title: document.getElementById('calc-input-title').value.trim(),
+        description: `Prazo Fatal calculado de ${publicationsState.calculatedResult.prazo_dias} dias úteis (${publicationsState.calculatedResult.regime}). Início: ${publicationsState.calculatedResult.data_inicio_prazo.split('-').reverse().join('/')}.`,
+        lawyer_id: lawyerSel ? lawyerSel.value : 'dr-jorge-alvim',
+        lawyer_name: lawyerOpt ? (lawyerOpt.getAttribute('data-name') || lawyerOpt.textContent.split(' - ')[0]) : 'Dr. Jorge Alvim',
+        client_name: document.getElementById('calc-input-client-name').value.trim(),
+        lawsuit_number: document.getElementById('calc-input-lawsuit-number').value.trim(),
+        deadline_date: publicationsState.calculatedResult.data_fatal,
+        regime: publicationsState.calculatedResult.regime,
+        days_count: publicationsState.calculatedResult.prazo_dias
+      };
+
+      const btn = document.getElementById('calc-launch-btn');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/court/deadline/launch-to-calendar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          alert(`🎉 ${data.message}\n\nO prazo fatal foi lançado com sucesso na pauta do advogado e na agenda do escritório!`);
+          closeDeadlineCalculator();
+          if (publicationsState.publications.length > 0) loadPublications();
+          loadCalendarEvents();
+          loadCalendarSummary();
+          loadPublicationsStats();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao lançar prazo na agenda.'}`);
+        }
+      } catch (err) {
+        alert('Falha ao comunicar com o servidor.');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function copyDeadlineCalculation() {
+      if (!publicationsState.calculatedResult) return;
+      const res = publicationsState.calculatedResult;
+      const title = document.getElementById('calc-input-title').value;
+      const lawsuitNum = document.getElementById('calc-input-lawsuit-number').value;
+
+      let text = `📅 MEMÓRIA DE CÁLCULO DE PRAZO PROCESSUAL\n`;
+      text += `Assunto: ${title}\n`;
+      if (lawsuitNum) text += `Processo CNJ: ${lawsuitNum}\n`;
+      text += `Regime: ${res.regime} (${res.prazo_dias} Dias ${res.tipo_dias})\n\n`;
+      text += `• D0 (Disponibilização DJe): ${res.data_disponibilizacao.split('-').reverse().join('/')}\n`;
+      text += `• D1 (Publicação Oficial): ${res.data_publicacao.split('-').reverse().join('/')}\n`;
+      text += `• D2 (Início da Contagem): ${res.data_inicio_prazo.split('-').reverse().join('/')}\n`;
+      text += `🚨 DATA FATAL (VENCIMENTO): ${res.data_fatal.split('-').reverse().join('/')} às 23:59h\n\n`;
+      if (res.feriados_compensados && res.feriados_compensados.length > 0) {
+        text += `Feriados e Fins de Semana Compensados:\n`;
+        res.feriados_compensados.forEach(f => {
+          text += ` - ${f.date.split('-').reverse().join('/')}: ${f.reason}\n`;
+        });
+      }
+      text += `\nGerado por: Jorge Alvim Advocacia & Tecnologia`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('📋 Memória de cálculo copiada para a área de transferência!');
+      });
     }
 
     // Inicialização ao Carregar

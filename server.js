@@ -6,6 +6,7 @@ import path from 'path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { DatabaseSync } from 'node:sqlite';
+import { execFile } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -429,6 +430,67 @@ db.exec(`
     converted_client_id TEXT,
     notes TEXT
   );
+
+  -- 10. Tabela de Agenda do Escritório, Prazos Judiciais e Calendário dos Advogados
+  CREATE TABLE IF NOT EXISTS calendar_events (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    event_type TEXT NOT NULL,       -- 'audiencia', 'prazo_fatal', 'consulta', 'reuniao', 'diligencia', 'outro'
+    start_datetime TEXT NOT NULL,   -- Formato ISO: YYYY-MM-DDTHH:mm ou YYYY-MM-DD
+    end_datetime TEXT,              -- Formato ISO: YYYY-MM-DDTHH:mm ou YYYY-MM-DD
+    all_day INTEGER DEFAULT 0,      -- 1 para dia inteiro (prazos), 0 para horário fixo
+    location TEXT,                  -- Foro, Vara, Endereço ou Sala
+    meeting_url TEXT,               -- Link TJMG, Zoom, Teams, Google Meet
+    lawyer_id TEXT,                 -- ID do office_members ou users (NULL = escritório geral)
+    lawyer_name TEXT,               -- Nome do advogado responsável
+    client_id TEXT,                 -- ID do client
+    client_name TEXT,               -- Nome do cliente
+    lawsuit_id TEXT,                -- ID do lawsuit
+    lawsuit_number TEXT,            -- Número CNJ do processo
+    priority TEXT DEFAULT 'normal', -- 'baixa', 'normal', 'alta', 'fatal'
+    status TEXT DEFAULT 'agendado', -- 'agendado', 'concluido', 'cancelado', 'remarcado'
+    color TEXT,                     -- Cor customizada hex
+    ical_uid TEXT,                  -- UID único para feed iCal
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- 11. Tabela de Intimações e Publicações Judiciais (ComunicaAPI / DJEN / DataJud)
+  CREATE TABLE IF NOT EXISTS court_publications (
+    id TEXT PRIMARY KEY,
+    comunicacao_id INTEGER UNIQUE,   -- ID único retornado pela ComunicaAPI
+    numero_processo TEXT,            -- Número sem máscara
+    numeroprocessocommascara TEXT,   -- Número formatado CNJ
+    sigla_tribunal TEXT,             -- Ex: TJMG, TRT3, TRF6, STJ
+    nome_orgao TEXT,                 -- Vara / Turma / Câmara
+    tipo_comunicacao TEXT,           -- 'Intimação', 'Citação', 'Edital', 'Aviso'
+    data_disponibilizacao TEXT,      -- YYYY-MM-DD
+    data_publicacao TEXT,            -- YYYY-MM-DD (1º dia útil seguinte)
+    texto TEXT,                      -- Inteiro teor da publicação
+    nome_classe TEXT,                -- Ex: Apelação Cível, Procedimento Comum
+    destinatarios_json TEXT,         -- Lista de partes JSON
+    advogado_oab TEXT,               -- OAB pesquisada
+    advogado_nome TEXT,              -- Nome do advogado destinatário
+    lawyer_id TEXT,                  -- ID interno do advogado
+    client_id TEXT,                  -- Vínculo com cliente
+    lawsuit_id TEXT,                 -- Vínculo com processo
+    deadline_date TEXT,              -- Data fatal calculada (se houver)
+    status TEXT DEFAULT 'nao_lido',  -- 'nao_lido', 'lido', 'prazo_lancado', 'arquivado'
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- 12. Tabela de Feriados Forenses e Nacionais (para Calculadora de Prazos)
+  CREATE TABLE IF NOT EXISTS court_holidays (
+    id TEXT PRIMARY KEY,
+    holiday_date TEXT NOT NULL UNIQUE, -- YYYY-MM-DD
+    name TEXT NOT NULL,
+    jurisdiction TEXT DEFAULT 'nacional', -- 'nacional', 'MG', 'federal'
+    is_forensic_recess INTEGER DEFAULT 0  -- 1 se for recesso forense (20/dez - 20/jan)
+  );
 `);
 
 // Migração segura para colunas de redes sociais, website e google_business em clients e leads
@@ -600,6 +662,109 @@ try {
   }
 } catch (e) {
   console.warn('Erro ao inicializar artigos do blog:', e);
+}
+
+// Inicialização / Seeder de Compromissos e Prazos da Agenda Jurídica
+try {
+  const eventCount = db.prepare(`SELECT COUNT(*) as count FROM calendar_events`).get().count;
+  if (eventCount === 0) {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const y = now.getFullYear();
+    const m = pad(now.getMonth() + 1);
+    const d = now.getDate();
+    
+    // Data para hoje, amanhã e próximos dias
+    const todayStr = `${y}-${m}-${pad(d)}T14:00`;
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 2);
+    const tomStr = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T10:00`;
+    
+    const nextWeek = new Date(now);
+    nextWeek.setDate(now.getDate() + 5);
+    const nextWeekStr = `${nextWeek.getFullYear()}-${pad(nextWeek.getMonth() + 1)}-${pad(nextWeek.getDate())}T18:00`;
+
+    const seedEvents = [
+      {
+        id: 'EVT-' + Date.now() + '-1',
+        title: 'Audiência de Instrução e Julgamento - TJMG',
+        description: 'Audiência de instrução com oitiva de testemunhas na 2ª Vara Cível de Juiz de Fora. Levar documentos originais e carteira da OAB.',
+        event_type: 'audiencia',
+        start_datetime: todayStr,
+        end_datetime: `${y}-${m}-${pad(d)}T15:30`,
+        all_day: 0,
+        location: 'Fórum Benjamin Colucci - 2ª Vara Cível (Sala 204)',
+        meeting_url: 'https://tjmg.jus.br/audiencias-virtuais',
+        lawyer_id: 'dr-jorge-alvim',
+        lawyer_name: 'Dr. Jorge Alvim',
+        client_name: 'Carlos Eduardo Oliveira',
+        lawsuit_number: '5001428-92.2026.8.13.0145',
+        priority: 'alta',
+        status: 'agendado',
+        color: '#dc2626',
+        ical_uid: 'evt-instrucao-tjmg@jorgealvimadvocacia.com.br'
+      },
+      {
+        id: 'EVT-' + Date.now() + '-2',
+        title: 'Prazo Fatal: Apelação Cível em Ação Revisional',
+        description: 'Interposição de recurso de apelação cível perante a 1ª Câmara Cível do TJMG. Verificar comprovação de custas recursais.',
+        event_type: 'prazo_fatal',
+        start_datetime: tomStr,
+        end_datetime: tomStr,
+        all_day: 1,
+        location: 'PJe TJMG - 1ª Instância',
+        meeting_url: '',
+        lawyer_id: 'dr-jorge-alvim',
+        lawyer_name: 'Dr. Jorge Alvim',
+        client_name: 'Mariana Ferreira Silva',
+        lawsuit_number: '0024190-77.2026.8.13.0145',
+        priority: 'fatal',
+        status: 'agendado',
+        color: '#ea580c',
+        ical_uid: 'evt-prazo-apelacao@jorgealvimadvocacia.com.br'
+      },
+      {
+        id: 'EVT-' + Date.now() + '-3',
+        title: 'Atendimento Inicial / Consulta: Direito Militar',
+        description: 'Consulta presencial no escritório com militar da reserva para análise de incorporação de gratificação de habilitação.',
+        event_type: 'consulta',
+        start_datetime: nextWeekStr,
+        end_datetime: `${nextWeek.getFullYear()}-${pad(nextWeek.getMonth() + 1)}-${pad(nextWeek.getDate())}T19:00`,
+        all_day: 0,
+        location: 'Escritório Benfica - Sala Principal',
+        meeting_url: '',
+        lawyer_id: 'dr-jorge-alvim',
+        lawyer_name: 'Dr. Jorge Alvim',
+        client_name: 'Sgt. Roberto Mendes',
+        lawsuit_number: '',
+        priority: 'normal',
+        status: 'agendado',
+        color: '#2563eb',
+        ical_uid: 'evt-consulta-militar@jorgealvimadvocacia.com.br'
+      }
+    ];
+
+    const insertEvtStmt = db.prepare(`
+      INSERT INTO calendar_events (
+        id, title, description, event_type, start_datetime, end_datetime,
+        all_day, location, meeting_url, lawyer_id, lawyer_name,
+        client_id, client_name, lawsuit_id, lawsuit_number,
+        priority, status, color, ical_uid, notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const evt of seedEvents) {
+      insertEvtStmt.run(
+        evt.id, evt.title, evt.description, evt.event_type, evt.start_datetime, evt.end_datetime,
+        evt.all_day, evt.location, evt.meeting_url, evt.lawyer_id, evt.lawyer_name,
+        null, evt.client_name, null, evt.lawsuit_number,
+        evt.priority, evt.status, evt.color, evt.ical_uid, '', now.toISOString(), now.toISOString()
+      );
+    }
+    console.log('📅 [AGENDA] 3 compromissos e audiências de demonstração semeados com sucesso!');
+  }
+} catch (e) {
+  console.warn('Erro ao inicializar eventos do calendário:', e);
 }
 
 // Migração segura para colunas de login e segurança na tabela clients
@@ -5982,7 +6147,37 @@ function normalizeJudicialHit(hit, tribunalCode) {
 }
 
 /**
- * Orquestrador central de busca multi-tribunal
+ * Executa o motor especializado em Python (radar_crawler.py)
+ */
+function runPythonRadarCrawler({ queryType, queryTerm, tribunal = 'all', uf = 'MG' }) {
+  return new Promise((resolve) => {
+    const scriptPath = path.join(__dirname, 'scripts', 'radar_crawler.py');
+    const args = [
+      scriptPath,
+      '--type', queryType || 'number',
+      '--term', queryTerm,
+      '--tribunal', tribunal || 'all',
+      '--uf', uf || 'MG'
+    ];
+
+    execFile('python3', args, { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) {
+        console.warn('⚠️ [RADAR PYTHON CRAWLER WARN]', error.message);
+        return resolve(null);
+      }
+      try {
+        const parsed = JSON.parse(stdout);
+        resolve(parsed);
+      } catch (e) {
+        console.warn('⚠️ [RADAR PYTHON PARSE ERROR]', e.message);
+        resolve(null);
+      }
+    });
+  });
+}
+
+/**
+ * Orquestrador central de busca multi-tribunal com motor Python
  */
 async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' }) {
   const cleanTerm = queryTerm.trim();
@@ -6004,9 +6199,36 @@ async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' })
     console.warn('Erro ao consultar cache judicial:', err);
   }
 
+  // 2. Executar Motor Especializado em Python (radar_crawler.py)
+  try {
+    const pyResult = await runPythonRadarCrawler({ queryType, queryTerm: cleanTerm, tribunal });
+    if (pyResult && pyResult.success && pyResult.processes && pyResult.processes.length > 0) {
+      console.log(`🐍 [RADAR PYTHON CRAWLER] ${pyResult.processes.length} processo(s) capturados com sucesso para '${cleanTerm}'`);
+
+      // Salvar em Cache (2 horas)
+      try {
+        const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+        db.prepare(`
+          INSERT INTO judicial_search_cache (query_type, query_term, tribunal, total_results, results_json, created_at, expires_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(queryType, cleanTerm, tribunal, pyResult.processes.length, JSON.stringify(pyResult.processes), now.toISOString(), expiresAt);
+      } catch (err) {}
+
+      return {
+        success: true,
+        engine: 'Python 3 Radar Crawler (DataJud • DJEN • SQLite)',
+        source: 'python_crawler',
+        total: pyResult.processes.length,
+        processes: pyResult.processes
+      };
+    }
+  } catch (pyErr) {
+    console.warn('Falha ao acionar motor Python:', pyErr.message);
+  }
+
   let aggregatedProcesses = [];
 
-  // 2. SE FOR BUSCA POR NÚMERO DO PROCESSO: Consulta a API DataJud em Tempo Real
+  // 3. Fallback Nativo JavaScript (se Python não retornar resultados)
   if (queryType === 'number' && digitsOnly.length >= 8) {
     let targetTribunals = [];
     if (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) {
@@ -6387,6 +6609,1079 @@ app.post('/api/judicial/import-to-office', requireAuth, (req, res) => {
   } catch (error) {
     console.error('[ERRO] Falha ao importar processo:', error);
     return res.status(500).json({ error: 'Erro ao importar processo: ' + error.message });
+  }
+});
+
+// =========================================================================
+// 📅 MÓDULO DE AGENDA & CALENDÁRIO JURÍDICO (REST, iCal & Google Calendar)
+// =========================================================================
+
+// Formatar data/hora para padrão iCalendar RFC 5545
+function formatIcalDateTime(dateStr, allDay = false) {
+  if (!dateStr) return '';
+  const clean = dateStr.replace(/[-:]/g, '');
+  if (allDay || clean.length <= 8) {
+    return clean.slice(0, 8);
+  }
+  if (clean.includes('T')) {
+    const parts = clean.split('T');
+    const timePart = (parts[1] + '0000').slice(0, 6);
+    return `${parts[0]}T${timePart}`;
+  }
+  return clean;
+}
+
+// Gerador de Feed .ics em conformidade com RFC 5545
+function generateIcsCalendar(events, calendarName = 'Jorge Alvim Advocacia - Agenda') {
+  const nowIcal = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Jorge Alvim Advocacia//Agenda & Prazos//PT-BR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:${calendarName}`,
+    'X-WR-TIMEZONE:America/Sao_Paulo',
+    'REFRESH-INTERVAL;VALUE=DURATION:PT1H'
+  ];
+
+  events.forEach(evt => {
+    const uid = evt.ical_uid || `${evt.id}@jorgealvimadvocacia.com.br`;
+    const dtStart = formatIcalDateTime(evt.start_datetime, evt.all_day === 1);
+    const dtEnd = formatIcalDateTime(evt.end_datetime || evt.start_datetime, evt.all_day === 1);
+    
+    let descriptionText = `Tipo: ${evt.event_type.toUpperCase()}\\n`;
+    if (evt.lawyer_name) descriptionText += `Advogado: ${evt.lawyer_name}\\n`;
+    if (evt.client_name) descriptionText += `Cliente: ${evt.client_name}\\n`;
+    if (evt.lawsuit_number) descriptionText += `Processo CNJ: ${evt.lawsuit_number}\\n`;
+    if (evt.meeting_url) descriptionText += `Link Virtual: ${evt.meeting_url}\\n`;
+    if (evt.description) descriptionText += `Detalhes: ${evt.description.replace(/\n/g, '\\n')}\\n`;
+
+    const summary = `${evt.event_type === 'audiencia' ? '⚖️ [AUDIÊNCIA] ' : evt.event_type === 'prazo_fatal' ? '⚠️ [PRAZO] ' : '📅 '}${evt.title}`;
+    const location = evt.meeting_url || evt.location || 'Jorge Alvim Advocacia - Benfica, Juiz de Fora / MG';
+
+    ics.push('BEGIN:VEVENT');
+    ics.push(`UID:${uid}`);
+    ics.push(`DTSTAMP:${nowIcal}`);
+    if (evt.all_day === 1) {
+      ics.push(`DTSTART;VALUE=DATE:${dtStart}`);
+      ics.push(`DTEND;VALUE=DATE:${dtEnd}`);
+    } else {
+      ics.push(`DTSTART:${dtStart}`);
+      ics.push(`DTEND:${dtEnd}`);
+    }
+    ics.push(`SUMMARY:${summary}`);
+    ics.push(`DESCRIPTION:${descriptionText}`);
+    ics.push(`LOCATION:${location}`);
+    ics.push(`STATUS:${evt.status === 'concluido' ? 'COMPLETED' : evt.status === 'cancelado' ? 'CANCELLED' : 'CONFIRMED'}`);
+    
+    // Alarme / Lembrete 24h antes
+    ics.push('BEGIN:VALARM');
+    ics.push('TRIGGER:-PT24H');
+    ics.push('ACTION:DISPLAY');
+    ics.push(`DESCRIPTION:Lembrete de Compromisso: ${evt.title}`);
+    ics.push('END:VALARM');
+
+    if (evt.event_type === 'audiencia' || evt.event_type === 'consulta' || evt.event_type === 'reuniao') {
+      ics.push('BEGIN:VALARM');
+      ics.push('TRIGGER:-PT2H');
+      ics.push('ACTION:DISPLAY');
+      ics.push(`DESCRIPTION:Audiência/Reunião em 2 Horas: ${evt.title}`);
+      ics.push('END:VALARM');
+    }
+
+    ics.push('END:VEVENT');
+  });
+
+  ics.push('END:VCALENDAR');
+  return ics.join('\r\n');
+}
+
+// 1. Listar Compromissos e Eventos com Filtros
+app.get('/api/calendar/events', requireAuth, (req, res) => {
+  try {
+    const { lawyer_id, event_type, status, month, year, start, end } = req.query;
+    let query = `SELECT * FROM calendar_events WHERE 1=1`;
+    const params = [];
+
+    if (lawyer_id && lawyer_id !== 'all') {
+      query += ` AND (lawyer_id = ? OR lawyer_name LIKE ?)`;
+      params.push(lawyer_id, `%${lawyer_id}%`);
+    }
+
+    if (event_type && event_type !== 'all') {
+      query += ` AND event_type = ?`;
+      params.push(event_type);
+    }
+
+    if (status && status !== 'all') {
+      query += ` AND status = ?`;
+      params.push(status);
+    }
+
+    if (year && month) {
+      const padM = String(month).padStart(2, '0');
+      query += ` AND (start_datetime LIKE ? OR end_datetime LIKE ?)`;
+      params.push(`${year}-${padM}%`, `${year}-${padM}%`);
+    } else if (year) {
+      query += ` AND (start_datetime LIKE ? OR end_datetime LIKE ?)`;
+      params.push(`${year}%`, `${year}%`);
+    }
+
+    if (start && end) {
+      query += ` AND (start_datetime >= ? AND start_datetime <= ?)`;
+      params.push(start, end);
+    }
+
+    query += ` ORDER BY start_datetime ASC`;
+
+    const events = db.prepare(query).all(...params);
+    return res.json({ success: true, events });
+  } catch (err) {
+    console.error('[ERRO] Falha ao buscar eventos da agenda:', err);
+    return res.status(500).json({ error: 'Erro ao consultar agenda: ' + err.message });
+  }
+});
+
+// 2. Criar Novo Compromisso / Prazo / Audiência
+app.post('/api/calendar/events', requireAuth, (req, res) => {
+  try {
+    const {
+      title, description, event_type, start_datetime, end_datetime,
+      all_day, location, meeting_url, lawyer_id, lawyer_name,
+      client_id, client_name, lawsuit_id, lawsuit_number,
+      priority, status, color, notes
+    } = req.body;
+
+    if (!title || !start_datetime || !event_type) {
+      return res.status(400).json({ error: 'Título, tipo de evento e data de início são obrigatórios.' });
+    }
+
+    const id = 'EVT-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
+    const now = new Date().toISOString();
+    const ical_uid = `${id}@jorgealvimadvocacia.com.br`;
+
+    // Resolver nomes de cliente ou advogado caso tenha vindo apenas ID
+    let resolvedLawyerName = lawyer_name || '';
+    if (lawyer_id && !resolvedLawyerName) {
+      const member = db.prepare(`SELECT name FROM office_members WHERE id = ?`).get(lawyer_id);
+      if (member) resolvedLawyerName = member.name;
+    }
+
+    let resolvedClientName = client_name || '';
+    if (client_id && !resolvedClientName) {
+      const cli = db.prepare(`SELECT full_name FROM clients WHERE id = ?`).get(client_id);
+      if (cli) resolvedClientName = cli.full_name;
+    }
+
+    let resolvedLawsuitNumber = lawsuit_number || '';
+    if (lawsuit_id && !resolvedLawsuitNumber) {
+      const law = db.prepare(`SELECT lawsuit_number FROM lawsuits WHERE id = ?`).get(lawsuit_id);
+      if (law) resolvedLawsuitNumber = law.lawsuit_number;
+    }
+
+    db.prepare(`
+      INSERT INTO calendar_events (
+        id, title, description, event_type, start_datetime, end_datetime,
+        all_day, location, meeting_url, lawyer_id, lawyer_name,
+        client_id, client_name, lawsuit_id, lawsuit_number,
+        priority, status, color, ical_uid, notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id, title, description || '', event_type, start_datetime, end_datetime || start_datetime,
+      all_day ? 1 : 0, location || '', meeting_url || '', lawyer_id || 'dr-jorge-alvim', resolvedLawyerName || 'Dr. Jorge Alvim',
+      client_id || null, resolvedClientName || '', lawsuit_id || null, resolvedLawsuitNumber || '',
+      priority || 'normal', status || 'agendado', color || '', ical_uid, notes || '', now, now
+    );
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'NOVO_COMPROMISSO_AGENDA',
+      module: 'AGENDA',
+      resource_id: id,
+      user_name: req.user ? req.user.name : 'Operador',
+      description: `Agendado: ${title} (${event_type.toUpperCase()}) para ${start_datetime} - Advogado: ${resolvedLawyerName || 'Geral'}.`,
+      details: { id, title, event_type, start_datetime, lawyer_name: resolvedLawyerName }
+    });
+
+    const newEvent = db.prepare(`SELECT * FROM calendar_events WHERE id = ?`).get(id);
+    return res.json({ success: true, message: 'Compromisso agendado com sucesso!', event: newEvent });
+  } catch (err) {
+    console.error('[ERRO] Falha ao criar compromisso:', err);
+    return res.status(500).json({ error: 'Erro ao agendar compromisso: ' + err.message });
+  }
+});
+
+// 3. Obter Detalhes de um Evento
+app.get('/api/calendar/events/:id', requireAuth, (req, res) => {
+  try {
+    const event = db.prepare(`SELECT * FROM calendar_events WHERE id = ?`).get(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Compromisso não encontrado.' });
+    return res.json({ success: true, event });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Atualizar Compromisso
+app.put('/api/calendar/events/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare(`SELECT * FROM calendar_events WHERE id = ?`).get(id);
+    if (!existing) return res.status(404).json({ error: 'Compromisso não encontrado.' });
+
+    const {
+      title, description, event_type, start_datetime, end_datetime,
+      all_day, location, meeting_url, lawyer_id, lawyer_name,
+      client_id, client_name, lawsuit_id, lawsuit_number,
+      priority, status, color, notes
+    } = req.body;
+
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE calendar_events SET
+        title = ?, description = ?, event_type = ?, start_datetime = ?, end_datetime = ?,
+        all_day = ?, location = ?, meeting_url = ?, lawyer_id = ?, lawyer_name = ?,
+        client_id = ?, client_name = ?, lawsuit_id = ?, lawsuit_number = ?,
+        priority = ?, status = ?, color = ?, notes = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      title !== undefined ? title : existing.title,
+      description !== undefined ? description : existing.description,
+      event_type !== undefined ? event_type : existing.event_type,
+      start_datetime !== undefined ? start_datetime : existing.start_datetime,
+      end_datetime !== undefined ? end_datetime : existing.end_datetime,
+      all_day !== undefined ? (all_day ? 1 : 0) : existing.all_day,
+      location !== undefined ? location : existing.location,
+      meeting_url !== undefined ? meeting_url : existing.meeting_url,
+      lawyer_id !== undefined ? lawyer_id : existing.lawyer_id,
+      lawyer_name !== undefined ? lawyer_name : existing.lawyer_name,
+      client_id !== undefined ? client_id : existing.client_id,
+      client_name !== undefined ? client_name : existing.client_name,
+      lawsuit_id !== undefined ? lawsuit_id : existing.lawsuit_id,
+      lawsuit_number !== undefined ? lawsuit_number : existing.lawsuit_number,
+      priority !== undefined ? priority : existing.priority,
+      status !== undefined ? status : existing.status,
+      color !== undefined ? color : existing.color,
+      notes !== undefined ? notes : existing.notes,
+      now,
+      id
+    );
+
+    logAudit(req, {
+      event_type: 'EDICAO',
+      event_name: 'ATUALIZAR_COMPROMISSO_AGENDA',
+      module: 'AGENDA',
+      resource_id: id,
+      user_name: req.user ? req.user.name : 'Operador',
+      description: `Atualizado: ${title || existing.title} (${(event_type || existing.event_type).toUpperCase()}).`,
+      details: { id, title }
+    });
+
+    const updated = db.prepare(`SELECT * FROM calendar_events WHERE id = ?`).get(id);
+    return res.json({ success: true, message: 'Compromisso atualizado com sucesso!', event: updated });
+  } catch (err) {
+    console.error('[ERRO] Falha ao atualizar compromisso:', err);
+    return res.status(500).json({ error: 'Erro ao atualizar compromisso: ' + err.message });
+  }
+});
+
+// 5. Atualização Rápida de Status (Ex: Concluído / Cumprido)
+app.patch('/api/calendar/events/:id/status', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status é obrigatório.' });
+
+    const now = new Date().toISOString();
+    db.prepare(`UPDATE calendar_events SET status = ?, updated_at = ? WHERE id = ?`).run(status, now, id);
+
+    return res.json({ success: true, message: `Status alterado para "${status}" com sucesso!` });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Excluir Compromisso
+app.delete('/api/calendar/events/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare(`SELECT * FROM calendar_events WHERE id = ?`).get(id);
+    if (!existing) return res.status(404).json({ error: 'Compromisso não encontrado.' });
+
+    db.prepare(`DELETE FROM calendar_events WHERE id = ?`).run(id);
+
+    logAudit(req, {
+      event_type: 'EXCLUSAO',
+      event_name: 'EXCLUIR_COMPROMISSO_AGENDA',
+      module: 'AGENDA',
+      resource_id: id,
+      user_name: req.user ? req.user.name : 'Operador',
+      description: `Excluído: ${existing.title} (${existing.event_type.toUpperCase()}).`,
+      details: { id, title: existing.title }
+    });
+
+    return res.json({ success: true, message: 'Compromisso removido com sucesso!' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. Resumo da Agenda (Pauta de Hoje e Prazos dos Próximos 7 Dias)
+app.get('/api/calendar/summary', requireAuth, (req, res) => {
+  try {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+    const next7Days = new Date(now);
+    next7Days.setDate(now.getDate() + 7);
+    const next7Str = `${next7Days.getFullYear()}-${pad(next7Days.getMonth() + 1)}-${pad(next7Days.getDate())}T23:59`;
+
+    // Eventos de Hoje
+    const todayEvents = db.prepare(`
+      SELECT * FROM calendar_events 
+      WHERE start_datetime LIKE ? OR (start_datetime <= ? AND end_datetime >= ?)
+      ORDER BY start_datetime ASC
+    `).all(`${todayStr}%`, `${todayStr}T23:59`, `${todayStr}T00:00`);
+
+    // Prazos Críticos nos Próximos 7 Dias
+    const urgentDeadlines = db.prepare(`
+      SELECT * FROM calendar_events 
+      WHERE event_type = 'prazo_fatal' AND status != 'concluido' AND start_datetime >= ? AND start_datetime <= ?
+      ORDER BY start_datetime ASC
+    `).all(`${todayStr}T00:00`, next7Str);
+
+    // Totais do Mês
+    const currentMonthPrefix = `${now.getFullYear()}-${pad(now.getMonth() + 1)}%`;
+    const totalMonth = db.prepare(`SELECT COUNT(*) as count FROM calendar_events WHERE start_datetime LIKE ?`).get(currentMonthPrefix).count;
+    const totalHearings = db.prepare(`SELECT COUNT(*) as count FROM calendar_events WHERE event_type = 'audiencia' AND start_datetime LIKE ?`).get(currentMonthPrefix).count;
+    const totalDeadlines = db.prepare(`SELECT COUNT(*) as count FROM calendar_events WHERE event_type = 'prazo_fatal' AND start_datetime LIKE ?`).get(currentMonthPrefix).count;
+
+    return res.json({
+      success: true,
+      today_events: todayEvents,
+      urgent_deadlines: urgentDeadlines,
+      stats: {
+        total_month: totalMonth,
+        total_hearings: totalHearings,
+        total_deadlines: totalDeadlines
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 8. Lista Consolidada de Advogados / Integrantes para a Agenda
+app.get('/api/calendar/lawyers', requireAuth, (req, res) => {
+  try {
+    const defaultLawyers = [
+      { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', role: 'Advogado Titular', oab: 'OAB/MG 222.943' }
+    ];
+
+    const members = db.prepare(`SELECT id, name, role_type, position_title, oab_number, oab_uf FROM office_members WHERE status = 'Ativo' ORDER BY name ASC`).all();
+    const users = db.prepare(`SELECT id, name, role, username FROM users ORDER BY name ASC`).all();
+
+    const consolidated = [...defaultLawyers];
+
+    members.forEach(m => {
+      if (!consolidated.some(l => l.id === m.id || l.name.toLowerCase() === m.name.toLowerCase())) {
+        consolidated.push({
+          id: m.id,
+          name: m.name,
+          role: m.position_title || m.role_type || 'Membro do Escritório',
+          oab: m.oab_number ? `OAB/${m.oab_uf || 'MG'} ${m.oab_number}` : ''
+        });
+      }
+    });
+
+    users.forEach(u => {
+      if (!consolidated.some(l => l.id === u.id || l.name.toLowerCase() === u.name.toLowerCase())) {
+        consolidated.push({
+          id: u.id,
+          name: u.name,
+          role: u.role === 'admin' ? 'Administrador' : 'Operador',
+          oab: ''
+        });
+      }
+    });
+
+    return res.json({ success: true, lawyers: consolidated });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 9. Informações e Links de Sincronização iCal / Google Agenda
+app.get('/api/calendar/sync-links', requireAuth, (req, res) => {
+  try {
+    const host = req.get('host') || `localhost:${PORT}`;
+    const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    const baseUrl = `${protocol}://${host}`;
+
+    const officeFeedUrl = `${baseUrl}/api/calendar/feed/office.ics`;
+    const googleSubOffice = `https://calendar.google.com/calendar/r/settings/addbyurl?cid=${encodeURIComponent(officeFeedUrl.replace(/^https?:\/\//, 'webcal://'))}`;
+
+    return res.json({
+      success: true,
+      office_feed_url: officeFeedUrl,
+      google_subscribe_url: googleSubOffice,
+      webcal_office_url: officeFeedUrl.replace(/^https?:\/\//, 'webcal://')
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 10. Feed iCalendar (.ics) Geral do Escritório (Público / Assinável)
+app.get('/api/calendar/feed/office.ics', (req, res) => {
+  try {
+    const events = db.prepare(`
+      SELECT * FROM calendar_events 
+      WHERE status != 'cancelado'
+      ORDER BY start_datetime ASC
+    `).all();
+
+    const icsContent = generateIcsCalendar(events, 'Jorge Alvim Advocacia - Agenda Geral');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="agenda-jorgealvim-geral.ics"');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.send(icsContent);
+  } catch (err) {
+    console.error('[ERRO] Falha ao gerar feed iCal do escritório:', err);
+    return res.status(500).send('Erro ao gerar calendário iCal: ' + err.message);
+  }
+});
+
+// 11. Feed iCalendar (.ics) Individual por Advogado
+app.get('/api/calendar/feed/lawyer/:lawyerId.ics', (req, res) => {
+  try {
+    const { lawyerId } = req.params;
+    const events = db.prepare(`
+      SELECT * FROM calendar_events 
+      WHERE (lawyer_id = ? OR lawyer_name LIKE ?) AND status != 'cancelado'
+      ORDER BY start_datetime ASC
+    `).all(lawyerId, `%${lawyerId}%`);
+
+    const lawyer = db.prepare(`SELECT name FROM office_members WHERE id = ?`).get(lawyerId);
+    const lawyerName = lawyer ? lawyer.name : (lawyerId === 'dr-jorge-alvim' ? 'Dr. Jorge Alvim' : lawyerId);
+
+    const icsContent = generateIcsCalendar(events, `Agenda: ${lawyerName} - Jorge Alvim Advocacia`);
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `inline; filename="agenda-${lawyerId}.ics"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.send(icsContent);
+  } catch (err) {
+    console.error('[ERRO] Falha ao gerar feed iCal do advogado:', err);
+    return res.status(500).send('Erro ao gerar calendário iCal: ' + err.message);
+  }
+});
+
+// =========================================================================
+// 📢 MÓDULO DE INTIMAÇÕES (COMUNICAAPI / DJEN), DATAJUD & CALCULADORA DE PRAZOS
+// =========================================================================
+
+// Semeador de Feriados Forenses e Nacionais (2025, 2026, 2027)
+function seedCourtHolidays() {
+  try {
+    const existing = db.prepare(`SELECT count(*) as count FROM court_holidays`).get();
+    if (existing && existing.count > 0) return;
+
+    const holidays = [
+      // 2025
+      { id: 'HOL-2025-01-01', holiday_date: '2025-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-03-03', holiday_date: '2025-03-03', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-03-04', holiday_date: '2025-03-04', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-03-05', holiday_date: '2025-03-05', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2025-04-16', holiday_date: '2025-04-16', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2025-04-17', holiday_date: '2025-04-17', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2025-04-18', holiday_date: '2025-04-18', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-04-21', holiday_date: '2025-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-05-01', holiday_date: '2025-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-06-19', holiday_date: '2025-06-19', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-08-11', holiday_date: '2025-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2025-09-07', holiday_date: '2025-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-10-12', holiday_date: '2025-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-10-28', holiday_date: '2025-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2025-11-02', holiday_date: '2025-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-11-15', holiday_date: '2025-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-11-20', holiday_date: '2025-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2025-12-08', holiday_date: '2025-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2025-12-25', holiday_date: '2025-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 },
+
+      // 2026
+      { id: 'HOL-2026-01-01', holiday_date: '2026-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-02-16', holiday_date: '2026-02-16', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-02-17', holiday_date: '2026-02-17', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-02-18', holiday_date: '2026-02-18', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2026-04-01', holiday_date: '2026-04-01', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2026-04-02', holiday_date: '2026-04-02', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2026-04-03', holiday_date: '2026-04-03', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-04-21', holiday_date: '2026-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-05-01', holiday_date: '2026-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-06-04', holiday_date: '2026-06-04', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-08-11', holiday_date: '2026-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2026-09-07', holiday_date: '2026-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-10-12', holiday_date: '2026-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-10-28', holiday_date: '2026-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2026-11-02', holiday_date: '2026-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-11-15', holiday_date: '2026-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-11-20', holiday_date: '2026-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2026-12-08', holiday_date: '2026-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2026-12-25', holiday_date: '2026-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 },
+
+      // 2027
+      { id: 'HOL-2027-01-01', holiday_date: '2027-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-02-08', holiday_date: '2027-02-08', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-02-09', holiday_date: '2027-02-09', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-02-10', holiday_date: '2027-02-10', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2027-03-24', holiday_date: '2027-03-24', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2027-03-25', holiday_date: '2027-03-25', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2027-03-26', holiday_date: '2027-03-26', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-04-21', holiday_date: '2027-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-05-01', holiday_date: '2027-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-05-27', holiday_date: '2027-05-27', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-08-11', holiday_date: '2027-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2027-09-07', holiday_date: '2027-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-10-12', holiday_date: '2027-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-10-28', holiday_date: '2027-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2027-11-02', holiday_date: '2027-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-11-15', holiday_date: '2027-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-11-20', holiday_date: '2027-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
+      { id: 'HOL-2027-12-08', holiday_date: '2027-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
+      { id: 'HOL-2027-12-25', holiday_date: '2027-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 }
+    ];
+
+    const insertStmt = db.prepare(`INSERT OR IGNORE INTO court_holidays (id, holiday_date, name, jurisdiction, is_forensic_recess) VALUES (?, ?, ?, ?, ?)`);
+    holidays.forEach(h => insertStmt.run(h.id, h.holiday_date, h.name, h.jurisdiction, h.is_forensic_recess));
+    console.log('📅 [FERIADOS FORENSES] Feriados nacionais e judiciais semeados com sucesso!');
+  } catch (err) {
+    console.warn('Aviso ao semear feriados:', err.message);
+  }
+}
+seedCourtHolidays();
+
+// Helper: Verifica se uma data é dia útil forense (não é sábado, domingo, feriado nem recesso forense)
+function isCourtBusinessDay(dateObj, holidaysMap) {
+  const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return { isBusinessDay: false, reason: dayOfWeek === 0 ? 'Domingo' : 'Sábado' };
+  }
+
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const d = String(dateObj.getDate()).padStart(2, '0');
+  const dateStr = `${y}-${m}-${d}`;
+
+  // Recesso Forense (art. 220 CPC: 20 de dezembro a 20 de janeiro)
+  const month = dateObj.getMonth() + 1;
+  const day = dateObj.getDate();
+  if ((month === 12 && day >= 20) || (month === 1 && day <= 20)) {
+    return { isBusinessDay: false, reason: 'Recesso Forense (Art. 220 CPC)' };
+  }
+
+  // Feriado cadastrado
+  if (holidaysMap.has(dateStr)) {
+    return { isBusinessDay: false, reason: `Feriado: ${holidaysMap.get(dateStr)}` };
+  }
+
+  return { isBusinessDay: true, reason: 'Dia Útil' };
+}
+
+// Helper: Próximo dia útil
+function getNextCourtBusinessDay(dateObj, holidaysMap) {
+  const next = new Date(dateObj);
+  next.setDate(next.getDate() + 1);
+  while (!isCourtBusinessDay(next, holidaysMap).isBusinessDay) {
+    next.setDate(next.getDate() + 1);
+  }
+  return next;
+}
+
+// Motor de Cálculo de Prazos Processuais (CPC/15, CLT, CPP, JEF)
+function calculateLegalDeadline(disponibilizacaoStr, daysCount, regime = 'cpc', customHolidays = []) {
+  const holidaysRows = db.prepare(`SELECT holiday_date, name FROM court_holidays`).all();
+  const holidaysMap = new Map();
+  holidaysRows.forEach(h => holidaysMap.set(h.holiday_date, h.name));
+  customHolidays.forEach(ch => holidaysMap.set(ch.date, ch.name));
+
+  const [y, m, d] = disponibilizacaoStr.slice(0, 10).split('-').map(Number);
+  const dataD0 = new Date(y, m - 1, d, 12, 0, 0); // Data da Disponibilização
+
+  // 1. Data da Publicação (D1) = 1º dia útil seguinte à disponibilização (art. 224, § 2º, CPC)
+  const dataPublicacao = getNextCourtBusinessDay(dataD0, holidaysMap);
+
+  // 2. Início do Prazo (D2) = 1º dia útil seguinte à publicação (art. 224, § 3º, CPC)
+  const dataInicioContagem = getNextCourtBusinessDay(dataPublicacao, holidaysMap);
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+
+  const memoriaCalculo = [];
+  const feriadosCompensados = [];
+
+  let diasUteisContados = 0;
+  let cursor = new Date(dataInicioContagem);
+  let dataFatal = null;
+
+  if (regime === 'cpc' || regime === 'clt' || regime === 'jef') {
+    // Contagem em DIAS ÚTEIS (Art. 219 CPC / Art. 775 CLT)
+    while (diasUteisContados < daysCount) {
+      const info = isCourtBusinessDay(cursor, holidaysMap);
+      const curFmt = fmt(cursor);
+
+      if (info.isBusinessDay) {
+        diasUteisContados++;
+        memoriaCalculo.push({
+          dia_numero: diasUteisContados,
+          data: curFmt,
+          status: 'contado',
+          descricao: `${diasUteisContados}º Dia Útil`
+        });
+        if (diasUteisContados === daysCount) {
+          dataFatal = new Date(cursor);
+          break;
+        }
+      } else {
+        memoriaCalculo.push({
+          dia_numero: null,
+          data: curFmt,
+          status: 'ignorado',
+          descricao: info.reason
+        });
+        if (!feriadosCompensados.some(f => f.date === curFmt)) {
+          feriadosCompensados.push({ date: curFmt, reason: info.reason });
+        }
+      }
+
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  } else {
+    // Contagem em DIAS CORRIDOS (Art. 798 CPP - Penal)
+    for (let i = 1; i <= daysCount; i++) {
+      const curFmt = fmt(cursor);
+      memoriaCalculo.push({
+        dia_numero: i,
+        data: curFmt,
+        status: 'contado',
+        descricao: `${i}º Dia Corrido`
+      });
+      if (i === daysCount) {
+        dataFatal = new Date(cursor);
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    // Se o último dia cair em dia não útil, prorroga para o 1º dia útil subsequente (art. 798, § 3º, CPP)
+    let infoFatal = isCourtBusinessDay(dataFatal, holidaysMap);
+    while (!infoFatal.isBusinessDay) {
+      memoriaCalculo.push({
+        dia_numero: null,
+        data: fmt(dataFatal),
+        status: 'prorrogado',
+        descricao: `Vencimento em ${infoFatal.reason} -> Prorrogado para o 1º dia útil seguinte`
+      });
+      dataFatal.setDate(dataFatal.getDate() + 1);
+      infoFatal = isCourtBusinessDay(dataFatal, holidaysMap);
+    }
+  }
+
+  return {
+    success: true,
+    regime: regime.toUpperCase(),
+    prazo_dias: daysCount,
+    tipo_dias: (regime === 'cpp' ? 'Corridos' : 'Úteis'),
+    data_disponibilizacao: fmt(dataD0),
+    data_publicacao: fmt(dataPublicacao),
+    data_inicio_prazo: fmt(dataInicioContagem),
+    data_fatal: fmt(dataFatal),
+    dias_uteis_contados: diasUteisContados,
+    total_dias_corridos: Math.round((dataFatal - dataD0) / (1000 * 60 * 60 * 24)),
+    feriados_compensados: feriadosCompensados,
+    memoria_calculo: memoriaCalculo
+  };
+}
+
+// 1. Endpoint: Calcular Prazo Processual
+app.post('/api/court/deadline/calculate', requireAuth, (req, res) => {
+  try {
+    const { start_date, days = 15, regime = 'cpc', custom_holidays = [] } = req.body;
+    if (!start_date) {
+      return res.status(400).json({ error: 'Data de disponibilização ou início é obrigatória.' });
+    }
+
+    const result = calculateLegalDeadline(start_date, Number(days) || 15, regime, custom_holidays);
+    return res.json(result);
+  } catch (err) {
+    console.error('[ERRO] Falha no cálculo de prazo:', err);
+    return res.status(500).json({ error: 'Erro ao calcular prazo: ' + err.message });
+  }
+});
+
+// 2. Endpoint: Buscar Publicações em Tempo Real na ComunicaAPI (PJe / DJEN)
+app.get('/api/court/publications/search-live', requireAuth, async (req, res) => {
+  try {
+    const { numeroOab, ufOab = 'MG', nomeAdvogado, numeroProcesso, siglaTribunal, dataInicio, dataFim, pagina = 1, itensPorPagina = 20 } = req.query;
+
+    const params = new URLSearchParams();
+    if (numeroOab) params.append('numeroOab', String(numeroOab).replace(/\D/g, ''));
+    if (ufOab) params.append('ufOab', ufOab.toUpperCase());
+    if (nomeAdvogado) params.append('nomeAdvogado', nomeAdvogado);
+    if (numeroProcesso) params.append('numeroProcesso', String(numeroProcesso).replace(/\D/g, ''));
+    if (siglaTribunal) params.append('siglaTribunal', siglaTribunal.toUpperCase());
+    if (dataInicio) params.append('dataDisponibilizacaoInicio', dataInicio);
+    if (dataFim) params.append('dataDisponibilizacaoFim', dataFim);
+    params.append('pagina', String(pagina));
+    params.append('itensPorPagina', String(itensPorPagina));
+
+    const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${params.toString()}`;
+    const apiRes = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'JorgeAlvimAdvocacia/1.0'
+      }
+    });
+
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      return res.status(apiRes.status).json({ error: `Erro na ComunicaAPI (${apiRes.status}): ${errText}` });
+    }
+
+    const data = await apiRes.json();
+    return res.json({
+      success: true,
+      count: data.count || (data.items ? data.items.length : 0),
+      items: data.items || []
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha ao consultar ComunicaAPI ao vivo:', err);
+    return res.status(500).json({ error: 'Erro ao consultar ComunicaAPI: ' + err.message });
+  }
+});
+
+// 3. Endpoint: Sincronizar Publicações de Todos os Advogados do Escritório
+app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
+  try {
+    const lawyers = [
+      { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
+      { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
+      { id: 'MEM-2026-0002', name: 'Dra. Mariana Fonseca Alvim', oab: '210450', uf: 'MG' },
+      { id: 'MEM-2026-0006', name: 'Dr. Roberto Medeiros Fonseca', oab: '165430', uf: 'MG' },
+      { id: 'MEM-2026-0007', name: 'Dra. Camila Vasconcelos', oab: '225890', uf: 'MG' }
+    ];
+
+    // Buscar também os membros cadastrados na tabela office_members com OAB
+    const dbMembers = db.prepare(`SELECT id, name, oab_number, oab_uf FROM office_members WHERE status = 'Ativo' AND oab_number IS NOT NULL AND oab_number != ''`).all();
+    dbMembers.forEach(m => {
+      const cleanOab = String(m.oab_number).replace(/\D/g, '');
+      if (cleanOab && !lawyers.some(l => l.oab === cleanOab)) {
+        lawyers.push({
+          id: m.id,
+          name: m.name,
+          oab: cleanOab,
+          uf: m.oab_uf || 'MG'
+        });
+      }
+    });
+
+    let totalSaved = 0;
+    let totalFound = 0;
+    const errors = [];
+
+    const insertPublicationStmt = db.prepare(`
+      INSERT OR IGNORE INTO court_publications (
+        id, comunicacao_id, numero_processo, numeroprocessocommascara,
+        sigla_tribunal, nome_orgao, tipo_comunicacao, data_disponibilizacao,
+        data_publicacao, texto, nome_classe, destinatarios_json,
+        advogado_oab, advogado_nome, lawyer_id, client_id, lawsuit_id,
+        status, created_at, updated_at
+      ) VALUES (
+        @id, @comunicacao_id, @numero_processo, @numeroprocessocommascara,
+        @sigla_tribunal, @nome_orgao, @tipo_comunicacao, @data_disponibilizacao,
+        @data_publicacao, @texto, @nome_classe, @destinatarios_json,
+        @advogado_oab, @advogado_nome, @lawyer_id, @client_id, @lawsuit_id,
+        'nao_lido', datetime('now'), datetime('now')
+      )
+    `);
+
+    for (const lawyer of lawyers) {
+      try {
+        const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=${lawyer.oab}&ufOab=${lawyer.uf}&pagina=1&itensPorPagina=25`;
+        const apiRes = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'JorgeAlvimAdvocacia/1.0' } });
+        
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          const items = data.items || [];
+          totalFound += items.length;
+
+          items.forEach(item => {
+            const pubId = `PUB-${item.id}`;
+            const cleanNum = (item.numero_processo || '').replace(/\D/g, '');
+
+            // Tentar vincular com processo interno se já existir
+            let matchedLawsuitId = null;
+            let matchedClientId = null;
+            if (cleanNum) {
+              const matchedLawsuit = db.prepare(`SELECT id, client_id FROM lawsuits WHERE REPLACE(REPLACE(REPLACE(cnj_number, '.', ''), '-', ''), '/', '') = ? OR cnj_number LIKE ?`).get(cleanNum, `%${cleanNum}%`);
+              if (matchedLawsuit) {
+                matchedLawsuitId = matchedLawsuit.id;
+                matchedClientId = matchedLawsuit.client_id;
+              }
+            }
+
+            const info = insertPublicationStmt.run({
+              id: pubId,
+              comunicacao_id: item.id,
+              numero_processo: item.numero_processo || '',
+              numeroprocessocommascara: item.numeroprocessocommascara || item.numero_processo || '',
+              sigla_tribunal: item.siglaTribunal || 'TJMG',
+              nome_orgao: item.nomeOrgao || '',
+              tipo_comunicacao: item.tipoComunicacao || 'Intimação',
+              data_disponibilizacao: item.data_disponibilizacao || '',
+              data_publicacao: item.datadisponibilizacao || item.data_disponibilizacao || '',
+              texto: item.texto || '',
+              nome_classe: item.nomeClasse || '',
+              destinatarios_json: JSON.stringify(item.destinatarios || []),
+              advogado_oab: `OAB/${lawyer.uf} ${lawyer.oab}`,
+              advogado_nome: lawyer.name,
+              lawyer_id: lawyer.id,
+              client_id: matchedClientId,
+              lawsuit_id: matchedLawsuitId
+            });
+
+            if (info.changes > 0) totalSaved++;
+          });
+        }
+      } catch (e) {
+        errors.push(`OAB ${lawyer.oab}: ${e.message}`);
+      }
+    }
+
+    logAudit(req, {
+      event_type: 'SINCRONIZACAO',
+      event_name: 'SINCRONIZAR_COMUNICAAPI_DJEN',
+      module: 'INTIMACOES',
+      resource_id: 'COMUNICAAPI-DJEN',
+      user_name: req.user ? req.user.name : 'Operador',
+      description: `Sincronização de intimações do DJEN/PJe concluída: ${totalSaved} novas publicações salvas de ${totalFound} encontradas.`,
+      details: { totalFound, totalSaved, lawyersChecked: lawyers.length, errors }
+    });
+
+    return res.json({
+      success: true,
+      message: `Sincronização concluída! ${totalSaved} novas intimações importadas (${totalFound} analisadas).`,
+      totalSaved,
+      totalFound,
+      lawyersChecked: lawyers.length,
+      errors
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha ao sincronizar publicações:', err);
+    return res.status(500).json({ error: 'Erro ao sincronizar publicações: ' + err.message });
+  }
+});
+
+// 4. Endpoint: Listar Publicações Armazenadas
+app.get('/api/court/publications', requireAuth, (req, res) => {
+  try {
+    const { status, lawyer_id, tribunal, search } = req.query;
+    let query = `SELECT * FROM court_publications WHERE 1=1`;
+    const params = [];
+
+    if (status && status !== 'all') {
+      query += ` AND status = ?`;
+      params.push(status);
+    }
+    if (lawyer_id && lawyer_id !== 'all') {
+      query += ` AND (lawyer_id = ? OR advogado_nome LIKE ?)`;
+      params.push(lawyer_id, `%${lawyer_id}%`);
+    }
+    if (tribunal && tribunal !== 'all') {
+      query += ` AND sigla_tribunal = ?`;
+      params.push(tribunal);
+    }
+    if (search && search.trim() !== '') {
+      query += ` AND (texto LIKE ? OR numero_processo LIKE ? OR numeroprocessocommascara LIKE ? OR nome_orgao LIKE ? OR advogado_nome LIKE ?)`;
+      const term = `%${search.trim()}%`;
+      params.push(term, term, term, term, term);
+    }
+
+    query += ` ORDER BY data_disponibilizacao DESC, created_at DESC LIMIT 100`;
+
+    const publications = db.prepare(query).all(...params);
+
+    const stats = {
+      total: db.prepare(`SELECT count(*) as count FROM court_publications`).get().count,
+      unread: db.prepare(`SELECT count(*) as count FROM court_publications WHERE status = 'nao_lido'`).get().count,
+      deadline_launched: db.prepare(`SELECT count(*) as count FROM court_publications WHERE status = 'prazo_lancado'`).get().count
+    };
+
+    return res.json({ success: true, publications, stats });
+  } catch (err) {
+    console.error('[ERRO] Falha ao listar publicações:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. Endpoint: Atualizar Status da Publicação (Lido / Arquivado)
+app.patch('/api/court/publications/:id/status', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!['nao_lido', 'lido', 'prazo_lancado', 'arquivado'].includes(status)) {
+      return res.status(400).json({ error: 'Status inválido.' });
+    }
+
+    db.prepare(`UPDATE court_publications SET status = ?, updated_at = datetime('now') WHERE id = ?`).run(status, id);
+    return res.json({ success: true, message: `Status da publicação atualizado para ${status}.` });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Endpoint: Lançar Prazo Calculado Diretamente na Agenda
+app.post('/api/court/deadline/launch-to-calendar', requireAuth, (req, res) => {
+  try {
+    const {
+      publication_id,
+      title,
+      description,
+      lawyer_id,
+      lawyer_name,
+      client_id,
+      client_name,
+      lawsuit_id,
+      lawsuit_number,
+      deadline_date,
+      regime,
+      days_count
+    } = req.body;
+
+    if (!title || !deadline_date) {
+      return res.status(400).json({ error: 'Título e data fatal do prazo são obrigatórios.' });
+    }
+
+    const eventId = `EVT-PRAZO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const icalUid = `prazo-${Date.now()}@jorgealvimadvocacia.com.br`;
+
+    db.prepare(`
+      INSERT INTO calendar_events (
+        id, title, description, event_type, start_datetime, end_datetime,
+        all_day, location, meeting_url, lawyer_id, lawyer_name,
+        client_id, client_name, lawsuit_id, lawsuit_number,
+        priority, status, color, ical_uid, notes, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, 'prazo_fatal', ?, ?,
+        1, 'PJe / Tribunal', '', ?, ?,
+        ?, ?, ?, ?,
+        'fatal', 'agendado', '#dc2626', ?, ?, datetime('now'), datetime('now')
+      )
+    `).run(
+      eventId,
+      title,
+      description || `Prazo fatal de ${days_count} dias (${(regime || 'CPC').toUpperCase()}).`,
+      `${deadline_date}T00:00`,
+      `${deadline_date}T23:59`,
+      lawyer_id || 'dr-jorge-alvim',
+      lawyer_name || 'Dr. Jorge Alvim',
+      client_id || null,
+      client_name || '',
+      lawsuit_id || null,
+      lawsuit_number || '',
+      icalUid,
+      `Calculado automaticamente pela Calculadora de Prazos Processuais.`
+    );
+
+    // Se vinculado a publicação, atualizar status para 'prazo_lancado'
+    if (publication_id) {
+      db.prepare(`UPDATE court_publications SET status = 'prazo_lancado', deadline_date = ?, updated_at = datetime('now') WHERE id = ?`).run(deadline_date, publication_id);
+    }
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'LANCAR_PRAZO_CALCULADORA',
+      module: 'AGENDA_PRAZOS',
+      resource_id: eventId,
+      user_name: req.user ? req.user.name : 'Operador',
+      description: `Prazo Fatal "${title}" para ${deadline_date} lançado com sucesso na agenda de ${lawyer_name || 'Geral'}.`,
+      details: { eventId, publication_id, deadline_date, days_count, regime }
+    });
+
+    return res.json({
+      success: true,
+      message: `Prazo Fatal lançado com sucesso na agenda do advogado para o dia ${deadline_date.split('-').reverse().join('/')}!`,
+      eventId,
+      deadline_date
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha ao lançar prazo na agenda:', err);
+    return res.status(500).json({ error: 'Erro ao lançar prazo: ' + err.message });
+  }
+});
+
+// 7. Endpoint: Consulta DataJud (CNJ)
+app.post('/api/court/datajud/search', requireAuth, async (req, res) => {
+  try {
+    const { lawsuit_number, tribunal = 'tjmg', custom_api_key } = req.body;
+    if (!lawsuit_number) {
+      return res.status(400).json({ error: 'Número do processo é obrigatório.' });
+    }
+
+    const cleanNumber = String(lawsuit_number).replace(/\D/g, '');
+    const cleanTribunal = String(tribunal).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const apiKey = custom_api_key || 'APIKey cDZHYzlZa0JadVREZDJCendQbXo6TGdrQHpMUXBScFlXakNZdnMwQUptUQ==';
+
+    const url = `https://api-publica.datajud.cnj.jus.br/api_publica_${cleanTribunal}/_search`;
+
+    const body = {
+      query: {
+        match: {
+          numeroProcesso: cleanNumber
+        }
+      }
+    };
+
+    const apiRes = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      return res.json({
+        success: false,
+        status: apiRes.status,
+        message: `Serviço DataJud retornou status ${apiRes.status}.`,
+        details: errText
+      });
+    }
+
+    const data = await apiRes.json();
+    return res.json({
+      success: true,
+      hits: data.hits ? data.hits.hits : []
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha na consulta DataJud:', err);
+    return res.status(500).json({ error: 'Erro na consulta DataJud: ' + err.message });
+  }
+});
+
+// 8. Endpoint: Listar Feriados Forenses
+app.get('/api/court/holidays', requireAuth, (req, res) => {
+  try {
+    const holidays = db.prepare(`SELECT * FROM court_holidays ORDER BY holiday_date ASC`).all();
+    return res.json({ success: true, holidays });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
