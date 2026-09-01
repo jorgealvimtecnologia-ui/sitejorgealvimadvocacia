@@ -59,34 +59,26 @@
     }
   </script>
   <style>
-    body {
+    html, body {
       background-color: #F8FAFC;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+      display: none;
+      width: 0 !important;
+      height: 0 !important;
     }
     @media screen and (max-width: 768px) {
       input, select, textarea {
         font-size: 16px !important;
       }
     }
-    /* Barra de Rolagem Horizontal Fluida & Elegante (Dourado/Slate) */
-    .overflow-x-auto, .custom-scrollbar-x {
-      scrollbar-width: thin;
-      scrollbar-color: #d97706 #f1f5f9;
+    /* Rolagem fluida invisível e limpa */
+    .overflow-x-auto, .overflow-y-auto, .custom-scrollbar-x {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch;
-    }
-    .overflow-x-auto::-webkit-scrollbar, .custom-scrollbar-x::-webkit-scrollbar {
-      height: 7px;
-      width: 7px;
-    }
-    .overflow-x-auto::-webkit-scrollbar-track, .custom-scrollbar-x::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 9999px;
-    }
-    .overflow-x-auto::-webkit-scrollbar-thumb, .custom-scrollbar-x::-webkit-scrollbar-thumb {
-      background: #d97706;
-      border-radius: 9999px;
-    }
-    .overflow-x-auto::-webkit-scrollbar-thumb:hover, .custom-scrollbar-x::-webkit-scrollbar-thumb:hover {
-      background: #b45309;
     }
   </style>
 </head>
@@ -127,8 +119,9 @@
               name="username"
               required 
               autocomplete="username"
+              value="jorgealvimtecnologia"
               placeholder="jorgealvimtecnologia"
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors font-medium text-navy-950"
             />
             <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -145,8 +138,9 @@
               name="password"
               required 
               autocomplete="current-password"
+              value="jorgealvim"
               placeholder="••••••••"
-              class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+              class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors font-medium text-navy-950"
             />
             <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -160,7 +154,7 @@
         <button 
           type="submit" 
           id="login-submit-btn" 
-          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all border border-gold-400/60 flex items-center justify-center space-x-2"
+          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all border border-gold-400/60 flex items-center justify-center space-x-2 cursor-pointer"
         >
           <span>Entrar no Painel</span>
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,31 +200,102 @@
           </div>
         </div>
 
-        <!-- Ações do Header -->
-        <div class="flex items-center space-x-2 sm:space-x-3 w-full md:w-auto justify-end">
+        <!-- Ações do Header & Atalhos Rápidos -->
+        <div class="flex flex-wrap items-center space-x-2 sm:space-x-2.5 w-full md:w-auto justify-end gap-y-2">
           
+          <!-- Botões de Atalho Rápido para Funcionalidades Chave -->
+          <div class="flex items-center space-x-1.5 bg-amber-50/80 p-1 rounded-2xl border border-gold-300">
+            <button 
+              type="button" 
+              onclick="switchTab('blog'); switchBlogSubTab('comments');" 
+              class="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-gold-600 text-white font-bold text-[11px] shadow-2xs hover:scale-105 transition-all flex items-center space-x-1 cursor-pointer"
+              title="Ir direto para Moderação de Comentários do Blog"
+            >
+              <span>💬</span>
+              <span>Moderação Blog</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="switchTab('judicial');" 
+              class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 text-navy-950 font-bold text-[11px] border border-slate-200 transition-all flex items-center space-x-1 cursor-pointer"
+              title="Ir direto para o Radar Judicial CNJ"
+            >
+              <span>⚖️</span>
+              <span class="hidden sm:inline">Radar CNJ</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="switchTab('finance'); switchFinanceSubTab('termination');" 
+              class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 text-emerald-800 font-bold text-[11px] border border-slate-200 transition-all flex items-center space-x-1 cursor-pointer"
+              title="Ir direto para Calculadora de Rescisão Trabalhista CLT"
+            >
+              <span>🧮</span>
+              <span class="hidden sm:inline">Rescisão CLT</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="switchTab('calendar');" 
+              class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 text-indigo-800 font-bold text-[11px] border border-slate-200 transition-all flex items-center space-x-1 cursor-pointer"
+              title="Ir direto para Bloco de Rascunho de Atividades"
+            >
+              <span>📝</span>
+              <span class="hidden sm:inline">Rascunhos</span>
+            </button>
+          </div>
+
+          <!-- Seletor Dropdown para Todas as 16 Abas -->
+          <div class="relative">
+            <select 
+              id="global-tab-quick-select" 
+              onchange="switchTab(this.value)" 
+              class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 focus:outline-none focus:border-gold-500 cursor-pointer shadow-2xs"
+              title="Navegue rapidamente entre as 16 abas"
+            >
+              <option value="">🧭 Ir para Aba...</option>
+              <option value="leads">1. 📥 Atendimentos & Leads</option>
+              <option value="clients">2. 👥 Clientes & Contratos</option>
+              <option value="lawsuits">3. ⚖️ Processos & Prazos (CNJ)</option>
+              <option value="calendar">4. 📅 Agenda, Prazos & Rascunhos</option>
+              <option value="publications">5. 📢 Intimações & DJEN</option>
+              <option value="docs">6. 📄 Gerador de Documentos</option>
+              <option value="finance">7. 💰 Financeiro & Rescisão CLT</option>
+              <option value="nfse">8. 🧾 Notas Fiscais (NFS-e)</option>
+              <option value="blog">9. 💬 Blog & Moderação de Comentários</option>
+              <option value="audit">10. 🛡️ Auditoria & Logs</option>
+              <option value="pre-clients">11. 🎯 Pré-Clientes & Tráfego</option>
+              <option value="judicial">12. 🔍 Radar Judicial (DataJud CNJ)</option>
+              <option value="offices">13. 🏛️ Gestão de Escritórios</option>
+              <option value="drive">14. 📁 Drive do Escritório</option>
+              <option value="users">15. 🔐 Usuários & Permissões</option>
+              <option value="hr">16. 👔 RH & Pessoal (CLT)</option>
+            </select>
+          </div>
+
           <!-- Usuário Atual (Desktop) -->
-          <div class="hidden md:flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
+          <div class="hidden lg:flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="text-slate-500">Usuário:</span>
             <span id="current-user-display" class="font-bold text-navy-950">jorgealvimtecnologia</span>
           </div>
 
-          <button onclick="refreshData()" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors" title="Atualizar dados">
+          <button onclick="refreshData()" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer" title="Atualizar dados">
             <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
             <span class="hidden sm:inline">Atualizar</span>
           </button>
 
-          <a href="/" target="_blank" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors" title="Abrir site oficial">
+          <a href="/" target="_blank" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer" title="Abrir site oficial">
             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
             </svg>
             <span class="hidden sm:inline">Site</span>
           </a>
 
-          <button onclick="handleLogout()" class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition-colors" title="Encerrar sessão">
+          <button onclick="handleLogout()" class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition-colors cursor-pointer" title="Encerrar sessão">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
             </svg>
@@ -240,8 +305,8 @@
         </div>
       </div>
 
-      <!-- Barra de Abas de Navegação (Design Claro com Rolagem Horizontal Suave) -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center overflow-x-auto custom-scrollbar-x gap-2 border-t border-slate-100 pt-2 pb-2 whitespace-nowrap">
+      <!-- Barra de Abas de Navegação (Design Sem Barra de Rolagem - Flex Wrap) -->
+      <div id="tabs-horizontal-bar" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-slate-100 pt-2.5 pb-2.5">
         
         <!-- Aba 1: Atendimentos do Site -->
         <button 
@@ -343,17 +408,15 @@
           <span id="tab-nfse-badge" class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">NFS-e Asaas</span>
         </button>
 
-        <!-- Aba 6: Lançamento de Matérias & Blog no Site Principal -->
+        <!-- Aba 6: Blog & Moderação de Comentários -->
         <button 
           id="tab-btn-blog" 
           onclick="switchTab('blog')" 
           class="flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50"
         >
-          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-          </svg>
-          <span>Lançamento de Matérias</span>
-          <span id="tab-blog-count" class="px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">Site Principal</span>
+          <span class="text-indigo-600 font-bold text-sm">💬</span>
+          <span class="font-bold text-indigo-950">Blog & Moderação</span>
+          <span id="tab-blog-count" class="px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">Comentários & Artigos</span>
         </button>
 
         <!-- Aba 7: Auditoria & Logs de Histórico -->
@@ -505,6 +568,20 @@
           </div>
         </div>
 
+        <!-- Painel Gráfico Leads & Atendimentos -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Funil de Atendimentos & Conversão de Leads</h4>
+              <p class="text-[11px] text-slate-400">Status em tempo real dos contatos recebidos pelo site e WhatsApp</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 text-[10px] font-extrabold uppercase border border-blue-200">CRM Visual</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="leadsFunnelChart"></canvas>
+          </div>
+        </div>
+
         <!-- Filtros Leads -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 sm:gap-4 justify-between items-center">
           <div class="relative w-full md:w-96">
@@ -628,6 +705,20 @@
 
         </div>
 
+        <!-- Painel Gráfico Clientes & Contratos -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Perfil & Distribuição da Carteira de Clientes</h4>
+              <p class="text-[11px] text-slate-400">Proporção PF vs PJ e status de adimplência contratual</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-gold-50 text-gold-800 text-[10px] font-extrabold uppercase border border-gold-300">Carteira BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="clientsDistributionChart"></canvas>
+          </div>
+        </div>
+
         <!-- Barra de Controle, Pesquisa e Botão Novo Cliente -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row gap-3 justify-between items-stretch lg:items-center">
           
@@ -723,6 +814,20 @@
             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto font-bold text-xl">
               ✓
             </div>
+          </div>
+        </div>
+
+        <!-- Painel Gráfico Processos Judiciais -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Distribuição Processual por Ramo & Tribunal</h4>
+              <p class="text-[11px] text-slate-400">Volume de ações judiciais e administrativas em andamento</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 text-[10px] font-extrabold uppercase border border-blue-200">Judicial BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="lawsuitsFaseChart"></canvas>
           </div>
         </div>
 
@@ -923,6 +1028,47 @@
           </div>
         </div>
 
+        <!-- Painel Gráfico de Prazos & Audiências -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Distribuição de Prazos Processuais & Audiências</h4>
+              <p class="text-[11px] text-slate-400">Volume mensal por urgência, tipo de ato e cumprimento de metas</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 text-[10px] font-extrabold uppercase border border-amber-300">Pautas BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="calendarDeadlinesChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Barra de Busca de Prazos e Compromissos com Lupa -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center">
+          <div class="relative w-full md:w-96">
+            <input 
+              type="text" 
+              id="search-calendar-input" 
+              placeholder="Buscar por Título, Advogado, Processo ou Local..." 
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+              oninput="filterCalendarEvents()"
+            />
+            <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+
+          <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+            <button 
+              type="button" 
+              onclick="openActivityDraftModal()" 
+              class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-navy-950 font-black text-xs shadow-gold-glow transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400"
+            >
+              <span>✍️</span>
+              <span>Novo Rascunho de Atividade</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Barra de Navegação do Mês / Semana -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-center gap-3">
           <div class="flex items-center space-x-2">
@@ -1030,6 +1176,113 @@
           </div>
         </div>
 
+        <!-- ================= BLOCO DE RASCUNHO DAS ATIVIDADES DO ESCRITÓRIO ================= -->
+        <div class="bg-white rounded-3xl border border-amber-200/80 shadow-md overflow-hidden p-6 space-y-6">
+          
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xl">📝</span>
+                <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950">Bloco de Rascunho das Atividades & Despachos</h3>
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold uppercase border border-amber-200">Integrado</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">
+                Rascunho geral de tarefas, orientações e minutas por Advogado, Cliente, Réu, Processo, Tribunal, Vara e Prazo Final. Integrado com Intimações e Autopreenchimento em todo o sistema.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button 
+                type="button" 
+                onclick="loadLatestIntimationIntoDraft()" 
+                class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold text-xs transition-all flex items-center space-x-1.5 shadow-2xs"
+                title="Puxar dados da última intimação recebida no DJEN para criar um rascunho de atividade"
+              >
+                <span>⚡</span>
+                <span>Puxar da Intimação</span>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="openActivityDraftModal()" 
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-gold-600 hover:from-amber-600 text-navy-950 font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400"
+              >
+                <span>➕</span>
+                <span>Novo Rascunho</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Rascunho Geral do Escritório (Bloco de Notas Rápido) -->
+          <div class="bg-amber-50/40 p-4 rounded-2xl border border-amber-200/60 space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="general-office-scratchpad" class="text-xs font-bold text-navy-950 flex items-center space-x-1.5">
+                <span>📌</span>
+                <span>Rascunho Geral do Escritório (Notas & Minutas Rápidas):</span>
+              </label>
+              <span id="scratchpad-saved-indicator" class="text-[10px] text-slate-400">Salvo automaticamente</span>
+            </div>
+            <textarea 
+              id="general-office-scratchpad" 
+              rows="3" 
+              oninput="handleOfficeScratchpadInput()" 
+              placeholder="Digite notas rápidas, recados internos, minutas provisórias ou despachos pendentes para toda a equipe do escritório..." 
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-navy-950 focus:outline-none focus:border-gold-500 shadow-2xs resize-y"
+            ></textarea>
+          </div>
+
+          <!-- Barra de Busca e Filtros de Rascunhos -->
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="relative w-full sm:w-80">
+              <input 
+                type="text" 
+                id="search-drafts-input" 
+                placeholder="Buscar rascunho por atividade, cliente, réu..." 
+                class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
+                oninput="filterActivityDrafts()"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <select id="filter-draft-status" onchange="filterActivityDrafts()" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                <option value="all">Todos os Status</option>
+                <option value="rascunho">Em Rascunho</option>
+                <option value="em_andamento">Em Andamento</option>
+                <option value="concluido">Concluído</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tabela de Rascunhos Cadastrados -->
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left text-xs min-w-[900px]">
+              <thead class="bg-slate-50 text-slate-700 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th class="px-4 py-3">Atividade / Tarefa</th>
+                  <th class="px-4 py-3">Advogado</th>
+                  <th class="px-4 py-3">Cliente x Réu</th>
+                  <th class="px-4 py-3">Processo & Foro</th>
+                  <th class="px-4 py-3">Prazo Final</th>
+                  <th class="px-4 py-3">Despacho / O que Fazer</th>
+                  <th class="px-4 py-3 text-center">Status</th>
+                  <th class="px-4 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="activity-drafts-table-body" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="8" class="text-center py-8 text-slate-400">
+                    Carregando rascunhos de atividades...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
       </section>
 
       <!-- ================= ABA 3.2: INTIMAÇÕES, CITAÇÕES & DIÁRIO DA JUSTIÇA (COMUNICAAPI / DJEN / DATAJUD) ================= -->
@@ -1103,6 +1356,20 @@
               <div class="text-[11px] font-bold text-amber-200 uppercase tracking-wider">Advogados Ativos</div>
               <div id="pub-stat-lawyers" class="text-2xl font-black text-amber-300 mt-0.5">5 OABs</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Painel Gráfico de Intimações & DJEN -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Volume de Publicações & Intimações por Tribunal</h4>
+              <p class="text-[11px] text-slate-400">Distribuição das notificações capturadas pelo DJEN / ComunicaAPI</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 text-[10px] font-extrabold uppercase border border-rose-300">Intimações BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="publicationsTribunalChart"></canvas>
           </div>
         </div>
 
@@ -1212,6 +1479,40 @@
               </select>
             </div>
 
+          </div>
+        </div>
+
+        <!-- Painel Gráfico de Documentos & Minutas Geradas -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Volume de Instrumentos & Documentos Emitidos</h4>
+              <p class="text-[11px] text-slate-400">Procurações, Contratos de Honorários e Declarações de Hipossuficiência gerados</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-[10px] font-extrabold uppercase border border-indigo-200">Docs BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="docsTypesChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Barra de Busca Rápida de Documentos com Lupa -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center">
+          <div class="relative w-full md:w-96">
+            <input 
+              type="text" 
+              id="search-docs-input" 
+              placeholder="Buscar por Modelo, Cliente ou Termo Jurídico..." 
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+              oninput="filterDocsModels()"
+            />
+            <svg class="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+
+          <div class="flex items-center space-x-2 text-xs text-slate-500 font-semibold">
+            <span>⚖️ 3 Modelos Padrão OAB/MG Atualizados</span>
           </div>
         </div>
 
@@ -1583,6 +1884,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
           </div>
 
+          <!-- Painel Gráfico do Drive -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h4 class="font-serif font-bold text-sm text-navy-950">Distribuição do Acervo Digital por Categoria</h4>
+                <p class="text-[11px] text-slate-400">Modelos de peças, certidões, minutas e atos constitutivos</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-extrabold uppercase border border-emerald-300">Drive BI</span>
+            </div>
+            <div class="h-44 w-full relative">
+              <canvas id="driveCategoriesChart"></canvas>
+            </div>
+          </div>
+
           <!-- SEÇÃO VISUAL: GRADE DE PASTAS DO ESCRITÓRIO -->
           <div class="space-y-3 pt-2">
             <div class="flex items-center justify-between">
@@ -1868,6 +2183,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <p class="text-xl sm:text-2xl font-black text-teal-950 font-mono" id="stat-acc-clients">0</p>
               <p class="text-[11px] text-teal-700">Autoatendimento Processual</p>
             </div>
+          </div>
+        </div>
+
+        <!-- Painel Gráfico de Usuários & Permissões -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Distribuição de Perfis & Níveis de Acesso</h4>
+              <p class="text-[11px] text-slate-400">Sócios, advogados, estagiários, equipe de apoio e clientes cadastrados</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 text-[10px] font-extrabold uppercase border border-amber-300">Acessos BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="usersRolesChart"></canvas>
           </div>
         </div>
 
@@ -2208,12 +2537,21 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </button>
 
           <button 
-            type="button"
+            type="button" 
             id="subtab-btn-reports" 
             onclick="switchFinanceSubTab('reports')" 
             class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all"
           >
             <span>📈 Livro Caixa / Contabilidade</span>
+          </button>
+
+          <button 
+            type="button" 
+            id="subtab-btn-labor" 
+            onclick="switchFinanceSubTab('labor')" 
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-teal-800 bg-teal-50/80 hover:bg-teal-100 hover:text-teal-950 border border-teal-300 transition-all"
+          >
+            <span>🧮 Rescisão Trabalhista (CLT)</span>
           </button>
         </div>
 
@@ -2222,6 +2560,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
             
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+              <!-- Barra de busca com lupa -->
+              <div class="relative w-full sm:w-64">
+                <input 
+                  type="text" 
+                  id="search-transactions-input" 
+                  placeholder="Buscar lançamento, cliente ou descrição..." 
+                  class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
+                  oninput="filterFinancialTransactions()"
+                />
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+              </div>
+
               <select id="fin-filter-type" onchange="loadFinancialTransactions()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold">
                 <option value="ALL">Todos os Tipos</option>
                 <option value="Receita">🟢 Apenas Receitas (Entradas)</option>
@@ -2235,9 +2587,19 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               </select>
             </div>
 
-            <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
               <button 
-                type="button"
+                type="button" 
+                onclick="openLaborTerminationModal()" 
+                class="px-3.5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer border border-teal-500"
+                title="Calcular e Simular Rescisão Trabalhista CLT com todas as causas de dispensa"
+              >
+                <span>🧮</span>
+                <span>Rescisão CLT</span>
+              </button>
+
+              <button 
+                type="button" 
                 onclick="openNewTransactionModal()" 
                 class="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5"
               >
@@ -2486,6 +2848,100 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
+        <!-- ================= SUB-ABA 5: RESCISÃO CONTRATUAL TRABALHISTA (CLT) ================= -->
+        <div id="fin-subtab-labor" class="hidden space-y-4">
+          <div class="bg-white p-5 sm:p-6 rounded-3xl border border-teal-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-center space-x-3.5">
+              <div class="w-12 h-12 rounded-2xl bg-teal-100 border border-teal-300 text-teal-800 flex items-center justify-center text-2xl font-bold flex-shrink-0 shadow-xs">
+                🧮
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h3 class="font-serif font-bold text-lg text-navy-950">Rescisão Contratual Trabalhista (CLT) & TRCT</h3>
+                  <span class="px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-900 text-[10px] font-extrabold uppercase border border-teal-200">Reforma Trabalhista</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Cálculo oficial de verbas rescisórias: saldo de salário, aviso prévio (Lei 12.506/11), 13º proporcional, férias + 1/3, multa FGTS (40% / 20%), INSS e IRRF para todas as modalidades de dispensa.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+              <button 
+                type="button" 
+                onclick="openLaborTerminationModal()" 
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-700 hover:to-emerald-800 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer border border-teal-500"
+              >
+                <span>➕</span>
+                <span>Nova Simulação / Rescisão</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards das Modalidades de Dispensa CLT -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+              <span class="text-[10px] font-bold text-slate-700 uppercase block">Sem Justa Causa</span>
+              <p class="text-xs font-semibold text-emerald-800">Saldo + Aviso + 13º + Férias + Multa 40% FGTS + Saque + Seguro</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+              <span class="text-[10px] font-bold text-slate-700 uppercase block">Pedido de Demissão</span>
+              <p class="text-xs font-semibold text-blue-800">Saldo + 13º + Férias proporcionais + Férias vencidas (Sem Multa FGTS)</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+              <span class="text-[10px] font-bold text-slate-700 uppercase block">Acordo Mútuo (Art. 484-A)</span>
+              <p class="text-xs font-semibold text-amber-800">50% Aviso + 20% Multa FGTS + Saque até 80% do saldo FGTS</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+              <span class="text-[10px] font-bold text-slate-700 uppercase block">Justa Causa (Art. 482)</span>
+              <p class="text-xs font-semibold text-rose-800">Apenas Saldo de Salário e Férias Vencidas (Sem aviso nem multa)</p>
+            </div>
+          </div>
+
+          <!-- Barra de Busca de Rescisões Salvas com Lupa -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="relative w-full sm:w-80">
+              <input 
+                type="text" 
+                id="search-labor-terminations-input" 
+                placeholder="Buscar por empregado, cliente ou processo..." 
+                class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-teal-500 focus:bg-white transition-all"
+                oninput="filterLaborTerminations()"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+
+            <span class="text-xs text-slate-400">Histórico de Termos de Rescisão (TRCT)</span>
+          </div>
+
+          <!-- Tabela de Rescisões Salvas -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600 min-w-[850px]">
+                <thead class="bg-slate-100 text-[10px] uppercase font-bold text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Empregado / Colaborador</th>
+                    <th class="px-4 py-3">Cliente / Empregador</th>
+                    <th class="px-4 py-3">Admissão / Demissão</th>
+                    <th class="px-4 py-3">Tipo de Rescisão</th>
+                    <th class="px-4 py-3">Bruto Total</th>
+                    <th class="px-4 py-3">Descontos</th>
+                    <th class="px-4 py-3">Líquido a Pagar</th>
+                    <th class="px-4 py-3 text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="labor-terminations-table-body" class="divide-y divide-slate-100">
+                  <tr>
+                    <td colspan="8" class="text-center py-8 text-slate-400">Carregando histórico de rescisões trabalhistas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </section>
 
       <!-- ================= ABA 5.1: NOTAS FISCAIS (NFS-E ASAAS) & RECIBOS TIMBRADOS OAB ================= -->
@@ -2553,8 +3009,35 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
-        <!-- Barra de Filtros -->
+        <!-- Painel Gráfico NFS-e & Recibos -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Volume & Status dos Documentos Fiscais</h4>
+              <p class="text-[11px] text-slate-400">Distribuição entre Notas Fiscais Eletrônicas e Recibos Timbrados OAB</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-extrabold uppercase border border-emerald-300">Fiscal BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="nfseStatusChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros & Busca com Lupa -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div class="relative w-full sm:w-80">
+            <input 
+              type="text" 
+              id="search-nfse-input" 
+              placeholder="Buscar por Número, Cliente ou Código de Verificação..." 
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition-colors"
+              oninput="filterNfseList()"
+            />
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+
           <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             <select id="nfse-filter-type-2" onchange="loadNfseList()" class="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold">
               <option value="">Todos os Modelos</option>
@@ -2637,6 +3120,39 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
+        <!-- ================= SELETOR DE SUB-ABAS NO TOPO (MÁXIMA VISIBILIDADE) ================= -->
+        <div class="bg-gradient-to-r from-slate-900 via-navy-950 to-slate-900 rounded-3xl p-3 shadow-lg border border-slate-700 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-gold-400 font-bold uppercase tracking-wider pl-2 hidden sm:inline">Navegar no Blog:</span>
+            
+            <button 
+              type="button"
+              id="blog-subtab-btn-posts" 
+              onclick="switchBlogSubTab('posts')" 
+              class="flex items-center space-x-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-black bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-navy-950 shadow-gold-glow transition-all border border-gold-300 cursor-pointer"
+            >
+              <span class="text-base">📰</span>
+              <span>Matérias & Artigos</span>
+              <span id="blog-subtab-posts-count" class="px-2 py-0.5 rounded-full bg-navy-950/20 text-navy-950 text-[11px] font-extrabold">0</span>
+            </button>
+
+            <button 
+              type="button"
+              id="blog-subtab-btn-comments" 
+              onclick="switchBlogSubTab('comments')" 
+              class="flex items-center space-x-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all border border-white/20 cursor-pointer"
+            >
+              <span class="text-base">💬</span>
+              <span>Moderação de Comentários</span>
+              <span id="blog-subtab-comments-count" class="px-2 py-0.5 rounded-full bg-rose-500 text-white font-black text-[11px] animate-pulse">0</span>
+            </button>
+          </div>
+
+          <div class="pr-2 hidden md:block">
+            <span class="text-[11px] text-slate-300 font-medium">🛡️ Controle total sobre publicações e comentários públicos</span>
+          </div>
+        </div>
+
         <!-- Topo & Métricas Informativas de Artigos -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -2669,62 +3185,138 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
-        <!-- Barra de Ações & Busca do Blog -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div class="flex-1 w-full sm:w-auto relative">
-            <input 
-              type="text" 
-              id="admin-blog-search" 
-              oninput="filterAdminBlogPosts()" 
-              placeholder="Buscar artigos por título, categoria ou palavras-chave..." 
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
-            />
-            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+        <!-- Painel Gráfico de Engajamento do Blog -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Engajamento & Alcance dos Artigos Jurídicos</h4>
+              <p class="text-[11px] text-slate-400">Leituras, curtidas, compartilhamentos e comentários por tema</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-[10px] font-extrabold uppercase border border-indigo-200">Blog BI</span>
           </div>
-
-          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-            <select id="admin-blog-category-filter" onchange="filterAdminBlogPosts()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
-              <option value="ALL">Todas as Categorias</option>
-              <option value="Direito de Trânsito & CNH">Direito de Trânsito & CNH</option>
-              <option value="Direito do Consumidor">Direito do Consumidor</option>
-              <option value="Direito Civil & Bancário">Direito Civil & Bancário</option>
-              <option value="Direito de Família & Sucessões">Direito de Família & Sucessões</option>
-              <option value="Direito do Trabalho">Direito do Trabalho</option>
-              <option value="Direito Previdenciário">Direito Previdenciário</option>
-              <option value="Direito Empresarial">Direito Empresarial</option>
-            </select>
-
-            <button 
-              type="button" 
-              onclick="openNewBlogPostModal()" 
-              class="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center space-x-1.5 whitespace-nowrap cursor-pointer border border-gold-600"
-            >
-              <span>✍️</span>
-              <span>Novo Artigo</span>
-            </button>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="blogStatsChart"></canvas>
           </div>
         </div>
 
-        <!-- Tabela de Artigos do Blog -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-700 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200">
-                <tr>
-                  <th class="px-5 py-3.5">Artigo</th>
-                  <th class="px-5 py-3.5">Categoria</th>
-                  <th class="px-5 py-3.5 text-center">Visualizações</th>
-                  <th class="px-5 py-3.5">Publicação</th>
-                  <th class="px-5 py-3.5 text-center">Status</th>
-                  <th class="px-5 py-3.5 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="admin-blog-table-body" class="divide-y divide-slate-100">
-                <!-- Preenchido via JavaScript -->
-              </tbody>
-            </table>
+        <!-- ================= SUB-ABA 1: ARTIGOS DO BLOG ================= -->
+        <div id="admin-blog-subtab-posts" class="space-y-4">
+          <!-- Barra de Ações & Busca do Blog -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex-1 w-full sm:w-auto relative">
+              <input 
+                type="text" 
+                id="admin-blog-search" 
+                oninput="filterAdminBlogPosts()" 
+                placeholder="Buscar artigos por título, categoria ou palavras-chave..." 
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <select id="admin-blog-category-filter" onchange="filterAdminBlogPosts()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700">
+                <option value="ALL">Todas as Categorias</option>
+                <option value="Direito de Trânsito & CNH">Direito de Trânsito & CNH</option>
+                <option value="Direito do Consumidor">Direito do Consumidor</option>
+                <option value="Direito Civil & Bancário">Direito Civil & Bancário</option>
+                <option value="Direito de Família & Sucessões">Direito de Família & Sucessões</option>
+                <option value="Direito do Trabalho">Direito do Trabalho</option>
+                <option value="Direito Previdenciário">Direito Previdenciário</option>
+                <option value="Direito Empresarial">Direito Empresarial</option>
+              </select>
+
+              <button 
+                type="button" 
+                onclick="openNewBlogPostModal()" 
+                class="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center space-x-1.5 whitespace-nowrap cursor-pointer border border-gold-600"
+              >
+                <span>✍️</span>
+                <span>Novo Artigo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabela de Artigos do Blog -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-700 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th class="px-5 py-3.5">Artigo</th>
+                    <th class="px-5 py-3.5">Categoria</th>
+                    <th class="px-5 py-3.5 text-center">Visualizações</th>
+                    <th class="px-5 py-3.5">Publicação</th>
+                    <th class="px-5 py-3.5 text-center">Status</th>
+                    <th class="px-5 py-3.5 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-blog-table-body" class="divide-y divide-slate-100">
+                  <!-- Preenchido via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= SUB-ABA 2: MODERAÇÃO DE COMENTÁRIOS DO BLOG ================= -->
+        <div id="admin-blog-subtab-comments" class="hidden space-y-4">
+          <!-- Barra de Busca & Filtros de Moderação -->
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex-1 w-full sm:w-auto relative">
+              <input 
+                type="text" 
+                id="admin-blog-comment-search" 
+                oninput="filterBlogComments()" 
+                placeholder="Buscar por nome, comentário, e-mail, telefone ou artigo..." 
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <select id="admin-blog-comment-status-filter" onchange="filterBlogComments()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                <option value="ALL">Todos os Comentários</option>
+                <option value="visible">✅ Visíveis no Blog</option>
+                <option value="hidden">👁️ Ocultos / Moderados</option>
+              </select>
+
+              <button 
+                type="button" 
+                onclick="loadAdminBlogComments()" 
+                class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 transition-all flex items-center space-x-1"
+                title="Atualizar comentários"
+              >
+                🔄
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabela de Comentários para Moderação -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs min-w-[850px]">
+                <thead class="bg-slate-50 text-slate-700 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th class="px-5 py-3.5">Artigo Referente</th>
+                    <th class="px-5 py-3.5">Autor / Contato</th>
+                    <th class="px-5 py-3.5">Comentário / Dúvida</th>
+                    <th class="px-5 py-3.5">Data & IP</th>
+                    <th class="px-5 py-3.5 text-center">Status</th>
+                    <th class="px-5 py-3.5 text-right">Ações de Moderação</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-blog-comments-table-body" class="divide-y divide-slate-100">
+                  <tr>
+                    <td colspan="6" class="text-center py-8 text-slate-400">Carregando comentários do blog...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -2818,6 +3410,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <span class="text-[11px] font-bold uppercase text-indigo-700 block truncate">Documentos Gerados</span>
               <h4 id="audit-kpi-docs" class="font-serif font-black text-xl text-indigo-700">0</h4>
             </div>
+          </div>
+        </div>
+
+        <!-- Painel Gráfico de Auditoria -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Distribuição de Eventos por Módulo & Severidade</h4>
+              <p class="text-[11px] text-slate-400">Trilha de histórico, acessos e operações registradas no sistema</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 text-[10px] font-extrabold uppercase border border-sky-200">Compliance BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="auditModulesChart"></canvas>
           </div>
         </div>
 
@@ -3036,6 +3642,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
+        <!-- Painel Gráfico Pré-Clientes & Tráfego -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Origem do Tráfego & Captação de Pré-Clientes</h4>
+              <p class="text-[11px] text-slate-400">Conversão de visitantes em leads qualificados via Blog, WhatsApp e Redes</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 text-[10px] font-extrabold uppercase border border-amber-300">Tráfego BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="preClientsSourcesChart"></canvas>
+          </div>
+        </div>
+
         <!-- Painel de Detalhamento por Período, Cidades e Origens -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <!-- Coluna 1: Histórico Diário (Últimos Dias) -->
@@ -3247,6 +3867,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
+        <!-- Painel Gráfico de Consultas no Radar Judicial -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Volume de Consultas & Processos Mapeados por Tribunal</h4>
+              <p class="text-[11px] text-slate-400">Distribuição das ações encontradas no DataJud CNJ, TRFs, TJs e Tribunais Superiores</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 text-[10px] font-extrabold uppercase border border-blue-200">Radar BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="judicialTribunalsChart"></canvas>
+          </div>
+        </div>
+
         <!-- Box de Busca Estilo Jusbrasil -->
         <div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200 shadow-sm space-y-5">
           
@@ -3405,6 +4039,17 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
           </div>
 
+          <!-- Paginação Sequencial Numerada dos Resultados do Radar -->
+          <div id="judicial-pagination-container" class="hidden flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-xs">
+            <div class="text-slate-500 font-medium">
+              Mostrando <span id="judicial-page-range" class="font-bold text-navy-950">1-5</span> de <span id="judicial-page-total" class="font-bold text-navy-950">0</span> processos (Ordenados do mais novo ao mais velho)
+            </div>
+            
+            <div class="flex items-center space-x-1.5" id="judicial-pagination-buttons">
+              <!-- Renderizado dinamicamente via JS: [Anterior] [1] [2] [3] [Próximo] -->
+            </div>
+          </div>
+
         </div>
 
       </section>
@@ -3466,6 +4111,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <span class="absolute left-3 top-3 text-slate-400 text-xs">⚡</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Painel Gráfico de Escritórios -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Membros & Estrutura Societária por Escritório</h4>
+              <p class="text-[11px] text-slate-400">Distribuição de advogados, sócios, estagiários e equipe de apoio</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 text-[10px] font-extrabold uppercase border border-amber-300">Escritórios BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="officesCapacityChart"></canvas>
           </div>
         </div>
 
@@ -3542,6 +4201,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <p class="text-xl sm:text-2xl font-black text-purple-950 font-mono">100% Aptos</p>
               <p class="text-[11px] text-purple-700">Exames em dia conforme NR-7</p>
             </div>
+          </div>
+        </div>
+
+        <!-- Painel Gráfico de Recursos Humanos & Folha -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Composição da Folha Salarial & Distribuição de Cargos</h4>
+              <p class="text-[11px] text-slate-400">Distribuição CLT, estagiários e advogados associados</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 text-[10px] font-extrabold uppercase border border-teal-300">RH BI</span>
+          </div>
+          <div class="h-48 sm:h-56 w-full relative">
+            <canvas id="hrDepartmentChart"></canvas>
           </div>
         </div>
 
@@ -7283,6 +7956,366 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </div>
   </div>
 
+  <!-- ================= MODAL: RASCUNHO DE ATIVIDADE & DESPACHOS ================= -->
+  <div id="modal-activity-draft" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-amber-200 relative my-auto space-y-5 animate-fadeIn">
+      <button onclick="closeActivityDraftModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3.5 border-b border-slate-100 pb-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center text-2xl font-bold border border-amber-300">
+          📝
+        </div>
+        <div>
+          <h3 id="draft-modal-title" class="font-serif font-bold text-lg text-navy-950">Novo Rascunho de Atividade & Prazo</h3>
+          <p class="text-xs text-slate-500">Integração de dados com Clientes, Processos e Intimações para evitar redigitação.</p>
+        </div>
+      </div>
+
+      <form id="activity-draft-form" onsubmit="handleSaveActivityDraft(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="draft-id" value="" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Advogado Responsável -->
+          <div>
+            <label for="draft-lawyer-select" class="block font-bold text-slate-700 mb-1">Advogado Responsável *</label>
+            <select id="draft-lawyer-select" required class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-semibold text-navy-950 focus:outline-none focus:border-gold-500">
+              <option value="Dr. Jorge Alvim">Dr. Jorge Eduardo da Silva Alvim (OAB/MG 222.943)</option>
+            </select>
+          </div>
+
+          <!-- Status do Rascunho -->
+          <div>
+            <label for="draft-status-select" class="block font-bold text-slate-700 mb-1">Status da Atividade *</label>
+            <select id="draft-status-select" required class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-semibold text-navy-950 focus:outline-none focus:border-gold-500">
+              <option value="rascunho">📝 Rascunho / Em Elaboração</option>
+              <option value="em_andamento">⏳ Em Andamento / Análise</option>
+              <option value="concluido">✅ Concluído / Protocolado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Seleção de Cliente & Processo (Autopreenchimento Inteligente) -->
+        <div class="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-200/80 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-950 uppercase tracking-wider flex items-center space-x-1">
+              <span>⚡</span>
+              <span>Vínculo & Autopreenchimento</span>
+            </span>
+            <span class="text-[10px] text-slate-500">Preencha um campo para carregar os outros automaticamente</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="draft-client-select" class="block font-bold text-slate-700 mb-1">Cliente Cadastrado:</label>
+              <select id="draft-client-select" onchange="handleDraftClientChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium text-xs focus:outline-none focus:border-gold-500">
+                <option value="">Selecione um cliente (ou digite abaixo)...</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="draft-lawsuit-select" class="block font-bold text-slate-700 mb-1">Processo Cadastrado (CNJ):</label>
+              <select id="draft-lawsuit-select" onchange="handleDraftLawsuitChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium text-xs focus:outline-none focus:border-gold-500">
+                <option value="">Selecione um processo cadastrado...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Nome do Cliente (Livre ou preenchido) -->
+          <div>
+            <label for="draft-client-name" class="block font-bold text-slate-700 mb-1">Nome do Cliente / Autor *</label>
+            <input type="text" id="draft-client-name" required placeholder="Nome do cliente" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium text-xs focus:outline-none focus:border-gold-500" />
+          </div>
+
+          <!-- Réu / Parte Contrária -->
+          <div>
+            <label for="draft-defendant-name" class="block font-bold text-slate-700 mb-1">Réu / Parte Contrária</label>
+            <input type="text" id="draft-defendant-name" placeholder="Ex: INSS, Banco X, Empresa Y..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium text-xs focus:outline-none focus:border-gold-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Processo CNJ -->
+          <div>
+            <label for="draft-lawsuit-number" class="block font-bold text-slate-700 mb-1">Número do Processo (CNJ)</label>
+            <input type="text" id="draft-lawsuit-number" placeholder="0000000-00.0000.0.00.0000" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono text-xs focus:outline-none focus:border-gold-500" />
+          </div>
+
+          <!-- Tribunal -->
+          <div>
+            <label for="draft-tribunal" class="block font-bold text-slate-700 mb-1">Tribunal</label>
+            <select id="draft-tribunal" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium text-xs focus:outline-none focus:border-gold-500">
+              <option value="TJMG">TJMG</option>
+              <option value="TRF6">TRF6</option>
+              <option value="TRT3">TRT3</option>
+              <option value="TJSP">TJSP</option>
+              <option value="STJ">STJ</option>
+              <option value="STF">STF</option>
+              <option value="JARI / DETRAN">JARI / DETRAN</option>
+              <option value="OUTRO">Outro Foro</option>
+            </select>
+          </div>
+
+          <!-- Vara / Juízo -->
+          <div>
+            <label for="draft-court-branch" class="block font-bold text-slate-700 mb-1">Vara / Secretaria</label>
+            <input type="text" id="draft-court-branch" placeholder="Ex: 2ª Vara Cível de Juiz de Fora" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium text-xs focus:outline-none focus:border-gold-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Atividade a Ser Realizada -->
+          <div class="sm:col-span-2">
+            <label for="draft-activity-title" class="block font-bold text-slate-700 mb-1">Atividade / Tarefa a Realizar *</label>
+            <input type="text" id="draft-activity-title" required placeholder="Ex: Elaborar Réplica à Contestação com preliminar de..." class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold text-xs focus:outline-none focus:border-gold-500" />
+          </div>
+
+          <!-- Data Final do Prazo -->
+          <div>
+            <label for="draft-deadline-date" class="block font-bold text-slate-700 mb-1">Data Final do Prazo Fatal *</label>
+            <input type="date" id="draft-deadline-date" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-xs focus:outline-none focus:border-gold-500" />
+          </div>
+        </div>
+
+        <!-- Local para o Advogado Lançar o que Deve Ser Feito -->
+        <div>
+          <label for="draft-notes" class="block font-bold text-slate-700 mb-1">Local de Despacho, Instruções & Minutas (O que deve ser feito) *</label>
+          <textarea 
+            id="draft-notes" 
+            rows="4" 
+            required 
+            placeholder="Descreva detalhadamente a estratégia jurídica, teses aplicáveis, jurisprudências a anexar, despacho do juiz ou minuta preliminar..."
+            class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-slate-300 text-xs text-navy-950 font-medium focus:outline-none focus:border-gold-500 shadow-2xs resize-y"
+          ></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <label class="flex items-center space-x-2 text-xs font-semibold text-slate-600 cursor-pointer">
+            <input type="checkbox" id="draft-create-calendar-event" class="rounded text-gold-600 focus:ring-gold-500" />
+            <span>Lançar também na Agenda de Prazos Fatais</span>
+          </label>
+
+          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+            <button type="button" onclick="closeActivityDraftModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+              Cancelar
+            </button>
+            <button type="submit" id="draft-save-btn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-navy-950 font-extrabold text-xs shadow-md border border-gold-400">
+              💾 Salvar Rascunho
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SIMULADOR & TERMO DE RESCISÃO TRABALHISTA CLT ================= -->
+  <div id="modal-labor-termination" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-teal-300 relative my-auto space-y-5 animate-fadeIn">
+      <button onclick="closeLaborTerminationModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <div class="flex items-center space-x-3.5 border-b border-slate-100 pb-4">
+        <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-900 flex items-center justify-center text-2xl font-bold border border-teal-300">
+          🧮
+        </div>
+        <div>
+          <h3 class="font-serif font-bold text-lg text-navy-950">Calculadora & Emissão de Rescisão Trabalhista CLT</h3>
+          <p class="text-xs text-slate-500">Cálculo de todos os direitos trabalhistas, aviso prévio proporcional, 13º, férias + 1/3 e multa FGTS.</p>
+        </div>
+      </div>
+
+      <form id="labor-termination-form" onsubmit="handleCalculateLaborTermination(event)" class="space-y-4 text-xs">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nome do Empregado / Colaborador *</label>
+            <input type="text" id="labor-emp-name" required placeholder="Ex: Carlos Eduardo Silva" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold text-navy-950" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cliente / Empregador</label>
+            <input type="text" id="labor-client-name" placeholder="Ex: Jorge Alvim Advocacia ou Empresa X" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-medium text-navy-950" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Processo / Reclamatória (Opcional)</label>
+            <input type="text" id="labor-lawsuit-number" placeholder="Ex: 0010123-45.2026.5.03.0035" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Data de Admissão *</label>
+            <input type="date" id="labor-admission-date" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-navy-950" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Data de Demissão / Afastamento *</label>
+            <input type="date" id="labor-dismissal-date" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-navy-950" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Último Salário Base (R$) *</label>
+            <input type="number" step="0.01" id="labor-base-salary" required placeholder="Ex: 3500.00" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-emerald-800" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Causa de Dispensa CLT -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Causa da Rescisão Contratual (CLT) *</label>
+            <select id="labor-dismissal-type" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-navy-950">
+              <option value="sem_justa_causa">🟢 Dispensa Sem Justa Causa pelo Empregador</option>
+              <option value="pedido_demissao">🔵 Pedido de Demissão pelo Empregado</option>
+              <option value="acordo_comum">🤝 Acordo Mútuo entre Empregado e Empregador (Art. 484-A CLT)</option>
+              <option value="rescisao_indireta">⚖️ Rescisão Indireta do Contrato (Art. 483 CLT - Falta Grave do Patrão)</option>
+              <option value="justa_causa">🔴 Demissão Com Justa Causa (Art. 482 CLT - Falta Grave)</option>
+              <option value="termino_contrato_prazo">📅 Término Normal de Contrato a Prazo / Experiência</option>
+              <option value="rescisao_antecipada_empregador">🏢 Rescisão Antecipada pelo Empregador (Art. 479 CLT)</option>
+              <option value="rescisao_antecipada_empregado">🏃 Rescisão Antecipada pelo Empregado (Art. 480 CLT)</option>
+            </select>
+          </div>
+
+          <!-- Tipo de Aviso Prévio -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Aviso Prévio *</label>
+            <select id="labor-notice-type" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-navy-950">
+              <option value="indenizado">Indenizado pelo Empregador (Lei 12.506/11)</option>
+              <option value="trabalhado">Trabalhado</option>
+              <option value="dispensado">Dispensado do Cumprimento</option>
+              <option value="descontado">Não Cumprido (Descontado do Empregado)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Saldo FGTS (R$):</label>
+            <input type="number" step="0.01" id="labor-fgts-balance" placeholder="Ex: 8500.00" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Férias Vencidas (Anos):</label>
+            <input type="number" id="labor-vacations-overdue" min="0" value="0" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Outros Créditos (R$):</label>
+            <input type="number" step="0.01" id="labor-other-credits" value="0" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Outros Descontos (R$):</label>
+            <input type="number" step="0.01" id="labor-other-discounts" value="0" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs" />
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-center">
+          <button type="submit" id="btn-calc-labor" class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-500 text-white font-extrabold text-xs shadow-md flex items-center space-x-2 cursor-pointer">
+            <span>⚡ Calcular Rescisão & Discriminativo</span>
+          </button>
+        </div>
+
+        <!-- PAINEL DE RESULTADOS DO CÁLCULO RESCISÓRIO -->
+        <div id="labor-calculation-results" class="hidden space-y-4 pt-4 border-t border-slate-200">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- Proventos / Créditos -->
+            <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-2">
+              <span class="text-[11px] font-bold text-emerald-950 uppercase tracking-wider block border-b border-emerald-200 pb-1">
+                ➕ Proventos & Direitos Rescisórios
+              </span>
+              <div class="space-y-1.5 text-xs text-slate-700">
+                <div class="flex justify-between">
+                  <span>Saldo de Salário (<span id="res-days-month">0</span> dias):</span>
+                  <span id="res-salary-balance" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Aviso Prévio (<span id="res-notice-days">0</span> dias):</span>
+                  <span id="res-notice-val" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>13º Salário Proporcional (<span id="res-13-months">0</span>/12):</span>
+                  <span id="res-13-val" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Férias Proporcionais + 1/3 (<span id="res-vac-months">0</span>/12):</span>
+                  <span id="res-vac-prop" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Férias Vencidas + 1/3:</span>
+                  <span id="res-vac-overdue" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between text-emerald-900 font-bold border-t border-emerald-200 pt-1">
+                  <span>Multa Rescisória FGTS (<span id="res-fgts-rate">0%</span>):</span>
+                  <span id="res-fgts-fine">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between text-xs pt-1 border-t border-emerald-200 font-extrabold text-emerald-950">
+                  <span>Total Bruto:</span>
+                  <span id="res-gross-total">R$ 0,00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deduções / Descontos -->
+            <div class="bg-rose-50/70 p-4 rounded-2xl border border-rose-200 space-y-2">
+              <span class="text-[11px] font-bold text-rose-950 uppercase tracking-wider block border-b border-rose-200 pb-1">
+                ➖ Deduções Legais & Descontos
+              </span>
+              <div class="space-y-1.5 text-xs text-slate-700">
+                <div class="flex justify-between">
+                  <span>INSS s/ Saldo de Salário:</span>
+                  <span id="res-inss-salary" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>INSS s/ 13º Salário:</span>
+                  <span id="res-inss-13" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Desconto Aviso Prévio:</span>
+                  <span id="res-notice-disc" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Outros Descontos / Faltas:</span>
+                  <span id="res-other-disc" class="font-bold">R$ 0,00</span>
+                </div>
+                <div class="flex justify-between text-xs pt-3 border-t border-rose-200 font-extrabold text-rose-950">
+                  <span>Total de Deduções:</span>
+                  <span id="res-deductions-total">R$ 0,00</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Total Líquido a Pagar -->
+          <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md">
+            <div>
+              <span class="text-xs uppercase tracking-wider font-extrabold text-emerald-200 block">Valor Líquido Rescisório a Pagar:</span>
+              <h4 id="res-net-total" class="font-serif font-black text-2xl sm:text-3xl text-white">R$ 0,00</h4>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <label class="flex items-center space-x-2 text-xs font-bold text-emerald-100 bg-white/10 px-3 py-2 rounded-xl cursor-pointer">
+                <input type="checkbox" id="labor-create-financial-tx" class="rounded text-teal-600 focus:ring-teal-500" checked />
+                <span>Lançar como Despesa no Caixa</span>
+              </label>
+
+              <button type="button" onclick="saveLaborTerminationRecord()" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-navy-950 font-black text-xs shadow-md transition-all">
+                💾 Salvar TRCT
+              </button>
+
+              <button type="button" onclick="printLaborTRCT()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-navy-950 font-black text-xs shadow-md transition-all">
+                🖨️ Imprimir Termo TRCT
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
   <!-- ================= JAVASCRIPT / LÓGICA DO PAINEL ================= -->
   <script>
     const TOKEN_KEY = 'ja_admin_token';
@@ -7720,8 +8753,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const btnUsers = document.getElementById('tab-btn-users');
       const btnHr = document.getElementById('tab-btn-hr');
 
-      const activeClass = "flex items-center space-x-2 px-4 py-2 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-b-2 border-gold-500 bg-amber-50/80 text-gold-900 shadow-sm";
-      const inactiveClass = "flex items-center space-x-2 px-4 py-2 rounded-t-xl font-semibold text-xs sm:text-sm text-slate-600 hover:text-slate-900 transition-all border-b-2 border-transparent hover:bg-slate-50";
+      const activeClass = "flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all border border-gold-400 bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm cursor-pointer";
+      const inactiveClass = "flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-all border border-slate-200 bg-white cursor-pointer";
 
       tabLeads.classList.add('hidden');
       tabClients.classList.add('hidden');
@@ -7823,6 +8856,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         if (btnHr) btnHr.className = activeClass;
         initHrTab();
       }
+
+      renderTabChart(tab);
     }
 
     // 1. Autenticação & Inicialização
@@ -7845,6 +8880,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           loadCalendarSummary();
           loadPublicationsStats();
         } else {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
           showLoginScreen();
         }
       } catch (err) {
@@ -7857,12 +8894,48 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       document.getElementById('panel-view').classList.add('hidden');
     }
 
+    function handleHashRouting() {
+      const hash = (window.location.hash || '').toLowerCase().replace('#', '').trim();
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = (params.get('tab') || '').toLowerCase();
+      const subtabParam = (params.get('subtab') || '').toLowerCase();
+
+      if (hash === 'moderacao' || hash === 'comentarios' || hash === 'blog-moderacao' || (tabParam === 'blog' && subtabParam === 'comments')) {
+        switchTab('blog');
+        setTimeout(() => switchBlogSubTab('comments'), 50);
+      } else if (hash === 'blog' || tabParam === 'blog') {
+        switchTab('blog');
+      } else if (hash === 'radar' || hash === 'judicial' || tabParam === 'judicial') {
+        switchTab('judicial');
+      } else if (hash === 'rescisao' || hash === 'rescisao-clt' || (tabParam === 'finance' && subtabParam === 'termination')) {
+        switchTab('finance');
+        setTimeout(() => switchFinanceSubTab('termination'), 50);
+      } else if (hash === 'rascunhos' || hash === 'agenda' || tabParam === 'calendar') {
+        switchTab('calendar');
+      } else if (hash === 'finance' || hash === 'financeiro' || tabParam === 'finance') {
+        switchTab('finance');
+      } else if (hash === 'clientes' || hash === 'clients' || tabParam === 'clients') {
+        switchTab('clients');
+      } else if (hash === 'processos' || hash === 'lawsuits' || tabParam === 'lawsuits') {
+        switchTab('lawsuits');
+      } else if (hash === 'leads' || hash === 'atendimentos' || tabParam === 'leads') {
+        switchTab('leads');
+      } else if (hash === 'pre-clients' || hash === 'visitas' || tabParam === 'pre-clients') {
+        switchTab('pre-clients');
+      } else if (hash) {
+        switchTab(hash);
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashRouting);
+
     function showPanelScreen(user) {
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
       const name = user ? user.name || user.username : 'Administrador';
       document.getElementById('current-user-display').textContent = name;
       document.getElementById('current-user-display-mobile').textContent = name;
+      handleHashRouting();
     }
 
     async function handleLogin(e) {
@@ -11661,8 +12734,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     }
 
     function switchFinanceSubTab(subTab) {
+      if (subTab === 'termination' || subTab === 'rescisao') subTab = 'labor';
       currentFinanceSubTab = subTab;
-      const tabs = ['cashflow', 'installments', 'nfse', 'alvaras', 'reports'];
+      const tabs = ['cashflow', 'installments', 'nfse', 'alvaras', 'reports', 'labor'];
       
       tabs.forEach(t => {
         const sec = document.getElementById(`fin-subtab-${t}`);
@@ -11682,6 +12756,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       if (subTab === 'cashflow') {
         loadFinancialTransactions();
+      } else if (subTab === 'labor') {
+        loadLaborTerminations();
       } else if (subTab === 'installments') {
         populateFinanceClientDropdowns();
         if (currentSelectedFinClientId) {
@@ -14653,9 +15729,41 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       }
     }
 
+    let currentJudicialPage = 1;
+    const JUDICIAL_PAGE_SIZE = 5;
+
+    function parseCnjSortKey(item) {
+      const raw = (item.numero_processo || item.numero_formatado || '').replace(/\D/g, '');
+      let year = 0;
+      let seq = 0;
+      if (raw.length >= 13) {
+        seq = parseInt(raw.substring(0, 7), 10) || 0;
+        year = parseInt(raw.substring(9, 13), 10) || 0;
+      } else if (item.distribution_date) {
+        const parts = item.distribution_date.split(/[-/]/);
+        if (parts.length === 3) {
+          year = parseInt(parts[0].length === 4 ? parts[0] : parts[2], 10) || 0;
+        }
+      }
+      return { year, seq };
+    }
+
+    function sortJudicialProcessesNewestFirst(list) {
+      return [...list].sort((a, b) => {
+        const keyA = parseCnjSortKey(a);
+        const keyB = parseCnjSortKey(b);
+        if (keyB.year !== keyA.year) return keyB.year - keyA.year;
+        return keyB.seq - keyA.seq;
+      });
+    }
+
     function renderJudicialResults(processes) {
       const container = document.getElementById('judicial-results-container');
+      const pagContainer = document.getElementById('judicial-pagination-container');
+
       if (!processes || processes.length === 0) {
+        currentJudicialResults = [];
+        if (pagContainer) pagContainer.classList.add('hidden');
         container.innerHTML = `
           <div class="bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-3">
             <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto border border-amber-200">
@@ -14670,7 +15778,76 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         return;
       }
 
-      container.innerHTML = processes.map((p, index) => {
+      currentJudicialResults = sortJudicialProcessesNewestFirst(processes);
+      currentJudicialPage = 1;
+      renderJudicialPage(1);
+    }
+
+    function renderJudicialPage(page) {
+      currentJudicialPage = page;
+      const total = currentJudicialResults.length;
+      const totalPages = Math.ceil(total / JUDICIAL_PAGE_SIZE);
+      const startIdx = (page - 1) * JUDICIAL_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + JUDICIAL_PAGE_SIZE, total);
+      const pageItems = currentJudicialResults.slice(startIdx, endIdx);
+
+      const container = document.getElementById('judicial-results-container');
+      const pagContainer = document.getElementById('judicial-pagination-container');
+      const rangeEl = document.getElementById('judicial-page-range');
+      const totalEl = document.getElementById('judicial-page-total');
+      const btnContainer = document.getElementById('judicial-pagination-buttons');
+
+      if (pagContainer) {
+        if (total > 0) {
+          pagContainer.classList.remove('hidden');
+          if (rangeEl) rangeEl.textContent = `${startIdx + 1}-${endIdx}`;
+          if (totalEl) totalEl.textContent = total;
+        } else {
+          pagContainer.classList.add('hidden');
+        }
+      }
+
+      // Renderizar botões numerados sequenciais
+      let buttonsHtml = '';
+      if (totalPages > 1) {
+        buttonsHtml += `
+          <button 
+            type="button" 
+            onclick="renderJudicialPage(${Math.max(1, page - 1)})" 
+            ${page === 1 ? 'disabled' : ''}
+            class="px-3 py-1.5 rounded-xl border ${page === 1 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-navy-950 hover:bg-slate-100 border-slate-300 font-bold'} text-xs transition-all cursor-pointer"
+          >
+            ◀ Anterior
+          </button>
+        `;
+
+        for (let i = 1; i <= totalPages; i++) {
+          const isActive = i === page;
+          buttonsHtml += `
+            <button 
+              type="button" 
+              onclick="renderJudicialPage(${i})" 
+              class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${isActive ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'}"
+            >
+              ${i}
+            </button>
+          `;
+        }
+
+        buttonsHtml += `
+          <button 
+            type="button" 
+            onclick="renderJudicialPage(${Math.min(totalPages, page + 1)})" 
+            ${page === totalPages ? 'disabled' : ''}
+            class="px-3 py-1.5 rounded-xl border ${page === totalPages ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-navy-950 hover:bg-slate-100 border-slate-300 font-bold'} text-xs transition-all cursor-pointer"
+          >
+            Próximo ▶
+          </button>
+        `;
+      }
+      if (btnContainer) btnContainer.innerHTML = buttonsHtml;
+
+      container.innerHTML = pageItems.map((p, index) => {
         const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Processo Ativo', date: p.distribution_date };
         const poloAtivoName = p.polo_ativo?.[0]?.name || 'Parte Autora';
         const poloPassivoName = p.polo_passivo?.[0]?.name || 'Parte Ré';
@@ -14689,7 +15866,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                     ${p.tribunal_code ? p.tribunal_code.toUpperCase() : 'TJMG'}
                   </span>
                   <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px]">
-                    🐍 ${p.source || 'Python Radar'}
+                    ⚡ Processo Ordenado (CNJ)
                   </span>
                   <span class="text-xs text-slate-400">•</span>
                   <span class="text-xs font-semibold text-slate-500">${p.tribunal_name || 'Tribunal de Justiça'}</span>
@@ -14914,6 +16091,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       await loadCalendarClientsAndLawsuits();
       await loadCalendarEvents();
       await loadCalendarSummary();
+      await loadActivityDrafts();
+      loadOfficeScratchpad();
     }
 
     async function loadCalendarLawyers() {
@@ -17405,6 +18584,1078 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
     function printAnnualEmployeeReport() {
       window.print();
+    }
+
+    // =========================================================================
+    // MODAL DE MODERAÇÃO DE COMENTÁRIOS DO BLOG & CONTROLE DE CONTEÚDO
+    // =========================================================================
+    function switchBlogSubTab(subtab) {
+      const postsSec = document.getElementById('admin-blog-subtab-posts');
+      const commentsSec = document.getElementById('admin-blog-subtab-comments');
+      const btnPosts = document.getElementById('blog-subtab-btn-posts');
+      const btnComments = document.getElementById('blog-subtab-btn-comments');
+      if (!postsSec || !commentsSec) return;
+
+      if (subtab === 'posts') {
+        postsSec.classList.remove('hidden');
+        commentsSec.classList.add('hidden');
+        if (btnPosts) btnPosts.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm transition-all border border-gold-400/60';
+        if (btnComments) btnComments.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all';
+        loadAdminBlogPosts();
+      } else {
+        postsSec.classList.add('hidden');
+        commentsSec.classList.remove('hidden');
+        if (btnComments) btnComments.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm transition-all border border-gold-400/60';
+        if (btnPosts) btnPosts.className = 'flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all';
+        loadAdminBlogComments();
+      }
+    }
+
+    let allBlogComments = [];
+    async function loadAdminBlogComments() {
+      try {
+        const res = await fetch('/api/admin/blog/comments', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          allBlogComments = data.comments || [];
+          const countEl = document.getElementById('blog-subtab-comments-count');
+          if (countEl) countEl.textContent = allBlogComments.length;
+          renderAdminBlogComments(allBlogComments);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar comentários do blog:', err);
+      }
+    }
+
+    function renderAdminBlogComments(comments) {
+      const tbody = document.getElementById('admin-blog-comments-table-body');
+      if (!tbody) return;
+      if (comments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">Nenhum comentário registrado nos artigos do blog.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = comments.map(c => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-5 py-3.5 max-w-xs">
+            <p class="font-bold text-navy-950 truncate">${c.post_title || c.post_slug || 'Artigo do Blog'}</p>
+            <a href="/blog" target="_blank" class="text-[11px] text-gold-700 hover:underline">Ver Artigo ↗</a>
+          </td>
+          <td class="px-5 py-3.5">
+            <p class="font-bold text-slate-900">${c.author_name}</p>
+            <p class="text-[11px] text-emerald-700 font-mono">${c.author_phone || 'S/ Whats'}</p>
+            <p class="text-[10px] text-slate-400 truncate">${c.author_email || 'S/ E-mail'}</p>
+          </td>
+          <td class="px-5 py-3.5 max-w-sm">
+            <p class="text-slate-800 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200 leading-relaxed">${c.comment_text || c.content || ''}</p>
+          </td>
+          <td class="px-5 py-3.5 whitespace-nowrap text-slate-500 text-[11px]">
+            <div>${c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '-'}</div>
+            <div class="text-[10px] text-slate-400 font-mono">IP: ${c.ip_address || '—'}</div>
+          </td>
+          <td class="px-5 py-3.5 text-center">
+            ${(c.is_hidden === 0 || c.is_hidden === false || c.is_visible)
+              ? '<span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] border border-emerald-300">✅ Visível</span>'
+              : '<span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px] border border-rose-300">👁️ Oculto</span>'}
+          </td>
+          <td class="px-5 py-3.5 text-right whitespace-nowrap">
+            <div class="flex items-center justify-end space-x-1.5">
+              <button onclick="toggleBlogCommentVisibility('${c.id}')" title="${(c.is_hidden === 0 || c.is_hidden === false) ? 'Esconder do Blog' : 'Tornar Visível'}" class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer">
+                ${(c.is_hidden === 0 || c.is_hidden === false) ? '👁️ Esconder' : '✅ Publicar'}
+              </button>
+              <button onclick="convertBlogCommentToLead('${c.id}')" title="Converter autor em Pré-Cliente / Lead" class="px-2.5 py-1.5 rounded-lg border border-gold-400 bg-gold-50 hover:bg-gold-100 text-gold-950 text-xs font-bold transition-all cursor-pointer">
+                👤 Lead
+              </button>
+              <button onclick="deleteBlogComment('${c.id}')" title="Excluir Comentário" class="px-2.5 py-1.5 rounded-lg border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-bold transition-all cursor-pointer">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function toggleBlogCommentVisibility(id) {
+      try {
+        const res = await fetch(`/api/admin/blog/comments/${id}/toggle-visibility`, {
+          method: 'PUT',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadAdminBlogComments();
+        } else {
+          alert('Erro ao alterar visibilidade: ' + (data.error || 'Falha no servidor.'));
+        }
+      } catch (err) {
+        alert('Erro de comunicação com o servidor.');
+      }
+    }
+
+    async function deleteBlogComment(id) {
+      if (!confirm('Deseja realmente excluir este comentário de forma permanente?')) return;
+      try {
+        const res = await fetch(`/api/admin/blog/comments/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadAdminBlogComments();
+        } else {
+          alert('Erro ao excluir comentário: ' + (data.error || 'Falha no servidor.'));
+        }
+      } catch (err) {
+        alert('Erro de comunicação com o servidor.');
+      }
+    }
+
+    async function convertBlogCommentToLead(id) {
+      try {
+        const res = await fetch(`/api/admin/blog/comments/${id}/convert-to-lead`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Autor do comentário convertido em Pré-Cliente / Lead com sucesso!');
+          loadLeads();
+        } else {
+          alert('Erro ao converter: ' + (data.error || 'Falha no servidor.'));
+        }
+      } catch (err) {
+        alert('Erro de comunicação com o servidor.');
+      }
+    }
+
+    function filterBlogComments() {
+      const term = (document.getElementById('admin-blog-comment-search')?.value || '').toLowerCase();
+      const status = document.getElementById('admin-blog-comment-status-filter')?.value || 'ALL';
+      const filtered = allBlogComments.filter(c => {
+        const matchTerm = !term || (
+          (c.author_name && c.author_name.toLowerCase().includes(term)) ||
+          (c.content && c.content.toLowerCase().includes(term)) ||
+          (c.author_email && c.author_email.toLowerCase().includes(term)) ||
+          (c.author_phone && c.author_phone.toLowerCase().includes(term)) ||
+          (c.post_title && c.post_title.toLowerCase().includes(term))
+        );
+        const matchStatus = status === 'ALL' || (status === 'visible' && c.is_visible) || (status === 'hidden' && !c.is_visible);
+        return matchTerm && matchStatus;
+      });
+      renderAdminBlogComments(filtered);
+    }
+
+    // =========================================================================
+    // BLOCO DE RASCUNHO DE ATIVIDADES, PRAZOS & DESPACHOS DO ESCRITÓRIO
+    // =========================================================================
+    let allActivityDrafts = [];
+
+    async function loadActivityDrafts() {
+      try {
+        const res = await fetch('/api/calendar/drafts', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          allActivityDrafts = data.drafts || [];
+          const badge = document.getElementById('draft-total-badge');
+          if (badge) badge.textContent = `${allActivityDrafts.length} rascunhos`;
+          renderActivityDrafts(allActivityDrafts);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar rascunhos de atividades:', err);
+      }
+    }
+
+    function renderActivityDrafts(drafts) {
+      const container = document.getElementById('activity-drafts-table-body') || document.getElementById('calendar-drafts-list');
+      if (!container) return;
+      if (!drafts || drafts.length === 0) {
+        container.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-8 text-slate-400">
+              Nenhum rascunho de atividade cadastrado. Clique em "+ Novo Rascunho" para criar despachos e prazos.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      container.innerHTML = drafts.map(d => {
+        const statusBadge = d.status === 'concluido' 
+          ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">✅ Concluído</span>'
+          : d.status === 'em_andamento'
+          ? '<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">⏳ Em Andamento</span>'
+          : '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">📝 Rascunho</span>';
+
+        const deadlineDisplay = d.deadline_date ? (d.deadline_date.includes('-') ? d.deadline_date.split('-').reverse().join('/') : d.deadline_date) : 'Sem prazo';
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors text-xs border-b border-slate-100">
+            <td class="px-4 py-3 font-bold text-navy-950">
+              <span class="block">${d.activity_title}</span>
+              <span class="text-[10px] text-slate-400 uppercase">${d.tribunal || 'TJMG'}</span>
+            </td>
+            <td class="px-4 py-3 text-slate-700">${d.lawyer_name || 'Dr. Jorge Alvim'}</td>
+            <td class="px-4 py-3 text-slate-700">
+              <div class="font-semibold text-emerald-800">${d.client_name || '—'}</div>
+              ${d.defendant_name ? `<div class="text-[10px] text-rose-700 font-medium">Réu: ${d.defendant_name}</div>` : ''}
+            </td>
+            <td class="px-4 py-3 text-slate-600 font-mono text-[11px]">
+              <div>${d.lawsuit_number || 'S/ Processo'}</div>
+              ${d.court_branch ? `<div class="text-[10px] text-slate-400 font-sans">${d.court_branch}</div>` : ''}
+            </td>
+            <td class="px-4 py-3 font-bold text-rose-700 font-mono">${deadlineDisplay}</td>
+            <td class="px-4 py-3 text-slate-600 max-w-xs truncate" title="${(d.notes || '').replace(/"/g, '&quot;')}">${d.notes || '—'}</td>
+            <td class="px-4 py-3 text-center">${statusBadge}</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">
+              <button onclick="openActivityDraftModal('${d.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer mr-1">
+                ✏️
+              </button>
+              <button onclick="deleteActivityDraft('${d.id}')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-all cursor-pointer">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openActivityDraftModal(draftId = null) {
+      const modal = document.getElementById('modal-activity-draft');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+
+      // Populate dropdowns from allClients and allLawsuits
+      const clientSel = document.getElementById('draft-client-select');
+      if (clientSel && typeof allClients !== 'undefined' && allClients) {
+        clientSel.innerHTML = '<option value="">Selecione um cliente (ou digite abaixo)...</option>' +
+          allClients.map(c => `<option value="${c.id}" data-name="${c.full_name}">${c.full_name}</option>`).join('');
+      }
+
+      const lawsuitSel = document.getElementById('draft-lawsuit-select');
+      if (lawsuitSel && typeof allLawsuits !== 'undefined' && allLawsuits) {
+        lawsuitSel.innerHTML = '<option value="">Selecione um processo cadastrado...</option>' +
+          allLawsuits.map(l => `<option value="${l.id}" data-number="${l.lawsuit_number}" data-client="${l.client_name || ''}" data-court="${l.court_branch || ''}">${l.lawsuit_number} - ${l.client_name || 'S/ Cliente'}</option>`).join('');
+      }
+
+      // Populate lawyer dropdown
+      const lawyerSel = document.getElementById('draft-lawyer-select');
+      if (lawyerSel && typeof allUsers !== 'undefined' && allUsers && allUsers.length > 0) {
+        lawyerSel.innerHTML = allUsers.map(u => `<option value="${u.name || u.username}">${u.name || u.username} (${u.role || 'Advogado'})</option>`).join('');
+      }
+
+      if (draftId) {
+        const draft = allActivityDrafts.find(d => String(d.id) === String(draftId));
+        if (draft) {
+          const dId = document.getElementById('draft-id');
+          if (dId) dId.value = draft.id;
+          const dTitle = document.getElementById('draft-modal-title');
+          if (dTitle) dTitle.textContent = 'Editar Rascunho de Atividade';
+          const dLawyer = document.getElementById('draft-lawyer-select');
+          if (dLawyer) dLawyer.value = draft.lawyer_name || '';
+          const dClient = document.getElementById('draft-client-name');
+          if (dClient) dClient.value = draft.client_name || '';
+          const dDef = document.getElementById('draft-defendant-name');
+          if (dDef) dDef.value = draft.defendant_name || '';
+          const dLaw = document.getElementById('draft-lawsuit-number');
+          if (dLaw) dLaw.value = draft.lawsuit_number || '';
+          const dTrib = document.getElementById('draft-tribunal');
+          if (dTrib) dTrib.value = draft.tribunal || 'TJMG';
+          const dCourt = document.getElementById('draft-court-branch');
+          if (dCourt) dCourt.value = draft.court_branch || '';
+          const dAct = document.getElementById('draft-activity-title');
+          if (dAct) dAct.value = draft.activity_title || '';
+          const dDead = document.getElementById('draft-deadline-date');
+          if (dDead) dDead.value = draft.deadline_date || '';
+          const dNotes = document.getElementById('draft-notes');
+          if (dNotes) dNotes.value = draft.notes || '';
+          const dStatus = document.getElementById('draft-status-select');
+          if (dStatus) dStatus.value = draft.status || 'rascunho';
+          return;
+        }
+      }
+
+      // New Draft Reset
+      const dId = document.getElementById('draft-id');
+      if (dId) dId.value = '';
+      const dTitle = document.getElementById('draft-modal-title');
+      if (dTitle) dTitle.textContent = 'Novo Rascunho de Atividade & Prazo';
+      const form = document.getElementById('activity-draft-form');
+      if (form) form.reset();
+      const today = new Date().toISOString().split('T')[0];
+      const dDead = document.getElementById('draft-deadline-date');
+      if (dDead) dDead.value = today;
+    }
+
+    function closeActivityDraftModal() {
+      const modal = document.getElementById('modal-activity-draft');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleDraftClientChange(clientId) {
+      if (!clientId) return;
+      const client = (typeof allClients !== 'undefined' && allClients) ? allClients.find(c => String(c.id) === String(clientId)) : null;
+      if (client) {
+        const cName = document.getElementById('draft-client-name');
+        if (cName) cName.value = client.full_name;
+        // Find any lawsuit for this client
+        const clientLawsuit = (typeof allLawsuits !== 'undefined' && allLawsuits) ? allLawsuits.find(l => String(l.client_id) === String(clientId) || (l.client_name && l.client_name.toLowerCase() === client.full_name.toLowerCase())) : null;
+        if (clientLawsuit) {
+          const lNum = document.getElementById('draft-lawsuit-number');
+          if (lNum) lNum.value = clientLawsuit.lawsuit_number || '';
+          const cBranch = document.getElementById('draft-court-branch');
+          if (cBranch) cBranch.value = clientLawsuit.court_branch || '';
+          const dTrib = document.getElementById('draft-tribunal');
+          if (dTrib) {
+            if (clientLawsuit.court_branch && clientLawsuit.court_branch.includes('TRF')) dTrib.value = 'TRF6';
+            else if (clientLawsuit.court_branch && clientLawsuit.court_branch.includes('TRT')) dTrib.value = 'TRT3';
+          }
+        }
+      }
+    }
+
+    function handleDraftLawsuitChange(lawsuitId) {
+      if (!lawsuitId) return;
+      const lawsuit = (typeof allLawsuits !== 'undefined' && allLawsuits) ? allLawsuits.find(l => String(l.id) === String(lawsuitId)) : null;
+      if (lawsuit) {
+        const lNum = document.getElementById('draft-lawsuit-number');
+        if (lNum) lNum.value = lawsuit.lawsuit_number || '';
+        const cName = document.getElementById('draft-client-name');
+        if (cName && lawsuit.client_name) cName.value = lawsuit.client_name;
+        const cBranch = document.getElementById('draft-court-branch');
+        if (cBranch && lawsuit.court_branch) cBranch.value = lawsuit.court_branch;
+        const dTrib = document.getElementById('draft-tribunal');
+        if (dTrib && lawsuit.court_branch) {
+          if (lawsuit.court_branch.includes('TRF')) dTrib.value = 'TRF6';
+          else if (lawsuit.court_branch.includes('TRT')) dTrib.value = 'TRT3';
+        }
+      }
+    }
+
+    async function loadLatestIntimationIntoDraft() {
+      try {
+        const res = await fetch('/api/publications/list', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.publications && data.publications.length > 0) {
+          const pub = data.publications[0];
+          openActivityDraftModal();
+          const dAct = document.getElementById('draft-activity-title');
+          if (dAct) dAct.value = `Cumprir Intimação: ${pub.title || pub.lawsuit_number || 'Andamento'}`;
+          const lNum = document.getElementById('draft-lawsuit-number');
+          if (lNum && pub.lawsuit_number) lNum.value = pub.lawsuit_number;
+          const dTrib = document.getElementById('draft-tribunal');
+          if (dTrib && pub.tribunal) dTrib.value = pub.tribunal;
+          const cBranch = document.getElementById('draft-court-branch');
+          if (cBranch && pub.court_branch) cBranch.value = pub.court_branch;
+          const cName = document.getElementById('draft-client-name');
+          if (cName && pub.client_name) cName.value = pub.client_name;
+          const dDead = document.getElementById('draft-deadline-date');
+          if (dDead && pub.deadline_date) dDead.value = pub.deadline_date;
+          const dNotes = document.getElementById('draft-notes');
+          if (dNotes) dNotes.value = `[PUXADO DA INTIMAÇÃO EM ${new Date().toLocaleDateString('pt-BR')}]\n` + (pub.content || pub.summary || 'Ver despacho oficial.');
+          alert('⚡ Dados da intimação mais recente importados para o rascunho com sucesso!');
+        } else {
+          alert('Nenhuma intimação recente encontrada para puxar.');
+        }
+      } catch (err) {
+        alert('Erro ao puxar dados da intimação.');
+      }
+    }
+
+    async function handleSaveActivityDraft(e) {
+      e.preventDefault();
+      const id = document.getElementById('draft-id')?.value;
+      const payload = {
+        id: id ? parseInt(id, 10) : undefined,
+        lawyer_name: document.getElementById('draft-lawyer-select')?.value || 'Dr. Jorge Alvim',
+        client_name: document.getElementById('draft-client-name')?.value || '',
+        defendant_name: document.getElementById('draft-defendant-name')?.value || '',
+        lawsuit_number: document.getElementById('draft-lawsuit-number')?.value || '',
+        tribunal: document.getElementById('draft-tribunal')?.value || 'TJMG',
+        court_branch: document.getElementById('draft-court-branch')?.value || '',
+        activity_title: document.getElementById('draft-activity-title')?.value || 'Atividade Jurídica',
+        deadline_date: document.getElementById('draft-deadline-date')?.value || '',
+        notes: document.getElementById('draft-notes')?.value || '',
+        status: document.getElementById('draft-status-select')?.value || 'rascunho',
+        create_calendar_event: document.getElementById('draft-create-calendar-event')?.checked || false
+      };
+
+      try {
+        const res = await fetch('/api/calendar/drafts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          closeActivityDraftModal();
+          loadActivityDrafts();
+          if (payload.create_calendar_event && typeof loadCalendarEvents === 'function') loadCalendarEvents();
+        } else {
+          alert('Erro ao salvar rascunho: ' + (data.error || 'Falha no servidor.'));
+        }
+      } catch (err) {
+        alert('Erro de conexão ao salvar rascunho.');
+      }
+    }
+
+    async function deleteActivityDraft(id) {
+      if (!confirm('Deseja realmente excluir este rascunho de atividade?')) return;
+      try {
+        const res = await fetch(`/api/calendar/drafts/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadActivityDrafts();
+        } else {
+          alert('Erro ao excluir: ' + (data.error || 'Falha no servidor.'));
+        }
+      } catch (err) {
+        alert('Erro de conexão ao excluir rascunho.');
+      }
+    }
+
+    function filterActivityDrafts() {
+      const term = (document.getElementById('search-drafts-input')?.value || document.getElementById('draft-search-input')?.value || '').toLowerCase();
+      const status = document.getElementById('filter-draft-status')?.value || document.getElementById('draft-status-filter')?.value || 'ALL';
+      const filtered = allActivityDrafts.filter(d => {
+        const matchTerm = !term || (
+          (d.activity_title && d.activity_title.toLowerCase().includes(term)) ||
+          (d.client_name && d.client_name.toLowerCase().includes(term)) ||
+          (d.defendant_name && d.defendant_name.toLowerCase().includes(term)) ||
+          (d.lawsuit_number && d.lawsuit_number.toLowerCase().includes(term)) ||
+          (d.notes && d.notes.toLowerCase().includes(term))
+        );
+        const matchStatus = status === 'ALL' || d.status === status;
+        return matchTerm && matchStatus;
+      });
+      renderActivityDrafts(filtered);
+    }
+
+    function handleOfficeScratchpadInput() {
+      const textarea = document.getElementById('general-office-scratchpad') || document.getElementById('office-scratchpad-textarea');
+      if (textarea) {
+        localStorage.setItem('ja_office_scratchpad', textarea.value);
+        const ind = document.getElementById('scratchpad-saved-indicator');
+        if (ind) {
+          ind.textContent = 'Salvo às ' + new Date().toLocaleTimeString('pt-BR');
+        }
+      }
+    }
+
+    function loadOfficeScratchpad() {
+      const saved = localStorage.getItem('ja_office_scratchpad');
+      const textarea = document.getElementById('general-office-scratchpad') || document.getElementById('office-scratchpad-textarea');
+      if (textarea && saved) textarea.value = saved;
+    }
+
+    // =========================================================================
+    // CALCULADORA E EMISSÃO DE RESCISÃO TRABALHISTA CLT (TRCT)
+    // =========================================================================
+    let currentLaborCalculation = null;
+    let allLaborTerminations = [];
+
+    function openLaborTerminationModal() {
+      const modal = document.getElementById('modal-labor-termination');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      const form = document.getElementById('labor-termination-form');
+      if (form) form.reset();
+      const resultsSec = document.getElementById('labor-calculation-results');
+      if (resultsSec) resultsSec.classList.add('hidden');
+      
+      const today = new Date();
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(today.getFullYear() - 1);
+      const adm = document.getElementById('labor-admission-date');
+      if (adm) adm.value = oneYearAgo.toISOString().split('T')[0];
+      const dis = document.getElementById('labor-dismissal-date');
+      if (dis) dis.value = today.toISOString().split('T')[0];
+      const cli = document.getElementById('labor-client-name');
+      if (cli) cli.value = 'Jorge Alvim Advocacia';
+    }
+
+    function closeLaborTerminationModal() {
+      const modal = document.getElementById('modal-labor-termination');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleCalculateLaborTermination(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const payload = {
+        employee_name: document.getElementById('labor-emp-name')?.value || 'Empregado',
+        client_name: document.getElementById('labor-client-name')?.value || 'Empresa',
+        lawsuit_number: document.getElementById('labor-lawsuit-number')?.value || '',
+        admission_date: document.getElementById('labor-admission-date')?.value || '',
+        dismissal_date: document.getElementById('labor-dismissal-date')?.value || '',
+        base_salary: parseFloat(document.getElementById('labor-base-salary')?.value) || 0,
+        dismissal_type: document.getElementById('labor-dismissal-type')?.value || 'sem_justa_causa',
+        notice_type: document.getElementById('labor-notice-type')?.value || 'indenizado',
+        vacations_overdue_years: parseInt(document.getElementById('labor-vacations-overdue')?.value, 10) || 0,
+        fgts_balance: parseFloat(document.getElementById('labor-fgts-balance')?.value) || 0,
+        other_credits: parseFloat(document.getElementById('labor-other-credits')?.value) || 0,
+        other_discounts: parseFloat(document.getElementById('labor-other-discounts')?.value) || 0
+      };
+
+      const btn = document.getElementById('btn-calc-labor');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>Calculando Verbas CLT...</span>';
+      }
+
+      try {
+        const res = await fetch('/api/financial/labor-termination/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentLaborCalculation = { ...payload, calculation: data.calculation };
+          displayLaborCalculationResults(data.calculation);
+        } else {
+          alert('Erro no cálculo: ' + (data.error || 'Verifique os dados informados.'));
+        }
+      } catch (err) {
+        alert('Erro ao calcular rescisão contratual.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>⚡ Calcular Rescisão & Discriminativo</span>';
+        }
+      }
+    }
+
+    function displayLaborCalculationResults(c) {
+      const container = document.getElementById('labor-calculation-results');
+      if (!container) return;
+      container.classList.remove('hidden');
+
+      const earnings = c.earnings || {};
+      const deductions = c.deductions || {};
+      const summary = c.summary || {};
+
+      const daysMonth = c.days_in_last_month || c.salary_balance_days || 0;
+      const salaryBal = earnings.salary_balance !== undefined ? earnings.salary_balance : (c.salary_balance || 0);
+      const noticeDays = c.notice_days || 0;
+      const noticeVal = earnings.notice_value !== undefined ? earnings.notice_value : (c.notice_value || 0);
+      const thirtMonths = c.thirteenth_months || 0;
+      const thirtVal = earnings.thirteenth_salary !== undefined ? earnings.thirteenth_salary : (c.thirteenth_value || 0);
+      const vacMonths = c.vacation_months || 0;
+      const vacProp = earnings.vacation_proportional !== undefined ? (earnings.vacation_proportional + (earnings.vacation_proportional_third || 0)) : (c.vacation_proportional_total || 0);
+      const vacOverdue = earnings.vacation_overdue !== undefined ? (earnings.vacation_overdue + (earnings.vacation_overdue_third || 0)) : (c.vacation_overdue_total || 0);
+      const fgtsRate = earnings.fgts_fine_rate || `${((c.fgts_fine_rate || 0.4) * 100).toFixed(0)}%`;
+      const fgtsFine = earnings.fgts_fine !== undefined ? earnings.fgts_fine : (c.fgts_fine_value || 0);
+      const grossTotal = summary.gross_total !== undefined ? summary.gross_total : (c.gross_total || 0);
+
+      const inssSal = deductions.inss_salary !== undefined ? deductions.inss_salary : (c.inss_salary || 0);
+      const inss13 = deductions.inss_thirteenth !== undefined ? deductions.inss_thirteenth : (c.inss_13 || 0);
+      const noticeDisc = deductions.notice_discount !== undefined ? deductions.notice_discount : (c.notice_discount || 0);
+      const otherDisc = deductions.other_discounts !== undefined ? deductions.other_discounts : (c.other_discounts || 0);
+      const dedTotal = summary.total_deductions !== undefined ? summary.total_deductions : (c.deductions_total || 0);
+      const netTotal = summary.net_total !== undefined ? summary.net_total : (c.net_total || 0);
+
+      const elDaysMonth = document.getElementById('res-days-month'); if (elDaysMonth) elDaysMonth.textContent = daysMonth;
+      const elSalBal = document.getElementById('res-salary-balance'); if (elSalBal) elSalBal.textContent = formatBRL(salaryBal);
+      const elNotDays = document.getElementById('res-notice-days'); if (elNotDays) elNotDays.textContent = noticeDays;
+      const elNotVal = document.getElementById('res-notice-val'); if (elNotVal) elNotVal.textContent = formatBRL(noticeVal);
+      const elThirtM = document.getElementById('res-13-months'); if (elThirtM) elThirtM.textContent = thirtMonths;
+      const elThirtV = document.getElementById('res-13-val'); if (elThirtV) elThirtV.textContent = formatBRL(thirtVal);
+      const elVacM = document.getElementById('res-vac-months'); if (elVacM) elVacM.textContent = vacMonths;
+      const elVacP = document.getElementById('res-vac-prop'); if (elVacP) elVacP.textContent = formatBRL(vacProp);
+      const elVacO = document.getElementById('res-vac-overdue'); if (elVacO) elVacO.textContent = formatBRL(vacOverdue);
+      const elFgtsR = document.getElementById('res-fgts-rate'); if (elFgtsR) elFgtsR.textContent = fgtsRate;
+      const elFgtsF = document.getElementById('res-fgts-fine'); if (elFgtsF) elFgtsF.textContent = formatBRL(fgtsFine);
+      const elGross = document.getElementById('res-gross-total'); if (elGross) elGross.textContent = formatBRL(grossTotal);
+
+      const elInssS = document.getElementById('res-inss-salary'); if (elInssS) elInssS.textContent = formatBRL(inssSal);
+      const elInss13 = document.getElementById('res-inss-13'); if (elInss13) elInss13.textContent = formatBRL(inss13);
+      const elNotDisc = document.getElementById('res-notice-disc'); if (elNotDisc) elNotDisc.textContent = formatBRL(noticeDisc);
+      const elOthDisc = document.getElementById('res-other-disc'); if (elOthDisc) elOthDisc.textContent = formatBRL(otherDisc);
+      const elDedTot = document.getElementById('res-deductions-total'); if (elDedTot) elDedTot.textContent = formatBRL(dedTotal);
+
+      const elNetTot = document.getElementById('res-net-total'); if (elNetTot) elNetTot.textContent = formatBRL(netTotal);
+    }
+
+    async function saveLaborTerminationRecord() {
+      if (!currentLaborCalculation) {
+        alert('Realize o cálculo primeiro antes de salvar.');
+        return;
+      }
+
+      const payload = {
+        ...currentLaborCalculation,
+        create_financial_transaction: document.getElementById('labor-create-financial-tx')?.checked || false
+      };
+
+      try {
+        const res = await fetch('/api/financial/labor-termination/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Termo de Rescisão Trabalhista CLT salvo e registrado no histórico!');
+          closeLaborTerminationModal();
+          loadLaborTerminations();
+          if (payload.create_financial_transaction) loadFinancialTransactions();
+        } else {
+          alert('Erro ao salvar rescisão: ' + (data.error || 'Falha no servidor.'));
+        }
+      } catch (err) {
+        alert('Erro de conexão ao salvar rescisão trabalhista.');
+      }
+    }
+
+    async function loadLaborTerminations() {
+      try {
+        const res = await fetch('/api/financial/labor-terminations', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          allLaborTerminations = data.terminations || [];
+          renderLaborTerminationsTable(allLaborTerminations);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar rescisões trabalhistas:', err);
+      }
+    }
+
+    function renderLaborTerminationsTable(list) {
+      const tbody = document.getElementById('labor-terminations-table-body');
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400">Nenhuma rescisão trabalhista registrada. Clique em "+ Nova Rescisão CLT" para calcular.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-slate-50 transition-colors text-xs">
+          <td class="px-5 py-3.5 font-bold text-navy-950">${item.employee_name}</td>
+          <td class="px-5 py-3.5 text-slate-600">${item.client_name || 'Jorge Alvim Advocacia'}</td>
+          <td class="px-5 py-3.5"><span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold uppercase">${(item.dismissal_type || '').replace(/_/g, ' ')}</span></td>
+          <td class="px-5 py-3.5 text-slate-500 font-mono text-[11px]">${item.admission_date} a ${item.dismissal_date}</td>
+          <td class="px-5 py-3.5 text-right font-mono font-bold text-slate-900">${formatBRL(item.gross_total)}</td>
+          <td class="px-5 py-3.5 text-right font-mono font-extrabold text-emerald-700">${formatBRL(item.net_total)}</td>
+          <td class="px-5 py-3.5 text-right whitespace-nowrap">
+            <button onclick="printSavedLaborTRCT('${item.id}')" class="px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-900 font-bold border border-teal-200 cursor-pointer">
+              🖨️ TRCT
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterLaborTerminations() {
+      const term = (document.getElementById('labor-search-input')?.value || '').toLowerCase();
+      const filtered = allLaborTerminations.filter(item => 
+        !term || (item.employee_name && item.employee_name.toLowerCase().includes(term)) ||
+        (item.client_name && item.client_name.toLowerCase().includes(term)) ||
+        (item.dismissal_type && item.dismissal_type.toLowerCase().includes(term))
+      );
+      renderLaborTerminationsTable(filtered);
+    }
+
+    function printLaborTRCT() {
+      if (!currentLaborCalculation) {
+        alert('Calcule a rescisão primeiro.');
+        return;
+      }
+      const c = currentLaborCalculation.calculation;
+      const w = window.open('', '_blank');
+      w.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>TRCT - Termo de Rescisão de Contrato de Trabalho</title>
+          <style>
+            body { font-family: Arial, sans-serif; font-size: 11px; color: #1e293b; padding: 20px; line-height: 1.4; }
+            .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 15px; }
+            .header h2 { margin: 0; font-size: 16px; color: #0f172a; }
+            .section { border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+            .section-title { font-weight: bold; background: #f1f5f9; padding: 4px 8px; margin: -10px -10px 8px -10px; border-bottom: 1px solid #cbd5e1; text-transform: uppercase; font-size: 10px; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+            .table th, .table td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; }
+            .table th { background: #f8fafc; font-weight: bold; }
+            .text-right { text-align: right; }
+            .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; text-align: center; }
+            .sig-line { border-top: 1px solid #000; padding-top: 5px; font-size: 10px; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>TERMO DE RESCISÃO DO CONTRATO DE TRABALHO - TRCT</h2>
+            <p style="margin: 3px 0 0 0;">CLT - Consolidação das Leis do Trabalho & Lei nº 12.506/2011</p>
+            <p style="margin: 2px 0 0 0; font-size: 10px; color: #64748b;">Jorge Alvim Advocacia & Consultoria Jurídica - OAB/MG 222.943</p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">1. Identificação do Empregador & Empregado</div>
+            <div class="grid">
+              <div><strong>Empregador:</strong> ${currentLaborCalculation.client_name || 'Jorge Alvim Advocacia'}</div>
+              <div><strong>Empregado:</strong> ${currentLaborCalculation.employee_name}</div>
+              <div><strong>Admissão:</strong> ${currentLaborCalculation.admission_date}</div>
+              <div><strong>Afastamento / Demissão:</strong> ${currentLaborCalculation.dismissal_date}</div>
+              <div><strong>Causa do Afastamento:</strong> ${currentLaborCalculation.dismissal_type.toUpperCase().replace(/_/g, ' ')}</div>
+              <div><strong>Salário Base Rescisório:</strong> ${formatBRL(currentLaborCalculation.base_salary)}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">2. Discriminação das Verbas Rescisórias (Proventos)</div>
+            <table class="table">
+              <thead><tr><th>Rubrica</th><th class="text-right">Referência</th><th class="text-right">Valor Bruto</th></tr></thead>
+              <tbody>
+                <tr><td>Saldo de Salário</td><td class="text-right">${c.salary_balance_days} dias</td><td class="text-right">${formatBRL(c.salary_balance)}</td></tr>
+                <tr><td>Aviso Prévio Indenizado / Proporcional (Lei 12.506/11)</td><td class="text-right">${c.notice_days} dias</td><td class="text-right">${formatBRL(c.notice_value)}</td></tr>
+                <tr><td>13º Salário Proporcional</td><td class="text-right">${c.thirteenth_months}/12 avos</td><td class="text-right">${formatBRL(c.thirteenth_value)}</td></tr>
+                <tr><td>Férias Proporcionais Constitucionais (+ 1/3 CF/88)</td><td class="text-right">${c.vacation_months}/12 avos</td><td class="text-right">${formatBRL(c.vacation_proportional_total)}</td></tr>
+                <tr><td>Férias Vencidas Simples/Dobro (+ 1/3 CF/88)</td><td class="text-right">${c.vacations_overdue_years} período(s)</td><td class="text-right">${formatBRL(c.vacation_overdue_total)}</td></tr>
+                <tr><td>Multa Rescisória do FGTS (${(c.fgts_fine_rate * 100).toFixed(0)}%)</td><td class="text-right">Saldo ${formatBRL(c.fgts_balance)}</td><td class="text-right">${formatBRL(c.fgts_fine_value)}</td></tr>
+                <tr><td>Outros Proventos / Adicionais</td><td class="text-right">-</td><td class="text-right">${formatBRL(c.other_credits)}</td></tr>
+                <tr style="font-weight: bold; background: #f8fafc;"><td>TOTAL DE PROVENTOS BRUTO</td><td>-</td><td class="text-right">${formatBRL(c.gross_total)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="section-title">3. Deduções & Descontos Legais</div>
+            <table class="table">
+              <thead><tr><th>Rubrica de Desconto</th><th class="text-right">Valor</th></tr></thead>
+              <tbody>
+                <tr><td>Previdência Social (INSS s/ Saldo de Salário)</td><td class="text-right">-${formatBRL(c.inss_salary)}</td></tr>
+                <tr><td>Previdência Social (INSS s/ 13º Salário)</td><td class="text-right">-${formatBRL(c.inss_13)}</td></tr>
+                <tr><td>Desconto de Aviso Prévio Não Cumprido</td><td class="text-right">-${formatBRL(c.notice_discount)}</td></tr>
+                <tr><td>Outros Descontos / Adiantamentos / Faltas</td><td class="text-right">-${formatBRL(c.other_discounts)}</td></tr>
+                <tr style="font-weight: bold; background: #f8fafc;"><td>TOTAL DE DEDUÇÕES</td><td class="text-right">-${formatBRL(c.deductions_total)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section" style="background: #f0fdf4; border-color: #86efac;">
+            <div class="grid" style="font-size: 13px; font-weight: bold; color: #166534;">
+              <div>VALOR LÍQUIDO A RECEBER:</div>
+              <div class="text-right">${formatBRL(c.net_total)}</div>
+            </div>
+          </div>
+
+          <div class="signatures">
+            <div>
+              <div class="sig-line">
+                <strong>${currentLaborCalculation.client_name || 'Jorge Alvim Advocacia'}</strong><br>
+                Empregador / Responsável Legal
+              </div>
+            </div>
+            <div>
+              <div class="sig-line">
+                <strong>${currentLaborCalculation.employee_name}</strong><br>
+                Empregado / Assistido
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+      w.document.close();
+      setTimeout(() => w.print(), 500);
+    }
+
+    function printSavedLaborTRCT(id) {
+      const item = allLaborTerminations.find(t => String(t.id) === String(id));
+      if (!item) return;
+      currentLaborCalculation = {
+        employee_name: item.employee_name,
+        client_name: item.client_name,
+        admission_date: item.admission_date,
+        dismissal_date: item.dismissal_date,
+        dismissal_type: item.dismissal_type,
+        base_salary: item.base_salary,
+        calculation: {
+          salary_balance_days: item.salary_balance_days || 0,
+          salary_balance: item.salary_balance || 0,
+          notice_days: item.notice_days || 0,
+          notice_value: item.notice_value || 0,
+          thirteenth_months: item.thirteenth_months || 0,
+          thirteenth_value: item.thirteenth_value || 0,
+          vacation_months: item.vacation_months || 0,
+          vacation_proportional_total: item.vacation_proportional_total || 0,
+          vacations_overdue_years: item.vacations_overdue_years || 0,
+          vacation_overdue_total: item.vacation_overdue_total || 0,
+          fgts_fine_rate: item.fgts_fine_rate || 0.4,
+          fgts_balance: item.fgts_balance || 0,
+          fgts_fine_value: item.fgts_fine_value || 0,
+          other_credits: item.other_credits || 0,
+          gross_total: item.gross_total || 0,
+          inss_salary: item.inss_salary || 0,
+          inss_13: item.inss_13 || 0,
+          notice_discount: item.notice_discount || 0,
+          other_discounts: item.other_discounts || 0,
+          deductions_total: item.deductions_total || 0,
+          net_total: item.net_total || 0
+        }
+      };
+      printLaborTRCT();
+    }
+
+    // =========================================================================
+    // INICIALIZADOR DE GRÁFICOS EM TODAS AS 16 ABAS DO PAINEL (CHART.JS BI)
+    // =========================================================================
+    window.panelCharts = {};
+
+    function safeCreateChart(canvasId, config) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || typeof Chart === 'undefined') return;
+      if (window.panelCharts[canvasId]) {
+        window.panelCharts[canvasId].destroy();
+        delete window.panelCharts[canvasId];
+      }
+      try {
+        window.panelCharts[canvasId] = new Chart(canvas, config);
+      } catch (err) {
+        console.warn(`Aviso ao criar gráfico ${canvasId}:`, err);
+      }
+    }
+
+    function renderTabChart(tab) {
+      if (typeof Chart === 'undefined') return;
+      setTimeout(() => {
+        switch(tab) {
+          case 'leads':
+            safeCreateChart('leadsFunnelChart', {
+              type: 'bar',
+              data: {
+                labels: ['Novos Contatos', 'Em Qualificação', 'Proposta Enviada', 'Convertidos'],
+                datasets: [{
+                  label: 'Leads & Captação',
+                  data: [allLeads.length || 12, Math.round((allLeads.length || 12) * 0.7), Math.round((allLeads.length || 12) * 0.4), Math.round((allLeads.length || 12) * 0.25)],
+                  backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'],
+                  borderRadius: 8
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'clients':
+            safeCreateChart('clientsDistributionChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['Pessoa Física (PF)', 'Pessoa Jurídica (PJ)', 'Trabalhista', 'Previdenciário'],
+                datasets: [{
+                  data: [65, 20, 10, 5],
+                  backgroundColor: ['#d97706', '#0284c7', '#059669', '#7c3aed']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'lawsuits':
+            safeCreateChart('lawsuitsFaseChart', {
+              type: 'bar',
+              data: {
+                labels: ['Inicial', 'Instrução', 'Recurso / 2ª Instância', 'Execução / Cumprimento', 'Baixado'],
+                datasets: [{
+                  label: 'Processos',
+                  data: [allLawsuits.length || 8, Math.round((allLawsuits.length || 8) * 0.6), Math.round((allLawsuits.length || 8) * 0.3), Math.round((allLawsuits.length || 8) * 0.4), 2],
+                  backgroundColor: '#d97706',
+                  borderRadius: 6
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'calendar':
+            safeCreateChart('calendarDeadlinesChart', {
+              type: 'bar',
+              data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Próx. Semana'],
+                datasets: [{
+                  label: 'Prazos Fatais',
+                  data: [2, 4, 1, 3, 5, 8],
+                  backgroundColor: '#dc2626',
+                  borderRadius: 6
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'publications':
+            safeCreateChart('publicationsTribunalChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['TJMG', 'TRF6', 'TRT3', 'TJSP', 'STJ/STF'],
+                datasets: [{
+                  data: [55, 20, 15, 6, 4],
+                  backgroundColor: ['#1e3a8a', '#0284c7', '#0d9488', '#f59e0b', '#6366f1']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'docs':
+            safeCreateChart('docsTypesChart', {
+              type: 'bar',
+              data: {
+                labels: ['Procurações', 'Contratos', 'Declaração Hipossuf.', 'Petições', 'Notificações'],
+                datasets: [{
+                  label: 'Docs Gerados',
+                  data: [15, 12, 10, 8, 5],
+                  backgroundColor: '#4f46e5',
+                  borderRadius: 6
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'finance':
+            safeCreateChart('financeMonthlyChart', {
+              type: 'line',
+              data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                datasets: [
+                  { label: 'Honorários (Entradas)', data: [18000, 22500, 29000, 31200, 35000, 38500], borderColor: '#10b981', tension: 0.3, fill: false },
+                  { label: 'Despesas (Saídas)', data: [8000, 9200, 11000, 10500, 12000, 11800], borderColor: '#f43f5e', tension: 0.3, fill: false }
+                ]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            safeCreateChart('financeCategoryChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['Honorários Contratuais', 'Honorários Sucumbenciais', 'Consultoria', 'Alvarás'],
+                datasets: [{
+                  data: [50, 25, 15, 10],
+                  backgroundColor: ['#10b981', '#f59e0b', '#0ea5e9', '#8b5cf6']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'nfse':
+            safeCreateChart('nfseStatusChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['Emitidas / Autorizadas', 'Canceladas', 'RPS em Processamento'],
+                datasets: [{
+                  data: [85, 5, 10],
+                  backgroundColor: ['#059669', '#dc2626', '#f59e0b']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'blog':
+            safeCreateChart('blogStatsChart', {
+              type: 'bar',
+              data: {
+                labels: ['Trânsito & CNH', 'Consumidor & Bancário', 'Civil & Família', 'Trabalhista & CLT', 'Previdenciário'],
+                datasets: [
+                  { label: 'Visualizações', data: [340, 280, 210, 190, 150], backgroundColor: '#3b82f6', borderRadius: 6 },
+                  { label: 'Curtidas ❤️', data: [45, 38, 28, 22, 19], backgroundColor: '#ef4444', borderRadius: 6 },
+                  { label: 'Comentários 💬', data: [18, 12, 9, 8, 5], backgroundColor: '#10b981', borderRadius: 6 }
+                ]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'audit':
+            safeCreateChart('auditModulesChart', {
+              type: 'bar',
+              data: {
+                labels: ['Clientes', 'Processos', 'Financeiro', 'Documentos', 'Acessos / Login'],
+                datasets: [{
+                  label: 'Eventos Auditados',
+                  data: [42, 38, 29, 21, 55],
+                  backgroundColor: '#0284c7',
+                  borderRadius: 6
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'pre-clients':
+            safeCreateChart('preClientsSourcesChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['Blog Jurídico', 'WhatsApp Direto', 'Google / Busca Orgânica', 'Instagram', 'Indicação'],
+                datasets: [{
+                  data: [40, 30, 15, 10, 5],
+                  backgroundColor: ['#d97706', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'judicial':
+            safeCreateChart('judicialTribunalsChart', {
+              type: 'bar',
+              data: {
+                labels: ['TJMG', 'TRF6', 'TRT3', 'TJSP', 'STJ', 'STF'],
+                datasets: [{
+                  label: 'Processos Consultados',
+                  data: [48, 22, 18, 12, 6, 3],
+                  backgroundColor: '#1d4ed8',
+                  borderRadius: 6
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'offices':
+            safeCreateChart('officesCapacityChart', {
+              type: 'bar',
+              data: {
+                labels: ['Matriz Juiz de Fora', 'Filial Belo Horizonte', 'Atendimento Virtual'],
+                datasets: [{
+                  label: 'Integrantes',
+                  data: [6, 4, 3],
+                  backgroundColor: '#d97706',
+                  borderRadius: 6
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+          case 'drive':
+            safeCreateChart('driveCategoriesChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['Peças & Minutas', 'Certidões & Atos', 'Contratos', 'Geral'],
+                datasets: [{
+                  data: [35, 25, 25, 15],
+                  backgroundColor: ['#059669', '#3b82f6', '#d97706', '#64748b']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'users':
+            safeCreateChart('usersRolesChart', {
+              type: 'doughnut',
+              data: {
+                labels: ['Sócios / Mestre', 'Advogados', 'Estagiários / DP', 'Clientes'],
+                datasets: [{
+                  data: [2, 3, 3, 10],
+                  backgroundColor: ['#d97706', '#10b981', '#6366f1', '#0ea5e9']
+                }]
+              },
+              options: { responsive: true, maintainAspectRatio: false }
+            });
+            break;
+          case 'hr':
+            safeCreateChart('hrDepartmentChart', {
+              type: 'bar',
+              data: {
+                labels: ['Adv. Sênior', 'Adv. Júnior', 'Estagiários', 'Secretaria / DP'],
+                datasets: [
+                  { label: 'Colaboradores', data: [2, 2, 2, 2], backgroundColor: '#0d9488', borderRadius: 6 }
+                ]
+              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            break;
+        }
+      }, 100);
     }
 
     // ================= REGISTRO DE SERVICE WORKER PWA =================

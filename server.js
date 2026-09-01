@@ -14,6 +14,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Função Auxiliar para Extração Segura de IP
+function getClientIp(req) {
+  if (!req) return '127.0.0.1';
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const ips = forwarded.split(',').map(s => s.trim());
+    if (ips[0]) return ips[0];
+  }
+  return req.socket?.remoteAddress || req.ip || '127.0.0.1';
+}
+
 // Configuração de Pastas de Armazenamento
 const STORAGE_DIR = path.join(__dirname, 'storage', 'clients');
 const STORAGE_DRIVE_DIR = path.join(__dirname, 'storage', 'office_drive');
@@ -432,8 +443,95 @@ db.exec(`
     author_name TEXT DEFAULT 'Dr. Jorge Eduardo da Silva Alvim',
     author_oab TEXT DEFAULT 'OAB/MG 222.943',
     views_count INTEGER DEFAULT 0,
+    likes_count INTEGER DEFAULT 0,
+    shares_count INTEGER DEFAULT 0,
     is_published INTEGER DEFAULT 1,
     published_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- 7.1 Tabela de Comentários do Blog (com Moderação)
+  CREATE TABLE IF NOT EXISTS blog_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER,
+    post_slug TEXT NOT NULL,
+    author_name TEXT NOT NULL,
+    author_email TEXT,
+    author_phone TEXT,
+    comment_text TEXT NOT NULL,
+    is_hidden INTEGER DEFAULT 0,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- 7.2 Tabela de Curtidas do Blog
+  CREATE TABLE IF NOT EXISTS blog_likes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER,
+    post_slug TEXT NOT NULL,
+    user_identifier TEXT,
+    ip_address TEXT,
+    created_at TEXT NOT NULL
+  );
+
+  -- 7.3 Tabela de Compartilhamentos do Blog
+  CREATE TABLE IF NOT EXISTS blog_shares (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER,
+    post_slug TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    ip_address TEXT,
+    created_at TEXT NOT NULL
+  );
+
+  -- 7.4 Tabela de Rascunhos de Atividades e Despachos (Agenda & Prazos)
+  CREATE TABLE IF NOT EXISTS activity_drafts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lawyer_name TEXT,
+    lawyer_id TEXT,
+    client_name TEXT,
+    client_id TEXT,
+    defendant_name TEXT,
+    lawsuit_number TEXT,
+    tribunal TEXT,
+    court_branch TEXT,
+    activity_title TEXT NOT NULL,
+    deadline_date TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'rascunho',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- 7.5 Tabela de Rescisões Contratuais Trabalhistas (CLT)
+  CREATE TABLE IF NOT EXISTS labor_terminations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    employee_name TEXT NOT NULL,
+    employee_id TEXT,
+    client_name TEXT,
+    client_id TEXT,
+    lawsuit_number TEXT,
+    admission_date TEXT NOT NULL,
+    dismissal_date TEXT NOT NULL,
+    dismissal_type TEXT NOT NULL,
+    base_salary REAL NOT NULL,
+    notice_type TEXT DEFAULT 'indenizado',
+    notice_value REAL DEFAULT 0,
+    salary_balance REAL DEFAULT 0,
+    thirteenth_salary REAL DEFAULT 0,
+    vacation_value REAL DEFAULT 0,
+    fgts_fine REAL DEFAULT 0,
+    other_credits REAL DEFAULT 0,
+    inss_discount REAL DEFAULT 0,
+    irrf_discount REAL DEFAULT 0,
+    other_discounts REAL DEFAULT 0,
+    gross_total REAL NOT NULL,
+    total_deductions REAL NOT NULL,
+    net_total REAL NOT NULL,
+    notes TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -772,8 +870,16 @@ try {
   if (!instCols.includes('nfse_url')) {
     db.exec(`ALTER TABLE contract_installments ADD COLUMN nfse_url TEXT`);
   }
+
+  const postCols = db.prepare(`PRAGMA table_info(blog_posts)`).all().map(c => c.name);
+  if (!postCols.includes('likes_count')) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN likes_count INTEGER DEFAULT 0`);
+  }
+  if (!postCols.includes('shares_count')) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN shares_count INTEGER DEFAULT 0`);
+  }
 } catch (e) {
-  console.warn('Verificação de migração de colunas sociais/sites/nfse:', e);
+  console.warn('Verificação de migração de colunas sociais/sites/nfse/blog:', e);
 }
 
 // Inicialização / Seeder de Artigos do Blog Jurídico para SEO em Juiz de Fora e Região
@@ -5648,6 +5754,336 @@ app.delete('/api/financial/nfse/:id', requireAuth, (req, res) => {
   }
 });
 
+// ================= ROTAS DE RESCISÃO CONTRATUAL TRABALHISTA (CLT) =================
+
+// Função auxiliar para calcular dias de aviso prévio proporcional (Lei 12.506/2011)
+function calculateNoticeDays(admissionDate, dismissalDate) {
+  const start = new Date(admissionDate);
+  const end = new Date(dismissalDate);
+  let years = end.getFullYear() - start.getFullYear();
+  const m = end.getMonth() - start.getMonth();
+  if (m < 0 || (m === 0 && end.getDate() < start.getDate())) {
+    years--;
+  }
+  const completeYears = Math.max(0, years);
+  const additionalDays = Math.min(60, completeYears * 3);
+  return { notice_days: 30 + additionalDays, complete_years: completeYears };
+}
+
+// Função para cálculo progressivo simplificado de INSS
+function calculateINSS(amount) {
+  if (amount <= 0) return 0;
+  if (amount <= 1412.00) return +(amount * 0.075).toFixed(2);
+  if (amount <= 2666.68) return +(1412.00 * 0.075 + (amount - 1412.00) * 0.09).toFixed(2);
+  if (amount <= 4000.03) return +(1412.00 * 0.075 + (2666.68 - 1412.00) * 0.09 + (amount - 2666.68) * 0.12).toFixed(2);
+  if (amount <= 7786.02) return +(1412.00 * 0.075 + (2666.68 - 1412.00) * 0.09 + (4000.03 - 2666.68) * 0.12 + (amount - 4000.03) * 0.14).toFixed(2);
+  return 908.85; // Teto INSS aproximado
+}
+
+// 1. Simulação / Cálculo de Rescisão Trabalhista CLT
+app.post('/api/financial/labor-termination/calculate', requireAuth, (req, res) => {
+  try {
+    const {
+      base_salary = 0,
+      admission_date,
+      dismissal_date,
+      dismissal_type = 'sem_justa_causa', // 'sem_justa_causa', 'justa_causa', 'pedido_demissao', 'rescisao_indireta', 'acordo_comum', 'termino_contrato_prazo', 'rescisao_antecipada_empregador', 'rescisao_antecipada_empregado'
+      notice_type = 'indenizado', // 'indenizado', 'trabalhado', 'dispensado', 'descontado'
+      vacations_overdue_years = 0,
+      fgts_balance = 0,
+      dependents_count = 0,
+      other_credits = 0,
+      other_discounts = 0
+    } = req.body;
+
+    const salary = parseFloat(base_salary) || 0;
+    if (salary <= 0 || !admission_date || !dismissal_date) {
+      return res.status(400).json({ error: 'Salário base, data de admissão e data de demissão são obrigatórios.' });
+    }
+
+    const adm = new Date(admission_date);
+    const dis = new Date(dismissal_date);
+    if (dis < adm) {
+      return res.status(400).json({ error: 'A data de demissão não pode ser anterior à data de admissão.' });
+    }
+
+    // 1. Dias trabalhados no último mês (Saldo de Salário)
+    const disDay = dis.getDate();
+    const daysInLastMonth = Math.min(30, disDay);
+    const dailyRate = salary / 30;
+    const salary_balance = +(dailyRate * daysInLastMonth).toFixed(2);
+
+    // 2. Aviso Prévio Proporcional
+    const { notice_days, complete_years } = calculateNoticeDays(admission_date, dismissal_date);
+    let notice_value = 0;
+    let notice_discount = 0;
+
+    if (dismissal_type === 'sem_justa_causa' || dismissal_type === 'rescisao_indireta') {
+      if (notice_type === 'indenizado') {
+        notice_value = +((salary / 30) * notice_days).toFixed(2);
+      }
+    } else if (dismissal_type === 'acordo_comum') { // Art. 484-A CLT
+      if (notice_type === 'indenizado') {
+        notice_value = +(((salary / 30) * notice_days) / 2).toFixed(2); // 50%
+      }
+    } else if (dismissal_type === 'pedido_demissao') {
+      if (notice_type === 'descontado') {
+        notice_discount = +salary.toFixed(2); // Desconto de 30 dias
+      }
+    }
+
+    // 3. Meses para 13º Salário Proporcional (ano corrente)
+    const admYear = adm.getFullYear();
+    const disYear = dis.getFullYear();
+    let thirteenth_start_month = 0; // Janeiro
+    if (admYear === disYear) {
+      thirteenth_start_month = adm.getMonth();
+      if (adm.getDate() > 15) thirteenth_start_month++;
+    }
+    let thirteenth_end_month = dis.getMonth();
+    if (dis.getDate() >= 15) thirteenth_end_month++;
+    let thirteenth_months = Math.max(0, Math.min(12, thirteenth_end_month - thirteenth_start_month));
+    
+    // Projeção do aviso prévio indenizado no 13º
+    if ((dismissal_type === 'sem_justa_causa' || dismissal_type === 'rescisao_indireta') && notice_type === 'indenizado') {
+      const projectedNoticeMonths = Math.floor(notice_days / 30);
+      thirteenth_months = Math.min(12, thirteenth_months + projectedNoticeMonths);
+    }
+
+    let thirteenth_salary = 0;
+    if (dismissal_type !== 'justa_causa') {
+      thirteenth_salary = +((salary / 12) * thirteenth_months).toFixed(2);
+    }
+
+    // 4. Férias Proporcionais + 1/3 Constitucional
+    // Cálculo do período aquisitivo corrente
+    const monthsDiff = (dis.getFullYear() - adm.getFullYear()) * 12 + (dis.getMonth() - adm.getMonth());
+    let vacation_months = monthsDiff % 12;
+    if (dis.getDate() >= 15) vacation_months++;
+    if (vacation_months > 12) vacation_months = 12;
+
+    let vacation_proportional = 0;
+    let vacation_proportional_third = 0;
+    if (dismissal_type !== 'justa_causa') {
+      vacation_proportional = +((salary / 12) * vacation_months).toFixed(2);
+      vacation_proportional_third = +(vacation_proportional / 3).toFixed(2);
+    }
+
+    // 5. Férias Vencidas + 1/3
+    const overdueYears = parseFloat(vacations_overdue_years) || 0;
+    const vacation_overdue = +(salary * overdueYears).toFixed(2);
+    const vacation_overdue_third = +(vacation_overdue / 3).toFixed(2);
+    const total_vacations = +(vacation_proportional + vacation_proportional_third + vacation_overdue + vacation_overdue_third).toFixed(2);
+
+    // 6. Multa Rescisória do FGTS (Art. 18 Lei 8.036/90 e Art. 484-A CLT)
+    const fgtsBalanceNum = parseFloat(fgts_balance) || 0;
+    let fgts_fine_rate = 0;
+    let fgts_fine = 0;
+    let fgts_withdraw_allowed = false;
+    let unemployment_insurance_allowed = false;
+
+    if (dismissal_type === 'sem_justa_causa' || dismissal_type === 'rescisao_indireta') {
+      fgts_fine_rate = 0.40; // 40%
+      fgts_fine = +(fgtsBalanceNum * 0.40).toFixed(2);
+      fgts_withdraw_allowed = true;
+      unemployment_insurance_allowed = true;
+    } else if (dismissal_type === 'acordo_comum') {
+      fgts_fine_rate = 0.20; // 20%
+      fgts_fine = +(fgtsBalanceNum * 0.20).toFixed(2);
+      fgts_withdraw_allowed = true; // Até 80%
+      unemployment_insurance_allowed = false;
+    } else if (dismissal_type === 'termino_contrato_prazo' || dismissal_type === 'rescisao_antecipada_empregador') {
+      fgts_fine_rate = dismissal_type === 'rescisao_antecipada_empregador' ? 0.40 : 0;
+      fgts_fine = +(fgtsBalanceNum * fgts_fine_rate).toFixed(2);
+      fgts_withdraw_allowed = true;
+      unemployment_insurance_allowed = dismissal_type === 'rescisao_antecipada_empregador';
+    }
+
+    // 7. Deduções Legais (INSS e IRRF)
+    const inss_salary = calculateINSS(salary_balance);
+    const inss_thirteenth = calculateINSS(thirteenth_salary);
+    const inss_total = +(inss_salary + inss_thirteenth).toFixed(2);
+
+    const extraCredits = parseFloat(other_credits) || 0;
+    const extraDiscounts = parseFloat(other_discounts) || 0;
+
+    // Totais
+    const gross_total = +(salary_balance + notice_value + thirteenth_salary + total_vacations + fgts_fine + extraCredits).toFixed(2);
+    const total_deductions = +(inss_total + notice_discount + extraDiscounts).toFixed(2);
+    const net_total = +(gross_total - total_deductions).toFixed(2);
+
+    return res.json({
+      success: true,
+      calculation: {
+        base_salary: salary,
+        admission_date,
+        dismissal_date,
+        dismissal_type,
+        notice_type,
+        complete_years,
+        notice_days,
+        days_in_last_month: daysInLastMonth,
+        thirteenth_months,
+        vacation_months,
+        earnings: {
+          salary_balance,
+          notice_value,
+          thirteenth_salary,
+          vacation_proportional,
+          vacation_proportional_third,
+          vacation_overdue,
+          vacation_overdue_third,
+          total_vacations,
+          fgts_fine,
+          fgts_fine_rate: `${(fgts_fine_rate * 100).toFixed(0)}%`,
+          other_credits: extraCredits
+        },
+        deductions: {
+          inss_salary,
+          inss_thirteenth,
+          inss_total,
+          notice_discount,
+          other_discounts: extraDiscounts
+        },
+        summary: {
+          gross_total,
+          total_deductions,
+          net_total,
+          fgts_withdraw_allowed,
+          unemployment_insurance_allowed
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('Erro ao calcular rescisão trabalhista:', err);
+    return res.status(500).json({ error: 'Erro no cálculo rescisório: ' + err.message });
+  }
+});
+
+// 2. Salvar Registro de Rescisão Trabalhista e Opcionalmente Lançar no Financeiro
+app.post('/api/financial/labor-termination/save', requireAuth, (req, res) => {
+  try {
+    const {
+      employee_name,
+      employee_id,
+      client_name,
+      client_id,
+      lawsuit_number,
+      admission_date,
+      dismissal_date,
+      dismissal_type,
+      base_salary,
+      notice_type,
+      notice_value = 0,
+      salary_balance = 0,
+      thirteenth_salary = 0,
+      vacation_value = 0,
+      fgts_fine = 0,
+      other_credits = 0,
+      inss_discount = 0,
+      irrf_discount = 0,
+      other_discounts = 0,
+      gross_total,
+      total_deductions,
+      net_total,
+      notes,
+      create_financial_transaction = false
+    } = req.body;
+
+    if (!employee_name || !admission_date || !dismissal_date || !gross_total) {
+      return res.status(400).json({ error: 'Dados obrigatórios da rescisão não fornecidos.' });
+    }
+
+    const now = new Date().toISOString();
+
+    const result = db.prepare(`
+      INSERT INTO labor_terminations (
+        employee_name, employee_id, client_name, client_id, lawsuit_number,
+        admission_date, dismissal_date, dismissal_type, base_salary,
+        notice_type, notice_value, salary_balance, thirteenth_salary, vacation_value,
+        fgts_fine, other_credits, inss_discount, irrf_discount, other_discounts,
+        gross_total, total_deductions, net_total, notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      employee_name.trim(),
+      employee_id || '',
+      client_name || '',
+      client_id || '',
+      lawsuit_number || '',
+      admission_date,
+      dismissal_date,
+      dismissal_type || 'sem_justa_causa',
+      parseFloat(base_salary) || 0,
+      notice_type || 'indenizado',
+      parseFloat(notice_value) || 0,
+      parseFloat(salary_balance) || 0,
+      parseFloat(thirteenth_salary) || 0,
+      parseFloat(vacation_value) || 0,
+      parseFloat(fgts_fine) || 0,
+      parseFloat(other_credits) || 0,
+      parseFloat(inss_discount) || 0,
+      parseFloat(irrf_discount) || 0,
+      parseFloat(other_discounts) || 0,
+      parseFloat(gross_total) || 0,
+      parseFloat(total_deductions) || 0,
+      parseFloat(net_total) || 0,
+      notes || '',
+      now,
+      now
+    );
+
+    const terminationId = result.lastInsertRowid;
+
+    // Se solicitado, lança no financeiro do escritório como despesa
+    if (create_financial_transaction) {
+      const todayYmd = now.split('T')[0];
+      db.prepare(`
+        INSERT INTO financial_transactions (
+          transaction_type, category, amount, transaction_date,
+          status, client_id, client_name, payment_method, notes, created_at, updated_at
+        ) VALUES ('DESPESA', 'TRABALHISTA_RESCISAO', ?, ?, 'PAGO', ?, ?, 'PIX', ?, ?, ?)
+      `).run(
+        parseFloat(net_total),
+        todayYmd,
+        client_id || null,
+        employee_name,
+        `Quitação de Verbas Rescisórias CLT - ${employee_name} (${dismissal_type})`,
+        now,
+        now
+      );
+    }
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'GERAR_RESCISAO_TRABALHISTA',
+      module: 'FINANCEIRO',
+      resource_id: terminationId,
+      description: `Cálculo e emissão de Termo Rescisório CLT para '${employee_name}' no valor líquido de R$ ${parseFloat(net_total).toFixed(2)}.`
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Rescisão trabalhista registrada e calculada com sucesso!',
+      id: terminationId
+    });
+
+  } catch (err) {
+    console.error('Erro ao salvar rescisão trabalhista:', err);
+    return res.status(500).json({ error: 'Erro ao salvar rescisão: ' + err.message });
+  }
+});
+
+// 3. Listar Rescisões Trabalhistas
+app.get('/api/financial/labor-terminations', requireAuth, (req, res) => {
+  try {
+    const terminations = db.prepare(`SELECT * FROM labor_terminations ORDER BY created_at DESC`).all();
+    return res.json({ success: true, terminations, total: terminations.length });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao buscar rescisões: ' + err.message });
+  }
+});
+
 // ================= ROTAS DO PORTAL DO CLIENTE (ÁREA DO CLIENTE) =================
 
 // 1. Cadastro do Cliente (Pessoa Física ou Pessoa Jurídica)
@@ -6752,6 +7188,422 @@ app.delete('/api/admin/blog/posts/:id', requireAuth, (req, res) => {
     res.json({ success: true, message: 'Artigo excluído com sucesso!' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao excluir artigo.' });
+  }
+});
+
+// ================= ROTAS DE INTERAÇÕES E MODERAÇÃO DO BLOG =================
+
+// 1. Obter Comentários Visíveis de um Artigo (Público)
+app.get('/api/blog/posts/:slug/comments', (req, res) => {
+  try {
+    const { slug } = req.params;
+    const comments = db.prepare(`
+      SELECT id, author_name, comment_text, created_at
+      FROM blog_comments
+      WHERE post_slug = ? AND is_hidden = 0
+      ORDER BY created_at DESC
+    `).all(slug);
+
+    res.json({ success: true, comments, total: comments.length });
+  } catch (err) {
+    console.error('Erro ao buscar comentários do blog:', err);
+    res.status(500).json({ error: 'Erro ao carregar comentários.' });
+  }
+});
+
+// 2. Enviar Novo Comentário no Artigo + Captação para Pré-Clientes
+app.post('/api/blog/posts/:slug/comments', (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { author_name, author_email, author_phone, comment_text } = req.body;
+
+    if (!author_name || !comment_text || !comment_text.trim()) {
+      return res.status(400).json({ error: 'Nome e Comentário são obrigatórios.' });
+    }
+
+    const post = db.prepare(`SELECT id, title, category FROM blog_posts WHERE slug = ?`).get(slug);
+    if (!post) {
+      return res.status(404).json({ error: 'Artigo não encontrado.' });
+    }
+
+    const now = new Date().toISOString();
+    const todayStr = now.split('T')[0];
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    const clientIp = getClientIp(req);
+
+    // Salvar comentário
+    const result = db.prepare(`
+      INSERT INTO blog_comments (
+        post_id, post_slug, author_name, author_email, author_phone,
+        comment_text, is_hidden, ip_address, user_agent, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+    `).run(
+      post.id,
+      slug,
+      author_name.trim(),
+      author_email ? author_email.trim() : '',
+      author_phone ? author_phone.trim() : '',
+      comment_text.trim(),
+      clientIp,
+      req.headers['user-agent'] || '',
+      now,
+      now
+    );
+
+    // Auto-registro como Pré-Cliente na tabela site_visits
+    try {
+      db.prepare(`
+        INSERT INTO site_visits (
+          ip_address, user_agent, referer, page_url, path,
+          visit_date, visit_year, visit_month,
+          visitor_name, visitor_phone, visitor_email, interest_area,
+          is_pre_client, lead_source, pre_client_notes,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'BLOG_COMENTARIO', ?, ?, ?)
+      `).run(
+        clientIp,
+        req.headers['user-agent'] || '',
+        req.headers['referer'] || '',
+        `/blog/${slug}`,
+        `/blog/${slug}`,
+        todayStr,
+        currentYear,
+        currentMonth,
+        author_name.trim(),
+        author_phone ? author_phone.trim() : '',
+        author_email ? author_email.trim() : '',
+        post.category || 'Blog Jurídico',
+        `Comentou no artigo '${post.title}': "${comment_text.trim().substring(0, 140)}"`,
+        now,
+        now
+      );
+    } catch (visitErr) {
+      console.warn('Aviso ao registrar pré-cliente por comentário:', visitErr.message);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Comentário publicado com sucesso! Obrigado por participar.',
+      comment: {
+        id: result.lastInsertRowid,
+        author_name: author_name.trim(),
+        comment_text: comment_text.trim(),
+        created_at: now
+      }
+    });
+  } catch (err) {
+    console.error('Erro ao postar comentário no blog:', err);
+    res.status(500).json({ error: 'Erro ao enviar comentário.' });
+  }
+});
+
+// 3. Registrar Curtida (Like) no Artigo + Captação de Interação
+app.post('/api/blog/posts/:slug/like', (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { user_identifier, visitor_name, visitor_phone, visitor_email } = req.body || {};
+
+    const post = db.prepare(`SELECT id, title, category, likes_count FROM blog_posts WHERE slug = ?`).get(slug);
+    if (!post) {
+      return res.status(404).json({ error: 'Artigo não encontrado.' });
+    }
+
+    const clientIp = getClientIp(req);
+    const now = new Date().toISOString();
+
+    // Incrementa curtida no artigo
+    db.prepare(`UPDATE blog_posts SET likes_count = COALESCE(likes_count, 0) + 1 WHERE id = ?`).run(post.id);
+
+    // Registra log da curtida
+    db.prepare(`
+      INSERT INTO blog_likes (post_id, post_slug, user_identifier, ip_address, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(post.id, slug, user_identifier || clientIp, clientIp, now);
+
+    // Se houver dados do visitante, envia para Pré-Clientes
+    if (visitor_name || visitor_phone || visitor_email) {
+      const todayStr = now.split('T')[0];
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      try {
+        db.prepare(`
+          INSERT INTO site_visits (
+            ip_address, user_agent, referer, page_url, path,
+            visit_date, visit_year, visit_month,
+            visitor_name, visitor_phone, visitor_email, interest_area,
+            is_pre_client, lead_source, pre_client_notes,
+            created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'BLOG_CURTIDA', ?, ?, ?)
+        `).run(
+          clientIp,
+          req.headers['user-agent'] || '',
+          req.headers['referer'] || '',
+          `/blog/${slug}`,
+          `/blog/${slug}`,
+          todayStr,
+          currentYear,
+          currentMonth,
+          (visitor_name || 'Leitor do Blog').trim(),
+          visitor_phone ? visitor_phone.trim() : '',
+          visitor_email ? visitor_email.trim() : '',
+          post.category || 'Blog Jurídico',
+          `Curtiu o artigo '${post.title}'`,
+          now,
+          now
+        );
+      } catch (visitErr) {
+        console.warn('Aviso ao registrar pré-cliente por like:', visitErr.message);
+      }
+    }
+
+    const updatedPost = db.prepare(`SELECT likes_count FROM blog_posts WHERE id = ?`).get(post.id);
+
+    res.json({
+      success: true,
+      message: 'Curtida registrada com sucesso!',
+      likes_count: updatedPost.likes_count || 1
+    });
+  } catch (err) {
+    console.error('Erro ao registrar curtida no blog:', err);
+    res.status(500).json({ error: 'Erro ao registrar curtida.' });
+  }
+});
+
+// 4. Registrar Compartilhamento (Share) no Artigo
+app.post('/api/blog/posts/:slug/share', (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { platform = 'whatsapp' } = req.body || {};
+
+    const post = db.prepare(`SELECT id, title, shares_count FROM blog_posts WHERE slug = ?`).get(slug);
+    if (!post) {
+      return res.status(404).json({ error: 'Artigo não encontrado.' });
+    }
+
+    const clientIp = getClientIp(req);
+    const now = new Date().toISOString();
+
+    db.prepare(`UPDATE blog_posts SET shares_count = COALESCE(shares_count, 0) + 1 WHERE id = ?`).run(post.id);
+
+    db.prepare(`
+      INSERT INTO blog_shares (post_id, post_slug, platform, ip_address, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(post.id, slug, platform, clientIp, now);
+
+    res.json({
+      success: true,
+      message: 'Compartilhamento registrado!',
+      shares_count: (post.shares_count || 0) + 1
+    });
+  } catch (err) {
+    console.error('Erro ao registrar compartilhamento:', err);
+    res.status(500).json({ error: 'Erro ao registrar compartilhamento.' });
+  }
+});
+
+// 5. Rastreamento de Cliques e Conversões do Blog para Pré-Clientes
+app.post('/api/blog/track-click', (req, res) => {
+  try {
+    const { visitor_name, visitor_phone, visitor_email, action_type, post_slug, interest_area, notes } = req.body;
+    const clientIp = getClientIp(req);
+    const now = new Date().toISOString();
+    const todayStr = now.split('T')[0];
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+
+    db.prepare(`
+      INSERT INTO site_visits (
+        ip_address, user_agent, referer, page_url, path,
+        visit_date, visit_year, visit_month,
+        visitor_name, visitor_phone, visitor_email, interest_area,
+        is_pre_client, lead_source, pre_client_notes,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
+    `).run(
+      clientIp,
+      req.headers['user-agent'] || '',
+      req.headers['referer'] || '',
+      post_slug ? `/blog/${post_slug}` : '/blog',
+      post_slug ? `/blog/${post_slug}` : '/blog',
+      todayStr,
+      currentYear,
+      currentMonth,
+      (visitor_name || 'Visitante do Blog').trim(),
+      visitor_phone ? visitor_phone.trim() : '',
+      visitor_email ? visitor_email.trim() : '',
+      interest_area || 'Consultoria Jurídica',
+      action_type || 'BLOG_CLICK_CTA',
+      notes || `Clicou em ação no blog (${action_type || 'Geral'})`,
+      now,
+      now
+    );
+
+    res.json({ success: true, message: 'Interação registrada em pré-clientes!' });
+  } catch (err) {
+    console.error('Erro ao rastrear clique do blog:', err);
+    res.status(500).json({ error: 'Erro ao registrar clique.' });
+  }
+});
+
+// 6. Listar Todos os Comentários para o Moderador (Painel Admin)
+app.get('/api/admin/blog/comments', requireAuth, (req, res) => {
+  try {
+    const { status, post_slug, search, limit = 50, page = 1 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    let query = `
+      SELECT c.*, p.title as post_title, p.category as post_category
+      FROM blog_comments c
+      LEFT JOIN blog_posts p ON c.post_slug = p.slug
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (status === 'hidden') {
+      query += ` AND c.is_hidden = 1`;
+    } else if (status === 'visible') {
+      query += ` AND c.is_hidden = 0`;
+    }
+
+    if (post_slug) {
+      query += ` AND c.post_slug = ?`;
+      params.push(post_slug);
+    }
+
+    if (search && search.trim()) {
+      const s = `%${search.trim()}%`;
+      query += ` AND (c.author_name LIKE ? OR c.author_email LIKE ? OR c.author_phone LIKE ? OR c.comment_text LIKE ? OR p.title LIKE ?)`;
+      params.push(s, s, s, s, s);
+    }
+
+    query += ` ORDER BY c.created_at DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), offset);
+
+    const comments = db.prepare(query).all(...params);
+
+    const countQuery = `SELECT COUNT(*) as total, SUM(CASE WHEN is_hidden = 1 THEN 1 ELSE 0 END) as hidden_count, SUM(CASE WHEN is_hidden = 0 THEN 1 ELSE 0 END) as visible_count FROM blog_comments`;
+    const stats = db.prepare(countQuery).get();
+
+    res.json({
+      success: true,
+      comments,
+      stats: {
+        total: stats.total || 0,
+        hidden_count: stats.hidden_count || 0,
+        visible_count: stats.visible_count || 0
+      }
+    });
+  } catch (err) {
+    console.error('Erro ao listar comentários para moderação:', err);
+    res.status(500).json({ error: 'Erro ao buscar comentários para moderação.' });
+  }
+});
+
+// 7. Alternar Visibilidade do Comentário (Esconder / Exibir) (Admin)
+app.put('/api/admin/blog/comments/:id/toggle-visibility', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const comment = db.prepare(`SELECT * FROM blog_comments WHERE id = ?`).get(id);
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comentário não encontrado.' });
+    }
+
+    const newHiddenState = comment.is_hidden === 1 ? 0 : 1;
+    const now = new Date().toISOString();
+
+    db.prepare(`UPDATE blog_comments SET is_hidden = ?, updated_at = ? WHERE id = ?`).run(newHiddenState, now, id);
+
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'MODERAR_COMENTARIO_BLOG',
+      module: 'BLOG',
+      resource_id: id,
+      description: `${newHiddenState === 1 ? 'Ocultou' : 'Exibiu'} o comentário de '${comment.author_name}' no artigo '${comment.post_slug}'.`
+    });
+
+    res.json({
+      success: true,
+      message: newHiddenState === 1 ? 'Comentário ocultado com sucesso!' : 'Comentário tornado visível no blog!',
+      is_hidden: newHiddenState
+    });
+  } catch (err) {
+    console.error('Erro ao moderar comentário:', err);
+    res.status(500).json({ error: 'Erro ao alterar visibilidade do comentário.' });
+  }
+});
+
+// 8. Excluir Comentário do Blog Definitivamente (Admin)
+app.delete('/api/admin/blog/comments/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const comment = db.prepare(`SELECT * FROM blog_comments WHERE id = ?`).get(id);
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comentário não encontrado.' });
+    }
+
+    db.prepare(`DELETE FROM blog_comments WHERE id = ?`).run(id);
+
+    logAudit(req, {
+      event_type: 'EXCLUSAO',
+      event_name: 'EXCLUIR_COMENTARIO_BLOG',
+      module: 'BLOG',
+      resource_id: id,
+      description: `Exclusão definitiva do comentário de '${comment.author_name}' (ID #${id}) no artigo '${comment.post_slug}'.`
+    });
+
+    res.json({ success: true, message: 'Comentário excluído com sucesso!' });
+  } catch (err) {
+    console.error('Erro ao excluir comentário:', err);
+    res.status(500).json({ error: 'Erro ao excluir comentário.' });
+  }
+});
+
+// 9. Converter Autor de Comentário em Lead (Admin)
+app.post('/api/admin/blog/comments/:id/convert-to-lead', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const comment = db.prepare(`
+      SELECT c.*, p.title as post_title, p.category as post_category
+      FROM blog_comments c
+      LEFT JOIN blog_posts p ON c.post_slug = p.slug
+      WHERE c.id = ?
+    `).get(id);
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comentário não encontrado.' });
+    }
+
+    const newLeadId = generateNextClientId();
+    const now = new Date().toISOString();
+    const leadName = (comment.author_name || 'Comentarista do Blog').trim();
+    const leadPhone = (comment.author_phone || '(32) 99815-3429').trim();
+    const leadArea = comment.post_category || 'Blog & Consultoria';
+    const messageNotes = `Lead originado do comentário no artigo '${comment.post_title || comment.post_slug}': "${comment.comment_text}". E-mail: ${comment.author_email || '—'}`;
+
+    db.prepare(`
+      INSERT INTO leads (id, created_at, name, phone, area, message, files, status, social_media, website, google_business)
+      VALUES (?, ?, ?, ?, ?, ?, '[]', 'Novo', '', '', '')
+    `).run(newLeadId, now, leadName, leadPhone, leadArea, messageNotes);
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'CONVERTER_COMENTARIO_LEAD',
+      module: 'LEADS',
+      resource_id: newLeadId,
+      description: `Conversão do comentarista '${leadName}' em Lead #${newLeadId}.`
+    });
+
+    res.json({
+      success: true,
+      message: `Comentarista ${leadName} convertido em Lead #${newLeadId} com sucesso!`,
+      lead_id: newLeadId
+    });
+  } catch (err) {
+    console.error('Erro ao converter comentário em lead:', err);
+    res.status(500).json({ error: 'Erro ao converter comentarista em lead.' });
   }
 });
 
@@ -8601,6 +9453,160 @@ app.get('/api/calendar/feed/lawyer/:lawyerId.ics', (req, res) => {
   } catch (err) {
     console.error('[ERRO] Falha ao gerar feed iCal do advogado:', err);
     return res.status(500).send('Erro ao gerar calendário iCal: ' + err.message);
+  }
+});
+
+// ================= ROTAS DO BLOCO DE RASCUNHO DE ATIVIDADES (AGENDA & PRAZOS) =================
+
+// 1. Listar Rascunhos de Atividades
+app.get('/api/calendar/drafts', requireAuth, (req, res) => {
+  try {
+    const { lawyer_id, client_id, lawsuit_number, status, search } = req.query;
+    let query = `SELECT * FROM activity_drafts WHERE 1=1`;
+    const params = [];
+
+    if (lawyer_id && lawyer_id !== 'all') {
+      query += ` AND (lawyer_id = ? OR lawyer_name LIKE ?)`;
+      params.push(lawyer_id, `%${lawyer_id}%`);
+    }
+
+    if (client_id) {
+      query += ` AND (client_id = ? OR client_name LIKE ?)`;
+      params.push(client_id, `%${client_id}%`);
+    }
+
+    if (lawsuit_number) {
+      query += ` AND lawsuit_number LIKE ?`;
+      params.push(`%${lawsuit_number}%`);
+    }
+
+    if (status && status !== 'all') {
+      query += ` AND status = ?`;
+      params.push(status);
+    }
+
+    if (search && search.trim()) {
+      const s = `%${search.trim()}%`;
+      query += ` AND (activity_title LIKE ? OR notes LIKE ? OR client_name LIKE ? OR defendant_name LIKE ? OR lawsuit_number LIKE ? OR tribunal LIKE ?)`;
+      params.push(s, s, s, s, s, s);
+    }
+
+    query += ` ORDER BY created_at DESC`;
+
+    const drafts = db.prepare(query).all(...params);
+    return res.json({ success: true, drafts, total: drafts.length });
+  } catch (err) {
+    console.error('Erro ao listar rascunhos de atividades:', err);
+    return res.status(500).json({ error: 'Erro ao buscar rascunhos: ' + err.message });
+  }
+});
+
+// 2. Criar ou Atualizar Rascunho de Atividade
+app.post('/api/calendar/drafts', requireAuth, (req, res) => {
+  try {
+    const {
+      id,
+      lawyer_name,
+      lawyer_id,
+      client_name,
+      client_id,
+      defendant_name,
+      lawsuit_number,
+      tribunal,
+      court_branch,
+      activity_title,
+      deadline_date,
+      notes,
+      status
+    } = req.body;
+
+    if (!activity_title || !activity_title.trim()) {
+      return res.status(400).json({ error: 'O título da atividade/tarefa é obrigatório.' });
+    }
+
+    const now = new Date().toISOString();
+
+    if (id) {
+      // Atualização
+      db.prepare(`
+        UPDATE activity_drafts SET
+          lawyer_name = ?,
+          lawyer_id = ?,
+          client_name = ?,
+          client_id = ?,
+          defendant_name = ?,
+          lawsuit_number = ?,
+          tribunal = ?,
+          court_branch = ?,
+          activity_title = ?,
+          deadline_date = ?,
+          notes = ?,
+          status = ?,
+          updated_at = ?
+        WHERE id = ?
+      `).run(
+        lawyer_name || '',
+        lawyer_id || '',
+        client_name || '',
+        client_id || '',
+        defendant_name || '',
+        lawsuit_number || '',
+        tribunal || '',
+        court_branch || '',
+        activity_title.trim(),
+        deadline_date || '',
+        notes || '',
+        status || 'rascunho',
+        now,
+        id
+      );
+
+      return res.json({ success: true, message: 'Rascunho de atividade atualizado com sucesso!', id });
+    } else {
+      // Criação
+      const result = db.prepare(`
+        INSERT INTO activity_drafts (
+          lawyer_name, lawyer_id, client_name, client_id,
+          defendant_name, lawsuit_number, tribunal, court_branch,
+          activity_title, deadline_date, notes, status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        lawyer_name || '',
+        lawyer_id || '',
+        client_name || '',
+        client_id || '',
+        defendant_name || '',
+        lawsuit_number || '',
+        tribunal || '',
+        court_branch || '',
+        activity_title.trim(),
+        deadline_date || '',
+        notes || '',
+        status || 'rascunho',
+        now,
+        now
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: 'Rascunho de atividade salvo com sucesso!',
+        id: result.lastInsertRowid
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao salvar rascunho de atividade:', err);
+    return res.status(500).json({ error: 'Erro ao salvar rascunho: ' + err.message });
+  }
+});
+
+// 3. Excluir Rascunho de Atividade
+app.delete('/api/calendar/drafts/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare(`DELETE FROM activity_drafts WHERE id = ?`).run(id);
+    return res.json({ success: true, message: 'Rascunho excluído com sucesso!' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao excluir rascunho: ' + err.message });
   }
 });
 

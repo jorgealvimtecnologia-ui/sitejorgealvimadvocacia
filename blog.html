@@ -347,6 +347,52 @@
           <!-- Injetado via JS -->
         </div>
 
+        <!-- ================= BARRA DE ENGAJAMENTO (CURTIR, COMPARTILHAR, COMENTÁRIOS) ================= -->
+        <div class="py-5 px-6 rounded-3xl bg-gradient-to-r from-amber-50/70 via-white to-gold-50/50 border border-amber-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4 mt-6">
+          <div class="flex items-center space-x-3">
+            <!-- Botão Curtir -->
+            <button 
+              id="reader-like-btn" 
+              onclick="handleArticleLike()" 
+              type="button" 
+              class="px-4 py-2.5 rounded-2xl bg-white hover:bg-rose-50 border border-slate-300 hover:border-rose-300 text-slate-700 hover:text-rose-600 text-xs font-bold transition-all duration-200 flex items-center space-x-2 shadow-2xs group cursor-pointer"
+              title="Curtir este artigo"
+            >
+              <span id="reader-like-heart" class="text-base group-hover:scale-125 transition-transform duration-200">🤍</span>
+              <span>Curtir</span>
+              <span id="reader-likes-count" class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[11px] font-extrabold">0</span>
+            </button>
+
+            <!-- Botão de Atalho para Comentários -->
+            <a 
+              href="#reader-comments-section" 
+              class="px-4 py-2.5 rounded-2xl bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-300 text-slate-700 hover:text-blue-700 text-xs font-bold transition-all flex items-center space-x-2 shadow-2xs cursor-pointer"
+            >
+              <span>💬</span>
+              <span>Comentários</span>
+              <span id="reader-comments-count-badge" class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-extrabold">0</span>
+            </a>
+          </div>
+
+          <!-- Botões de Compartilhamento Rápido -->
+          <div class="flex items-center space-x-2">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Compartilhe:</span>
+            <button onclick="shareArticle('whatsapp')" class="w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 border border-emerald-300 flex items-center justify-center transition-all shadow-2xs" title="WhatsApp">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            </button>
+            <button onclick="shareArticle('facebook')" class="w-9 h-9 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-300 flex items-center justify-center transition-all shadow-2xs" title="Facebook">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </button>
+            <button onclick="shareArticle('linkedin')" class="w-9 h-9 rounded-xl bg-sky-50 hover:bg-sky-700 hover:text-white text-sky-800 border border-sky-300 flex items-center justify-center transition-all shadow-2xs" title="LinkedIn">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </button>
+            <button onclick="copyArticleUrl(this)" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-300 flex items-center space-x-1" title="Copiar Link">
+              <span>🔗</span>
+              <span>Copiar</span>
+            </button>
+          </div>
+        </div>
+
         <!-- BANNER DE CONVERSÃO / CTA WHATSAPP NO FIM DO ARTIGO -->
         <div class="bg-gradient-to-br from-amber-50 via-white to-gold-50/60 rounded-3xl p-6 sm:p-8 text-slate-800 text-center space-y-3 border-2 border-gold-300 shadow-md mt-8">
           <div class="w-12 h-12 rounded-2xl bg-gold-100 text-gold-800 flex items-center justify-center text-2xl mx-auto border border-gold-300 shadow-2xs">
@@ -361,11 +407,100 @@
               id="reader-whatsapp-cta-btn" 
               href="#" 
               target="_blank" 
+              onclick="handleBlogWhatsAppClick()" 
               class="inline-flex items-center space-x-2 px-6 py-3.5 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 text-white font-extrabold text-sm shadow-md transition-all transform hover:-translate-y-0.5 border border-emerald-500/40"
             >
               <span>💬</span>
               <span>Solicitar Orientação no WhatsApp</span>
             </a>
+          </div>
+        </div>
+
+        <!-- ================= SEÇÃO DE COMENTÁRIOS DO ARTIGO ================= -->
+        <div id="reader-comments-section" class="pt-8 border-t border-slate-200 space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-serif text-xl font-bold text-navy-950 flex items-center space-x-2">
+                <span>💬</span>
+                <span>Comentários & Dúvidas</span>
+              </h4>
+              <p class="text-xs text-slate-500 mt-0.5">Participe da discussão ou deixe sua dúvida sobre este tema jurídico.</p>
+            </div>
+            <span id="reader-comments-total-badge" class="px-3 py-1 rounded-full bg-amber-50 border border-gold-300 text-gold-900 font-bold text-xs">
+              0 comentários
+            </span>
+          </div>
+
+          <!-- Formulário de Comentário -->
+          <form id="article-comment-form" onsubmit="handleCommentSubmit(event)" class="bg-slate-50 p-5 sm:p-6 rounded-3xl border border-slate-200 space-y-4 shadow-2xs">
+            <div id="comment-alert-success" class="hidden p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center space-x-2">
+              <span>✅</span>
+              <span>Seu comentário foi publicado com sucesso! Obrigado por participar.</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="comment-author-name" class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Seu Nome *</label>
+                <input 
+                  type="text" 
+                  id="comment-author-name" 
+                  required 
+                  placeholder="Ex: João da Silva" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-medium text-navy-950 focus:outline-none focus:border-gold-500 shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label for="comment-author-phone" class="block text-[11px] font-bold text-slate-700 uppercase mb-1">WhatsApp / Telefone *</label>
+                <input 
+                  type="tel" 
+                  id="comment-author-phone" 
+                  required 
+                  placeholder="Ex: (32) 99999-9999" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-medium text-navy-950 focus:outline-none focus:border-gold-500 shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label for="comment-author-email" class="block text-[11px] font-bold text-slate-700 uppercase mb-1">E-mail (Opcional)</label>
+                <input 
+                  type="email" 
+                  id="comment-author-email" 
+                  placeholder="seuemail@exemplo.com" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-medium text-navy-950 focus:outline-none focus:border-gold-500 shadow-2xs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="comment-text" class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Seu Comentário ou Dúvida *</label>
+              <textarea 
+                id="comment-text" 
+                required 
+                rows="3" 
+                placeholder="Escreva seu comentário, consideração ou dúvida sobre o artigo..." 
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-medium text-navy-950 focus:outline-none focus:border-gold-500 shadow-2xs resize-none"
+              ></textarea>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-1">
+              <p class="text-[10px] text-slate-400">
+                🔒 Seus dados são protegidos conforme a LGPD e o Código de Ética da OAB.
+              </p>
+              <button 
+                type="submit" 
+                id="comment-submit-btn" 
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-navy-950 font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400/60"
+              >
+                <span>Enviar Comentário</span>
+                <span>📨</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Lista de Comentários Aprovados -->
+          <div id="reader-comments-list" class="space-y-3 pt-2">
+            <!-- Renderizado via JS -->
           </div>
         </div>
 
@@ -521,15 +656,19 @@
                 </p>
               </div>
               <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <div class="text-xs text-slate-500">
-                  Por <strong>${featured.author_name}</strong>
+                <div class="flex items-center space-x-3 text-xs text-slate-500">
+                  <span>Por <strong>${featured.author_name}</strong></span>
+                  <span class="inline-flex items-center space-x-1 text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                    <span>❤️</span>
+                    <span>${featured.likes_count || 0}</span>
+                  </span>
                 </div>
                 <a 
                   href="/blog/${featured.slug}" 
                   onclick="openArticleView('${featured.slug}', event)" 
-                  class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs shadow-xs transition-colors flex items-center space-x-1 border border-gold-400/60"
+                  class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs shadow-xs transition-colors flex items-center space-x-1 border border-gold-400/60 cursor-pointer"
                 >
-                  <span>Ler Artigo</span>
+                  <span>Ler Artigo & Comentar 💬</span>
                   <span>→</span>
                 </a>
               </div>
@@ -541,14 +680,14 @@
       // Demais Artigos no Grid
       const remainingPosts = posts.slice(1);
       if (remainingPosts.length === 0) {
-        grid.innerHTML = '';
+        grid.innerHTML = '<div class="col-span-3 text-center py-8 text-xs text-slate-400">Nenhum outro artigo nesta categoria.</div>';
         return;
       }
 
       grid.innerHTML = remainingPosts.map(p => `
         <div class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div class="h-48 relative overflow-hidden bg-slate-100">
+            <div class="h-48 relative overflow-hidden bg-slate-100 cursor-pointer" onclick="openArticleView('${p.slug}', event)">
               <img 
                 src="${p.cover_image || 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80'}" 
                 alt="${p.title}" 
@@ -561,8 +700,9 @@
               </div>
             </div>
             <div class="p-5 sm:p-6 space-y-2.5">
-              <div class="text-[11px] text-slate-400 font-medium">
-                📅 ${formatDate(p.published_at)} • 👁️ ${p.views_count || 0} visualizações
+              <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                <span>📅 ${formatDate(p.published_at)}</span>
+                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">❤️ ${p.likes_count || 0}</span>
               </div>
               <h4 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug line-clamp-2">
                 <a href="/blog/${p.slug}" onclick="openArticleView('${p.slug}', event)" class="hover:text-gold-700 transition-colors">
@@ -575,13 +715,13 @@
             </div>
           </div>
           <div class="p-5 sm:p-6 pt-0 border-t border-slate-100 mt-2 flex items-center justify-between">
-            <span class="text-[11px] text-slate-400">Leitura de 3 min</span>
+            <span class="text-[11px] text-slate-500 font-medium">💬 Comentários abertos</span>
             <a 
               href="/blog/${p.slug}" 
               onclick="openArticleView('${p.slug}', event)" 
-              class="text-xs font-bold text-gold-700 hover:text-gold-800 flex items-center space-x-1"
+              class="text-xs font-bold text-gold-700 hover:text-gold-800 flex items-center space-x-1 cursor-pointer"
             >
-              <span>Continuar lendo</span>
+              <span>Ler & Comentar</span>
               <span>→</span>
             </a>
           </div>
@@ -650,6 +790,11 @@
       document.getElementById('reader-author-name').textContent = post.author_name;
       document.getElementById('reader-author-oab').textContent = `${post.author_oab} • Advogado`;
 
+      // Likes & Engajamento
+      document.getElementById('reader-likes-count').textContent = post.likes_count || 0;
+      document.getElementById('reader-like-heart').textContent = '🤍';
+      document.getElementById('reader-like-btn').classList.remove('bg-rose-50', 'text-rose-600', 'border-rose-400');
+
       const coverImg = document.getElementById('reader-cover-img');
       if (post.cover_image) {
         coverImg.src = post.cover_image;
@@ -665,9 +810,12 @@
       const waMsg = `Olá, Dr. Jorge Alvim! Estava lendo o artigo "${post.title}" no seu blog e gostaria de uma orientação jurídica sobre meu caso.`;
       ctaBtn.href = `https://api.whatsapp.com/send?phone=5532998153429&text=${encodeURIComponent(waMsg)}`;
 
+      // Carregar Comentários do Artigo
+      loadArticleComments(post.slug);
+
       // Artigos Relacionados
       const relatedContainer = document.getElementById('reader-related-grid');
-      if (related.length === 0) {
+      if (!related || related.length === 0) {
         relatedContainer.innerHTML = '<div class="col-span-3 text-xs text-slate-400">Nenhum outro artigo disponível.</div>';
       } else {
         relatedContainer.innerHTML = related.map(r => `
@@ -688,6 +836,174 @@
       }
     }
 
+    // Carregar Lista de Comentários Aprovados
+    async function loadArticleComments(slug) {
+      const container = document.getElementById('reader-comments-list');
+      const countBadge = document.getElementById('reader-comments-total-badge');
+      const navBadge = document.getElementById('reader-comments-count-badge');
+      
+      try {
+        const res = await fetch(`/api/blog/posts/${slug}/comments`);
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          const comments = data.comments || [];
+          countBadge.textContent = `${comments.length} comentário(s)`;
+          navBadge.textContent = comments.length;
+
+          if (comments.length === 0) {
+            container.innerHTML = `
+              <div class="p-6 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-400">
+                Seja o primeiro a deixar um comentário ou dúvida sobre este artigo!
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = comments.map(c => `
+            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-gold-200 border border-gold-300 text-gold-900 flex items-center justify-center text-xs font-bold font-serif">
+                    ${c.author_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h6 class="text-xs font-bold text-navy-950">${c.author_name}</h6>
+                    <span class="text-[10px] text-slate-400">📅 ${formatDate(c.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-slate-700 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                ${c.comment_text}
+              </p>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Erro ao buscar comentários:', err);
+      }
+    }
+
+    // Curtir Artigo
+    async function handleArticleLike() {
+      if (!currentArticle) return;
+      const likeBtn = document.getElementById('reader-like-btn');
+      const heart = document.getElementById('reader-like-heart');
+      const countSpan = document.getElementById('reader-likes-count');
+
+      heart.textContent = '❤️';
+      likeBtn.classList.add('bg-rose-50', 'text-rose-600', 'border-rose-400');
+
+      try {
+        const res = await fetch(`/api/blog/posts/${currentArticle.slug}/like`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visitor_name: 'Leitor Anônimo',
+            action_type: 'BLOG_LIKE'
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          countSpan.textContent = data.likes_count;
+        }
+      } catch (err) {
+        console.warn('Erro ao registrar curtida:', err);
+      }
+    }
+
+    // Compartilhar Artigo
+    function shareArticle(platform) {
+      if (!currentArticle) return;
+      const url = window.location.href;
+      const title = currentArticle.title;
+
+      if (platform === 'whatsapp') {
+        const text = `Confira este artigo jurídico de Jorge Alvim Advocacia:\n*${title}*\n${url}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      } else if (platform === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+      } else if (platform === 'linkedin') {
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+      }
+
+      // Registro no Backend
+      fetch(`/api/blog/posts/${currentArticle.slug}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform })
+      }).catch(() => {});
+    }
+
+    // Submissão do Comentário com Auto-Envio para Pré-Clientes
+    async function handleCommentSubmit(e) {
+      if (e) e.preventDefault();
+      if (!currentArticle) return;
+
+      const nameInput = document.getElementById('comment-author-name');
+      const phoneInput = document.getElementById('comment-author-phone');
+      const emailInput = document.getElementById('comment-author-email');
+      const textInput = document.getElementById('comment-text');
+      const submitBtn = document.getElementById('comment-submit-btn');
+      const alertSuccess = document.getElementById('comment-alert-success');
+
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const email = emailInput.value.trim();
+      const text = textInput.value.trim();
+
+      if (!name || !phone || !text) {
+        alert('Por favor, informe seu Nome, Telefone/WhatsApp e seu Comentário.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Enviando...</span>';
+
+      try {
+        const res = await fetch(`/api/blog/posts/${currentArticle.slug}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            author_name: name,
+            author_phone: phone,
+            author_email: email,
+            comment_text: text
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          textInput.value = '';
+          alertSuccess.classList.remove('hidden');
+          setTimeout(() => { alertSuccess.classList.add('hidden'); }, 5000);
+          loadArticleComments(currentArticle.slug);
+        } else {
+          alert(`❌ ${data.error || 'Erro ao enviar comentário.'}`);
+        }
+      } catch (err) {
+        alert('Erro ao enviar comentário. Verifique sua conexão.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Enviar Comentário</span> <span>📨</span>';
+      }
+    }
+
+    // Rastrear Clique de WhatsApp no Blog para Pré-Clientes
+    function handleBlogWhatsAppClick() {
+      if (!currentArticle) return;
+      fetch('/api/blog/track-click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_type: 'BLOG_WHATSAPP_CTA',
+          post_slug: currentArticle.slug,
+          interest_area: currentArticle.category,
+          notes: `Clicou para falar no WhatsApp a partir do artigo '${currentArticle.title}'`
+        })
+      }).catch(() => {});
+    }
+
     function showReaderView() {
       document.getElementById('blog-list-view').classList.add('hidden');
       document.getElementById('article-reader-view').classList.remove('hidden');
@@ -702,10 +1018,7 @@
     }
 
     function shareOnWhatsApp() {
-      if (!currentArticle) return;
-      const url = window.location.href;
-      const text = `Confira este artigo jurídico: *${currentArticle.title}*\n${url}`;
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      shareArticle('whatsapp');
     }
 
     function copyArticleUrl(btn) {
