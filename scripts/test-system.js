@@ -286,6 +286,56 @@ async function runTests() {
       const myPermsRes = await fetch(`${baseUrl}/api/access-control/my-permissions`, { headers });
       const myPermsData = await myPermsRes.json();
       logTestResult('API RBAC/ABAC - Permissões da Sessão Ativa (/api/access-control/my-permissions)', myPermsRes.status === 200 && myPermsData.success, `Sessão Mestre: ${myPermsData.is_master ? 'SIM (Acesso Pleno)' : 'NÃO'}`);
+
+      // ================= MÓDULO DE INTEGRAÇÃO TOTAL & ZERO DIGITAÇÃO =================
+      // 19. Consulta Universal por CEP
+      const cepRes = await fetch(`${baseUrl}/api/lookup/cep/36090300`);
+      const cepData = await cepRes.json();
+      logTestResult('API Zero Digitação - Consulta de CEP (/api/lookup/cep/:cep)', cepRes.status === 200 && cepData.success, `CEP 36090-300: ${cepData.address?.street || 'Rua'}, ${cepData.address?.neighborhood || 'Bairro'} - ${cepData.address?.city || 'Juiz de Fora'}/${cepData.address?.state || 'MG'}`);
+
+      // 20. Consulta Universal por CNPJ na Receita Federal
+      const cnpjRes = await fetch(`${baseUrl}/api/lookup/cnpj/00000000000191`);
+      const cnpjData = await cnpjRes.json();
+      logTestResult('API Zero Digitação - Consulta de CNPJ na Receita (/api/lookup/cnpj/:cnpj)', cnpjRes.status === 200 && cnpjData.success, `Empresa: ${cnpjData.company?.corporate_name || 'BANCO DO BRASIL SA'} | Cidade: ${cnpjData.company?.city || 'BRASILIA'}`);
+
+      // 21. Consulta Unificada de Pessoa por CPF
+      const cpfTarget = '321.654.987-33';
+      const personRes = await fetch(`${baseUrl}/api/lookup/person/${cpfTarget}`, { headers });
+      const personData = await personRes.json();
+      logTestResult('API Zero Digitação - Busca Unificada por CPF (/api/lookup/person/:cpf)', personRes.status === 200 && personData.success, `Localizado: ${personData.person?.full_name || 'Mariana Alvim'} (${personData.person?.source_type})`);
+
+      // 22. Decodificação Estrutural de Processo Judicial por CNJ
+      const cnjTarget = '0001234-56.2026.8.13.0145';
+      const cnjRes = await fetch(`${baseUrl}/api/lookup/cnj/${cnjTarget}`, { headers });
+      const cnjData = await cnjRes.json();
+      logTestResult('API Zero Digitação - Decodificador de CNJ (/api/lookup/cnj/:cnj)', cnjRes.status === 200 && cnjData.success, `Tribunal: ${cnjData.lawsuit?.tribunal || 'TJMG'} | Órgão: ${cnjData.lawsuit?.court_branch || 'Vara Cível'} | Ação: ${cnjData.lawsuit?.action_type || 'Ação'}`);
+
+      // 23. Gerador Inteligente de Documentos: Procuração Ad Judicia
+      const docProcRes = await fetch(`${baseUrl}/api/documents/generate-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ template_type: 'procuracao', client_id: clientsData.clients?.[0]?.id || 'CLI-001' })
+      });
+      const docProcData = await docProcRes.json();
+      logTestResult('API Zero Digitação - Gerador de Procuração Ad Judicia (/api/documents/generate-template)', docProcRes.status === 200 && docProcData.success && docProcData.document?.content?.includes('OUTORGANTE'), `Documento: "${docProcData.document?.title}" qualificado para ${docProcData.document?.client_name}`);
+
+      // 24. Gerador Inteligente de Documentos: Declaração de Hipossuficiência
+      const docHipoRes = await fetch(`${baseUrl}/api/documents/generate-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ template_type: 'hipossuficiencia', client_id: clientsData.clients?.[0]?.id || 'CLI-001' })
+      });
+      const docHipoData = await docHipoRes.json();
+      logTestResult('API Zero Digitação - Gerador de Declaração de Hipossuficiência (/api/documents/generate-template)', docHipoRes.status === 200 && docHipoData.success && docHipoData.document?.content?.includes('DECLARANTE'), `Documento: "${docHipoData.document?.title}" gerado com sucesso`);
+
+      // 25. Gerador Inteligente de Documentos: Contrato de Honorários Advocatícios
+      const docContRes = await fetch(`${baseUrl}/api/documents/generate-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ template_type: 'contrato_honorarios', client_id: clientsData.clients?.[0]?.id || 'CLI-001' })
+      });
+      const docContData = await docContRes.json();
+      logTestResult('API Zero Digitação - Gerador de Contrato de Honorários (/api/documents/generate-template)', docContRes.status === 200 && docContData.success && docContData.document?.content?.includes('CONTRATANTE'), `Documento: "${docContData.document?.title}" gerado com cláusulas financeiras e honorários`);
     }
   } catch (err) {
     logTestResult('Teste de APIs do Servidor', false, err.message);

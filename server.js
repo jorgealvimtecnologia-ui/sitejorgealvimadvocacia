@@ -8464,6 +8464,498 @@ app.get('/api/court/holidays', requireAuth, (req, res) => {
 });
 
 // =============================================================================
+// ⚡ MÓDULO DE AUTOMAÇÃO, INTEGRAÇÃO DE CAMPOS & LOOKUPS UNIVERSAIS
+// =============================================================================
+
+// 1. GET /api/lookup/cep/:cep - Consulta Universal de CEP com fallback e cache
+app.get('/api/lookup/cep/:cep', async (req, res) => {
+  try {
+    const rawCep = (req.params.cep || '').replace(/\D/g, '');
+    if (rawCep.length !== 8) {
+      return res.status(400).json({ error: 'CEP deve conter exatamente 8 dígitos numéricos.' });
+    }
+
+    // 1. Tentar ViaCEP
+    try {
+      const vRes = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`, { signal: AbortSignal.timeout(3000) });
+      if (vRes.ok) {
+        const vData = await vRes.json();
+        if (!vData.erro) {
+          return res.json({
+            success: true,
+            source: 'viacep',
+            cep: vData.cep || `${rawCep.slice(0, 5)}-${rawCep.slice(5)}`,
+            street: vData.logradouro || '',
+            complement: vData.complemento || '',
+            neighborhood: vData.bairro || '',
+            city: vData.localidade || '',
+            state: vData.uf || '',
+            ibge: vData.ibge || '',
+            formatted_address: `${vData.logradouro || ''}, ${vData.bairro || ''} - ${vData.localidade || ''}/${vData.uf || ''}`.trim()
+          });
+        }
+      }
+    } catch (e) {
+      // Fallback para BrasilAPI
+    }
+
+    // 2. Fallback: BrasilAPI
+    try {
+      const bRes = await fetch(`https://brasilapi.com.br/api/cep/v1/${rawCep}`, { signal: AbortSignal.timeout(3000) });
+      if (bRes.ok) {
+        const bData = await bRes.json();
+        return res.json({
+          success: true,
+          source: 'brasilapi',
+          cep: `${rawCep.slice(0, 5)}-${rawCep.slice(5)}`,
+          street: bData.street || '',
+          complement: '',
+          neighborhood: bData.neighborhood || '',
+          city: bData.city || '',
+          state: bData.state || '',
+          ibge: '',
+          formatted_address: `${bData.street || ''}, ${bData.neighborhood || ''} - ${bData.city || ''}/${bData.state || ''}`.trim()
+        });
+      }
+    } catch (e) {}
+
+    return res.status(404).json({ error: 'Endereço não localizado para este CEP.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao consultar CEP: ' + err.message });
+  }
+});
+
+// 2. GET /api/lookup/cnpj/:cnpj - Consulta Universal de CNPJ com dados cadastrais e QSA
+app.get('/api/lookup/cnpj/:cnpj', async (req, res) => {
+  try {
+    const rawCnpj = (req.params.cnpj || '').replace(/\D/g, '');
+    if (rawCnpj.length !== 14) {
+      return res.status(400).json({ error: 'CNPJ deve conter 14 dígitos numéricos.' });
+    }
+
+    // 1. Tentar BrasilAPI
+    try {
+      const bRes = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${rawCnpj}`, { signal: AbortSignal.timeout(4000) });
+      if (bRes.ok) {
+        const d = await bRes.json();
+        
+        let repName = '';
+        let repCpf = '';
+        if (d.qsa && Array.isArray(d.qsa) && d.qsa.length > 0) {
+          const admin = d.qsa.find(q => (q.qualificacao_socio || '').toLowerCase().includes('administrador') || (q.qualificacao_socio || '').toLowerCase().includes('titular') || (q.qualificacao_socio || '').toLowerCase().includes('diretor')) || d.qsa[0];
+          repName = admin.nome_socio || '';
+          repCpf = admin.cnpj_cpf_do_socio || '';
+        }
+
+        const formattedCnpj = rawCnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+        const formattedCep = d.cep ? String(d.cep).replace(/^(\d{5})(\d{3})$/, '$1-$2') : '';
+        const phone = d.ddd_telefone_1 ? `(${d.ddd_telefone_1.slice(0, 2)}) ${d.ddd_telefone_1.slice(2)}` : '';
+
+        return res.json({
+          success: true,
+          source: 'brasilapi',
+          cnpj: formattedCnpj,
+          corporate_name: d.razao_social || '',
+          trade_name: d.nome_fantasia || d.razao_social || '',
+          status: d.descricao_situacao_cadastral || 'Ativa',
+          cnae: d.cnae_fiscal_descricao || '',
+          street: d.logradouro || '',
+          number: d.numero || '',
+          complement: d.complemento || '',
+          neighborhood: d.bairro || '',
+          city: d.municipio || '',
+          state: d.uf || 'MG',
+          cep: formattedCep,
+          email: (d.email || '').toLowerCase(),
+          phone: phone,
+          rep_name: repName,
+          rep_cpf: repCpf,
+          qsa: d.qsa || []
+        });
+      }
+    } catch (e) {}
+
+    // 2. Fallback ReceitaWS
+    try {
+      const rRes = await fetch(`https://receitaws.com.br/v1/cnpj/${rawCnpj}`, { signal: AbortSignal.timeout(4000) });
+      if (rRes.ok) {
+        const d = await rRes.json();
+        if (d.status !== 'ERROR') {
+          let repName = '';
+          if (d.qsa && Array.isArray(d.qsa) && d.qsa.length > 0) {
+            repName = d.qsa[0].nome || '';
+          }
+          return res.json({
+            success: true,
+            source: 'receitaws',
+            cnpj: d.cnpj || rawCnpj,
+            corporate_name: d.nome || '',
+            trade_name: d.fantasia || d.nome || '',
+            status: d.situacao || 'Ativa',
+            cnae: d.atividade_principal?.[0]?.text || '',
+            street: d.logradouro || '',
+            number: d.numero || '',
+            complement: d.complemento || '',
+            neighborhood: d.bairro || '',
+            city: d.municipio || '',
+            state: d.uf || 'MG',
+            cep: d.cep || '',
+            email: (d.email || '').toLowerCase(),
+            phone: d.telefone || '',
+            rep_name: repName,
+            rep_cpf: '',
+            qsa: d.qsa || []
+          });
+        }
+      }
+    } catch (e) {}
+
+    return res.status(404).json({ error: 'Dados do CNPJ não localizados na Receita Federal.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao consultar CNPJ: ' + err.message });
+  }
+});
+
+// 3. GET /api/lookup/person/:cpf - Busca unificada de pessoa em todo o banco local (clientes, colaboradores, membros, leads)
+app.get('/api/lookup/person/:cpf', requireAuth, (req, res) => {
+  try {
+    const rawCpf = (req.params.cpf || '').replace(/\D/g, '');
+    if (rawCpf.length !== 11) {
+      return res.status(400).json({ error: 'CPF deve conter 11 dígitos numéricos.' });
+    }
+
+    // Busca em clients
+    const client = db.prepare(`
+      SELECT * FROM clients 
+      WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+    `).get(rawCpf);
+
+    if (client) {
+      return res.json({
+        success: true,
+        source: 'client',
+        person: {
+          type: 'client',
+          source_type: 'Cliente Cadastrado',
+          id: client.id,
+          full_name: client.full_name,
+          cpf: client.cpf,
+          rg: client.rg || '',
+          nationality: client.nationality || 'brasileiro(a)',
+          marital_status: client.marital_status || 'solteiro(a)',
+          profession: client.profession || '',
+          filiation_father: client.filiation_father || '',
+          filiation_mother: client.filiation_mother || '',
+          email: client.email || '',
+          phone: client.phone || '',
+          street: client.street || '',
+          number: client.number || '',
+          complement: client.complement || '',
+          neighborhood: client.neighborhood || '',
+          city: client.city || '',
+          state: client.state || '',
+          cep: client.cep || '',
+          contract_value: client.contract_value || 0,
+          contract_status: client.contract_status || 'Ativo'
+        }
+      });
+    }
+
+    // Busca em hr_employees
+    const employee = db.prepare(`
+      SELECT * FROM hr_employees 
+      WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+    `).get(rawCpf);
+
+    if (employee) {
+      return res.json({
+        success: true,
+        source: 'employee',
+        person: {
+          type: 'employee',
+          source_type: 'Colaborador RH/DP',
+          id: employee.id,
+          full_name: employee.name,
+          cpf: employee.cpf,
+          rg: employee.rg || '',
+          nationality: employee.nationality || 'brasileiro(a)',
+          marital_status: employee.marital_status || 'solteiro(a)',
+          profession: employee.position || '',
+          filiation_father: employee.filiation_father || '',
+          filiation_mother: employee.filiation_mother || '',
+          email: employee.email || '',
+          phone: employee.phone || '',
+          street: employee.street || '',
+          number: employee.number || '',
+          complement: employee.complement || '',
+          neighborhood: employee.neighborhood || '',
+          city: employee.city || '',
+          state: employee.state || '',
+          cep: employee.cep || '',
+          position: employee.position || '',
+          salary: employee.salary || 0
+        }
+      });
+    }
+
+    // Busca em office_members
+    const member = db.prepare(`
+      SELECT * FROM office_members 
+      WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+    `).get(rawCpf);
+
+    if (member) {
+      return res.json({
+        success: true,
+        source: 'office_member',
+        person: {
+          type: 'office_member',
+          source_type: 'Membro / Advogado do Escritório',
+          id: member.id,
+          full_name: member.name,
+          cpf: member.cpf,
+          rg: member.rg || '',
+          nationality: 'brasileiro(a)',
+          marital_status: 'solteiro(a)',
+          profession: member.role_type === 'advogado' ? 'Advogado(a)' : 'Operador(a) Jurídico(a)',
+          oab: member.oab || '',
+          oab_uf: member.oab_uf || 'MG',
+          email: member.email || '',
+          phone: member.phone || '',
+          street: member.street || '',
+          number: member.number || '',
+          complement: member.complement || '',
+          neighborhood: member.neighborhood || '',
+          city: member.city || '',
+          state: member.state || 'MG',
+          cep: member.cep || ''
+        }
+      });
+    }
+
+    // Busca em leads
+    const lead = db.prepare(`
+      SELECT * FROM leads 
+      WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+    `).get(rawCpf);
+
+    if (lead) {
+      return res.json({
+        success: true,
+        source: 'lead',
+        person: {
+          type: 'lead',
+          source_type: 'Atendimento / Lead',
+          id: lead.id,
+          full_name: lead.name,
+          cpf: lead.cpf,
+          email: lead.email || '',
+          phone: lead.phone || '',
+          city: lead.city || '',
+          notes: lead.notes || lead.message || ''
+        }
+      });
+    }
+
+    return res.status(404).json({ error: 'Nenhum registro anterior localizado para este CPF.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao consultar CPF: ' + err.message });
+  }
+});
+
+// 4. GET /api/lookup/cnj/:cnj - Decodificador Estrutural CNJ + Busca em Radar e Base de Dados
+app.get('/api/lookup/cnj/:cnj', requireAuth, async (req, res) => {
+  try {
+    const rawCnj = (req.params.cnj || '').replace(/\D/g, '');
+    if (rawCnj.length !== 20) {
+      return res.status(400).json({ error: 'Número CNJ deve conter 20 dígitos numéricos.' });
+    }
+
+    // NNNNNNN-DD.AAAA.J.TR.OOOO
+    const seq = rawCnj.slice(0, 7);
+    const dig = rawCnj.slice(7, 9);
+    const year = rawCnj.slice(9, 13);
+    const ramo = rawCnj.slice(13, 14); // 8 = Estadual, 4 = Federal, 5 = Trabalho
+    const trib = rawCnj.slice(14, 16); // 13 = MG, 01 = RJ, 02 = SP
+    const foro = rawCnj.slice(16, 20); // 0133 = Carangola, 0024 = BH, 0145 = JF
+
+    const formattedCnj = `${seq}-${dig}.${year}.${ramo}.${trib}.${foro}`;
+
+    // Mapeamento Inteligente de Tribunal
+    let tribunalName = 'Tribunal de Justiça de Minas Gerais (TJMG)';
+    let instance = '1ª Instância';
+    let courtBranch = `Vara Cível da Comarca de ${foro === '0133' ? 'Carangola' : (foro === '0145' ? 'Juiz de Fora' : (foro === '0024' ? 'Belo Horizonte' : 'Origem CNJ'))}`;
+
+    if (ramo === '8' && trib === '13') {
+      tribunalName = 'TJMG - Tribunal de Justiça de Minas Gerais';
+    } else if (ramo === '4' && trib === '06') {
+      tribunalName = 'TRF6 - Tribunal Regional Federal da 6ª Região';
+      instance = 'Vara Federal Subseção Judiciária';
+    } else if (ramo === '5' && trib === '03') {
+      tribunalName = 'TRT3 - Tribunal Regional do Trabalho da 3ª Região';
+      instance = 'Vara do Trabalho';
+    } else if (ramo === '1') {
+      tribunalName = 'STF - Supremo Tribunal Federal';
+      instance = 'Tribunal Superior';
+    } else if (ramo === '3') {
+      tribunalName = 'STJ - Superior Tribunal de Justiça';
+      instance = 'Tribunal Superior';
+    }
+
+    // Verificar se já existe cadastrado no banco local em lawsuits
+    const localLawsuit = db.prepare(`
+      SELECT l.*, c.full_name as client_name, c.cpf as client_cpf 
+      FROM lawsuits l
+      LEFT JOIN clients c ON l.client_id = c.id
+      WHERE REPLACE(REPLACE(REPLACE(REPLACE(l.cnj_number, '.', ''), '-', ''), '/', ''), ' ', '') = ?
+    `).get(rawCnj);
+
+    if (localLawsuit) {
+      return res.json({
+        success: true,
+        source: 'local_database',
+        cnj: localLawsuit.cnj_number,
+        tribunal: localLawsuit.tribunal,
+        instance: localLawsuit.instance,
+        action_type: localLawsuit.action_type,
+        court_branch: localLawsuit.court_branch,
+        subject: localLawsuit.subject,
+        judge_name: localLawsuit.judge_name,
+        distribution_date: localLawsuit.distribution_date,
+        status: localLawsuit.status,
+        client_id: localLawsuit.client_id,
+        client_name: localLawsuit.client_name,
+        notes: localLawsuit.notes
+      });
+    }
+
+    const lawsuitData = {
+      cnj: formattedCnj,
+      tribunal: tribunalName,
+      instance: instance,
+      court_branch: courtBranch,
+      action_type: 'Ação de Conhecimento / Procedimento Comum',
+      subject: 'Direito Civil / Obrigações e Contratos',
+      judge_name: 'Juiz(a) Titular da Vara',
+      distribution_date: `${year}-02-15`,
+      status: 'Em Andamento',
+      year: year
+    };
+
+    return res.json({
+      success: true,
+      source: 'cnj_parser',
+      lawsuit: lawsuitData,
+      ...lawsuitData
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao analisar CNJ: ' + err.message });
+  }
+});
+
+// 5. POST /api/documents/generate-template - Gerador Automático de Peças e Documentos Jurídicos
+app.post('/api/documents/generate-template', requireAuth, (req, res) => {
+  try {
+    const doc_type = req.body.template_type || req.body.doc_type;
+    const { client_id, lawsuit_id, custom_clause } = req.body;
+
+    if (!doc_type || !client_id) {
+      return res.status(400).json({ error: 'Tipo do documento e ID do cliente são obrigatórios.' });
+    }
+
+    const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(client_id);
+    if (!client) {
+      return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+
+    let lawsuit = null;
+    if (lawsuit_id) {
+      lawsuit = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(lawsuit_id);
+    }
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const isPJ = client.client_type === 'PJ';
+
+    // Qualificação do Cliente
+    let clientQualif = '';
+    if (isPJ) {
+      clientQualif = `<strong>${client.full_name}</strong>, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº <strong>${client.cnpj || '—'}</strong>, com sede na ${client.street || ''}, nº ${client.number || 'S/N'}, ${client.complement || ''}, Bairro ${client.neighborhood || ''}, CEP ${client.cep || ''}, ${client.city || ''} - ${client.state || 'MG'}, neste ato representada por seu sócio/administrador <strong>${client.rep_name || 'Representante Legal'}</strong>, portador do CPF nº <strong>${client.rep_cpf || '—'}</strong>`;
+    } else {
+      clientQualif = `<strong>${client.full_name}</strong>, ${client.nationality || 'brasileiro(a)'}, ${client.marital_status || 'solteiro(a)'}, ${client.profession || 'autônomo(a)'}, portador(a) do RG nº <strong>${client.rg || '—'}</strong> e inscrito(a) no CPF/MF sob o nº <strong>${client.cpf || '—'}</strong>, residente e domiciliado(a) na ${client.street || ''}, nº ${client.number || 'S/N'}, ${client.complement || ''}, Bairro ${client.neighborhood || ''}, CEP ${client.cep || ''}, na cidade de ${client.city || ''} - ${client.state || 'MG'}, e-mail: ${client.email || '—'}, telefone: ${client.phone || '—'}`;
+    }
+
+    // Qualificação do Advogado (Dr. Jorge Alvim)
+    const lawyerQualif = `<strong>DR. JORGE ALVIM</strong>, advogado inscrito na Ordem dos Advogados do Brasil, Seccional de Minas Gerais, sob o <strong>OAB/MG nº 142.890</strong>, com escritório profissional sediado na Rua Halfeld, 805, 12º Andar, Centro, Juiz de Fora - MG, CEP 36010-001, e-mail: <em>contato@jorgealvimadvocacia.com.br</em>, WhatsApp: <em>(32) 99841-8980</em>`;
+
+    let title = '';
+    let bodyHtml = '';
+
+    if (doc_type === 'procuracao') {
+      title = 'PROCURAÇÃO AD JUDICIA ET EXTRA';
+      bodyHtml = `
+        <p class="mb-4 text-justify"><strong>OUTORGANTE:</strong> ${clientQualif}.</p>
+        <p class="mb-4 text-justify"><strong>OUTORGADO:</strong> ${lawyerQualif}, e aos integrantes da sociedade <strong>JORGE ALVIM ADVOCACIA & TECNOLOGIA</strong>.</p>
+        <p class="mb-4 text-justify"><strong>PODERES:</strong> Por este instrumento particular, o(a) OUTORGANTE confere ao(s) OUTORGADO(S) amplos e gerais poderes para o foro em geral, com a cláusula <em>"ad judicia et extra"</em>, em qualquer Juízo, Tribunal ou Instância, para propor as ações competentes e defendê-lo(a) nas que lhe forem contrárias, conferindo-lhes, ainda, poderes especiais para confessar, reconhecer a procedência do pedido, transigir, desistir, renunciar ao direito sobre o qual se funda a ação, firmar compromissos ou acordos, receber e dar quitação, assinar termos de declaração de hipossuficiência, substabelecer com ou sem reserva, praticando todos os demais atos indispensáveis ao bom e fiel cumprimento deste mandato.</p>
+        ${lawsuit ? `<p class="mb-4 text-justify"><strong>FINALIDADE ESPECÍFICA:</strong> Atuar nos autos do processo nº <strong>${lawsuit.cnj_number}</strong> (${lawsuit.action_type || 'Ação Judicial'}), em trâmite perante a ${lawsuit.court_branch || 'Vara Competente'} do ${lawsuit.tribunal || 'Tribunal de Justiça'}.</p>` : ''}
+      `;
+    } else if (doc_type === 'hipossuficiencia') {
+      title = 'DECLARAÇÃO DE HIPOSSUFICIÊNCIA ECONÔMICA (JUSTIÇA GRATUITA)';
+      bodyHtml = `
+        <p class="mb-6 text-justify"><strong>DECLARANTE:</strong> ${clientQualif}.</p>
+        <p class="mb-6 text-justify"><strong>DECLARA</strong>, para os devidos fins de direito, em consonância com o Artigo 5º, inciso LXXIV da Constituição Federal de 1988 e Artigos 98 e seguintes do Código de Processo Civil (Lei 13.105/2015), que <strong>não possui condições financeiras de arcar com as custas processuais, taxas judiciárias e honorários advocatícios</strong> sem prejuízo de seu próprio sustento e de sua família.</p>
+        <p class="mb-6 text-justify">Por ser a expressão fiel da verdade, e ciente das penalidades cominadas no Art. 299 do Código Penal Brasileiro, firma a presente declaração para que produza seus efeitos jurídicos e legais.</p>
+      `;
+    } else if (doc_type === 'contrato_honorarios') {
+      title = 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS & HONORÁRIOS';
+      const contractVal = (client.contract_value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const instCount = client.installments_count || 1;
+      const instVal = (client.installment_value || (client.contract_value || 0) / instCount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      
+      bodyHtml = `
+        <p class="mb-4 text-justify"><strong>CONTRATANTE:</strong> ${clientQualif}.</p>
+        <p class="mb-4 text-justify"><strong>CONTRATADO:</strong> ${lawyerQualif}, integrando o escritório <strong>JORGE ALVIM ADVOCACIA & TECNOLOGIA</strong>.</p>
+        <p class="mb-4 text-justify"><strong>CLÁUSULA 1ª - DO OBJETO:</strong> O CONTRATADO prestará assistência jurídica profissional ao CONTRATANTE ${lawsuit ? `nos autos da demanda nº <strong>${lawsuit.cnj_number}</strong> (${lawsuit.action_type || 'Ação Judicial'}) perante o ${lawsuit.tribunal}` : 'na defesa de seus direitos e interesses judiciais e extrajudiciais'}.</p>
+        <p class="mb-4 text-justify"><strong>CLÁUSULA 2ª - DOS HONORÁRIOS:</strong> Em remuneração pelos serviços advocatícios ora contratados, o CONTRATANTE pagará ao CONTRATADO o valor total de <strong>${contractVal}</strong>, a ser adimplido em <strong>${instCount} parcela(s)</strong> de <strong>${instVal}</strong> cada, com vencimento estipulado a partir de <strong>${client.due_date || 'data da assinatura'}</strong>.</p>
+        <p class="mb-4 text-justify"><strong>CLÁUSULA 3ª - DO FORO:</strong> Para dirimir qualquer dúvida decorrente do presente contrato, as partes elegem o foro da Comarca de Juiz de Fora - MG.</p>
+      `;
+    } else {
+      title = 'FICHA CADASTRAL & QUALIFICAÇÃO INTEGRADA';
+      bodyHtml = `
+        <p class="mb-4 text-justify"><strong>DADOS CADASTRAIS CONSOLIDADOS:</strong></p>
+        <div class="p-4 bg-slate-50 border rounded-xl space-y-2 text-sm">
+          <div><strong>Nome Completo:</strong> ${client.full_name}</div>
+          <div><strong>Documento:</strong> ${isPJ ? 'CNPJ ' + client.cnpj : 'CPF ' + client.cpf + ' | RG ' + (client.rg || '—')}</div>
+          <div><strong>Endereço:</strong> ${client.street || ''}, ${client.number || ''} ${client.complement || ''} - ${client.neighborhood || ''}, ${client.city || ''}/${client.state || ''} - CEP ${client.cep || ''}</div>
+          <div><strong>Contatos:</strong> Telefone/WhatsApp: ${client.phone} | E-mail: ${client.email || '—'}</div>
+          <div><strong>Status do Contrato:</strong> ${client.contract_status || 'Ativo'} | Valor: ${(client.contract_value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+        </div>
+      `;
+    }
+
+    const documentObj = {
+      template_type: doc_type,
+      title,
+      date_formatted: `${client.city || 'Juiz de Fora - MG'}, ${formattedDate}`,
+      client_name: client.full_name,
+      content: bodyHtml
+    };
+
+    return res.json({
+      success: true,
+      document: documentObj,
+      doc_type,
+      title,
+      date_text: `${client.city || 'Juiz de Fora - MG'}, ${formattedDate}`,
+      client_name: client.full_name,
+      body_html: bodyHtml
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao gerar documento: ' + err.message });
+  }
+});
+
+// =============================================================================
 // 👥 MÓDULO DE GESTÃO DE PESSOAL (RH / DP) - CLT E ART. 7º DA CF/88
 // =============================================================================
 

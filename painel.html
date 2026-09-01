@@ -3778,7 +3778,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">CEP</label>
-              <input type="text" id="off-modal-cep" placeholder="36090-300" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500" />
+              <input 
+                type="text" 
+                id="off-modal-cep" 
+                placeholder="36090-300" 
+                oninput="maskCEP(this); if(this.value.replace(/\D/g,'').length===8) autoLookupOfficeCep();" 
+                onblur="autoLookupOfficeCep()"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-amber-500 font-mono" 
+              />
             </div>
 
             <div>
@@ -4197,7 +4204,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         <!-- 2. DADOS PRINCIPAIS DO CLIENTE -->
         <div class="space-y-3">
-          <h4 class="font-bold text-xs uppercase tracking-wider text-navy-900 border-b pb-1">1. Identificação Principal</h4>
+          <div class="flex justify-between items-center border-b pb-1">
+            <h4 class="font-bold text-xs uppercase tracking-wider text-navy-900">1. Identificação Principal</h4>
+            <span class="text-[11px] text-amber-700 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">⚡ Preenchimento Inteligente Ativo</span>
+          </div>
+
+          <!-- Banner dinâmico de CPF Encontrado no Banco -->
+          <div id="cli-cpf-found-badge" class="hidden p-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300 text-emerald-950 text-xs shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-base">⚡</span>
+              <div>
+                <strong id="cli-cpf-found-name">Pessoa Localizada</strong>
+                <p class="text-[11px] text-emerald-800" id="cli-cpf-found-detail">Dados cadastrais anteriores encontrados no sistema.</p>
+              </div>
+            </div>
+            <button type="button" id="cli-cpf-apply-btn" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center space-x-1 cursor-pointer">
+              <span>✨ Preencher Tudo em 1-Clique</span>
+            </button>
+          </div>
           
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <div class="sm:col-span-2">
@@ -4206,13 +4230,22 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
 
             <div id="field-cpf-container">
-              <label class="block text-xs font-bold text-slate-700 mb-1">CPF</label>
-              <input type="text" id="cli-cpf" placeholder="000.000.000-00" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              <label class="block text-xs font-bold text-slate-700 mb-1">CPF (Pessoa Física)</label>
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="cli-cpf" 
+                  placeholder="000.000.000-00" 
+                  oninput="maskCPF(this); if(this.value.replace(/\D/g,'').length===11) autoLookupClientCpf();" 
+                  onblur="autoLookupClientCpf()"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono" 
+                />
+              </div>
             </div>
 
             <div id="field-rg-container">
               <label class="block text-xs font-bold text-slate-700 mb-1">Carteira de Identidade (RG)</label>
-              <input type="text" id="cli-rg" placeholder="Ex: MG-12.345.678" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              <input type="text" id="cli-rg" placeholder="Ex: MG-12.345.678" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono" />
             </div>
 
             <div id="field-nationality-container">
@@ -4237,14 +4270,32 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <input type="text" id="cli-profession" placeholder="Ex: Motorista / Empresário / Aposentado(a)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
             </div>
 
-            <div id="field-cnpj-container" class="hidden">
-              <label class="block text-xs font-bold text-slate-700 mb-1">CNPJ *</label>
-              <input type="text" id="cli-cnpj" placeholder="00.000.000/0001-00" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+            <div id="field-cnpj-container" class="hidden sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-700 mb-1">CNPJ da Empresa (Busca Receita Federal Automática) *</label>
+              <div class="flex space-x-2">
+                <input 
+                  type="text" 
+                  id="cli-cnpj" 
+                  placeholder="00.000.000/0001-00" 
+                  oninput="maskCNPJ(this); if(this.value.replace(/\D/g,'').length===14) autoLookupClientCnpj();" 
+                  onblur="autoLookupClientCnpj()"
+                  class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono font-bold" 
+                />
+                <button 
+                  type="button" 
+                  onclick="autoLookupClientCnpj()" 
+                  class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-navy-950 font-extrabold text-xs shadow-xs transition-colors flex items-center space-x-1.5 whitespace-nowrap cursor-pointer"
+                  title="Consultar CNPJ na Receita Federal"
+                >
+                  <span>🔍</span>
+                  <span>Receita Federal</span>
+                </button>
+              </div>
             </div>
 
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Telefone / WhatsApp *</label>
-              <input type="tel" id="cli-phone" required placeholder="(32) 99888-7766" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              <input type="tel" id="cli-phone" required placeholder="(32) 99888-7766" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono" />
             </div>
 
             <div>
@@ -4283,16 +4334,40 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         <!-- 3. ENDEREÇO COMPLETO DO CLIENTE / SEDE -->
         <div class="space-y-3">
-          <h4 class="font-bold text-xs uppercase tracking-wider text-navy-900 border-b pb-1">2. Endereço Completo</h4>
+          <div class="flex justify-between items-center border-b pb-1">
+            <h4 class="font-bold text-xs uppercase tracking-wider text-navy-900">2. Endereço Completo (Auto-Preenchimento por CEP)</h4>
+            <span class="text-[10px] text-slate-500 font-medium">Digite o CEP para buscar rua, bairro e cidade</span>
+          </div>
           
           <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">CEP (Auto-Busca)</label>
+              <div class="flex space-x-1.5">
+                <input 
+                  type="text" 
+                  id="cli-cep" 
+                  placeholder="36010-001" 
+                  oninput="maskCEP(this); if(this.value.replace(/\D/g,'').length===8) autoLookupClientCep();" 
+                  onblur="autoLookupClientCep()"
+                  class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono font-bold" 
+                />
+                <button 
+                  type="button" 
+                  onclick="autoLookupClientCep()" 
+                  class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs" 
+                  title="Buscar CEP"
+                >
+                  🔍
+                </button>
+              </div>
+            </div>
             <div class="sm:col-span-2">
               <label class="block text-xs font-bold text-slate-700 mb-1">Rua / Logradouro</label>
               <input type="text" id="cli-street" placeholder="Ex: Rua Henrique Dias" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Número da Residência/Sede</label>
-              <input type="text" id="cli-number" placeholder="Ex: 259" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              <label class="block text-xs font-bold text-slate-700 mb-1">Número</label>
+              <input type="text" id="cli-number" placeholder="Ex: 259" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-bold" />
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Complemento</label>
@@ -4308,11 +4383,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Estado (UF)</label>
-              <input type="text" id="cli-state" value="MG" placeholder="Ex: MG" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white uppercase" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">CEP</label>
-              <input type="text" id="cli-cep" placeholder="36090-300" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              <input type="text" id="cli-state" value="MG" placeholder="Ex: MG" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white uppercase font-bold" />
             </div>
           </div>
         </div>
@@ -4331,7 +4402,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">CPF do Representante</label>
-              <input type="text" id="cli-rep-cpf" placeholder="000.000.000-00" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500" />
+              <input type="text" id="cli-rep-cpf" placeholder="000.000.000-00" oninput="maskCPF(this)" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 font-mono" />
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">RG do Representante</label>
@@ -4664,19 +4735,37 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </select>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Número CNJ -->
+        <div class="space-y-3">
+          <!-- Número CNJ com Auto-Busca Radar/DataJud -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Número do Processo (CNJ) *</label>
-            <input 
-              type="text" 
-              id="lawsuit-cnj" 
-              required 
-              placeholder="0000000-00.0000.0.00.0000" 
-              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white" 
-            />
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Número do Processo (CNJ) *</label>
+              <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">⚡ Auto-Preenchimento CNJ</span>
+            </div>
+            <div class="flex space-x-2">
+              <input 
+                type="text" 
+                id="lawsuit-cnj" 
+                required 
+                placeholder="0000000-00.0000.0.00.0000" 
+                oninput="maskCNJ(this); if(this.value.replace(/\D/g,'').length===20) autoLookupLawsuitCnj();" 
+                onblur="autoLookupLawsuitCnj()"
+                class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white text-xs sm:text-sm" 
+              />
+              <button 
+                type="button" 
+                onclick="autoLookupLawsuitCnj()" 
+                class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-navy-950 font-bold text-xs shadow-xs transition-colors flex items-center space-x-1.5 whitespace-nowrap cursor-pointer"
+                title="Decodificar e Preencher Dados do Processo"
+              >
+                <span>🔍</span>
+                <span>Decodificar CNJ</span>
+              </button>
+            </div>
           </div>
+        </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Tribunal -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tribunal *</label>
@@ -4693,9 +4782,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <option value="Outro">Outro Tribunal / Órgão</option>
             </select>
           </div>
-        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Instância -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Grau / Instância *</label>
@@ -4706,7 +4793,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <option value="Fase Administrativa">Fase Administrativa / JARI</option>
             </select>
           </div>
+        </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Status do Processo -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Status Atual *</label>
@@ -4719,6 +4808,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <option value="Julgado Improcedente">Julgado Improcedente</option>
               <option value="Arquivado">Arquivado</option>
             </select>
+          </div>
+
+          <!-- Data de Distribuição -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Data de Distribuição</label>
+            <input type="date" id="lawsuit-dist-date" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white" />
           </div>
         </div>
 
@@ -4737,14 +4832,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Data de Distribuição -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Data de Distribuição</label>
-            <input type="date" id="lawsuit-dist-date" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white" />
-          </div>
-
           <!-- Juiz Titular / Relator -->
-          <div>
+          <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Juiz / Relator (Opcional)</label>
             <input type="text" id="lawsuit-judge" placeholder="Nome do magistrado..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white" />
           </div>
@@ -4763,6 +4852,120 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: GERADOR INTELIGENTE DE PEÇAS & DOCUMENTOS JURÍDICOS ================= -->
+  <div id="legal-doc-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[94vh] overflow-y-auto space-y-5 my-auto">
+      <button onclick="closeLegalDocModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <!-- Topo Modal -->
+      <div class="flex items-center space-x-3.5 pb-4 border-b border-slate-100">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 via-gold-500 to-amber-600 text-navy-950 flex items-center justify-center text-2xl font-bold shadow-gold-glow border border-gold-400/80">
+          📄
+        </div>
+        <div>
+          <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950 flex items-center space-x-2">
+            <span>Gerador Inteligente de Documentos & Peças</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-950 text-[10px] font-extrabold uppercase border border-emerald-300">Zero Digitação</span>
+          </h3>
+          <p class="text-xs text-slate-500">Gere Procurações, Declarações e Contratos com qualificação 100% preenchida automaticamente.</p>
+        </div>
+      </div>
+
+      <!-- Controles de Seleção e Tipo -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Documento *</label>
+          <select id="doc-select-type" onchange="generateLegalDocLive()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm font-bold text-navy-950 focus:outline-none focus:border-amber-500">
+            <option value="procuracao">📄 Procuração Ad Judicia Et Extra</option>
+            <option value="hipossuficiencia">📜 Declaração de Hipossuficiência (Justiça Gratuita)</option>
+            <option value="contrato_honorarios">📑 Contrato de Prestação de Serviços & Honorários</option>
+            <option value="ficha_cadastral">🧾 Ficha Cadastral e Qualificação</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Cliente Vinculado *</label>
+          <select id="doc-select-client" onchange="generateLegalDocLive()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-amber-500">
+            <option value="">Selecione o cliente...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Processo Judicial (Opcional)</label>
+          <select id="doc-select-lawsuit" onchange="generateLegalDocLive()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-amber-500">
+            <option value="">Nenhum (Finalidade Geral)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Preview do Documento Timbrado -->
+      <div class="border border-slate-300 rounded-2xl bg-slate-100 p-4 sm:p-6 overflow-hidden">
+        <div id="legal-doc-printable-area" class="bg-white p-6 sm:p-10 rounded-xl shadow-md border border-slate-200 text-slate-800 font-serif leading-relaxed text-sm max-w-2xl mx-auto space-y-6">
+          
+          <!-- Cabeçalho Timbrado do Escritório -->
+          <div class="text-center border-b-2 border-amber-600/60 pb-4 space-y-1">
+            <h2 class="font-serif font-black text-lg sm:text-xl text-navy-950 tracking-wide uppercase">Jorge Alvim Advocacia & Tecnologia</h2>
+            <p class="text-xs text-slate-600 font-sans font-medium">Sociedade de Advocacia • OAB/MG nº 142.890 • CNPJ 12.345.678/0001-90</p>
+            <p class="text-[11px] text-slate-500 font-sans">Rua Halfeld, 805, 12º Andar, Centro, Juiz de Fora - MG • Tel/WhatsApp: (32) 99841-8980</p>
+          </div>
+
+          <!-- Título do Documento -->
+          <div class="text-center pt-2">
+            <h3 id="doc-preview-title" class="font-bold text-base sm:text-lg text-navy-950 uppercase tracking-wider border-b border-slate-100 pb-2">
+              PROCURAÇÃO AD JUDICIA ET EXTRA
+            </h3>
+          </div>
+
+          <!-- Conteúdo Principal do Documento -->
+          <div id="doc-preview-body" class="text-justify text-xs sm:text-sm leading-relaxed space-y-4 font-sans text-slate-700">
+            Selecione um cliente para gerar o documento automaticamente...
+          </div>
+
+          <!-- Data e Assinatura -->
+          <div class="pt-6 space-y-6 text-center">
+            <p id="doc-preview-date" class="text-right text-xs font-sans text-slate-600">Juiz de Fora - MG, 1 de setembro de 2026</p>
+            
+            <div class="pt-8 flex flex-col items-center justify-center">
+              <div class="w-64 border-t border-slate-400"></div>
+              <strong id="doc-preview-client-name" class="text-xs text-navy-950 font-bold mt-1">Nome do Cliente</strong>
+              <span class="text-[11px] text-slate-500 font-sans">Outorgante / Contratante</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Barra de Ações do Documento -->
+      <div class="pt-2 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="flex items-center space-x-2 text-xs text-slate-500">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span>Documento timbrado em conformidade com as normas do CPC e da OAB.</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+          <button 
+            type="button" 
+            onclick="copyLegalDocText()" 
+            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+          >
+            <span>📋</span>
+            <span>Copiar Texto</span>
+          </button>
+
+          <button 
+            type="button" 
+            onclick="printLegalDoc()" 
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-navy-950 font-extrabold text-xs shadow-gold-glow transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400/60"
+          >
+            <span>🖨️</span>
+            <span>Imprimir / Salvar PDF</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -6669,6 +6872,351 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       });
     }
 
+    // ================= MÁSCARAS E PREENCHIMENTO UNIVERSAL =================
+    function maskCPF(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 11);
+      if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+      else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+      input.value = v;
+    }
+
+    function maskCNPJ(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 14);
+      if (v.length > 12) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+      else if (v.length > 8) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{1,4})/, '$1.$2.$3/$4');
+      else if (v.length > 5) v = v.replace(/(\d{2})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      else if (v.length > 2) v = v.replace(/(\d{2})(\d{1,3})/, '$1.$2');
+      input.value = v;
+    }
+
+    function maskCEP(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 8);
+      if (v.length > 5) v = v.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+      input.value = v;
+    }
+
+    function maskCNJ(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 20);
+      if (v.length > 16) v = v.replace(/(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{1,4})/, '$1-$2.$3.$4.$5.$6');
+      else if (v.length > 14) v = v.replace(/(\d{7})(\d{2})(\d{4})(\d{1})(\d{1,2})/, '$1-$2.$3.$4.$5');
+      else if (v.length > 13) v = v.replace(/(\d{7})(\d{2})(\d{4})(\d{1})/, '$1-$2.$3.$4');
+      else if (v.length > 9) v = v.replace(/(\d{7})(\d{2})(\d{1,4})/, '$1-$2.$3');
+      else if (v.length > 7) v = v.replace(/(\d{7})(\d{1,2})/, '$1-$2');
+      input.value = v;
+    }
+
+    // 1. Auto-Busca Universal por CEP
+    async function lookupAndFillCep(cepValue, streetId, neighId, cityId, stateId, numId) {
+      const clean = (cepValue || '').replace(/\D/g, '');
+      if (clean.length !== 8) return;
+
+      try {
+        const res = await fetch(`/api/lookup/cep/${clean}`);
+        const data = await res.json();
+        if (data.success && data.address) {
+          const a = data.address;
+          if (streetId && document.getElementById(streetId)) document.getElementById(streetId).value = a.street || '';
+          if (neighId && document.getElementById(neighId)) document.getElementById(neighId).value = a.neighborhood || '';
+          if (cityId && document.getElementById(cityId)) document.getElementById(cityId).value = a.city || '';
+          if (stateId && document.getElementById(stateId)) document.getElementById(stateId).value = a.state || '';
+          if (numId && document.getElementById(numId)) {
+            document.getElementById(numId).focus();
+          }
+        }
+      } catch (err) {
+        console.error('Erro na busca de CEP:', err);
+      }
+    }
+
+    function autoLookupClientCep() {
+      lookupAndFillCep(document.getElementById('cli-cep')?.value, 'cli-street', 'cli-neighborhood', 'cli-city', 'cli-state', 'cli-number');
+    }
+
+    function autoLookupOfficeCep() {
+      lookupAndFillCep(document.getElementById('off-modal-cep')?.value, 'off-modal-street', 'off-modal-neighborhood', 'off-modal-city', 'off-modal-state', 'off-modal-number');
+    }
+
+    function autoLookupEmployeeCep() {
+      lookupAndFillCep(document.getElementById('emp-cep')?.value, 'emp-street', 'emp-neighborhood', 'emp-city', 'emp-state', 'emp-number');
+    }
+
+    function autoLookupMemberCep() {
+      lookupAndFillCep(document.getElementById('mem-modal-cep')?.value, 'mem-modal-street', 'mem-modal-neighborhood', 'mem-modal-city', 'mem-modal-state', 'mem-modal-number');
+    }
+
+    // 2. Auto-Busca de CNPJ na Receita Federal
+    async function autoLookupClientCnpj() {
+      const cnpjInput = document.getElementById('cli-cnpj');
+      if (!cnpjInput) return;
+      const clean = cnpjInput.value.replace(/\D/g, '');
+      if (clean.length !== 14) return;
+
+      try {
+        const res = await fetch(`/api/lookup/cnpj/${clean}`);
+        const data = await res.json();
+        if (data.success && data.company) {
+          const c = data.company;
+          if (document.getElementById('cli-fullname') && c.corporate_name) {
+            document.getElementById('cli-fullname').value = c.corporate_name;
+          }
+          if (document.getElementById('cli-email') && c.email) {
+            document.getElementById('cli-email').value = c.email;
+          }
+          if (document.getElementById('cli-phone') && c.phone) {
+            document.getElementById('cli-phone').value = c.phone;
+          }
+          if (document.getElementById('cli-street') && c.street) {
+            document.getElementById('cli-street').value = c.street;
+          }
+          if (document.getElementById('cli-number') && c.number) {
+            document.getElementById('cli-number').value = c.number;
+          }
+          if (document.getElementById('cli-complement') && c.complement) {
+            document.getElementById('cli-complement').value = c.complement;
+          }
+          if (document.getElementById('cli-neighborhood') && c.neighborhood) {
+            document.getElementById('cli-neighborhood').value = c.neighborhood;
+          }
+          if (document.getElementById('cli-city') && c.city) {
+            document.getElementById('cli-city').value = c.city;
+          }
+          if (document.getElementById('cli-state') && c.state) {
+            document.getElementById('cli-state').value = c.state;
+          }
+          if (document.getElementById('cli-cep') && c.cep) {
+            document.getElementById('cli-cep').value = c.cep;
+          }
+          if (c.representative_name && document.getElementById('cli-rep-name')) {
+            document.getElementById('cli-rep-name').value = c.representative_name;
+          }
+          if (c.representative_cpf && document.getElementById('cli-rep-cpf')) {
+            document.getElementById('cli-rep-cpf').value = c.representative_cpf;
+          }
+        }
+      } catch (err) {
+        console.error('Erro na consulta CNPJ:', err);
+      }
+    }
+
+    // 3. Auto-Detecção Inteligente de CPF de Pessoa
+    async function autoLookupClientCpf() {
+      const cpfInput = document.getElementById('cli-cpf');
+      if (!cpfInput) return;
+      const clean = cpfInput.value.replace(/\D/g, '');
+      if (clean.length !== 11) return;
+
+      try {
+        const res = await fetch(`/api/lookup/person/${clean}`);
+        const data = await res.json();
+        const badge = document.getElementById('cli-cpf-found-badge');
+        const applyBtn = document.getElementById('cli-cpf-apply-btn');
+
+        if (data.success && data.person && badge) {
+          const p = data.person;
+          document.getElementById('cli-cpf-found-name').textContent = `${p.full_name} (${p.source_type})`;
+          document.getElementById('cli-cpf-found-detail').textContent = `Encontrado em ${p.source_type} • Telefone: ${p.phone || '—'} • ${p.city || ''}/${p.state || ''}`;
+          badge.classList.remove('hidden');
+
+          applyBtn.onclick = () => {
+            if (p.full_name && document.getElementById('cli-fullname')) document.getElementById('cli-fullname').value = p.full_name;
+            if (p.rg && document.getElementById('cli-rg')) document.getElementById('cli-rg').value = p.rg;
+            if (p.nationality && document.getElementById('cli-nationality')) document.getElementById('cli-nationality').value = p.nationality;
+            if (p.marital_status && document.getElementById('cli-marital-status')) document.getElementById('cli-marital-status').value = p.marital_status;
+            if (p.profession && document.getElementById('cli-profession')) document.getElementById('cli-profession').value = p.profession;
+            if (p.phone && document.getElementById('cli-phone')) document.getElementById('cli-phone').value = p.phone;
+            if (p.email && document.getElementById('cli-email')) document.getElementById('cli-email').value = p.email;
+            if (p.street && document.getElementById('cli-street')) document.getElementById('cli-street').value = p.street;
+            if (p.number && document.getElementById('cli-number')) document.getElementById('cli-number').value = p.number;
+            if (p.complement && document.getElementById('cli-complement')) document.getElementById('cli-complement').value = p.complement;
+            if (p.neighborhood && document.getElementById('cli-neighborhood')) document.getElementById('cli-neighborhood').value = p.neighborhood;
+            if (p.city && document.getElementById('cli-city')) document.getElementById('cli-city').value = p.city;
+            if (p.state && document.getElementById('cli-state')) document.getElementById('cli-state').value = p.state;
+            if (p.cep && document.getElementById('cli-cep')) document.getElementById('cli-cep').value = p.cep;
+            if (p.filiation_father && document.getElementById('cli-father')) document.getElementById('cli-father').value = p.filiation_father;
+            if (p.filiation_mother && document.getElementById('cli-mother')) document.getElementById('cli-mother').value = p.filiation_mother;
+            badge.classList.add('hidden');
+          };
+        } else if (badge) {
+          badge.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('Erro na consulta de CPF:', err);
+      }
+    }
+
+    // 4. Auto-Decodificação e Preenchimento de Processo por CNJ
+    async function autoLookupLawsuitCnj() {
+      const cnjInput = document.getElementById('lawsuit-cnj');
+      if (!cnjInput) return;
+      const clean = cnjInput.value.replace(/\D/g, '');
+      if (clean.length !== 20) return;
+
+      try {
+        const res = await fetch(`/api/lookup/cnj/${clean}`);
+        const data = await res.json();
+        if (data.success && data.lawsuit) {
+          const l = data.lawsuit;
+          if (l.tribunal && document.getElementById('lawsuit-tribunal')) {
+            document.getElementById('lawsuit-tribunal').value = l.tribunal;
+          }
+          if (l.instance && document.getElementById('lawsuit-instance')) {
+            document.getElementById('lawsuit-instance').value = l.instance;
+          }
+          if (l.court_branch && document.getElementById('lawsuit-court-branch')) {
+            document.getElementById('lawsuit-court-branch').value = l.court_branch;
+          }
+          if (l.action_type && document.getElementById('lawsuit-action-type')) {
+            document.getElementById('lawsuit-action-type').value = l.action_type;
+          }
+          if (l.distribution_date && document.getElementById('lawsuit-dist-date')) {
+            document.getElementById('lawsuit-dist-date').value = l.distribution_date;
+          }
+          if (l.judge_name && document.getElementById('lawsuit-judge')) {
+            document.getElementById('lawsuit-judge').value = l.judge_name;
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao decodificar CNJ:', err);
+      }
+    }
+
+    // 5. Conversão Direta de Lead em Cliente em 1-Clique
+    function convertLeadToClient(leadId) {
+      const lead = allLeads.find(l => String(l.id) === String(leadId));
+      if (!lead) return;
+
+      // Abre o modal de cliente em modo novo
+      openNewClientModal();
+
+      // Preenche os campos vindos do lead
+      if (document.getElementById('cli-fullname')) document.getElementById('cli-fullname').value = lead.name || '';
+      if (document.getElementById('cli-phone')) document.getElementById('cli-phone').value = lead.phone || '';
+      if (document.getElementById('cli-email')) document.getElementById('cli-email').value = lead.email || '';
+      if (document.getElementById('cli-city')) document.getElementById('cli-city').value = lead.city || 'Juiz de Fora';
+      if (document.getElementById('cli-notes')) {
+        document.getElementById('cli-notes').value = `[Convertido do Atendimento #${lead.id} - Área: ${lead.area || 'Geral'}]\n${lead.message || ''}`;
+      }
+    }
+
+    // 6. Gerador Inteligente de Documentos Timbrados com Qualificação Automática
+    let currentGeneratedDoc = { title: '', content: '', date: '', clientName: '' };
+
+    function openLegalDocModal(docType = 'procuracao', clientId = '', lawsuitId = '') {
+      populateLegalDocSelects(clientId, lawsuitId);
+      if (document.getElementById('doc-select-type')) {
+        document.getElementById('doc-select-type').value = docType;
+      }
+      document.getElementById('legal-doc-modal')?.classList.remove('hidden');
+      generateLegalDocLive();
+    }
+
+    function closeLegalDocModal() {
+      document.getElementById('legal-doc-modal')?.classList.add('hidden');
+    }
+
+    function populateLegalDocSelects(preselectedClientId = '', preselectedLawsuitId = '') {
+      const clientSelect = document.getElementById('doc-select-client');
+      const lawsuitSelect = document.getElementById('doc-select-lawsuit');
+
+      if (clientSelect) {
+        clientSelect.innerHTML = '<option value="">Selecione o cliente cadastrado...</option>' +
+          allClients.map(c => `
+            <option value="${c.id}" ${String(c.id) === String(preselectedClientId) ? 'selected' : ''}>
+              ${c.full_name} (${c.client_type === 'PJ' ? 'CNPJ: ' + (c.cnpj || '—') : 'CPF: ' + (c.cpf || '—')})
+            </option>
+          `).join('');
+      }
+
+      if (lawsuitSelect) {
+        const availableLaws = preselectedClientId 
+          ? allLawsuits.filter(l => String(l.client_id) === String(preselectedClientId))
+          : allLawsuits;
+
+        lawsuitSelect.innerHTML = '<option value="">Nenhum processo específico (Finalidade Geral)</option>' +
+          availableLaws.map(l => `
+            <option value="${l.id}" ${String(l.id) === String(preselectedLawsuitId) ? 'selected' : ''}>
+              CNJ: ${l.cnj_number} (${l.tribunal || 'Tribunal'} - ${l.action_type || 'Ação'})
+            </option>
+          `).join('');
+      }
+    }
+
+    async function generateLegalDocLive() {
+      const docType = document.getElementById('doc-select-type')?.value || 'procuracao';
+      const clientId = document.getElementById('doc-select-client')?.value;
+      const lawsuitId = document.getElementById('doc-select-lawsuit')?.value;
+
+      if (!clientId) {
+        document.getElementById('doc-preview-title').textContent = 'SELECIONE UM CLIENTE';
+        document.getElementById('doc-preview-body').innerHTML = '<p class="text-center py-6 text-slate-400 italic">Por favor, selecione um cliente no menu acima para carregar automaticamente a qualificação completa, endereço e poderes legais.</p>';
+        document.getElementById('doc-preview-client-name').textContent = 'Nome do Cliente';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/documents/generate-template', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({
+            template_type: docType,
+            client_id: clientId,
+            lawsuit_id: lawsuitId || undefined
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.document) {
+          const doc = data.document;
+          currentGeneratedDoc = doc;
+          document.getElementById('doc-preview-title').textContent = doc.title;
+          document.getElementById('doc-preview-body').innerHTML = doc.content;
+          document.getElementById('doc-preview-date').textContent = doc.date_formatted;
+          document.getElementById('doc-preview-client-name').textContent = doc.client_name;
+        } else {
+          document.getElementById('doc-preview-body').innerHTML = `<p class="text-rose-600 font-bold">${data.error || 'Erro ao gerar documento.'}</p>`;
+        }
+      } catch (err) {
+        console.error('Erro ao gerar documento live:', err);
+      }
+    }
+
+    function printLegalDoc() {
+      const printContents = document.getElementById('legal-doc-printable-area').innerHTML;
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${currentGeneratedDoc.title || 'Documento Jurídico'}</title>
+          <style>
+            @page { size: A4; margin: 20mm; }
+            body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #111; padding: 20px; }
+            h2 { text-transform: uppercase; font-size: 14pt; margin-bottom: 2px; }
+            h3 { text-transform: uppercase; font-size: 13pt; text-align: center; margin: 20px 0; }
+            p { text-align: justify; margin-bottom: 12px; }
+            .header-timbrado { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+            .signature-area { margin-top: 50px; text-align: center; }
+            .signature-line { width: 300px; border-top: 1px solid #111; margin: 0 auto 5px auto; }
+          </style>
+        </head>
+        <body onload="window.print();">
+          ${printContents}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    function copyLegalDocText() {
+      const area = document.getElementById('legal-doc-printable-area');
+      if (!area) return;
+      const text = area.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('📋 Texto do documento copiado para a área de transferência com sucesso!');
+      });
+    }
+
     // Alternar entre Abas
     function switchTab(tab) {
       const tabLeads = document.getElementById('tab-content-leads');
@@ -7377,6 +7925,45 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   <span>Carnê & PIX Asaas</span>
                 </button>
 
+                <!-- Gerador 1-Clique de Documentos Timbrados -->
+                <div class="flex items-center space-x-1 border-l border-slate-300 pl-2">
+                  <button 
+                    onclick="openLegalDocModal('procuracao', '${client.id}')" 
+                    class="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-extrabold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-amber-600"
+                    title="Gerar Procuração Ad Judicia 100% preenchida em 1-Clique"
+                  >
+                    <span>📄</span>
+                    <span>Gerar Procuração</span>
+                  </button>
+
+                  <button 
+                    onclick="openLegalDocModal('contrato_honorarios', '${client.id}')" 
+                    class="px-2.5 py-1.5 rounded-xl bg-gold-400 hover:bg-gold-300 text-navy-950 font-extrabold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-gold-600"
+                    title="Gerar Contrato de Honorários 100% preenchido em 1-Clique"
+                  >
+                    <span>📑</span>
+                    <span>Gerar Contrato</span>
+                  </button>
+
+                  <button 
+                    onclick="openLegalDocModal('hipossuficiencia', '${client.id}')" 
+                    class="px-2.5 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-900 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-teal-300"
+                    title="Gerar Declaração de Hipossuficiência em 1-Clique"
+                  >
+                    <span>📜</span>
+                    <span>Gerar Declaração</span>
+                  </button>
+
+                  <button 
+                    onclick="openLegalDocModal('ficha_cadastral', '${client.id}')" 
+                    class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-slate-300"
+                    title="Gerar Ficha Cadastral em 1-Clique"
+                  >
+                    <span>🧾</span>
+                    <span>Ficha</span>
+                  </button>
+                </div>
+
               </div>
             </div>
 
@@ -7875,6 +8462,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               </select>
             </td>
             <td class="px-4 sm:px-6 py-3 sm:py-4 text-right space-x-1 sm:space-x-2 whitespace-nowrap">
+              <button onclick="convertLeadToClient('${lead.id}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold shadow-xs inline-flex items-center space-x-1" title="Converter Atendimento em Cliente Cadastrado (Preenchimento Automático)">
+                <span>🚀</span>
+                <span>Converter</span>
+              </button>
               <button onclick="viewLeadDetails('${lead.id}')" class="p-1.5 text-slate-500 hover:text-navy-950 hover:bg-slate-100 rounded-md" title="Ver Mensagem">
                 👁️
               </button>
@@ -8088,6 +8679,15 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
             <!-- Botões de Ação do Processo -->
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
+              <button 
+                onclick="openLegalDocModal('procuracao', '${law.client_id}', '${law.id}')" 
+                class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold text-xs shadow-xs transition-colors cursor-pointer border border-amber-600"
+                title="Gerar Peça/Procuração vinculada a este Processo CNJ"
+              >
+                <span>📄</span>
+                <span>Gerar Doc</span>
+              </button>
+
               <button 
                 onclick="openNewMovementModal('${law.id}')" 
                 class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
