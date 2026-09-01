@@ -1348,7 +1348,21 @@
 
         let actionBtn = '';
         if (isPago) {
-          actionBtn = `<span class="text-xs font-bold text-emerald-700">✓ Pago</span>`;
+          if (inst.nfse_url || inst.nfse_id) {
+            actionBtn = `
+              <a 
+                href="${inst.nfse_url || ('/api/financial/receipts/' + inst.nfse_id)}" 
+                target="_blank" 
+                class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300 transition-colors shadow-2xs"
+                title="Visualizar Nota Fiscal Eletrônica / Recibo Oficial"
+              >
+                <span>📄</span>
+                <span>NFS-e / Recibo</span>
+              </a>
+            `;
+          } else {
+            actionBtn = `<span class="text-xs font-bold text-emerald-700">✓ Quitado</span>`;
+          }
         } else {
           actionBtn = `
             <button 

@@ -30,7 +30,7 @@ async function runTests() {
     const dbPath = path.join(projectRoot, 'leads.db');
     const db = new DatabaseSync(dbPath);
 
-    const tables = ['clients', 'office_members', 'lawsuits', 'office_drive_files', 'audit_logs', 'blog_posts', 'users', 'calendar_events', 'court_publications', 'court_holidays', 'hr_employees', 'hr_contracts', 'hr_medical_exams', 'hr_time_clock', 'hr_payrolls', 'hr_vacations', 'hr_thirteenth_salary'];
+    const tables = ['clients', 'office_members', 'lawsuits', 'office_drive_files', 'audit_logs', 'blog_posts', 'users', 'calendar_events', 'court_publications', 'court_holidays', 'hr_employees', 'hr_contracts', 'hr_medical_exams', 'hr_time_clock', 'hr_payrolls', 'hr_vacations', 'hr_thirteenth_salary', 'nfse_invoices'];
     let allTablesOk = true;
     const missingTables = [];
 
@@ -42,7 +42,7 @@ async function runTests() {
       }
     });
 
-    logTestResult('Banco de Dados SQLite (leads.db)', allTablesOk, allTablesOk ? 'Todas as 17 tabelas ativas (incluindo as 7 tabelas do Módulo de Gestão de Pessoal RH/DP)' : `Faltam tabelas: ${missingTables.join(', ')}`);
+    logTestResult('Banco de Dados SQLite (leads.db)', allTablesOk, allTablesOk ? 'Todas as 18 tabelas ativas (incluindo Módulo NFS-e e Recibos OAB)' : `Faltam tabelas: ${missingTables.join(', ')}`);
   } catch (err) {
     logTestResult('Banco de Dados SQLite (leads.db)', false, err.message);
   }
@@ -336,6 +336,49 @@ async function runTests() {
       });
       const docContData = await docContRes.json();
       logTestResult('API Zero Digitação - Gerador de Contrato de Honorários (/api/documents/generate-template)', docContRes.status === 200 && docContData.success && docContData.document?.content?.includes('CONTRATANTE'), `Documento: "${docContData.document?.title}" gerado com cláusulas financeiras e honorários`);
+
+      // 26. Emissão de Nota Fiscal de Serviços Eletrônica (NFS-e Asaas)
+      const nfseRes = await fetch(`${baseUrl}/api/financial/nfse/asaas/issue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({
+          client_id: clientsData.clients?.[0]?.id || 'CLI-001',
+          value: 1500.00,
+          service_code: '17.01',
+          service_description: 'Assessoria e Consultoria Jurídica em Juiz de Fora - Dr. Jorge Alvim OAB/MG 142.890'
+        })
+      });
+      const nfseData = await nfseRes.json();
+      logTestResult('API NFS-e Asaas - Emissão de Nota Fiscal Eletrônica (/api/financial/nfse/asaas/issue)', nfseRes.status === 201 && nfseData.success, `NFS-e #${nfseData.invoice?.invoice_number} emitida no valor de R$ ${nfseData.invoice?.value?.toFixed(2)} (Status: ${nfseData.invoice?.status})`);
+
+      // 27. Emissão de Recibo / RPS Timbrado OAB com Hash Criptográfico SHA-256
+      const receiptRes = await fetch(`${baseUrl}/api/financial/receipts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({
+          client_id: clientsData.clients?.[0]?.id || 'CLI-001',
+          value: 750.00,
+          service_description: 'Quitação de honorários advocatícios referente à atuação judicial.'
+        })
+      });
+      const receiptData = await receiptRes.json();
+      const receiptHash = receiptData.receipt?.hash_signature;
+      logTestResult('API Recibo OAB - Emissão de Recibo Timbrado com Hash SHA-256 (/api/financial/receipts/generate)', receiptRes.status === 201 && receiptData.success && !!receiptHash, `Recibo #${receiptData.receipt?.receipt_number} gerado com Hash: ${receiptHash?.substring(0, 16)}...`);
+
+      // 28. Verificador Público de Autenticidade do Recibo / NFS-e
+      const verifyRes = await fetch(`${baseUrl}/api/financial/receipts/verify/${receiptHash}`);
+      const verifyData = await verifyRes.json();
+      logTestResult('API Validador de Autenticidade - Verificação por Hash (/api/financial/receipts/verify/:hash)', verifyRes.status === 200 && verifyData.valid === true, `Autenticado: "${verifyData.lawyer}" para "${verifyData.document?.client_name}"`);
+
+      // 29. Página Pública de Validação Instantânea (QR Code Smartphone)
+      const verifyPageRes = await fetch(`${baseUrl}/validar-recibo/${receiptHash}`);
+      const verifyPageHtml = await verifyPageRes.text();
+      logTestResult('Página Pública de Validação Digital (/validar-recibo/:hash)', verifyPageRes.status === 200 && verifyPageHtml.includes('CERTIFICADO DIGITAL VÁLIDO'), `Página de validação responsiva com selo de autenticidade`);
+
+      // 30. Listagem Geral de Notas Fiscais e Recibos (Painel Financeiro)
+      const listNfseRes = await fetch(`${baseUrl}/api/financial/nfse`, { headers });
+      const listNfseData = await listNfseRes.json();
+      logTestResult('API Gestão de NFS-e & Recibos - Listagem Geral (/api/financial/nfse)', listNfseRes.status === 200 && listNfseData.success && listNfseData.invoices?.length >= 2, `${listNfseData.invoices?.length} documento(s) fiscal(is) cadastrados | Total: R$ ${listNfseData.kpis?.total_value?.toFixed(2)}`);
     }
   } catch (err) {
     logTestResult('Teste de APIs do Servidor', false, err.message);
