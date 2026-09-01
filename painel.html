@@ -1910,12 +1910,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   <th class="py-3 px-1.5 text-center" title="Portal do Cliente">🌐 Portal Cliente</th>
                   <th class="py-3 px-1.5 text-center" title="Gestão de Usuários">🔐 Usuários</th>
                   <th class="py-3 px-1.5 text-center" title="Configurações & Gateway">⚙️ Config</th>
+                  <th class="py-3 px-2 text-center" title="Simular visão do usuário no painel">🎭 Testar Visão</th>
                   <th class="py-3 px-3 text-center">Status Geral</th>
                 </tr>
               </thead>
               <tbody id="access-matrix-tbody" class="divide-y divide-slate-200">
                 <tr>
-                  <td colspan="17" class="text-center py-10 text-slate-400">
+                  <td colspan="18" class="text-center py-10 text-slate-400">
                     Carregando matriz de controle de acessos...
                   </td>
                 </tr>
@@ -1936,10 +1937,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         <!-- Box de Usuários Operadores Tradicionais (PBKDF2) -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 sm:p-6 bg-slate-50/80 border-b border-slate-200 flex justify-between items-center">
+          <div class="p-4 sm:p-6 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Operadores com Acesso Direto ao Painel (Logins & Senhas)</h4>
-              <p class="text-xs text-slate-500">Credenciais criptografadas via algoritmo PBKDF2 com Salt Seguro.</p>
+              <div class="flex items-center space-x-2.5">
+                <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Operadores com Acesso Direto ao Painel (Logins & Senhas)</h4>
+                <span id="users-summary-badge" class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-extrabold border border-amber-300">0 operadores</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Credenciais criptografadas via algoritmo PBKDF2 com Salt Seguro e proteção contra invasão.</p>
             </div>
             <button 
               onclick="openNewUserModal()" 
@@ -9592,7 +9596,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (list.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="17" class="text-center py-10 text-slate-400">
+            <td colspan="18" class="text-center py-10 text-slate-400">
               Nenhum cadastrado encontrado com os filtros selecionados.
             </td>
           </tr>
@@ -9656,6 +9660,21 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </select>
           `;
 
+        // Botão de Simulação de Visão
+        const testVisionBtn = isMaster
+          ? `<span class="text-[10px] text-amber-700 font-bold">Visão Plena</span>`
+          : `
+            <button 
+              type="button" 
+              onclick="simulateUserView('${item.user_id}')" 
+              class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-extrabold text-[10px] border border-indigo-300 shadow-2xs transition-all flex items-center space-x-1 mx-auto"
+              title="Testar e simular imediatamente o painel como ${item.user_name}"
+            >
+              <span>👁️</span>
+              <span>Testar</span>
+            </button>
+          `;
+
         // Botão de Status Geral
         const statusBtn = isMaster
           ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-[10px]">🟢 Vitalício</span>`
@@ -9688,10 +9707,117 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </td>
             <td class="py-3 px-2">${templateSelector}</td>
             ${switchesHtml}
+            <td class="py-3 px-2 text-center">${testVisionBtn}</td>
             <td class="py-3 px-3 text-center">${statusBtn}</td>
           </tr>
         `;
       }).join('');
+    }
+
+    // ================= SIMULADOR DE VISÃO DE PERFIL =================
+    let originalMasterState = null;
+    let simulatedUser = null;
+
+    function simulateUserView(userId) {
+      const user = accessMatrixState.data.find(u => u.user_id === userId);
+      if (!user) return;
+
+      simulatedUser = user;
+
+      // 1. Aplica as permissões do usuário simulado na interface
+      applyAccessControlToUI(user);
+
+      // 2. Exibe o banner de simulação no topo
+      let banner = document.getElementById('simulation-mode-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'simulation-mode-banner';
+        document.body.prepend(banner);
+      }
+
+      banner.className = 'fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-800 via-indigo-800 to-navy-950 text-white px-4 py-2.5 shadow-2xl flex items-center justify-between text-xs font-bold border-b border-purple-400/40';
+      banner.innerHTML = `
+        <div class="flex items-center space-x-2.5">
+          <span class="text-base animate-bounce">🎭</span>
+          <span>MODO DE TESTE DE PERMISSÃO ATIVO:</span>
+          <span class="px-2 py-0.5 rounded-full bg-white/20 text-gold-300 font-mono text-[11px]">${user.user_name} (${user.notes || user.role_template})</span>
+          <span class="text-slate-300 font-normal hidden md:inline">— Visualizando apenas as abas e funções autorizadas nos switches de arrasto.</span>
+        </div>
+        <button 
+          onclick="exitSimulationView()" 
+          class="px-3.5 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs shadow-md transition-all cursor-pointer flex items-center space-x-1"
+        >
+          <span>✕</span>
+          <span>Sair do Modo de Teste (Voltar ao Dr. Jorge Alvim)</span>
+        </button>
+      `;
+
+      // 3. Muda para a primeira aba permitida
+      const firstAllowedTab = getFirstAllowedTab(user);
+      if (firstAllowedTab) {
+        switchTab(firstAllowedTab);
+      }
+    }
+
+    function exitSimulationView() {
+      simulatedUser = null;
+      const banner = document.getElementById('simulation-mode-banner');
+      if (banner) banner.remove();
+
+      // Restaura acesso mestre irrestrito
+      const masterPerms = {
+        is_master: true,
+        tab_leads: 1, tab_clients: 1, tab_lawsuits: 1, tab_radar: 1,
+        tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
+        tab_hr: 1, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 1,
+        tab_users: 1, tab_settings: 1
+      };
+      applyAccessControlToUI(masterPerms);
+      switchTab('users');
+    }
+
+    function getFirstAllowedTab(perms) {
+      if (perms.tab_leads) return 'leads';
+      if (perms.tab_clients) return 'clients';
+      if (perms.tab_lawsuits) return 'lawsuits';
+      if (perms.tab_calendar) return 'calendar';
+      if (perms.tab_publications) return 'publications';
+      if (perms.tab_financial) return 'finance';
+      if (perms.tab_hr) return 'hr';
+      if (perms.tab_drive) return 'drive';
+      if (perms.tab_users) return 'users';
+      return 'leads';
+    }
+
+    function applyAccessControlToUI(perms) {
+      if (!perms) return;
+      const isMaster = perms.is_master || perms.role_template === 'master';
+
+      const toggleTabBtn = (id, allowed) => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          if (isMaster || allowed) {
+            btn.classList.remove('!hidden');
+            btn.style.display = '';
+          } else {
+            btn.classList.add('!hidden');
+            btn.style.display = 'none';
+          }
+        }
+      };
+
+      toggleTabBtn('tab-btn-leads', perms.tab_leads === 1);
+      toggleTabBtn('tab-btn-clients', perms.tab_clients === 1);
+      toggleTabBtn('tab-btn-lawsuits', perms.tab_lawsuits === 1);
+      toggleTabBtn('tab-btn-judicial', perms.tab_radar === 1);
+      toggleTabBtn('tab-btn-offices', perms.tab_offices === 1);
+      toggleTabBtn('tab-btn-drive', perms.tab_drive === 1);
+      toggleTabBtn('tab-btn-calendar', perms.tab_calendar === 1);
+      toggleTabBtn('tab-btn-publications', perms.tab_publications === 1);
+      toggleTabBtn('tab-btn-hr', perms.tab_hr === 1);
+      toggleTabBtn('tab-btn-finance', perms.tab_financial === 1);
+      toggleTabBtn('tab-btn-nfse', perms.tab_financial === 1);
+      toggleTabBtn('tab-btn-users', perms.tab_users === 1);
     }
 
     async function toggleAccessSwitch(userId, tabKey, currentVal) {
@@ -9776,7 +9902,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         }
         const data = await res.json();
         if (data.success) {
-          allUsers = data.users;
+          allUsers = data.users || [];
           renderUsers(allUsers);
         }
       } catch (err) {
@@ -9794,15 +9920,19 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
     function renderUsers(users) {
       const tbody = document.getElementById('users-table-body');
+      if (!tbody) return;
+
       const count = users.length;
-      document.getElementById('tab-users-count').textContent = count;
-      document.getElementById('users-summary-badge').textContent = `${count} ${count === 1 ? 'usuário registrado' : 'usuários registrados'}`;
+      const badge1 = document.getElementById('tab-users-count');
+      if (badge1) badge1.textContent = count;
+      const badge2 = document.getElementById('users-summary-badge');
+      if (badge2) badge2.textContent = `${count} ${count === 1 ? 'operador registrado' : 'operadores registrados'}`;
 
       if (users.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="6" class="text-center py-10 text-slate-400">
-              Nenhum usuário localizado. Clique em <strong>➕ Incluir Usuário</strong> para cadastrar.
+              Nenhum operador localizado. Clique em <strong>➕ Incluir Novo Operador</strong> para cadastrar.
             </td>
           </tr>
         `;
@@ -9810,7 +9940,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       }
 
       tbody.innerHTML = users.map(u => {
-        const isMaster = u.username === 'jorgealvimtecnologia' || u.role === 'master';
+        const isMaster = u.username === 'jorgealvimtecnologia' || u.role === 'master' || u.username === 'jorge alvim' || u.username === 'admin';
         const initials = u.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         const avatarBg = isMaster ? 'bg-gold-500 text-navy-950 font-extrabold' : 'bg-slate-200 text-slate-700 font-bold';
 
@@ -9826,11 +9956,11 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               </span>`
             : `<span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs">
                 <span>🛡️</span>
-                <span>Administrador Geral</span>
+                <span>Operador / Advogado</span>
               </span>`);
 
         const deleteButton = isMaster
-          ? `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed border border-slate-200" title="O usuário mestre jorgealvimtecnologia está protegido contra exclusão por motivos de segurança.">
+          ? `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed border border-slate-200" title="O usuário mestre está protegido contra exclusão.">
                <span>🔒</span>
                <span>Mestre Blindado</span>
              </span>`
@@ -9839,7 +9969,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                <span>Excluir</span>
              </button>`;
 
-        const dateFormatted = new Date(u.created_at).toLocaleDateString('pt-BR', {
+        const dateFormatted = new Date(u.created_at || Date.now()).toLocaleDateString('pt-BR', {
           day: '2-digit', month: '2-digit', year: 'numeric'
         });
 
@@ -9865,7 +9995,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <td class="px-5 py-4 whitespace-nowrap">
               <span class="inline-flex items-center space-x-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>Criptografada</span>
+                <span>PBKDF2 Segura</span>
               </span>
             </td>
             <td class="px-5 py-4 text-xs text-slate-500 whitespace-nowrap">${dateFormatted}</td>
@@ -9874,9 +10004,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <button 
                   onclick="openEditUserModal('${u.id}')" 
                   class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-900 border border-amber-300 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  title="Alterar dados e redefinir senha"
                 >
                   <span>✏️</span>
-                  <span>Alterar</span>
+                  <span>Alterar Senha</span>
                 </button>
                 ${deleteButton}
               </div>
