@@ -1959,8 +1959,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <tr>
                   <th class="py-3 px-4">Nome do Operador</th>
                   <th class="py-3 px-4">Login de Acesso</th>
+                  <th class="py-3 px-4">Senha de Acesso (Modo Criação/Testes)</th>
                   <th class="py-3 px-4">Função no Painel</th>
-                  <th class="py-3 px-4">Criptografia de Senha</th>
+                  <th class="py-3 px-4">Segurança / Criptografia</th>
                   <th class="py-3 px-4 text-center">Ações</th>
                 </tr>
               </thead>
@@ -9688,6 +9689,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </button>
           `;
 
+        const passTag = item.plain_password ? `
+          <div class="mt-1 flex items-center space-x-1">
+            <span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 font-mono text-[9px] font-bold">🔑 ${item.plain_password}</span>
+          </div>
+        ` : '';
+
         return `
           <tr class="hover:bg-slate-50/80 transition-colors ${item.is_active === 0 ? 'opacity-50 bg-slate-50' : ''}">
             <td class="py-3 px-3">
@@ -9702,6 +9709,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   </div>
                   <div class="text-[10px] text-slate-500 truncate font-medium">${item.notes || item.role_name}</div>
                   <div class="text-[9px] text-slate-400 font-mono truncate">${item.user_identifier || ''}</div>
+                  ${passTag}
                 </div>
               </div>
             </td>
@@ -9973,6 +9981,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           day: '2-digit', month: '2-digit', year: 'numeric'
         });
 
+        const passText = u.plain_password || (isMaster ? 'jorgealvim' : '123456');
+        const passCell = `
+          <td class="px-5 py-4 whitespace-nowrap">
+            <div class="inline-flex items-center space-x-2 bg-amber-50/90 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-mono font-black text-amber-950 shadow-2xs">
+              <span>🔑</span>
+              <span id="user-plain-pass-${u.id}" class="select-all tracking-wider">${passText}</span>
+              <button 
+                type="button" 
+                onclick="navigator.clipboard.writeText('${passText}'); alert('Senha copiada: ${passText}');" 
+                class="text-[11px] text-amber-700 hover:text-amber-950 ml-1 px-1.5 py-0.5 rounded hover:bg-amber-200 transition-colors cursor-pointer" 
+                title="Copiar senha"
+              >
+                📋
+              </button>
+            </div>
+          </td>
+        `;
+
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="px-5 py-4 min-w-[200px]">
@@ -9991,14 +10017,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 @${u.username}
               </span>
             </td>
+            ${passCell}
             <td class="px-5 py-4 whitespace-nowrap">${roleBadge}</td>
             <td class="px-5 py-4 whitespace-nowrap">
               <span class="inline-flex items-center space-x-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>PBKDF2 Segura</span>
+                <span>PBKDF2 + Aberta</span>
               </span>
             </td>
-            <td class="px-5 py-4 text-xs text-slate-500 whitespace-nowrap">${dateFormatted}</td>
             <td class="px-5 py-4 text-center whitespace-nowrap">
               <div class="inline-flex items-center justify-center space-x-2">
                 <button 
@@ -10067,10 +10093,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       document.getElementById('eu-id').value = user.id;
       document.getElementById('eu-username').value = user.username;
       document.getElementById('eu-name').value = user.name;
-      document.getElementById('eu-password').value = '';
+      document.getElementById('eu-password').value = user.plain_password || '';
       document.getElementById('edit-user-error').classList.add('hidden');
       document.getElementById('edit-user-modal').classList.remove('hidden');
-      setTimeout(() => { document.getElementById('eu-name')?.focus(); }, 100);
+      setTimeout(() => { document.getElementById('eu-password')?.focus(); }, 100);
     }
 
     function closeEditUserModal() {

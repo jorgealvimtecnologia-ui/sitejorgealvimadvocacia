@@ -70,9 +70,18 @@ db.exec(`
     salt TEXT NOT NULL,
     name TEXT NOT NULL,
     role TEXT DEFAULT 'admin',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    plain_password TEXT
   );
 `);
+
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN plain_password TEXT;`);
+} catch (e) {}
+
+try {
+  db.exec(`ALTER TABLE access_permissions ADD COLUMN plain_password TEXT;`);
+} catch (e) {}
 
 // 3. Tabela Completa de Gestão de Clientes e Contratos
 db.exec(`
@@ -1118,8 +1127,8 @@ try {
   const masterCheck = db.prepare(`SELECT id FROM users WHERE username = ? OR id = ?`).get('jorgealvimtecnologia', 'USR-MASTER-01');
   if (!masterCheck) {
     db.prepare(`
-      INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, username, password_hash, salt, name, role, created_at, plain_password)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'USR-MASTER-01',
       'jorgealvimtecnologia',
@@ -1127,17 +1136,35 @@ try {
       salt,
       'Dr. Jorge Alvim (Mestre)',
       'master',
-      new Date().toISOString()
+      new Date().toISOString(),
+      'jorgealvim'
     );
     console.log('👑 [AUTH] Usuário Mestre "jorgealvimtecnologia" criado com sucesso.');
   } else {
     db.prepare(`
       UPDATE users 
-      SET password_hash = ?, salt = ?, role = 'master' 
+      SET password_hash = ?, salt = ?, role = 'master', plain_password = 'jorgealvim' 
       WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'
     `).run(hash, salt);
     console.log('👑 [AUTH] Credenciais do Usuário Mestre "jorgealvimtecnologia" sincronizadas com sucesso.');
   }
+
+  // Preenche senhas legíveis para os operadores cadastrados para fins de desenvolvimento / testes
+  db.exec(`
+    UPDATE users SET plain_password = 'jorgealvim' WHERE username = 'jorgealvimtecnologia' OR id = 'USR-MASTER-01' OR username LIKE '%jorge%';
+    UPDATE users SET plain_password = 'mariana123' WHERE username LIKE '%mariana%';
+    UPDATE users SET plain_password = 'gabriela123' WHERE username LIKE '%gabriela%';
+    UPDATE users SET plain_password = 'lucas123' WHERE username LIKE '%lucas%';
+    UPDATE users SET plain_password = 'patricia123' WHERE username LIKE '%patricia%';
+    UPDATE users SET plain_password = 'carlos123' WHERE username LIKE '%carlos%';
+    UPDATE users SET plain_password = 'roberto123' WHERE username LIKE '%roberto%';
+    UPDATE users SET plain_password = 'camila123' WHERE username LIKE '%camila%';
+    UPDATE users SET plain_password = 'fernanda123' WHERE username LIKE '%fernanda%';
+    UPDATE users SET plain_password = 'juliana123' WHERE username LIKE '%juliana%';
+    UPDATE users SET plain_password = 'gabriel123' WHERE username LIKE '%gabriel%';
+    UPDATE users SET plain_password = 'cliente123' WHERE plain_password IS NULL AND role = 'cliente';
+    UPDATE users SET plain_password = '123456' WHERE plain_password IS NULL;
+  `);
 } catch (err) {
   console.error('Erro ao verificar usuário mestre:', err);
 }
@@ -1830,9 +1857,11 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/users', requireAuth, (req, res) => {
   try {
     const rows = db.prepare(`
-      SELECT id, username, name, role, created_at 
+      SELECT id, username, name, role, created_at, COALESCE(plain_password, '123456') AS plain_password 
       FROM users 
-      ORDER BY created_at ASC
+      ORDER BY 
+        CASE WHEN role = 'master' THEN 1 ELSE 2 END,
+        created_at ASC
     `).all();
     return res.json({ success: true, users: rows });
   } catch (error) {
@@ -1854,18 +1883,19 @@ app.post('/api/users', requireAuth, (req, res) => {
     }
 
     const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = password.trim();
     const existing = db.prepare(`SELECT id FROM users WHERE username = ?`).get(cleanUsername);
 
     if (existing) {
       return res.status(400).json({ error: 'Este nome de usuário já está cadastrado.' });
     }
 
-    const { hash, salt } = hashPassword(password);
+    const { hash, salt } = hashPassword(cleanPassword);
     const userId = 'USR-' + Date.now();
 
     db.prepare(`
-      INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, username, password_hash, salt, name, role, created_at, plain_password)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       userId,
       cleanUsername,
@@ -1873,7 +1903,8 @@ app.post('/api/users', requireAuth, (req, res) => {
       salt,
       name.trim(),
       role || 'admin',
-      new Date().toISOString()
+      new Date().toISOString(),
+      cleanPassword
     );
 
     logAudit(req, {
@@ -1915,12 +1946,13 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
       if (password.trim().length < 4) {
         return res.status(400).json({ error: 'A nova senha deve ter no mínimo 4 caracteres.' });
       }
-      const { hash, salt } = hashPassword(password.trim());
+      const cleanPassword = password.trim();
+      const { hash, salt } = hashPassword(cleanPassword);
       db.prepare(`
         UPDATE users 
-        SET name = ?, password_hash = ?, salt = ?, role = ? 
+        SET name = ?, password_hash = ?, salt = ?, role = ?, plain_password = ? 
         WHERE id = ?
-      `).run(updatedName, hash, salt, updatedRole, id);
+      `).run(updatedName, hash, salt, updatedRole, cleanPassword, id);
     } else {
       db.prepare(`
         UPDATE users 
@@ -2251,10 +2283,31 @@ app.get('/api/access-control/matrix', requireAuth, (req, res) => {
       clients: rows.filter(r => r.role_template === 'cliente').length
     };
 
+    // Mapeamento rápido de senhas de usuários do painel para desenvolvimento / testes
+    const userPassMap = new Map();
+    db.prepare(`SELECT id, username, plain_password FROM users`).all().forEach(u => {
+      userPassMap.set(u.id, u.plain_password || '123456');
+      if (u.username) userPassMap.set(u.username, u.plain_password || '123456');
+    });
+
     const matrix = rows.map(r => {
       const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
+      let passwordPreview = userPassMap.get(r.user_id) || userPassMap.get(r.user_identifier);
+      if (!passwordPreview) {
+        if (r.role_template === 'master' || (r.user_name || '').toLowerCase().includes('jorge alvim')) {
+          passwordPreview = 'jorgealvim';
+        } else if (r.role_template === 'cliente') {
+          passwordPreview = 'CPF / CNPJ';
+        } else if (r.user_type === 'empregado') {
+          passwordPreview = 'Data Nasc.';
+        } else {
+          passwordPreview = '123456';
+        }
+      }
+
       return {
         ...r,
+        plain_password: passwordPreview,
         is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01' || (r.user_name || '').toLowerCase().includes('jorge alvim'),
         badge_label: tpl.badge_label,
         badge_class: tpl.badge_class,
