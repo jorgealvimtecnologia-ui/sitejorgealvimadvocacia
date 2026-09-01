@@ -11633,6 +11633,76 @@ app.get('/api/hr/reports/annual-financial/office', requireAuth, (req, res) => {
   }
 });
 
+// ================= BACKUP & EXPORTAÇÃO DE DADOS (ADMIN) =================
+
+// 1. Download do Banco de Dados SQLite leads.db
+app.get('/api/admin/backup/download-db', requireAuth, (req, res) => {
+  try {
+    const dbPath = path.resolve(__dirname, 'leads.db');
+    if (!fs.existsSync(dbPath)) {
+      return res.status(404).json({ error: 'Arquivo do banco de dados não encontrado.' });
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `backup-jorgealvim-db-${timestamp}.sqlite`;
+
+    logAudit(req, {
+      event_type: 'EXPORTACAO',
+      event_name: 'BACKUP_SQLITE',
+      module: 'SISTEMA',
+      description: `Backup completo do banco de dados SQLite baixado pelo operador ${req.user.name}.`
+    });
+
+    res.download(dbPath, filename);
+  } catch (err) {
+    console.error('Erro ao gerar download de backup:', err);
+    res.status(500).json({ error: 'Erro ao gerar backup.' });
+  }
+});
+
+// 2. Exportação Completa de Todas as Tabelas em JSON
+app.get('/api/admin/backup/export-full-json', requireAuth, (req, res) => {
+  try {
+    const tables = [
+      'leads', 'users', 'clients', 'offices', 'contract_installments',
+      'lawsuits', 'lawsuit_timeline', 'court_calendar', 'court_publications',
+      'office_files', 'audit_logs', 'system_settings', 'hr_employees',
+      'hr_time_clock', 'hr_payroll', 'hr_vacations', 'access_permissions', 'nfse_invoices'
+    ];
+
+    const backupData = {
+      system: 'Jorge Alvim Advocacia & Tecnologia',
+      version: '2.5.0-Enterprise',
+      exported_at: new Date().toISOString(),
+      exported_by: req.user.name,
+      tables: {}
+    };
+
+    for (const table of tables) {
+      try {
+        backupData.tables[table] = db.prepare(`SELECT * FROM ${table}`).all();
+      } catch (e) {
+        backupData.tables[table] = [];
+      }
+    }
+
+    logAudit(req, {
+      event_type: 'EXPORTACAO',
+      event_name: 'BACKUP_JSON_TOTAL',
+      module: 'SISTEMA',
+      description: `Dump JSON completo de todas as 18 tabelas exportado pelo operador ${req.user.name}.`
+    });
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="dump-jorgealvim-${timestamp}.json"`);
+    return res.send(JSON.stringify(backupData, null, 2));
+  } catch (err) {
+    console.error('Erro ao exportar JSON completo:', err);
+    res.status(500).json({ error: 'Erro ao exportar dump JSON.' });
+  }
+});
+
 // Middleware Global de Tratamento de Erros (Multer e Servidor)
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {

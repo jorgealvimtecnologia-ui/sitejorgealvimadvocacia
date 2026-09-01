@@ -109,8 +109,12 @@
   }
   </script>
 
-  <!-- Favicon -->
+  <!-- Favicon & PWA Manifest -->
   <link rel="icon" type="image/svg+xml" href="./public/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#B8860B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2360,6 +2364,15 @@
       } catch (err) {
         console.warn('Fallback para matérias estáticas:', err);
       }
+    }
+
+    // ================= REGISTRO DE SERVICE WORKER PWA =================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('📱 [PWA] Service Worker registrado com sucesso! Escopo:', reg.scope))
+          .catch((err) => console.warn('📱 [PWA] Falha ao registrar Service Worker:', err));
+      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {

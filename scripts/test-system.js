@@ -379,6 +379,22 @@ async function runTests() {
       const listNfseRes = await fetch(`${baseUrl}/api/financial/nfse`, { headers });
       const listNfseData = await listNfseRes.json();
       logTestResult('API Gestão de NFS-e & Recibos - Listagem Geral (/api/financial/nfse)', listNfseRes.status === 200 && listNfseData.success && listNfseData.invoices?.length >= 2, `${listNfseData.invoices?.length} documento(s) fiscal(is) cadastrados | Total: R$ ${listNfseData.kpis?.total_value?.toFixed(2)}`);
+
+      // 31. PWA - Manifesto & Service Worker Offline
+      const manifestRes = await fetch(`${baseUrl}/manifest.json`);
+      const manifestData = await manifestRes.json();
+      const swRes = await fetch(`${baseUrl}/sw.js`);
+      logTestResult('PWA - Manifesto & Service Worker (/manifest.json & /sw.js)', manifestRes.status === 200 && manifestData.name?.includes('Jorge Alvim') && swRes.status === 200, `PWA Standalone ativo: "${manifestData.short_name}"`);
+
+      // 32. API Backup Administrativo - Download SQLite
+      const backupDbRes = await fetch(`${baseUrl}/api/admin/backup/download-db`, { headers });
+      logTestResult('API Backup - Download SQLite em 1-Clique (/api/admin/backup/download-db)', backupDbRes.status === 200 && backupDbRes.headers.get('content-disposition')?.includes('.sqlite'), `Arquivo SQLite baixado com sucesso`);
+
+      // 33. API Backup Administrativo - Dump JSON Total de Todas as Tabelas
+      const backupJsonRes = await fetch(`${baseUrl}/api/admin/backup/export-full-json`, { headers });
+      const backupJsonData = await backupJsonRes.json();
+      const tablesCount = Object.keys(backupJsonData.tables || {}).length;
+      logTestResult('API Backup - Dump JSON Total de Todas as Tabelas (/api/admin/backup/export-full-json)', backupJsonRes.status === 200 && tablesCount >= 15, `${tablesCount} tabelas exportadas para o operador ${backupJsonData.exported_by}`);
     }
   } catch (err) {
     logTestResult('Teste de APIs do Servidor', false, err.message);
