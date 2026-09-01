@@ -1762,127 +1762,197 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
       </div>
 
-      <!-- ================= ABA 12: USUÁRIOS & SENHAS ================= -->
+      <!-- ================= ABA 12: USUÁRIOS & MATRIZ DE CONTROLE DE ACESSOS (RBAC/ABAC) ================= -->
       <section id="tab-content-users" class="hidden space-y-6">
         
-        <!-- Banner Informativo Superior com Destaques Claros -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-amber-50/80 p-5 rounded-2xl border border-amber-300 text-amber-950 shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-gold-500 text-navy-950 flex items-center justify-center text-2xl flex-shrink-0 shadow-sm font-bold">
-              👑
+        <!-- Topo: Título & Sub-Navegação da Gestão de Acessos -->
+        <div class="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-5">
+            <div class="flex items-center space-x-3.5">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 via-gold-500 to-amber-600 text-navy-950 flex items-center justify-center text-2xl font-bold shadow-gold-glow border border-gold-400/80">
+                🛡️
+              </div>
+              <div>
+                <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950 flex items-center space-x-2">
+                  <span>Quadro de Gestão de Acessos & Permissões Granulares</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-950 text-[10px] font-extrabold uppercase border border-emerald-300">RBAC / ABAC Híbrido</span>
+                </h3>
+                <p class="text-xs text-slate-500">Controle visual de permissões aba a aba para todos os cadastrados (Advogados, Estagiários, Donos de Escritório, Motoristas, Secretárias e Clientes).</p>
+              </div>
             </div>
-            <div class="min-w-0">
-              <span class="text-[10px] uppercase tracking-wider text-amber-800 font-bold">Administrador Mestre</span>
-              <h4 class="font-bold text-sm truncate text-navy-950">jorgealvimtecnologia</h4>
-              <p class="text-[11px] text-slate-600">Acesso total e controle mestre</p>
+
+            <!-- Botões de Ação Superior -->
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button 
+                onclick="loadAccessControlMatrix()" 
+                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer"
+                title="Sincronizar e Recarregar Matriz"
+              >
+                <span>🔄</span>
+                <span>Sincronizar Cadastrados</span>
+              </button>
+              <button 
+                onclick="openNewUserModal()" 
+                class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-navy-950 font-extrabold text-xs shadow-gold-glow transition-all flex items-center space-x-1.5 cursor-pointer border border-gold-400/60"
+              >
+                <span>➕</span>
+                <span>Novo Operador</span>
+              </button>
             </div>
           </div>
 
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-2xl flex-shrink-0">
-              🔒
+          <!-- Cards de Métricas em Tempo Real da Matriz -->
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs" id="access-matrix-stats">
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-amber-800 block">Total Cadastrados</span>
+              <p class="text-xl sm:text-2xl font-black text-amber-950 font-mono" id="stat-acc-total">0</p>
+              <p class="text-[11px] text-amber-700">Pessoas Físicas & Jurídicas</p>
             </div>
-            <div>
-              <span class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Criptografia PBKDF2</span>
-              <h4 class="font-bold text-sm text-navy-950">Senhas Blindadas</h4>
-              <p class="text-[11px] text-emerald-600 font-semibold">Salt Seguro com 10.000 iterações</p>
-            </div>
-          </div>
 
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-              <span class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Controle Rápido</span>
-              <h4 class="font-bold text-sm text-navy-950">Novo Acesso</h4>
-              <p class="text-[11px] text-slate-500">Cadastre secretária ou advogado</p>
+            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-emerald-800 block">👑 Mestre & Sócios</span>
+              <p class="text-xl sm:text-2xl font-black text-emerald-950 font-mono" id="stat-acc-masters">0</p>
+              <p class="text-[11px] text-emerald-700">Acesso Pleno / Direção</p>
             </div>
-            <button 
-              onclick="openNewUserModal()" 
-              class="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs shadow-sm transition-all transform hover:scale-105 flex items-center space-x-1.5 flex-shrink-0"
-            >
-              <span>➕ Incluir</span>
-            </button>
+
+            <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-indigo-800 block">⚖️ Advogados Associados</span>
+              <p class="text-xl sm:text-2xl font-black text-indigo-950 font-mono" id="stat-acc-lawyers">0</p>
+              <p class="text-[11px] text-indigo-700">Processos, Radar & Prazos</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-purple-800 block">👥 Equipe & Apoio DP</span>
+              <p class="text-xl sm:text-2xl font-black text-purple-950 font-mono" id="stat-acc-staff">0</p>
+              <p class="text-[11px] text-purple-700">Estagiários, Motorista, Secr.</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-teal-50/70 border border-teal-200/80 space-y-1">
+              <span class="text-[10px] font-bold uppercase text-teal-800 block">👤 Clientes no Portal</span>
+              <p class="text-xl sm:text-2xl font-black text-teal-950 font-mono" id="stat-acc-clients">0</p>
+              <p class="text-[11px] text-teal-700">Autoatendimento Processual</p>
+            </div>
           </div>
         </div>
 
-        <!-- Box de Usuários -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden">
-          <div class="p-4 sm:p-6 bg-slate-50/80 border-b border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div class="flex items-center space-x-3">
-              <div class="w-9 h-9 rounded-lg bg-gold-100 text-gold-800 border border-gold-300 flex items-center justify-center shadow-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950">Usuários Cadastrados no Sistema</h3>
-                <p class="text-xs text-slate-500">Gerenciamento completo: controle de logins, redefinição de senhas e cancelamento de acessos.</p>
-              </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
-              <div class="relative w-full sm:w-56">
-                <input 
-                  type="text" 
-                  id="search-users-input" 
-                  placeholder="Buscar usuário..." 
-                  class="w-full pl-8 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-xs focus:outline-none focus:border-gold-500 transition-colors"
-                  oninput="filterUsers()"
-                />
-                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-              </div>
-
-              <button 
-                onclick="openNewUserModal()" 
-                class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs shadow-sm transition-all border border-gold-400/60 cursor-pointer"
-              >
-                <span class="text-white font-extrabold text-sm">➕</span>
-                <span>Incluir Usuário</span>
-              </button>
-
-              <button 
-                onclick="loadUsers()" 
-                class="inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs transition-colors"
-              >
-                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                <span class="hidden sm:inline">Recarregar</span>
-              </button>
-            </div>
+        <!-- Barra de Filtros & Busca da Matriz -->
+        <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+          <div class="relative flex-1">
+            <input 
+              type="text" 
+              id="search-access-matrix" 
+              oninput="filterAccessMatrix()" 
+              placeholder="Buscar cadastrado por nome, CPF, login ou cargo..." 
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:outline-none focus:border-amber-500 focus:bg-white transition-colors"
+            />
+            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[700px]">
-              <thead class="bg-slate-100/80 text-[10px] sm:text-xs uppercase font-bold text-slate-600 border-b border-slate-200">
-                <tr>
-                  <th class="px-5 py-3.5">Usuário / Nome</th>
-                  <th class="px-5 py-3.5">Login de Acesso</th>
-                  <th class="px-5 py-3.5">Nível de Permissão</th>
-                  <th class="px-5 py-3.5">Segurança / Senha</th>
-                  <th class="px-5 py-3.5">Data de Cadastro</th>
-                  <th class="px-5 py-3.5 text-center">Painel de Ações</th>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="filter-access-category" onchange="filterAccessMatrix()" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+              <option value="all">Todas as Funções & Vínculos</option>
+              <option value="master">👑 Dr. Jorge Alvim (Mestre)</option>
+              <option value="dono_escritorio">🏛️ Sócios Titulares / Donos de Escritório</option>
+              <option value="advogado">⚖️ Advogados Associados</option>
+              <option value="estagiario">🎓 Estagiários de Direito</option>
+              <option value="secretaria">💼 Secretárias & Recepção</option>
+              <option value="gerente">🏢 Gerência & DP</option>
+              <option value="motorista">🚗 Motoristas & Externo</option>
+              <option value="cliente">👤 Clientes (PF / PJ)</option>
+            </select>
+
+            <select id="filter-access-status" onchange="filterAccessMatrix()" class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+              <option value="all">Todos os Status</option>
+              <option value="active">🟢 Apenas Acessos Ativos</option>
+              <option value="inactive">🔴 Apenas Acessos Suspensos</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Matriz Interativa com Switches Deslizantes -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
+          <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h4 class="font-bold text-xs sm:text-sm text-navy-950">Matriz Granular de Acessos em Tempo Real</h4>
+            </div>
+            <p class="text-[11px] text-slate-500">Clique nos botões de arrastar (switches) para ligar/desligar permissões instantaneamente.</p>
+          </div>
+
+          <div class="overflow-x-auto p-2">
+            <table class="w-full text-left text-xs border-collapse min-w-[1450px]">
+              <thead>
+                <tr class="bg-navy-950 text-gold-300 font-bold uppercase tracking-wider text-[10px] border-b border-navy-900">
+                  <th class="py-3 px-3 w-64">Cadastrado / Vínculo</th>
+                  <th class="py-3 px-2 w-44">Perfil Modelo (1-Clique)</th>
+                  <th class="py-3 px-1.5 text-center" title="Leads & Oportunidades">🎯 Leads</th>
+                  <th class="py-3 px-1.5 text-center" title="Gestão de Clientes & Contratos">👥 Clientes</th>
+                  <th class="py-3 px-1.5 text-center" title="Processos Judiciais (CNJ)">⚖️ Processos</th>
+                  <th class="py-3 px-1.5 text-center" title="Radar Judicial (Python)">📡 Radar</th>
+                  <th class="py-3 px-1.5 text-center" title="Escritórios PJ">🏛️ Escritórios</th>
+                  <th class="py-3 px-1.5 text-center" title="Drive de Documentos">📁 Drive</th>
+                  <th class="py-3 px-1.5 text-center" title="Agenda & Prazos">📅 Agenda</th>
+                  <th class="py-3 px-1.5 text-center" title="Intimações & DJEN">📰 Intimações</th>
+                  <th class="py-3 px-1.5 text-center" title="Gestão de Pessoal RH/DP">👥 RH/DP</th>
+                  <th class="py-3 px-1.5 text-center" title="Ficha Financeira Geral">📊 Ficha Anual</th>
+                  <th class="py-3 px-1.5 text-center" title="Portal do Colaborador">👤 Colaborador</th>
+                  <th class="py-3 px-1.5 text-center" title="Portal do Cliente">🌐 Portal Cliente</th>
+                  <th class="py-3 px-1.5 text-center" title="Gestão de Usuários">🔐 Usuários</th>
+                  <th class="py-3 px-1.5 text-center" title="Configurações & Gateway">⚙️ Config</th>
+                  <th class="py-3 px-3 text-center">Status Geral</th>
                 </tr>
               </thead>
-              <tbody id="users-table-body" class="divide-y divide-slate-100">
+              <tbody id="access-matrix-tbody" class="divide-y divide-slate-200">
                 <tr>
-                  <td colspan="6" class="text-center py-10 text-slate-400">
-                    Carregando usuários cadastrados...
+                  <td colspan="17" class="text-center py-10 text-slate-400">
+                    Carregando matriz de controle de acessos...
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+          <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
             <div class="flex items-center space-x-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Todos os acessos possuem proteção de token com expiração automática.</span>
+              <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">👑 GOD MODE ATIVO</span>
+              <span>O Dr. Jorge Alvim possui acesso total perpétuo a 100% dos recursos sem restrições.</span>
             </div>
-            <div id="users-summary-badge" class="font-bold text-slate-700">
-              1 usuário registrado
+            <div id="access-matrix-count" class="font-bold text-slate-700">
+              0 cadastrados listados
             </div>
+          </div>
+        </div>
+
+        <!-- Box de Usuários Operadores Tradicionais (PBKDF2) -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 sm:p-6 bg-slate-50/80 border-b border-slate-200 flex justify-between items-center">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">Operadores com Acesso Direto ao Painel (Logins & Senhas)</h4>
+              <p class="text-xs text-slate-500">Credenciais criptografadas via algoritmo PBKDF2 com Salt Seguro.</p>
+            </div>
+            <button 
+              onclick="openNewUserModal()" 
+              class="px-4 py-2 bg-navy-900 hover:bg-navy-800 text-gold-400 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1 cursor-pointer"
+            >
+              <span>➕ Incluir Novo Operador</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 text-[11px] font-bold text-slate-600 border-b border-slate-200 uppercase">
+                <tr>
+                  <th class="py-3 px-4">Nome do Operador</th>
+                  <th class="py-3 px-4">Login de Acesso</th>
+                  <th class="py-3 px-4">Função no Painel</th>
+                  <th class="py-3 px-4">Criptografia de Senha</th>
+                  <th class="py-3 px-4 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-slate-100">
+                <!-- Renderizado via JS -->
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -6723,6 +6793,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       } else if (tab === 'users') {
         tabUsers.classList.remove('hidden');
         btnUsers.className = activeClass;
+        loadAccessControlMatrix();
         loadUsers();
       } else if (tab === 'hr') {
         if (tabHr) tabHr.classList.remove('hidden');
@@ -6826,6 +6897,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       loadLeads();
       loadClients();
       loadOffices();
+      loadAccessControlMatrix();
       loadUsers();
     }
 
@@ -8451,6 +8523,268 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           await loadLawsuits();
         } else {
           alert(data.error || 'Erro ao excluir andamento.');
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    // =============================================================================
+    // 🛡️ MATRIZ DE GESTÃO DE ACESSOS & PERMISSÕES GRANULARES (RBAC/ABAC HÍBRIDO)
+    // =============================================================================
+
+    const accessMatrixState = {
+      data: [],
+      templates: {},
+      stats: {},
+      filtered: []
+    };
+
+    const TABS_CONFIG = [
+      { key: 'tab_leads', label: 'Leads', icon: '🎯', title: 'Leads & Oportunidades' },
+      { key: 'tab_clients', label: 'Clientes', icon: '👥', title: 'Clientes & Contratos' },
+      { key: 'tab_lawsuits', label: 'Processos', icon: '⚖️', title: 'Processos Judiciais (CNJ)' },
+      { key: 'tab_radar', label: 'Radar', icon: '📡', title: 'Radar Judicial (Motor Python)' },
+      { key: 'tab_offices', label: 'Escritórios', icon: '🏛️', title: 'Escritórios PJ' },
+      { key: 'tab_drive', label: 'Drive', icon: '📁', title: 'Drive & Arquivo Digital' },
+      { key: 'tab_calendar', label: 'Agenda', icon: '📅', title: 'Agenda Forense & Prazos' },
+      { key: 'tab_publications', label: 'Intimações', icon: '📰', title: 'Intimações & DJEN' },
+      { key: 'tab_hr', label: 'RH/DP', icon: '👥', title: 'Gestão de Pessoal & Ponto' },
+      { key: 'tab_financial', label: 'Ficha Geral', icon: '📊', title: 'Ficha Financeira Anual do Escritório' },
+      { key: 'tab_colaborador', label: 'Colaborador', icon: '👤', title: 'Portal do Colaborador (Autoatendimento)' },
+      { key: 'tab_portal_cliente', label: 'Portal Cliente', icon: '🌐', title: 'Portal do Cliente' },
+      { key: 'tab_users', label: 'Usuários', icon: '🔐', title: 'Gestão de Usuários e Senhas' },
+      { key: 'tab_settings', label: 'Config', icon: '⚙️', title: 'Configurações & Integrações' }
+    ];
+
+    async function loadAccessControlMatrix() {
+      const tbody = document.getElementById('access-matrix-tbody');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="17" class="text-center py-8 text-slate-400 font-medium">Carregando permissões e sincronizando cadastrados...</td></tr>`;
+      }
+
+      try {
+        const res = await fetch('/api/access-control/matrix', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        accessMatrixState.data = data.matrix || [];
+        accessMatrixState.templates = data.templates || {};
+        accessMatrixState.stats = data.stats || {};
+        accessMatrixState.filtered = [...accessMatrixState.data];
+
+        // Atualiza indicadores do topo
+        const s = accessMatrixState.stats;
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || 0; };
+        setEl('stat-acc-total', s.total);
+        setEl('stat-acc-masters', s.masters);
+        setEl('stat-acc-lawyers', s.lawyers);
+        setEl('stat-acc-staff', s.staff);
+        setEl('stat-acc-clients', s.clients);
+
+        renderAccessMatrix(accessMatrixState.filtered);
+      } catch (err) {
+        console.error('Erro ao carregar matriz de acessos:', err);
+      }
+    }
+
+    function filterAccessMatrix() {
+      const search = (document.getElementById('search-access-matrix')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('filter-access-category')?.value || 'all';
+      const status = document.getElementById('filter-access-status')?.value || 'all';
+
+      accessMatrixState.filtered = accessMatrixState.data.filter(item => {
+        const matchSearch = !search ||
+          (item.user_name || '').toLowerCase().includes(search) ||
+          (item.user_identifier || '').toLowerCase().includes(search) ||
+          (item.notes || '').toLowerCase().includes(search) ||
+          (item.role_name || '').toLowerCase().includes(search);
+
+        const matchCat = cat === 'all' || item.role_template === cat || (cat === 'master' && item.is_master);
+        const matchStatus = status === 'all' || (status === 'active' && item.is_active === 1) || (status === 'inactive' && item.is_active === 0);
+
+        return matchSearch && matchCat && matchStatus;
+      });
+
+      renderAccessMatrix(accessMatrixState.filtered);
+    }
+
+    function renderAccessMatrix(list) {
+      const tbody = document.getElementById('access-matrix-tbody');
+      const countEl = document.getElementById('access-matrix-count');
+      if (countEl) countEl.textContent = `${list.length} cadastrados listados`;
+      if (!tbody) return;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="17" class="text-center py-10 text-slate-400">
+              Nenhum cadastrado encontrado com os filtros selecionados.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => {
+        const isMaster = item.is_master || item.role_template === 'master';
+        const initials = (item.user_name || 'U').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+        const avatarBg = isMaster ? 'bg-amber-400 text-navy-950 font-black' : (item.role_template === 'cliente' ? 'bg-teal-100 text-teal-900 font-bold' : 'bg-slate-200 text-slate-700 font-bold');
+
+        // Renderiza cada coluna de Switch Deslizante
+        const switchesHtml = TABS_CONFIG.map(tab => {
+          const isEnabled = item[tab.key] === 1;
+
+          if (isMaster) {
+            return `
+              <td class="py-2.5 px-1 text-center">
+                <div class="inline-flex items-center justify-center p-1 rounded-lg bg-amber-50 border border-amber-300" title="👑 Acesso Mestre Irrestrito (God Mode Permanente)">
+                  <span class="text-xs">👑</span>
+                </div>
+              </td>
+            `;
+          }
+
+          return `
+            <td class="py-2.5 px-1 text-center">
+              <button 
+                type="button" 
+                onclick="toggleAccessSwitch('${item.user_id}', '${tab.key}', ${isEnabled})" 
+                class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isEnabled ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-300 hover:bg-slate-400'}"
+                role="switch" 
+                aria-checked="${isEnabled}"
+                title="${tab.title}: ${isEnabled ? 'ATIVADA' : 'DESATIVADA'} (Clique para alternar)"
+              >
+                <span 
+                  class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isEnabled ? 'translate-x-4' : 'translate-x-0'}"
+                ></span>
+              </button>
+            </td>
+          `;
+        }).join('');
+
+        // Seletor de Perfil Modelo
+        const templateSelector = isMaster 
+          ? `<span class="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-950 font-extrabold text-[11px] border border-amber-400 shadow-xs">👑 Mestre Absoluto</span>`
+          : `
+            <select 
+              onchange="applyUserTemplate('${item.user_id}', this.value)" 
+              class="px-2 py-1 rounded-xl bg-slate-50 border border-slate-300 text-[11px] font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer w-full"
+            >
+              <option value="advogado" ${item.role_template === 'advogado' ? 'selected' : ''}>⚖️ Advogado</option>
+              <option value="estagiario" ${item.role_template === 'estagiario' ? 'selected' : ''}>🎓 Estagiário</option>
+              <option value="dono_escritorio" ${item.role_template === 'dono_escritorio' ? 'selected' : ''}>🏛️ Sócio Titular</option>
+              <option value="secretaria" ${item.role_template === 'secretaria' ? 'selected' : ''}>💼 Secretária</option>
+              <option value="gerente" ${item.role_template === 'gerente' ? 'selected' : ''}>🏢 Gerência/DP</option>
+              <option value="motorista" ${item.role_template === 'motorista' ? 'selected' : ''}>🚗 Motorista</option>
+              <option value="cliente" ${item.role_template === 'cliente' ? 'selected' : ''}>👤 Cliente</option>
+              <option value="custom" ${item.role_template === 'custom' ? 'selected' : ''}>⚙️ Personalizado</option>
+            </select>
+          `;
+
+        // Botão de Status Geral
+        const statusBtn = isMaster
+          ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-[10px]">🟢 Vitalício</span>`
+          : `
+            <button 
+              onclick="toggleUserGlobalAccess('${item.user_id}', ${item.is_active === 1})" 
+              class="px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${item.is_active === 1 ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-rose-50 hover:text-rose-800' : 'bg-rose-50 text-rose-800 border border-rose-300 hover:bg-emerald-50 hover:text-emerald-800'}"
+              title="Clique para ${item.is_active === 1 ? 'Suspender Acesso' : 'Ativar Acesso'}"
+            >
+              ${item.is_active === 1 ? '🟢 Ativo' : '🔴 Suspenso'}
+            </button>
+          `;
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors ${item.is_active === 0 ? 'opacity-50 bg-slate-50' : ''}">
+            <td class="py-3 px-3">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl ${avatarBg} flex items-center justify-center text-xs shadow-xs flex-shrink-0">
+                  ${isMaster ? '👑' : initials}
+                </div>
+                <div class="min-w-0">
+                  <div class="font-bold text-navy-950 text-xs truncate flex items-center space-x-1">
+                    <span>${item.user_name}</span>
+                    ${isMaster ? '<span class="text-amber-600" title="Superusuário">⚡</span>' : ''}
+                  </div>
+                  <div class="text-[10px] text-slate-500 truncate font-medium">${item.notes || item.role_name}</div>
+                  <div class="text-[9px] text-slate-400 font-mono truncate">${item.user_identifier || ''}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-2">${templateSelector}</td>
+            ${switchesHtml}
+            <td class="py-3 px-3 text-center">${statusBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleAccessSwitch(userId, tabKey, currentVal) {
+      const newVal = !currentVal;
+      
+      // Atualização otimista na memória para resposta instantânea na tela
+      const target = accessMatrixState.data.find(d => d.user_id === userId);
+      if (target) {
+        target[tabKey] = newVal ? 1 : 0;
+        target.role_template = 'custom';
+        renderAccessMatrix(accessMatrixState.filtered);
+      }
+
+      try {
+        const res = await fetch('/api/access-control/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ user_id: userId, tab_key: tabKey, enabled: newVal })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          alert(`❌ ${data.error || 'Erro ao alternar permissão.'}`);
+          await loadAccessControlMatrix();
+        }
+      } catch (err) {
+        console.error('Falha ao comunicar com o servidor:', err);
+        await loadAccessControlMatrix();
+      }
+    }
+
+    async function applyUserTemplate(userId, templateKey) {
+      try {
+        const res = await fetch('/api/access-control/apply-template', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ user_id: userId, template_key: templateKey })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await loadAccessControlMatrix();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao aplicar perfil.'}`);
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    async function toggleUserGlobalAccess(userId, currentActive) {
+      const newStatus = !currentActive;
+      const confirmMsg = newStatus ? 'Deseja reativar o acesso deste usuário ao sistema?' : 'Deseja suspender temporariamente o acesso deste usuário ao sistema?';
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch('/api/access-control/toggle-user-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ user_id: userId, is_active: newStatus })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await loadAccessControlMatrix();
+        } else {
+          alert(`❌ ${data.error || 'Erro ao alterar status.'}`);
         }
       } catch (err) {
         alert('Erro ao comunicar com o servidor.');

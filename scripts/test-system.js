@@ -239,6 +239,53 @@ async function runTests() {
       const annualOfficeRes = await fetch(`${baseUrl}/api/hr/reports/annual-financial/office?year=2026`, { headers });
       const annualOfficeData = await annualOfficeRes.json();
       logTestResult('API RH - Ficha Financeira Geral Consolidada do Escritório (/api/hr/reports/annual-financial/office)', annualOfficeRes.status === 200 && annualOfficeData.success, `${annualOfficeData.summary?.total_active_employees} colaboradores | Custo Global Anual: R$ ${annualOfficeData.summary?.total_annual_personnel_global_cost?.toFixed(2)}`);
+
+      // ================= MÓDULO DE MATRIZ DE CONTROLE DE ACESSO (RBAC / ABAC) =================
+      // 14. Matriz de Controle de Acesso Geral (Unificada)
+      const matrixRes = await fetch(`${baseUrl}/api/access-control/matrix`, { headers });
+      const matrixData = await matrixRes.json();
+      logTestResult('API RBAC/ABAC - Matriz de Permissões Granulares (/api/access-control/matrix)', matrixRes.status === 200 && matrixData.success, `${matrixData.matrix?.length || 0} cadastrados mapeados (${matrixData.stats?.masters || 0} mestres/sócios, ${matrixData.stats?.lawyers || 0} advogados, ${matrixData.stats?.staff || 0} equipe/apoio, ${matrixData.stats?.clients || 0} clientes)`);
+
+      // 15. Alternância Granular de Aba via Switch (Toggle)
+      const targetUser = matrixData.matrix?.find(m => !m.is_master) || matrixData.matrix?.[1];
+      if (targetUser) {
+        const toggleRes = await fetch(`${baseUrl}/api/access-control/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body: JSON.stringify({ user_id: targetUser.user_id, tab_key: 'tab_lawsuits', enabled: true })
+        });
+        const toggleData = await toggleRes.json();
+        logTestResult('API RBAC/ABAC - Alternância Granular de Switch (/api/access-control/toggle)', toggleRes.status === 200 && toggleData.success, `Aba Processos habilitada com sucesso para ${targetUser.user_name}`);
+      }
+
+      // 16. Proteção de Acesso Mestre (God Mode do Dr. Jorge Alvim)
+      const masterUser = matrixData.matrix?.find(m => m.is_master);
+      if (masterUser) {
+        const godModeRes = await fetch(`${baseUrl}/api/access-control/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body: JSON.stringify({ user_id: masterUser.user_id, tab_key: 'tab_financial', enabled: false })
+        });
+        const godModeData = await godModeRes.json();
+        const isGodProtected = godModeRes.status === 403 && godModeData.error?.includes('👑');
+        logTestResult('API RBAC/ABAC - Blindagem God Mode Dr. Jorge Alvim (/api/access-control/toggle)', isGodProtected, 'Acesso Mestre Irrestrito garantido contra revogação');
+      }
+
+      // 17. Aplicação de Template / Perfil de Cargo em 1 Clique
+      if (targetUser) {
+        const tplRes = await fetch(`${baseUrl}/api/access-control/apply-template`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body: JSON.stringify({ user_id: targetUser.user_id, template_key: 'advogado' })
+        });
+        const tplData = await tplRes.json();
+        logTestResult('API RBAC/ABAC - Aplicação de Perfil Modelo em 1-Clique (/api/access-control/apply-template)', tplRes.status === 200 && tplData.success, `Perfil Advogado(a) Associado(a) aplicado para ${targetUser.user_name}`);
+      }
+
+      // 18. Consulta de Permissões da Sessão Atual
+      const myPermsRes = await fetch(`${baseUrl}/api/access-control/my-permissions`, { headers });
+      const myPermsData = await myPermsRes.json();
+      logTestResult('API RBAC/ABAC - Permissões da Sessão Ativa (/api/access-control/my-permissions)', myPermsRes.status === 200 && myPermsData.success, `Sessão Mestre: ${myPermsData.is_master ? 'SIM (Acesso Pleno)' : 'NÃO'}`);
     }
   } catch (err) {
     logTestResult('Teste de APIs do Servidor', false, err.message);

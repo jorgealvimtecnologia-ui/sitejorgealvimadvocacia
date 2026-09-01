@@ -231,6 +231,39 @@ db.exec(`
   );
 `);
 
+// 3.2. Tabela de Matriz de Controle de Acessos & Permissões Granulares (RBAC/ABAC)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS access_permissions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL UNIQUE,
+    user_type TEXT NOT NULL,
+    user_name TEXT NOT NULL,
+    user_identifier TEXT,
+    user_email TEXT,
+    user_phone TEXT,
+    role_template TEXT NOT NULL DEFAULT 'advogado',
+    tab_leads INTEGER DEFAULT 0,
+    tab_clients INTEGER DEFAULT 0,
+    tab_lawsuits INTEGER DEFAULT 0,
+    tab_radar INTEGER DEFAULT 0,
+    tab_offices INTEGER DEFAULT 0,
+    tab_drive INTEGER DEFAULT 0,
+    tab_calendar INTEGER DEFAULT 0,
+    tab_publications INTEGER DEFAULT 0,
+    tab_hr INTEGER DEFAULT 0,
+    tab_financial INTEGER DEFAULT 0,
+    tab_colaborador INTEGER DEFAULT 0,
+    tab_portal_cliente INTEGER DEFAULT 0,
+    tab_users INTEGER DEFAULT 0,
+    tab_settings INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    data_scope TEXT DEFAULT 'assigned',
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+`);
+
 // 4. Tabelas de Processos Judiciais, Tribunais, Instâncias e Andamentos (CNJ)
 db.exec(`
   CREATE TABLE IF NOT EXISTS lawsuits (
@@ -1895,6 +1928,497 @@ app.delete('/api/users/:id', requireAuth, (req, res) => {
   } catch (error) {
     console.error('[ERRO] Falha ao excluir usuário:', error);
     return res.status(500).json({ error: 'Erro ao excluir usuário.' });
+  }
+});
+
+// =============================================================================
+// 🛡️ MATRIZ DE CONTROLE DE ACESSO & PERMISSÕES GRANULARES (RBAC/ABAC HÍBRIDO)
+// =============================================================================
+
+const ROLE_TEMPLATES = {
+  master: {
+    key: 'master',
+    name: 'Dr. Jorge Alvim (Mestre / Diretor Geral)',
+    badge_label: '👑 Mestre Irrestrito',
+    badge_class: 'bg-amber-100 text-amber-950 border-amber-400 font-extrabold',
+    data_scope: 'all',
+    tabs: {
+      tab_leads: 1, tab_clients: 1, tab_lawsuits: 1, tab_radar: 1,
+      tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
+      tab_hr: 1, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 1,
+      tab_users: 1, tab_settings: 1
+    }
+  },
+  dono_escritorio: {
+    key: 'dono_escritorio',
+    name: 'Dono de Escritório / Sócio Titular',
+    badge_label: '🏛️ Sócio Titular',
+    badge_class: 'bg-gold-100 text-gold-950 border-gold-400 font-bold',
+    data_scope: 'all',
+    tabs: {
+      tab_leads: 1, tab_clients: 1, tab_lawsuits: 1, tab_radar: 1,
+      tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
+      tab_hr: 1, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 1,
+      tab_users: 1, tab_settings: 1
+    }
+  },
+  advogado: {
+    key: 'advogado',
+    name: 'Advogado(a) Associado(a)',
+    badge_label: '⚖️ Advogado(a)',
+    badge_class: 'bg-emerald-100 text-emerald-900 border-emerald-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 1, tab_lawsuits: 1, tab_radar: 1,
+      tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  estagiario: {
+    key: 'estagiario',
+    name: 'Estagiário(a) de Direito',
+    badge_label: '🎓 Estagiário(a)',
+    badge_class: 'bg-indigo-100 text-indigo-900 border-indigo-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 1, tab_radar: 1,
+      tab_offices: 0, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  secretaria: {
+    key: 'secretaria',
+    name: 'Secretária Executiva / Atendimento',
+    badge_label: '💼 Secretária / Atendimento',
+    badge_class: 'bg-purple-100 text-purple-900 border-purple-300 font-semibold',
+    data_scope: 'office',
+    tabs: {
+      tab_leads: 1, tab_clients: 1, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  gerente: {
+    key: 'gerente',
+    name: 'Gerente Administrativo-Financeiro',
+    badge_label: '🏢 Gerência / DP',
+    badge_class: 'bg-blue-100 text-blue-900 border-blue-300 font-semibold',
+    data_scope: 'all',
+    tabs: {
+      tab_leads: 1, tab_clients: 1, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 1, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 1
+    }
+  },
+  motorista: {
+    key: 'motorista',
+    name: 'Motorista / Apoio Operacional',
+    badge_label: '🚗 Motorista / Externo',
+    badge_class: 'bg-slate-200 text-slate-800 border-slate-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  cliente: {
+    key: 'cliente',
+    name: 'Cliente (PF / PJ)',
+    badge_label: '👤 Cliente',
+    badge_class: 'bg-teal-100 text-teal-900 border-teal-300 font-semibold',
+    data_scope: 'own',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 0, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 0, tab_portal_cliente: 1,
+      tab_users: 0, tab_settings: 0
+    }
+  }
+};
+
+function syncAllAccessPermissions() {
+  try {
+    const now = new Date().toISOString();
+
+    // 1. Sincronizar Usuários do Painel
+    const users = db.prepare(`SELECT * FROM users`).all();
+    for (const u of users) {
+      const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.name.toLowerCase().includes('jorge alvim');
+      const isDraMariana = u.name.toLowerCase().includes('mariana') || u.username.includes('mariana');
+      const isDraGabriela = u.name.toLowerCase().includes('gabriela') || u.username.includes('gabriela');
+      
+      let tplKey = isMaster ? 'master' : ((isDraMariana || isDraGabriela) ? 'dono_escritorio' : 'advogado');
+      let userType = isMaster ? 'master' : 'admin';
+      const tpl = ROLE_TEMPLATES[tplKey];
+
+      const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(u.id);
+      if (!exists) {
+        db.prepare(`
+          INSERT INTO access_permissions (
+            id, user_id, user_type, user_name, user_identifier, user_email, user_phone,
+            role_template, tab_leads, tab_clients, tab_lawsuits, tab_radar, tab_offices,
+            tab_drive, tab_calendar, tab_publications, tab_hr, tab_financial, tab_colaborador,
+            tab_portal_cliente, tab_users, tab_settings, is_active, data_scope, notes, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          `PERM-${u.id}`, u.id, userType, u.name, u.username, '', '',
+          tplKey, tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
+          tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
+          tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
+          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, 'Usuário Painel', now, now
+        );
+      } else if (isMaster) {
+        // Enforce God Mode para Dr. Jorge Alvim
+        db.prepare(`
+          UPDATE access_permissions 
+          SET role_template = 'master', tab_leads = 1, tab_clients = 1, tab_lawsuits = 1, tab_radar = 1,
+              tab_offices = 1, tab_drive = 1, tab_calendar = 1, tab_publications = 1, tab_hr = 1,
+              tab_financial = 1, tab_colaborador = 1, tab_portal_cliente = 1, tab_users = 1, tab_settings = 1,
+              is_active = 1, data_scope = 'all', updated_at = ?
+          WHERE user_id = ?
+        `).run(now, u.id);
+      }
+    }
+
+    // 2. Sincronizar Colaboradores do RH (CLT, Estágio, Associados)
+    const employees = db.prepare(`SELECT * FROM hr_employees`).all();
+    for (const emp of employees) {
+      const pos = (emp.position || '').toLowerCase();
+      let tplKey = 'advogado';
+      let userType = 'empregado';
+
+      if (pos.includes('estagi')) {
+        tplKey = 'estagiario';
+        userType = 'estagiario';
+      } else if (pos.includes('secret') || pos.includes('recepc')) {
+        tplKey = 'secretaria';
+        userType = 'secretaria';
+      } else if (pos.includes('gerente') || pos.includes('financ')) {
+        tplKey = 'gerente';
+        userType = 'gerente';
+      } else if (pos.includes('motorist') || pos.includes('externo')) {
+        tplKey = 'motorista';
+        userType = 'motorista';
+      } else if (pos.includes('sóci') || pos.includes('socio') || pos.includes('titular')) {
+        tplKey = 'dono_escritorio';
+        userType = 'dono_escritorio';
+      } else if (pos.includes('advog')) {
+        tplKey = 'advogado';
+        userType = 'advogado';
+      }
+
+      const tpl = ROLE_TEMPLATES[tplKey];
+      const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(emp.id);
+      if (!exists) {
+        db.prepare(`
+          INSERT INTO access_permissions (
+            id, user_id, user_type, user_name, user_identifier, user_email, user_phone,
+            role_template, tab_leads, tab_clients, tab_lawsuits, tab_radar, tab_offices,
+            tab_drive, tab_calendar, tab_publications, tab_hr, tab_financial, tab_colaborador,
+            tab_portal_cliente, tab_users, tab_settings, is_active, data_scope, notes, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          `PERM-${emp.id}`, emp.id, userType, emp.name, emp.cpf, emp.email || '', emp.phone || '',
+          tplKey, tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
+          tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
+          tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
+          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, `${emp.position} (${emp.contract_type})`, now, now
+        );
+      }
+    }
+
+    // 3. Sincronizar Clientes Cadastrados (PF e PJ)
+    const clients = db.prepare(`SELECT * FROM clients`).all();
+    for (const c of clients) {
+      const tpl = ROLE_TEMPLATES.cliente;
+      const iden = c.client_type === 'PJ' ? (c.cnpj || c.cpf) : (c.cpf || c.cnpj);
+      const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(c.id);
+      if (!exists) {
+        db.prepare(`
+          INSERT INTO access_permissions (
+            id, user_id, user_type, user_name, user_identifier, user_email, user_phone,
+            role_template, tab_leads, tab_clients, tab_lawsuits, tab_radar, tab_offices,
+            tab_drive, tab_calendar, tab_publications, tab_hr, tab_financial, tab_colaborador,
+            tab_portal_cliente, tab_users, tab_settings, is_active, data_scope, notes, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          `PERM-${c.id}`, c.id, 'cliente', c.full_name, iden || c.id, c.email || '', c.phone || '',
+          'cliente', tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
+          tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
+          tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
+          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, 'own', `Cliente ${c.client_type}`, now, now
+        );
+      }
+    }
+    console.log('🛡️ [RBAC/ABAC] Sincronização de Matriz de Controle de Acesso concluída com sucesso!');
+  } catch (err) {
+    console.error('Erro na sincronização de permissões de acesso:', err);
+  }
+}
+
+// Executar sincronização inicial no boot
+try {
+  syncAllAccessPermissions();
+} catch (e) {
+  console.warn('Erro no boot sync de permissões:', e);
+}
+
+/**
+ * 1. GET /api/access-control/matrix - Listar toda a matriz de permissões granulares
+ */
+app.get('/api/access-control/matrix', requireAuth, (req, res) => {
+  try {
+    syncAllAccessPermissions();
+
+    const rows = db.prepare(`
+      SELECT * FROM access_permissions 
+      ORDER BY 
+        CASE 
+          WHEN role_template = 'master' THEN 1
+          WHEN role_template = 'dono_escritorio' THEN 2
+          WHEN role_template = 'advogado' THEN 3
+          WHEN role_template = 'estagiario' THEN 4
+          WHEN role_template = 'gerente' THEN 5
+          WHEN role_template = 'secretaria' THEN 6
+          WHEN role_template = 'motorista' THEN 7
+          WHEN role_template = 'cliente' THEN 8
+          ELSE 9
+        END, user_name ASC
+    `).all();
+
+    const stats = {
+      total: rows.length,
+      active: rows.filter(r => r.is_active === 1).length,
+      masters: rows.filter(r => r.role_template === 'master' || r.role_template === 'dono_escritorio').length,
+      lawyers: rows.filter(r => r.role_template === 'advogado').length,
+      interns: rows.filter(r => r.role_template === 'estagiario').length,
+      staff: rows.filter(r => ['secretaria', 'gerente', 'motorista'].includes(r.role_template)).length,
+      clients: rows.filter(r => r.role_template === 'cliente').length
+    };
+
+    const matrix = rows.map(r => {
+      const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
+      return {
+        ...r,
+        is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01' || (r.user_name || '').toLowerCase().includes('jorge alvim'),
+        badge_label: tpl.badge_label,
+        badge_class: tpl.badge_class,
+        role_name: tpl.name
+      };
+    });
+
+    return res.json({
+      success: true,
+      stats,
+      templates: ROLE_TEMPLATES,
+      matrix
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha ao consultar matriz de acessos:', err);
+    return res.status(500).json({ error: 'Erro ao consultar matriz de permissões.' });
+  }
+});
+
+/**
+ * 2. POST /api/access-control/toggle - Ligar/Desligar switch de uma aba individual
+ */
+app.post('/api/access-control/toggle', requireAuth, (req, res) => {
+  try {
+    const { user_id, tab_key, enabled } = req.body;
+
+    if (!user_id || !tab_key) {
+      return res.status(400).json({ error: 'ID do usuário e chave da aba são obrigatórios.' });
+    }
+
+    const validTabs = [
+      'tab_leads', 'tab_clients', 'tab_lawsuits', 'tab_radar', 'tab_offices',
+      'tab_drive', 'tab_calendar', 'tab_publications', 'tab_hr', 'tab_financial',
+      'tab_colaborador', 'tab_portal_cliente', 'tab_users', 'tab_settings'
+    ];
+
+    if (!validTabs.includes(tab_key)) {
+      return res.status(400).json({ error: 'Chave de aba inválida.' });
+    }
+
+    const record = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(user_id);
+    if (!record) {
+      return res.status(404).json({ error: 'Registro de permissão não encontrado.' });
+    }
+
+    // Regra de Ouro: Dr. Jorge Alvim / Mestre NUNCA pode ter acesso revogado (God Mode)
+    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01' || (record.user_name || '').toLowerCase().includes('jorge alvim');
+    if (isMaster && !enabled) {
+      return res.status(403).json({
+        error: '👑 Acesso Mestre Protegido: O Dr. Jorge Alvim possui acesso total permanente e irrestrito a todos os recursos.'
+      });
+    }
+
+    const val = enabled ? 1 : 0;
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE access_permissions 
+      SET ${tab_key} = ?, role_template = 'custom', updated_at = ?
+      WHERE user_id = ?
+    `).run(val, now, user_id);
+
+    logAudit(req, {
+      event_type: 'ALTERACAO_PERMISSAO',
+      event_name: 'TOGGLE_ABA',
+      module: 'CONTROLE_ACESSO',
+      resource_id: user_id,
+      description: `Permissão da aba '${tab_key}' ${enabled ? 'HABILITADA' : 'DESABILITADA'} para '${record.user_name}'.`,
+      details: { user_id, user_name: record.user_name, tab_key, enabled: val }
+    });
+
+    return res.json({
+      success: true,
+      message: `Aba ${tab_key.replace('tab_', '').toUpperCase()} ${enabled ? 'ativada' : 'desativada'} com sucesso para ${record.user_name}.`,
+      tab_key,
+      enabled: val
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha ao alternar permissão:', err);
+    return res.status(500).json({ error: 'Erro ao alternar permissão.' });
+  }
+});
+
+/**
+ * 3. POST /api/access-control/apply-template - Aplicar Perfil Pronto em 1 Clique
+ */
+app.post('/api/access-control/apply-template', requireAuth, (req, res) => {
+  try {
+    const { user_id, template_key } = req.body;
+
+    if (!user_id || !template_key || !ROLE_TEMPLATES[template_key]) {
+      return res.status(400).json({ error: 'Usuário e Modelo de Perfil válido são obrigatórios.' });
+    }
+
+    const record = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(user_id);
+    if (!record) {
+      return res.status(404).json({ error: 'Registro de permissão não encontrado.' });
+    }
+
+    // Regra de Ouro: Dr. Jorge Alvim sempre permanece como Master
+    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01' || (record.user_name || '').toLowerCase().includes('jorge alvim');
+    const targetKey = isMaster ? 'master' : template_key;
+    const tpl = ROLE_TEMPLATES[targetKey];
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE access_permissions 
+      SET role_template = ?, tab_leads = ?, tab_clients = ?, tab_lawsuits = ?, tab_radar = ?,
+          tab_offices = ?, tab_drive = ?, tab_calendar = ?, tab_publications = ?, tab_hr = ?,
+          tab_financial = ?, tab_colaborador = ?, tab_portal_cliente = ?, tab_users = ?,
+          tab_settings = ?, data_scope = ?, updated_at = ?
+      WHERE user_id = ?
+    `).run(
+      targetKey, tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
+      tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
+      tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
+      tpl.tabs.tab_users, tpl.tabs.tab_settings, tpl.data_scope, now, user_id
+    );
+
+    logAudit(req, {
+      event_type: 'ALTERACAO_PERMISSAO',
+      event_name: 'APLICAR_TEMPLATE',
+      module: 'CONTROLE_ACESSO',
+      resource_id: user_id,
+      description: `Perfil padrão '${tpl.name}' aplicado para '${record.user_name}'.`
+    });
+
+    return res.json({
+      success: true,
+      message: `Perfil '${tpl.name}' aplicado com sucesso para ${record.user_name}!`,
+      template: tpl
+    });
+  } catch (err) {
+    console.error('[ERRO] Falha ao aplicar template de permissões:', err);
+    return res.status(500).json({ error: 'Erro ao aplicar modelo de permissão.' });
+  }
+});
+
+/**
+ * 4. POST /api/access-control/toggle-user-status - Ativar / Suspender Acesso Global
+ */
+app.post('/api/access-control/toggle-user-status', requireAuth, (req, res) => {
+  try {
+    const { user_id, is_active } = req.body;
+
+    const record = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(user_id);
+    if (!record) {
+      return res.status(404).json({ error: 'Registro não encontrado.' });
+    }
+
+    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01' || (record.user_name || '').toLowerCase().includes('jorge alvim');
+    if (isMaster && !is_active) {
+      return res.status(403).json({ error: '👑 O acesso do Dr. Jorge Alvim não pode ser inativado.' });
+    }
+
+    const activeVal = is_active ? 1 : 0;
+    db.prepare(`UPDATE access_permissions SET is_active = ?, updated_at = ? WHERE user_id = ?`).run(activeVal, new Date().toISOString(), user_id);
+
+    return res.json({
+      success: true,
+      message: `Acesso de ${record.user_name} ${is_active ? 'ATIVADO' : 'SUSPENSO'} com sucesso!`
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 5. GET /api/access-control/my-permissions - Retorna abas permitidas da sessão ativa
+ */
+app.get('/api/access-control/my-permissions', (req, res) => {
+  try {
+    // 1. Tentar ler sessão do painel
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || req.headers['x-access-token']);
+    const session = validateToken(token);
+
+    if (session) {
+      const isMaster = session.userId === 'USR-MASTER-01' || session.username === 'jorgealvimtecnologia' || (session.name || '').toLowerCase().includes('jorge alvim') || session.role === 'master';
+      if (isMaster) {
+        return res.json({
+          success: true,
+          is_master: true,
+          role_name: 'Dr. Jorge Alvim (Mestre)',
+          permissions: ROLE_TEMPLATES.master.tabs
+        });
+      }
+
+      const perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(session.userId);
+      if (perm) {
+        return res.json({
+          success: true,
+          is_master: false,
+          role_name: perm.role_template,
+          permissions: {
+            tab_leads: perm.tab_leads, tab_clients: perm.tab_clients, tab_lawsuits: perm.tab_lawsuits,
+            tab_radar: perm.tab_radar, tab_offices: perm.tab_offices, tab_drive: perm.tab_drive,
+            tab_calendar: perm.tab_calendar, tab_publications: perm.tab_publications, tab_hr: perm.tab_hr,
+            tab_financial: perm.tab_financial, tab_colaborador: perm.tab_colaborador,
+            tab_portal_cliente: perm.tab_portal_cliente, tab_users: perm.tab_users, tab_settings: perm.tab_settings
+          }
+        });
+      }
+    }
+
+    // Default permissivo para operadores autenticados
+    return res.json({
+      success: true,
+      is_master: true,
+      permissions: ROLE_TEMPLATES.master.tabs
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
