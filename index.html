@@ -187,20 +187,25 @@
       background-color: #B8860B;
       color: #FFFFFF;
     }
-    /* Scrollbars suaves */
+    /* Scrollbars suaves horizontais e verticais */
     ::-webkit-scrollbar {
       width: 8px;
-      height: 8px;
+      height: 7px;
     }
     ::-webkit-scrollbar-track {
       background: #F1F5F9;
     }
     ::-webkit-scrollbar-thumb {
-      background: #CBD5E1;
-      border-radius: 4px;
+      background: #D97706;
+      border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #B8860B;
+      background: #B45309;
+    }
+    .overflow-x-auto, .custom-scrollbar-x {
+      scrollbar-width: thin;
+      scrollbar-color: #D97706 #F1F5F9;
+      -webkit-overflow-scrolling: touch;
     }
     .gold-gradient-text {
       background: linear-gradient(135deg, #855E1C 0%, #B8860B 50%, #D4AF37 100%);
@@ -2303,7 +2308,64 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', checkLgpdBanner);
+    // ================= CARREGAMENTO DINÂMICO DE MATÉRIAS PUBLICADAS NA HOME =================
+    async function loadHomeBlogPosts() {
+      const grid = document.getElementById('home-blog-posts-grid');
+      if (!grid) return;
+
+      try {
+        const res = await fetch('/api/blog/posts?limit=3');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && data.posts && data.posts.length > 0) {
+          grid.innerHTML = data.posts.map(post => {
+            const dateStr = post.published_at 
+              ? new Date(post.published_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+              : 'Recente';
+            const cover = post.cover_image || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80';
+            const author = post.author_name || 'Dr. Jorge Alvim';
+
+            return `
+              <div class="bg-warm-50 rounded-3xl border border-slate-200 overflow-hidden shadow-card-light hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                  <div class="h-48 relative overflow-hidden bg-slate-200">
+                    <img src="${cover}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                    <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-navy-950 shadow-xs border border-slate-200">
+                      ${post.category}
+                    </span>
+                  </div>
+                  <div class="p-5 sm:p-6 space-y-2">
+                    <span class="text-[11px] text-slate-400 font-medium">📅 ${dateStr} • ${post.views_count || 1} visualizações</span>
+                    <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
+                      <a href="/blog/${post.slug}" class="hover:text-gold-700 transition-colors">
+                        ${post.title}
+                      </a>
+                    </h3>
+                    <p class="text-slate-600 text-xs leading-relaxed line-clamp-3">
+                      ${post.summary}
+                    </p>
+                  </div>
+                </div>
+                <div class="p-5 sm:p-6 pt-0 border-t border-slate-200/60 mt-2 flex items-center justify-between">
+                  <span class="text-[11px] text-gold-700 font-bold">Por ${author}</span>
+                  <a href="/blog/${post.slug}" class="text-xs font-bold text-gold-800 hover:text-gold-900 flex items-center space-x-1">
+                    <span>Ler Matéria</span>
+                    <span>→</span>
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.warn('Fallback para matérias estáticas:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkLgpdBanner();
+      loadHomeBlogPosts();
+    });
   </script>
 
 </body>

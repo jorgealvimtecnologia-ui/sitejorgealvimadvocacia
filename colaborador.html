@@ -65,19 +65,25 @@
       background-color: #B8860B;
       color: #FFFFFF;
     }
+    /* Scrollbars suaves horizontais e verticais */
     ::-webkit-scrollbar {
       width: 8px;
-      height: 8px;
+      height: 7px;
     }
     ::-webkit-scrollbar-track {
       background: #F1F5F9;
     }
     ::-webkit-scrollbar-thumb {
-      background: #CBD5E1;
-      border-radius: 4px;
+      background: #D97706;
+      border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #B8860B;
+      background: #B45309;
+    }
+    .overflow-x-auto, .custom-scrollbar-x {
+      scrollbar-width: thin;
+      scrollbar-color: #D97706 #F1F5F9;
+      -webkit-overflow-scrolling: touch;
     }
     .gold-gradient-text {
       background: linear-gradient(135deg, #855E1C 0%, #B8860B 50%, #D4AF37 100%);
