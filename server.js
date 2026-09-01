@@ -1794,11 +1794,31 @@ app.get('/robots.txt', (req, res) => {
   return res.send(txt);
 });
 
+// Função utilitária para entregar arquivos HTML sempre frescos sem cache agressivo
+function sendFreshFile(res, fileName) {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  return res.sendFile(path.join(__dirname, fileName));
+}
+
+// Rota para Service Worker (sempre fresco)
+app.get('/sw.js', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Content-Type': 'application/javascript'
+  });
+  res.sendFile(path.join(__dirname, 'sw.js'));
+});
+
 // Rota da Página Principal e Painel de Controle
 app.use(express.static(__dirname));
 
 app.get('/painel', (req, res) => {
-  res.sendFile(path.join(__dirname, 'painel.html'));
+  sendFreshFile(res, 'painel.html');
 });
 
 app.get('/admin', (req, res) => {
@@ -1806,40 +1826,40 @@ app.get('/admin', (req, res) => {
 });
 
 app.get('/cliente', (req, res) => {
-  res.sendFile(path.join(__dirname, 'cliente.html'));
+  sendFreshFile(res, 'cliente.html');
 });
 
 app.get('/portal-cliente', (req, res) => {
-  res.sendFile(path.join(__dirname, 'cliente.html'));
+  sendFreshFile(res, 'cliente.html');
 });
 
 app.get('/area-do-cliente', (req, res) => {
-  res.sendFile(path.join(__dirname, 'cliente.html'));
+  sendFreshFile(res, 'cliente.html');
 });
 
 // Portal do Colaborador / Autoatendimento do Trabalhador
 app.get('/colaborador', (req, res) => {
-  res.sendFile(path.join(__dirname, 'colaborador.html'));
+  sendFreshFile(res, 'colaborador.html');
 });
 
 app.get('/portal-colaborador', (req, res) => {
-  res.sendFile(path.join(__dirname, 'colaborador.html'));
+  sendFreshFile(res, 'colaborador.html');
 });
 
 app.get('/area-do-colaborador', (req, res) => {
-  res.sendFile(path.join(__dirname, 'colaborador.html'));
+  sendFreshFile(res, 'colaborador.html');
 });
 
 app.get('/funcionario', (req, res) => {
-  res.sendFile(path.join(__dirname, 'colaborador.html'));
+  sendFreshFile(res, 'colaborador.html');
 });
 
 app.get('/blog', (req, res) => {
-  res.sendFile(path.join(__dirname, 'blog.html'));
+  sendFreshFile(res, 'blog.html');
 });
 
 app.get('/blog/:slug', (req, res) => {
-  res.sendFile(path.join(__dirname, 'blog.html'));
+  sendFreshFile(res, 'blog.html');
 });
 
 app.get('/artigos', (req, res) => {
