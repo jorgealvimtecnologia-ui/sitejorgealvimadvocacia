@@ -1,81 +1,129 @@
-# Jorge Alvim Advocacia — Website & Landing Page Institucional
+# Jorge Alvim Advocacia — Plataforma de Gestão Jurídica
 
-Website institucional moderno, ágil e de alta performance desenvolvido para o escritório **Jorge Alvim Advocacia**.
+Sistema web integrado para o escritório **Jorge Alvim Advocacia (OAB/MG)**: site institucional
++ ERP jurídico completo (clientes, processos, prazos, financeiro, RH, blog e portais de
+autoatendimento para clientes e colaboradores).
 
----
-
-## 🏛️ Tecnologias Utilizadas
-
-- **Vite 6**: Ambiente de desenvolvimento ultrarrápido com Hot Module Replacement (HMR) e empacotamento otimizado.
-- **Tailwind CSS 3**: Estilização com utilitários CSS modernos, design responsivo, cores nobres e efeitos de *glassmorphism*.
-- **JavaScript Moderno (ES6+)**: Lógica interativa para menu mobile, formulário com integração direta ao WhatsApp, máscara de telefone brasileira e accordion de perguntas frequentes (FAQ).
-- **SEO & OAB Ready**: Meta tags Open Graph completas para compartilhamento no WhatsApp/redes sociais, marcação Schema.org (`LegalService`) e conformidade com o Código de Ética da OAB.
+> **Stack:** Node.js 22+ · Express 5 · SQLite nativo (`node:sqlite`) · HTML/Tailwind (CDN) ·
+> Docker + Nginx. Sem framework de frontend — as telas são servidas como páginas HTML.
 
 ---
 
-## 📁 Estrutura de Arquivos
+## 📦 Módulos do sistema
+
+| Área | Descrição |
+|------|-----------|
+| **Site institucional** | Landing page, áreas de atuação, blog, captação de leads (formulário → WhatsApp) |
+| **Painel administrativo** (`/painel`) | Console central de gestão do escritório |
+| **Clientes** | Cadastro PF/PJ, documentos, contratos, portal do cliente (`/cliente`) |
+| **Processos** | Processos judiciais (CNJ), andamentos, publicações, radar judicial (crawler Python) |
+| **Agenda / Prazos** | Calendário, compromissos, prazos fatais |
+| **Financeiro** | Livro caixa, transações, integração Asaas, NFS-e / recibos RPS-OAB |
+| **RH / Folha** | Colaboradores CLT, ponto, folha de pagamento, rescisões, portal do colaborador (`/colaborador`) |
+| **Escritórios** | Sociedades, membros, drive de documentos |
+| **Foguetes** | Mensageria interna / despachos rápidos entre a equipe |
+| **Blog** | Publicação de artigos com moderação de comentários |
+| **Segurança** | Sessões por token, matriz de permissões (RBAC/ABAC), trilha de auditoria (LGPD) |
+
+---
+
+## 🏛️ Arquitetura
 
 ```
 sitejorgealvimadvocacia/
-├── index.html              # Estrutura semântica e seções do site
-├── package.json            # Dependências e scripts
-├── tailwind.config.js      # Paleta de cores jurídica e tipografia
-├── postcss.config.js       # Autoprefixer e PostCSS
-├── vite.config.js          # Configuração do Vite
-├── public/
-│   └── favicon.svg         # Favicon vetorial com símbolo da balança
+├── server.js              # Backend Express (API + roteamento das páginas)
+├── index.html             # Site institucional
+├── painel.html            # Painel administrativo (SPA em HTML)
+├── cliente.html           # Portal do cliente
+├── colaborador.html       # Portal do colaborador (RH)
+├── blog.html              # Blog público
 ├── src/
-│   ├── css/
-│   │   └── style.css       # Diretivas Tailwind e estilização refinada
-│   └── js/
-│       └── main.js         # Lógica do WhatsApp, menu mobile, FAQ e máscaras
-└── dist/                   # Build final pronto para publicação
+│   ├── config/            # db.js (schema SQLite), constants.js
+│   ├── middleware/        # auth.js (sessões), audit.js (LGPD), upload.js (multer)
+│   └── modules/           # rockets/ (rotas modularizadas)
+├── public/js/             # Frontend modular (core: router, auth, api)
+├── scripts/               # radar_crawler.py, testes de sistema
+├── nginx/                 # Proxy reverso + SSL
+├── Dockerfile · docker-compose.yml
+└── leads.db               # Banco SQLite (NÃO versionado — contém dados sensíveis)
 ```
+
+O banco é criado/migrado automaticamente na primeira execução (`src/config/db.js`
+e o bloco de init em `server.js`).
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 🚀 Como executar (desenvolvimento)
 
-### 1. Iniciar o Servidor de Desenvolvimento Local
+**Pré-requisitos:** Node.js **22 ou superior** (a API `node:sqlite` é nativa a partir do 22.5).
+
 ```bash
-npm run dev
+# 1. Instalar dependências
+npm install
+
+# 2. Configurar variáveis de ambiente
+cp .env.example .env      # e edite conforme necessário
+
+# 3. Subir o servidor (site + painel + API na porta 3000)
+npm run start
 ```
-O Vite iniciará o servidor local (geralmente em `http://localhost:3000` ou porta equivalente) com recarregamento em tempo real a cada alteração.
 
-### 2. Gerar o Build de Produção
-```bash
-npm run build
-```
-Gera os arquivos otimizados, minificados e comprimidos na pasta `dist/`.
+Acessos:
+- Site: <http://localhost:3000>
+- Painel: <http://localhost:3000/painel>
+- Portal do cliente: <http://localhost:3000/cliente>
+- Portal do colaborador: <http://localhost:3000/colaborador>
 
-### 3. Testar a Versão de Produção Localmente
+> O site institucional em si também pode ser desenvolvido com Vite (`npm run dev`),
+> mas o **sistema completo** roda pelo servidor Node (`npm run start`).
+
+### Build do site estático (opcional)
 ```bash
+npm run build      # gera dist/ otimizado
 npm run preview
 ```
 
 ---
 
-## ⚙️ Como Personalizar Dados de Contato e Textos
+## 🔐 Variáveis de ambiente
 
-### 1. Alterar o Número do WhatsApp:
-Abra o arquivo [src/js/main.js](file:///home/jorgealvim/Documents/sitejorgealvimadvocacia/src/js/main.js) e atualize a constante `whatsappNumber`:
-```javascript
-const SITE_CONFIG = {
-  whatsappNumber: '5511999999999', // Substitua pelo DDD + Número (ex: 5511988887777)
-  ...
-};
-```
-*Dica: Você também pode substituir as ocorrências do link `wa.me/5511999999999` no [index.html](file:///home/jorgealvim/Documents/sitejorgealvimadvocacia/index.html).*
+Definidas em `.env` (veja `.env.example`):
 
-### 2. Alterar E-mail, Endereço e Textos:
-Todos os textos, áreas de atuação e dados de contato estão centralizados de forma semântica e comentada no arquivo [index.html](file:///home/jorgealvim/Documents/sitejorgealvimadvocacia/index.html).
+| Variável | Uso |
+|----------|-----|
+| `NODE_ENV` | `development` ou `production` |
+| `PORT` | Porta do servidor (padrão 3000) |
+| `ALLOWED_ORIGINS` | Origens liberadas no CORS (separadas por vírgula) |
+| `ASAAS_API_KEY` / `ASAAS_BASE_URL` | Integração financeira Asaas |
 
 ---
 
-## 🌐 Como Publicar na Internet Gratuitamente
+## 🛡️ Segurança e LGPD
 
-Você pode hospedar este site com certificado SSL grátis em serviços como:
-- **Vercel**: Basta conectar o repositório Git ou rodar `npx vercel`.
-- **Netlify**: Arraste e solte a pasta `dist` ou conecte via Git.
-- **GitHub Pages**: Publicando a pasta `dist` no branch `gh-pages`.
-- **Hospedagem Tradicional (cPanel / Hostinger / Locaweb / etc.)**: Basta enviar os arquivos gerados dentro de `dist/` para a pasta `public_html`.
+- Senhas com **PBKDF2 + salt**; sessões por token (expiração 24h).
+- **Matriz de permissões** granular por módulo (RBAC/ABAC).
+- **Trilha de auditoria** de acessos e operações (`audit_logs`).
+- O diretório-raiz **não** é exposto estaticamente; apenas assets públicos.
+- `leads.db` e uploads em `storage/` **nunca** são versionados.
+
+> ⚠️ **Pendências de segurança conhecidas** (ver histórico do projeto): a coluna
+> `plain_password` ainda armazena senhas em texto legível para exibição no painel —
+> recomenda-se substituir por um fluxo de "redefinir senha" e remover o armazenamento
+> em texto puro.
+
+---
+
+## 🐳 Deploy (produção)
+
+```bash
+docker compose up -d --build
+```
+
+Sobe a aplicação Node + Nginx (proxy reverso com HTTPS via Let's Encrypt —
+ver `init-letsencrypt.sh`).
+
+---
+
+## 📄 Licença
+
+Projeto proprietário — Jorge Alvim Advocacia & Tecnologia.
