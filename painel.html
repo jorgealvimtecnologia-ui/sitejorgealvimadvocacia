@@ -8644,9 +8644,18 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
   <!-- ================= JAVASCRIPT / LÓGICA DO PAINEL ================= -->
   <!-- Scripts Core e Módulos Independentes -->
+  <!--
+    api.js  -> fornece apiFetch() + TOKEN_KEY/USER_KEY (usados pelo inline e por rockets.js).
+    rockets.js -> módulo da aba Foguetes.
+    auth.js e router.js foram REMOVIDOS: todas as suas funções (checkAuth,
+    showLoginScreen, showPanelScreen, switchTab, handleHashRouting, handleLogin/Logout,
+    togglePasswordVisibility) já existem no bloco inline abaixo, que também registra os
+    listeners DOMContentLoaded/hashchange. Mantê-los duplicava a lógica (fazendo
+    checkAuth/handleHashRouting rodarem 2x) e, por sombreamento de escopo, tornava
+    edições nesses módulos silenciosamente ineficazes — foi a causa-raiz do bug da
+    aba Foguetes e do crash de TOKEN_KEY. O inline é a fonte única da verdade.
+  -->
   <script src="/js/core/api.js"></script>
-  <script src="/js/core/auth.js"></script>
-  <script src="/js/core/router.js"></script>
   <script src="/js/modules/rockets.js"></script>
   <script>
     // TOKEN_KEY e USER_KEY são declarados em /js/core/api.js (escopo global dos
