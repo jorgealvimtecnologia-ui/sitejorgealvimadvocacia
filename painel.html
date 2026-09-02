@@ -471,6 +471,12 @@
           <span id="tab-hr-count" class="px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-900 text-[10px] font-bold">CLT</span>
         </button>
 
+        <button id="tab-btn-rockets" onclick="switchTab('rockets')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-all border border-slate-200 bg-white cursor-pointer">
+          <span>🚀</span>
+          <span>Foguetes</span>
+          <span id="tab-rockets-count" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">Despacho</span>
+        </button>
+
       </div>
     </header>
 
@@ -4644,6 +4650,165 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       </section>
 
+      <!-- ================= ABA 17: 🚀 CENTRAL DE FOGUETES (DESPACHOS & COMUNICAÇÃO INTERNA) ================= -->
+      <section id="tab-content-rockets" class="hidden space-y-6">
+        
+        <!-- Topo com Título e Botão de Ação -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-navy-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl border border-slate-800">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="text-2xl">🚀</span>
+              <h2 class="text-xl sm:text-2xl font-black tracking-tight font-serif text-white">Central de Foguetes</h2>
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold border border-amber-500/30">Despachos & Comunicação</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-300">
+              Dispare ordens de trabalho, orientações estratégicas e avisos com protocolo sequencial e controle de ciência em tempo real.
+            </p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="openNewRocketModal()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all flex items-center space-x-2 cursor-pointer">
+              <span>🚀</span>
+              <span>Lançar Foguete</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cards de Métricas e KPIs de Foguetes -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Foguetes Ativos</span>
+              <h3 id="rocket-stat-active" class="text-2xl sm:text-3xl font-extrabold text-navy-950 font-serif mt-0.5 sm:mt-1">0</h3>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto text-xl">
+              🚀
+            </div>
+          </div>
+
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] sm:text-xs font-bold text-rose-600 uppercase tracking-wider">Para Execução</span>
+              <h3 id="rocket-stat-pending-exec" class="text-2xl sm:text-3xl font-extrabold text-rose-700 font-serif mt-0.5 sm:mt-1">0</h3>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto text-xl">
+              🎯
+            </div>
+          </div>
+
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] sm:text-xs font-bold text-blue-600 uppercase tracking-wider">Para Conhecimento</span>
+              <h3 id="rocket-stat-pending-know" class="text-2xl sm:text-3xl font-extrabold text-blue-700 font-serif mt-0.5 sm:mt-1">0</h3>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto text-xl">
+              👁️
+            </div>
+          </div>
+
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase tracking-wider">Missões Cumpridas</span>
+              <h3 id="rocket-stat-done" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 font-serif mt-0.5 sm:mt-1">0</h3>
+            </div>
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 self-end sm:self-auto text-xl">
+              🏆
+            </div>
+          </div>
+        </div>
+
+        <!-- Caixas de Navegação, Filtros e Busca -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            <!-- Sub-Abas / Caixas -->
+            <div class="flex items-center space-x-2 overflow-x-auto pb-1">
+              <button id="rocket-box-btn-all" onclick="switchRocketBox('all')" class="px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-white shadow-sm transition-all cursor-pointer">
+                📂 Todos os Foguetes
+              </button>
+              <button id="rocket-box-btn-inbox" onclick="switchRocketBox('inbox')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
+                📥 Caixa de Entrada
+              </button>
+              <button id="rocket-box-btn-outbox" onclick="switchRocketBox('outbox')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
+                📤 Enviados por Mim
+              </button>
+              <button id="rocket-box-btn-archived" onclick="switchRocketBox('archived')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
+                📦 Arquivados
+              </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="rocket-filter-type" onchange="loadRockets()" class="px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:border-amber-500">
+                <option value="">Todos os Tipos</option>
+                <option value="execucao">🎯 Execução</option>
+                <option value="conhecimento">👁️ Conhecimento</option>
+              </select>
+
+              <select id="rocket-filter-priority" onchange="loadRockets()" class="px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:border-amber-500">
+                <option value="">Todas as Prioridades</option>
+                <option value="normal">Normal</option>
+                <option value="urgente">🔥 Urgente</option>
+                <option value="altissima">⚡ Altíssima</option>
+              </select>
+
+              <select id="rocket-filter-status" onchange="loadRockets()" class="px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:border-amber-500">
+                <option value="">Todos os Status</option>
+                <option value="pendente">⏳ Pendente</option>
+                <option value="ciente">👁️ Ciente</option>
+                <option value="em_andamento">⚡ Em Andamento</option>
+                <option value="missao_cumprida">🎯 Missão Cumprida</option>
+              </select>
+
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="rocket-search-input" 
+                  placeholder="Buscar protocolo, assunto, texto..." 
+                  onkeyup="if(event.key==='Enter') loadRockets()"
+                  class="pl-8 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:border-amber-500 w-48 sm:w-64"
+                />
+                <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Tabela de Foguetes -->
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                  <th class="px-4 py-3">Protocolo</th>
+                  <th class="px-4 py-3">De (Remetente)</th>
+                  <th class="px-4 py-3">Para (Destinatário)</th>
+                  <th class="px-4 py-3">Assunto & Resumo</th>
+                  <th class="px-4 py-3">Tipo</th>
+                  <th class="px-4 py-3">Prioridade</th>
+                  <th class="px-4 py-3">Prazo Limite</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="rockets-table-body" class="divide-y divide-slate-100">
+                <!-- Linhas preenchidas dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Feedback de Carregamento & Vazio -->
+          <div id="rockets-loading" class="hidden text-center py-8 text-slate-400 text-xs font-semibold">
+            ⏳ Carregando despachos em tempo real...
+          </div>
+          <div id="rockets-empty-state" class="hidden text-center py-12 text-slate-400 space-y-2">
+            <div class="text-4xl">🚀</div>
+            <div class="text-sm font-bold text-slate-600">Nenhum foguete encontrado nesta caixa</div>
+            <p class="text-xs text-slate-400">Clique em "Lançar Foguete" para disparar um novo despacho para a equipe.</p>
+          </div>
+
+        </div>
+
+      </section>
+
     </main>
   </div>
 
@@ -8279,7 +8444,210 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </div>
   </div>
 
+  <!-- ================= MODAIS DE FOGUETES (DESPACHOS & COMUNICAÇÃO) ================= -->
+  
+  <!-- Modal 1: Lançar Novo Foguete -->
+  <div id="rocket-new-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-xl shadow-md">
+            🚀
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-navy-950 font-serif">Lançar Novo Foguete</h3>
+            <p class="text-xs text-slate-500">Despacho interno instantâneo com protocolo e rastreabilidade</p>
+          </div>
+        </div>
+        <button onclick="closeNewRocketModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+          ✕
+        </button>
+      </div>
+
+      <form id="rocket-new-form" onsubmit="handleCreateRocket(event)" class="space-y-4">
+        
+        <!-- Destinatário (De -> Para) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Destinatário (Para Quem?) <span class="text-rose-500">*</span>
+          </label>
+          <select id="rocket-recipient-select" required class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-amber-500">
+            <option value="">Carregando destinatários...</option>
+          </select>
+        </div>
+
+        <!-- Tipo / Finalidade -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            Finalidade do Despacho <span class="text-rose-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="p-3 rounded-2xl border border-slate-200 hover:border-amber-500 bg-slate-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-slate-800 transition-all">
+              <input type="radio" name="rocket-type" value="execucao" checked class="accent-amber-500" />
+              <span>🎯 Para Execução (Ordem / Tarefa)</span>
+            </label>
+            <label class="p-3 rounded-2xl border border-slate-200 hover:border-blue-500 bg-slate-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-slate-800 transition-all">
+              <input type="radio" name="rocket-type" value="conhecimento" class="accent-blue-500" />
+              <span>👁️ Para Conhecimento (Aviso / Ciência)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Assunto -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Assunto do Foguete <span class="text-rose-500">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="rocket-subject" 
+            required 
+            placeholder="Ex: Protocolar Petição Inicial do Cliente Silva até as 17h"
+            class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-amber-500"
+          />
+        </div>
+
+        <!-- Prioridade & Prazo Fatal -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Prioridade</label>
+            <select id="rocket-priority" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-amber-500">
+              <option value="normal">Normal</option>
+              <option value="urgente">🔥 Urgente</option>
+              <option value="altissima">⚡ Altíssima / Prioridade Máxima</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Prazo Limite / Fatal</label>
+            <input 
+              type="datetime-local" 
+              id="rocket-deadline"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-amber-500"
+            />
+          </div>
+        </div>
+
+        <!-- Mensagem Detalhada -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Mensagem / Instruções do Despacho <span class="text-rose-500">*</span>
+          </label>
+          <textarea 
+            id="rocket-message" 
+            rows="4" 
+            required
+            placeholder="Descreva as orientações com clareza, prazos, observações do processo ou documentos a conferir..."
+            class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:border-amber-500"
+          ></textarea>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeNewRocketModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all">
+            Cancelar
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-black text-xs shadow-md transition-all flex items-center space-x-2">
+            <span>🚀</span>
+            <span>Disparar Foguete</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Visualizar Foguete & Thread de Respostas em Cadeia -->
+  <div id="rocket-view-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
+      
+      <!-- Cabeçalho do Foguete -->
+      <div class="flex items-start justify-between border-b border-slate-100 pb-4">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🚀</span>
+            <span id="rocket-view-protocol" class="font-mono font-bold text-amber-600 text-sm">#FOG-0000-0000</span>
+            <span id="rocket-view-status" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+              Pendente
+            </span>
+          </div>
+          <h3 id="rocket-view-subject" class="text-lg font-black text-navy-950 font-serif">
+            Assunto do Despacho
+          </h3>
+          <div class="text-xs text-slate-500 flex flex-wrap gap-x-4 gap-y-1">
+            <span>👤 <strong>De:</strong> <span id="rocket-view-sender">—</span></span>
+            <span>🎯 <strong>Para:</strong> <span id="rocket-view-recipient">—</span></span>
+            <span>📅 <strong>Data:</strong> <span id="rocket-view-date">—</span></span>
+            <span>⏳ <strong>Prazo:</strong> <span id="rocket-view-deadline">—</span></span>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="printRocketSlip()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center space-x-1" title="Imprimir Comprovante">
+            <span>🖨️</span>
+            <span class="hidden sm:inline">Imprimir</span>
+          </button>
+          <button onclick="closeViewRocketModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Conteúdo do Despacho Original -->
+      <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/60 space-y-2">
+        <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Despacho Original</span>
+        <div id="rocket-view-original-msg" class="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap font-sans">
+          Carregando conteúdo original...
+        </div>
+      </div>
+
+      <!-- Respostas em Cadeia / Timeline -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center space-x-1">
+          <span>💬</span>
+          <span>Histórico & Respostas em Cadeia (Thread)</span>
+        </h4>
+        <div id="rocket-view-timeline" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+          <!-- Respostas carregadas via JS -->
+        </div>
+      </div>
+
+      <!-- Ações Rápidas de 1-Clique & Caixa de Resposta -->
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold text-slate-700">Ações Rápidas:</span>
+          <button onclick="quickReplyRocket('ciente')" class="px-3 py-1.5 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold text-xs border border-blue-300 shadow-sm transition-all flex items-center space-x-1 cursor-pointer">
+            <span>👁️</span>
+            <span>Responder "Ciente"</span>
+          </button>
+          <button onclick="quickReplyRocket('missao_cumprida')" class="px-3 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-xs border border-emerald-300 shadow-sm transition-all flex items-center space-x-1 cursor-pointer">
+            <span>🎯</span>
+            <span>Responder "Missão Cumprida"</span>
+          </button>
+        </div>
+
+        <form onsubmit="submitRocketReply(event)" class="flex gap-2">
+          <input 
+            type="text" 
+            id="rocket-reply-input" 
+            placeholder="Escreva uma réplica ou atualização sobre este foguete..." 
+            class="flex-1 px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500"
+          />
+          <button type="submit" class="px-4 py-2 rounded-xl bg-navy-950 hover:bg-gold-600 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1 cursor-pointer">
+            <span>Enviar</span>
+            <span>↵</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= JAVASCRIPT / LÓGICA DO PAINEL ================= -->
+  <!-- Scripts Core e Módulos Independentes -->
+  <script src="/js/core/api.js"></script>
+  <script src="/js/core/auth.js"></script>
+  <script src="/js/core/router.js"></script>
+  <script src="/js/modules/rockets.js"></script>
   <script>
     const TOKEN_KEY = 'ja_admin_token';
     const USER_KEY = 'ja_admin_user';

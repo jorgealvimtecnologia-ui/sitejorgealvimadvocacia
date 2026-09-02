@@ -7,6 +7,13 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { DatabaseSync } from 'node:sqlite';
 import { execFile } from 'node:child_process';
+import { 
+  sessions, createSession, validateToken, requireAuth, requireMaster,
+  clientSessions, createClientSession, validateClientToken, requireClientAuth,
+  employeeSessions, createEmployeeSession, validateEmployeeToken, requireEmployeeAuth
+} from './src/middleware/auth.js';
+import { logAudit } from './src/middleware/audit.js';
+import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1162,71 +1169,6 @@ function verifyPassword(password, storedHash, salt) {
   return hash === storedHash;
 }
 
-// Helper Centralizado de Auditoria e Trilha de Histórico Geral
-function logAudit(req, {
-  event_type = 'ALTERACAO',
-  event_name,
-  module,
-  resource_id = null,
-  user_cpf = null,
-  user_name = null,
-  user_role = null,
-  description,
-  details = null
-}) {
-  try {
-    const ip = req ? (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.ip || '127.0.0.1') : '127.0.0.1';
-    const cleanIp = typeof ip === 'string' ? ip.split(',')[0].trim().replace(/^::ffff:/, '') : '127.0.0.1';
-    const userAgent = req ? (req.headers['user-agent'] || 'Desconhecido') : 'Sistema Local';
-
-    let finalName = user_name;
-    let finalCpf = user_cpf;
-    let finalRole = user_role;
-
-    if (!finalName && req) {
-      if (req.user) {
-        finalName = req.user.name || req.user.username;
-        finalRole = req.user.role || 'admin';
-        finalCpf = req.user.cpf || (req.user.username === 'jorgealvimtecnologia' ? '000.000.000-00' : null);
-      } else if (req.client) {
-        finalName = req.client.name;
-        finalRole = 'client';
-        finalCpf = req.client.cpf || req.client.cnpj || null;
-      }
-    }
-
-    if (!finalName) {
-      finalName = 'Sistema';
-      finalRole = 'sistema';
-    }
-
-    const detailsJson = details ? (typeof details === 'string' ? details : JSON.stringify(details)) : null;
-    const now = new Date().toISOString();
-
-    db.prepare(`
-      INSERT INTO audit_logs (
-        event_type, event_name, module, resource_id, user_cpf, user_name,
-        user_role, ip_address, user_agent, description, details, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      event_type,
-      event_name,
-      module,
-      resource_id ? String(resource_id) : null,
-      finalCpf || null,
-      finalName,
-      finalRole || 'admin',
-      cleanIp,
-      userAgent.substring(0, 255),
-      description,
-      detailsJson,
-      now
-    );
-  } catch (err) {
-    console.error('[AUDITORIA] Falha ao registrar log de auditoria:', err);
-  }
-}
-
 // Inicialização / Garantia do Usuário Mestre Padrão
 try {
   const { hash, salt } = hashPassword('jorgealvim');
@@ -1273,139 +1215,6 @@ try {
   `);
 } catch (err) {
   console.error('Erro ao verificar usuário mestre:', err);
-}
-
-// Gerenciamento de Sessões em Memória
-const sessions = new Map();
-
-function createSession(user) {
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 horas
-  sessions.set(token, {
-    userId: user.id,
-    username: user.username,
-    name: user.name,
-    role: user.role,
-    expiresAt
-  });
-  return token;
-}
-
-function validateToken(token) {
-  if (!token) return null;
-  const session = sessions.get(token);
-  if (!session) return null;
-  if (Date.now() > session.expiresAt) {
-    sessions.delete(token);
-    return null;
-  }
-  return session;
-}
-
-function requireAuth(req, res, next) {
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') 
-    ? authHeader.substring(7) 
-    : (req.query.token || req.headers['x-access-token']);
-
-  const session = validateToken(token);
-  if (!session) {
-    return res.status(401).json({ error: 'Acesso não autorizado. Faça login no painel.' });
-  }
-  req.user = session;
-  next();
-}
-
-// Gerenciamento de Sessões do Portal do Cliente
-const clientSessions = new Map();
-
-function createClientSession(client) {
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 horas
-  clientSessions.set(token, {
-    clientId: client.id,
-    fullName: client.full_name,
-    email: client.email,
-    cpf: client.cpf,
-    cnpj: client.cnpj,
-    clientType: client.client_type,
-    expiresAt
-  });
-  return token;
-}
-
-function validateClientToken(token) {
-  if (!token) return null;
-  const session = clientSessions.get(token);
-  if (!session) return null;
-  if (Date.now() > session.expiresAt) {
-    clientSessions.delete(token);
-    return null;
-  }
-  return session;
-}
-
-function requireClientAuth(req, res, next) {
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') 
-    ? authHeader.substring(7) 
-    : (req.query.token || req.headers['x-client-token']);
-
-  const session = validateClientToken(token);
-  if (!session) {
-    return res.status(401).json({ error: 'Sessão do cliente expirada ou inválida. Faça login novamente.' });
-  }
-  req.client = session;
-  next();
-}
-
-// Gerenciamento de Sessões do Portal do Colaborador / Autoatendimento do Trabalhador
-const employeeSessions = new Map();
-
-function createEmployeeSession(emp) {
-  const token = crypto.randomBytes(32).toString('hex');
-  const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 horas
-  employeeSessions.set(token, {
-    employeeId: emp.id,
-    fullName: emp.name || emp.full_name,
-    cpf: emp.cpf,
-    position: emp.position,
-    contractType: emp.contract_type,
-    expiresAt
-  });
-  return token;
-}
-
-function validateEmployeeToken(token) {
-  if (!token) return null;
-  const session = employeeSessions.get(token);
-  if (!session) return null;
-  if (Date.now() > session.expiresAt) {
-    employeeSessions.delete(token);
-    return null;
-  }
-  return session;
-}
-
-function requireEmployeeAuth(req, res, next) {
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') 
-    ? authHeader.substring(7) 
-    : (req.query.token || req.headers['x-employee-token']);
-
-  // Permite acesso se for Admin autenticado no painel
-  const adminSession = validateToken(token);
-  if (adminSession) {
-    req.user = adminSession;
-    return next();
-  }
-
-  const session = validateEmployeeToken(token);
-  if (!session) {
-    return res.status(401).json({ error: 'Sessão do colaborador expirada ou inválida. Faça login novamente.' });
-  }
-  req.employee = session;
-  next();
 }
 
 // Gerador de ID para Leads do Formulário do Site: JA-2026-0001
@@ -1757,6 +1566,10 @@ app.use(express.urlencoded({ extended: true }));
 // Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório
 app.use('/storage/clients', express.static(STORAGE_DIR));
 app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
+app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
+
+// Roteadores Modulares
+app.use(rocketsRouter);
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {
