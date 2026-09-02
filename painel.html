@@ -9122,6 +9122,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (btnHr) btnHr.className = inactiveClass;
       btnUsers.className = inactiveClass;
 
+      // Foguetes: aba adicionada na modularização; não constava no switchTab inline.
+      const tabRockets = document.getElementById('tab-content-rockets');
+      const btnRockets = document.getElementById('tab-btn-rockets');
+      if (tabRockets) tabRockets.classList.add('hidden');
+      if (btnRockets) btnRockets.className = inactiveClass;
+
       if (tab === 'leads') {
         tabLeads.classList.remove('hidden');
         btnLeads.className = activeClass;
@@ -9187,6 +9193,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         if (tabHr) tabHr.classList.remove('hidden');
         if (btnHr) btnHr.className = activeClass;
         initHrTab();
+      } else if (tab === 'rockets') {
+        if (tabRockets) tabRockets.classList.remove('hidden');
+        if (btnRockets) btnRockets.className = activeClass;
+        if (typeof initRocketsTab === 'function') initRocketsTab();
       }
 
       renderTabChart(tab);
@@ -9205,6 +9215,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         if (res.ok) {
           const data = await res.json();
           showPanelScreen(data.user);
+          loadLeads(); // popula o badge "Atendimentos" já na carga inicial
           loadClients();
           loadLawsuits();
           loadOffices();
@@ -9294,6 +9305,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
+          loadLeads(); // popula o badge "Atendimentos" já na carga inicial
           loadClients();
           loadLawsuits();
           loadOffices();

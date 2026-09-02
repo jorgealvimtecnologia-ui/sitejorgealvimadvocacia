@@ -274,10 +274,10 @@ console.log(`📅 Agenda: ${EVENTS.length} eventos criados.`);
 
 const finCols = colsOf('financial_transactions');
 const FINANCE = [
-  { type: 'receita', category: 'Honorários', description: 'Honorários - João da Silva (parcela 1/6)', amount: 1000, due_date: now().slice(0, 10), payment_date: now().slice(0, 10), status: 'Pago', client_id: 'CLI-DEMO-01', payment_method: 'PIX' },
-  { type: 'receita', category: 'Honorários', description: 'Assessoria mensal - Tech Solutions', amount: 2000, due_date: daysFromNow(5).slice(0, 10), status: 'Pendente', client_id: 'CLI-DEMO-03' },
-  { type: 'despesa', category: 'Custas Processuais', description: 'Custas iniciais processo 0801234-56', amount: 350, due_date: daysFromNow(3).slice(0, 10), status: 'Pendente', client_id: 'CLI-DEMO-01' },
-  { type: 'despesa', category: 'Folha de Pagamento', description: 'Salário - Ana Paula Rezende', amount: 1800, due_date: daysFromNow(10).slice(0, 10), status: 'Pendente' },
+  { type: 'Receita', category: 'Honorários', description: 'Honorários - João da Silva (parcela 1/6)', amount: 1000, due_date: now().slice(0, 10), payment_date: now().slice(0, 10), status: 'Pago', client_id: 'CLI-DEMO-01', payment_method: 'PIX' },
+  { type: 'Receita', category: 'Honorários', description: 'Assessoria mensal - Tech Solutions', amount: 2000, due_date: daysFromNow(5).slice(0, 10), status: 'Pendente', client_id: 'CLI-DEMO-03' },
+  { type: 'Despesa', category: 'Custas Processuais', description: 'Custas iniciais processo 0801234-56', amount: 350, due_date: daysFromNow(3).slice(0, 10), status: 'Pendente', client_id: 'CLI-DEMO-01' },
+  { type: 'Despesa', category: 'Folha de Pagamento', description: 'Salário - Ana Paula Rezende', amount: 1800, due_date: daysFromNow(10).slice(0, 10), status: 'Pendente' },
 ];
 FINANCE.forEach((f, i) => run(`financeiro ${i + 1}`, () => {
   const exists = db.prepare('SELECT id FROM financial_transactions WHERE description = ?').get(f.description);
