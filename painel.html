@@ -8649,8 +8649,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/core/router.js"></script>
   <script src="/js/modules/rockets.js"></script>
   <script>
-    const TOKEN_KEY = 'ja_admin_token';
-    const USER_KEY = 'ja_admin_user';
+    // TOKEN_KEY e USER_KEY são declarados em /js/core/api.js (escopo global dos
+    // scripts). Não redeclarar aqui — a duplicação com `const` quebrava o painel
+    // ("Identifier 'TOKEN_KEY' has already been declared").
 
     let allLeads = [];
     let allUsers = [];
