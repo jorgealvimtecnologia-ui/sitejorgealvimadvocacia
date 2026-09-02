@@ -10,7 +10,8 @@ import { execFile } from 'node:child_process';
 import { 
   sessions, createSession, validateToken, requireAuth, requireMaster,
   clientSessions, createClientSession, validateClientToken, requireClientAuth,
-  employeeSessions, createEmployeeSession, validateEmployeeToken, requireEmployeeAuth
+  employeeSessions, createEmployeeSession, validateEmployeeToken, requireEmployeeAuth,
+  destroySession
 } from './src/middleware/auth.js';
 import { logAudit } from './src/middleware/audit.js';
 import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
@@ -1822,7 +1823,7 @@ app.post('/api/auth/logout', (req, res) => {
         description: `Operador ${sess.name} encerrou a sessão no painel administrativo.`
       });
     }
-    sessions.delete(token);
+    destroySession(token);
   }
   return res.json({ success: true, message: 'Sessão encerrada com sucesso.' });
 });
@@ -6738,7 +6739,7 @@ app.delete('/api/client-portal/account', requireClientAuth, (req, res) => {
     // Invalidar sessões ativas
     for (const [token, session] of clientSessions.entries()) {
       if (session.clientId === clientId) {
-        clientSessions.delete(token);
+        destroySession(token);
       }
     }
 
