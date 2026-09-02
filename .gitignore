@@ -6,6 +6,15 @@ dist-ssr
 .env.*
 !.env.example
 
+# Banco de dados SQLite (dados sensíveis de clientes — NUNCA versionar)
+*.db
+*.db-shm
+*.db-wal
+leads.db
+
+# Logs
+*.log
+
 # Backups e Uploads Locais / Servidor
 backups/*
 !backups/.gitkeep

@@ -18,6 +18,16 @@ import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Carrega variáveis de ambiente do arquivo .env (carregador nativo do Node >= 20.12/22).
+// Segredos (chaves Asaas, origens CORS, etc.) devem ficar no .env, nunca no código.
+try {
+  if (typeof process.loadEnvFile === 'function' && fs.existsSync(path.join(__dirname, '.env'))) {
+    process.loadEnvFile(path.join(__dirname, '.env'));
+  }
+} catch (e) {
+  console.warn('[ENV] Não foi possível carregar .env:', e.message);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -1189,30 +1199,23 @@ try {
     );
     console.log('👑 [AUTH] Usuário Mestre "jorgealvimtecnologia" criado com sucesso.');
   } else {
+    // SEGURANÇA: apenas garante o papel de mestre. NÃO reescreve a senha a cada boot
+    // (antes o hash era forçado para 'jorgealvim' sempre, impedindo troca de senha).
     db.prepare(`
-      UPDATE users 
-      SET password_hash = ?, salt = ?, role = 'master', plain_password = 'jorgealvim' 
+      UPDATE users SET role = 'master'
       WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'
-    `).run(hash, salt);
-    console.log('👑 [AUTH] Credenciais do Usuário Mestre "jorgealvimtecnologia" sincronizadas com sucesso.');
+    `).run();
+    console.log('👑 [AUTH] Papel do Usuário Mestre "jorgealvimtecnologia" sincronizado.');
   }
 
-  // Preenche senhas legíveis para os operadores cadastrados para fins de desenvolvimento / testes
-  db.exec(`
-    UPDATE users SET plain_password = 'jorgealvim' WHERE username = 'jorgealvimtecnologia' OR id = 'USR-MASTER-01' OR username LIKE '%jorge%';
-    UPDATE users SET plain_password = 'mariana123' WHERE username LIKE '%mariana%';
-    UPDATE users SET plain_password = 'gabriela123' WHERE username LIKE '%gabriela%';
-    UPDATE users SET plain_password = 'lucas123' WHERE username LIKE '%lucas%';
-    UPDATE users SET plain_password = 'patricia123' WHERE username LIKE '%patricia%';
-    UPDATE users SET plain_password = 'carlos123' WHERE username LIKE '%carlos%';
-    UPDATE users SET plain_password = 'roberto123' WHERE username LIKE '%roberto%';
-    UPDATE users SET plain_password = 'camila123' WHERE username LIKE '%camila%';
-    UPDATE users SET plain_password = 'fernanda123' WHERE username LIKE '%fernanda%';
-    UPDATE users SET plain_password = 'juliana123' WHERE username LIKE '%juliana%';
-    UPDATE users SET plain_password = 'gabriel123' WHERE username LIKE '%gabriel%';
-    UPDATE users SET plain_password = 'cliente123' WHERE plain_password IS NULL AND role = 'cliente';
-    UPDATE users SET plain_password = '123456' WHERE plain_password IS NULL;
-  `);
+  // SEGURANÇA: o preenchimento de senhas previsíveis (mariana123, 123456, ...) só ocorre
+  // em desenvolvimento. Em produção nunca semeamos senhas fracas conhecidas.
+  if (process.env.NODE_ENV !== 'production') {
+    db.exec(`
+      UPDATE users SET plain_password = 'cliente123' WHERE plain_password IS NULL AND role = 'cliente';
+      UPDATE users SET plain_password = '123456' WHERE plain_password IS NULL;
+    `);
+  }
 } catch (err) {
   console.error('Erro ao verificar usuário mestre:', err);
 }
@@ -1559,7 +1562,23 @@ app.use((req, res, next) => {
 });
 
 // Middlewares Padrão
-app.use(cors());
+// SEGURANÇA: CORS restrito a origens explicitamente permitidas.
+// Configure ALLOWED_ORIGINS no .env (separadas por vírgula). Sem valor => mesma origem apenas.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Requisições sem origin (apps nativos, curl, mesma origem) são permitidas
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.length === 0) return callback(null, true); // fallback dev
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error('Origem não permitida pela política de CORS.'));
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -1628,7 +1647,30 @@ app.get('/sw.js', (req, res) => {
 });
 
 // Rota da Página Principal e Painel de Controle
-app.use(express.static(__dirname));
+// SEGURANÇA: NÃO servir o diretório-raiz inteiro (isso exporia leads.db, server.js,
+// .git, backups, etc.). Servimos apenas os assets públicos explicitamente permitidos.
+app.use('/public', express.static(path.join(__dirname, 'public'), {
+  maxAge: '7d',
+  dotfiles: 'deny'
+}));
+app.use('/dist', express.static(path.join(__dirname, 'dist'), { maxAge: '7d' }));
+
+app.get('/manifest.json', (req, res) => {
+  res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
+app.get('/favicon.svg', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
+// Página principal do site institucional
+app.get('/', (req, res) => {
+  sendFreshFile(res, 'index.html');
+});
 
 app.get('/painel', (req, res) => {
   sendFreshFile(res, 'painel.html');
@@ -1710,18 +1752,12 @@ app.post('/api/auth/login', (req, res) => {
       }
     }
 
-    // Aceita variações de senha do mestre/admin:
-    // 'jorgealvim', 'jorge alvim', 'Jorge Alvim', 'jorgealvimtecnologia', '123456', 'admin', 'jorgealvimadvocacia'
-    const isMasterUser = user && (user.id === 'USR-MASTER-01' || user.username === 'jorgealvimtecnologia' || user.role === 'master' || user.role === 'admin');
-    const isMasterPass = ['jorgealvim', 'jorgealvimtecnologia', '123456', 'admin', 'jorgealvimadvocacia'].includes(compactPassword) || rawPassword.toLowerCase() === 'jorge alvim';
-    const isMasterFallback = isMasterUser && isMasterPass;
-
+    // SEGURANÇA: sem senhas-mestre hardcoded. A autenticação valida SOMENTE o hash
+    // PBKDF2 armazenado. Aceitamos a senha exata ou sua versão compacta (sem espaços),
+    // para tolerar variações de digitação, mas nunca uma senha fixa universal.
     const isPasswordValid = user && (
-      isMasterFallback ||
       verifyPassword(rawPassword, user.password_hash, user.salt) ||
-      verifyPassword(cleanUsername, user.password_hash, user.salt) ||
-      verifyPassword(compactPassword, user.password_hash, user.salt) ||
-      verifyPassword('jorgealvim', user.password_hash, user.salt)
+      (compactPassword !== rawPassword && verifyPassword(compactPassword, user.password_hash, user.salt))
     );
 
     if (!user || !isPasswordValid) {
