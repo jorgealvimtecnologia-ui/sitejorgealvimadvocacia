@@ -15,6 +15,9 @@ leads.db
 # Logs
 *.log
 
+# Credenciais de demonstração (não versionar)
+CREDENCIAIS-DEMO.md
+
 # Backups e Uploads Locais / Servidor
 backups/*
 !backups/.gitkeep

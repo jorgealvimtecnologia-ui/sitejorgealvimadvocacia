@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "start": "node server.js",
     "server": "node server.js",
+    "seed": "node scripts/seed-demo.js",
     "test": "node scripts/test-system.js"
   },
   "devDependencies": {
