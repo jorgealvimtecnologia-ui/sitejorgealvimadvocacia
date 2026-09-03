@@ -179,6 +179,35 @@ export function reconcileDeadlinesToCalendar() {
   return { created };
 }
 
+/**
+ * INTERNO: religa publicações órfãs (sem processo) a processos já cadastrados,
+ * casando pelo número CNJ. Cobre "processo cadastrado ↔ suas publicações".
+ */
+export function relinkOrphanPublications() {
+  let linked = 0;
+  let orphans = [];
+  try {
+    orphans = db.prepare(`SELECT id, numero_processo, numeroprocessocommascara FROM court_publications WHERE lawsuit_id IS NULL OR lawsuit_id = ''`).all();
+  } catch (e) { return { linked: 0 }; }
+  const now = new Date().toISOString();
+  for (const p of orphans) {
+    const clean = String(p.numero_processo || p.numeroprocessocommascara || '').replace(/\D/g, '');
+    if (!clean) continue;
+    try {
+      const ml = db.prepare(`SELECT id, client_id FROM lawsuits WHERE REPLACE(REPLACE(REPLACE(cnj_number, '.', ''), '-', ''), '/', '') = ? OR cnj_number LIKE ?`).get(clean, `%${clean}%`);
+      if (ml) {
+        db.prepare(`UPDATE court_publications SET lawsuit_id = ?, client_id = COALESCE(client_id, ?), updated_at = ? WHERE id = ?`).run(ml.id, ml.client_id, now, p.id);
+        linked++;
+      }
+    } catch (e) { /* segue */ }
+  }
+  return { linked };
+}
+
+// Tarefas de sincronização externas registráveis (ex.: DataJud, registrada pelo server.js).
+const _tasks = [];
+export function registerSyncTask(name, fn) { _tasks.push({ name, fn }); }
+
 /** Salva/lê o status da última sincronização em system_settings. */
 function saveStatus(status) {
   try {
@@ -204,14 +233,35 @@ export async function runFullSync(reqOrNull = null) {
   try {
     const ext = await syncComunicaApi({});
     const rec = reconcileDeadlinesToCalendar();
+    const rel = relinkOrphanPublications();
+
+    // Tarefas externas registradas (ex.: DataJud/andamentos).
+    const tasks = {};
+    for (const t of _tasks) {
+      try { tasks[t.name] = await t.fn(); }
+      catch (e) { tasks[t.name] = { error: e.message }; }
+    }
+    const movimentosNovos = tasks.datajud_movements?.newMovements || 0;
+
     const status = {
       started_at: startedAt, finished_at: new Date().toISOString(),
       publicacoes_novas: ext.totalSaved, publicacoes_analisadas: ext.totalFound,
-      prazos_criados: rec.created, advogados: ext.lawyersChecked, errors: ext.errors
+      prazos_criados: rec.created, publicacoes_religadas: rel.linked,
+      movimentos_novos: movimentosNovos, advogados: ext.lawyersChecked,
+      errors: ext.errors, tasks
     };
     saveStatus(status);
-    if (ext.totalSaved > 0 || rec.created > 0) {
-      console.log(`🔄 [SYNC] ${ext.totalSaved} intimação(ões) nova(s), ${rec.created} prazo(s) na agenda.`);
+
+    if (movimentosNovos > 0) {
+      createNotification({
+        category: 'geral', level: 'info',
+        title: `📌 ${movimentosNovos} novo(s) andamento(s) processual(is)`,
+        message: `Sincronizados do DataJud/CNJ em ${tasks.datajud_movements?.lawsuitsChecked || 0} processo(s).`,
+        link: '#tab:lawsuits', dedupe_key: `andamentos:${startedAt}`
+      });
+    }
+    if (ext.totalSaved > 0 || rec.created > 0 || movimentosNovos > 0) {
+      console.log(`🔄 [SYNC] ${ext.totalSaved} intimação(ões), ${rec.created} prazo(s), ${movimentosNovos} andamento(s).`);
     }
     if (reqOrNull) {
       logAudit(reqOrNull, {

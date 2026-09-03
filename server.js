@@ -20,7 +20,7 @@ import { esignRouter } from './src/modules/esign/esign.routes.js';
 import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
-import { syncRouter, syncComunicaApi, startSyncScheduler } from './src/modules/sync/sync.routes.js';
+import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } from './src/modules/sync/sync.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -8767,6 +8767,41 @@ app.get('/api/judicial/tribunals', requireAuth, (req, res) => {
     }))
   });
 });
+
+// Tarefa de sincronização registrada no Motor: puxa andamentos do DataJud/CNJ
+// para os processos ativos do escritório, gravando os novos em lawsuit_movements.
+async function syncActiveLawsuitMovements() {
+  let checked = 0, newMovements = 0;
+  let lawsuits = [];
+  try {
+    lawsuits = db.prepare(`SELECT id, cnj_number, client_id FROM lawsuits WHERE status = 'Em Andamento' OR status IS NULL LIMIT 100`).all();
+  } catch (e) { return { lawsuitsChecked: 0, newMovements: 0 }; }
+
+  for (const ls of lawsuits) {
+    const code = detectTribunalFromNPU(ls.cnj_number);
+    if (!code) continue; // sem tribunal identificável, pula (evita varrer todos)
+    checked++;
+    try {
+      const r = await searchJudicialNetwork({ queryType: 'number', queryTerm: ls.cnj_number, tribunal: code });
+      const proc = (r.processes || [])[0];
+      if (proc && Array.isArray(proc.movements)) {
+        for (const m of proc.movements) {
+          const mdate = String(m.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
+          const title = String(m.title || 'Movimentação').slice(0, 300);
+          const exists = db.prepare(`SELECT 1 FROM lawsuit_movements WHERE lawsuit_id = ? AND movement_date = ? AND title = ?`).get(ls.id, mdate, title);
+          if (!exists) {
+            db.prepare(`INSERT INTO lawsuit_movements (lawsuit_id, movement_date, title, description, created_at) VALUES (?, ?, ?, ?, ?)`)
+              .run(ls.id, mdate, title, String(m.details || '').slice(0, 2000), new Date().toISOString());
+            newMovements++;
+          }
+        }
+      }
+    } catch (e) { /* processo indisponível no DataJud, segue */ }
+    await new Promise(rr => setTimeout(rr, 300)); // polidez com a API do CNJ
+  }
+  return { lawsuitsChecked: checked, newMovements };
+}
+registerSyncTask('datajud_movements', syncActiveLawsuitMovements);
 
 /**
  * 3. POST /api/judicial/import-to-office - Importação de Processo para a Base do Escritório com 1 Clique

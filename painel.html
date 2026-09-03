@@ -20222,7 +20222,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         const s = d.status;
         if (!s) { el.textContent = 'Ainda não sincronizado nesta sessão. Roda automaticamente a cada 12h.'; return; }
         const when = s.finished_at ? fmtDate(s.finished_at) : '—';
-        el.innerHTML = `Última: <strong>${when}</strong> • ${s.publicacoes_novas || 0} intimação(ões) nova(s), ${s.prazos_criados || 0} prazo(s) na agenda`;
+        el.innerHTML = `Última: <strong>${when}</strong> • ${s.publicacoes_novas || 0} intimação(ões), ${s.prazos_criados || 0} prazo(s), ${s.movimentos_novos || 0} andamento(s)`;
       } catch (e) { el.textContent = 'Status indisponível.'; }
     }
     async function runFullSyncNow() {
@@ -20233,7 +20233,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       try {
         const { ok, data } = await jsend('/api/sync/run', 'POST');
         if (ok && data.success) {
-          if (el) el.innerHTML = `✅ ${data.publicacoes_novas || 0} intimação(ões) nova(s), ${data.prazos_criados || 0} prazo(s) criado(s).`;
+          if (el) el.innerHTML = `✅ ${data.publicacoes_novas || 0} intimação(ões), ${data.prazos_criados || 0} prazo(s), ${data.movimentos_novos || 0} andamento(s).`;
           loadDashboardOverview();
           refreshNotifBadge();
         } else {
