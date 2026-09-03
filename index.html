@@ -122,9 +122,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Tailwind CSS CDN com Suporte a Breakpoint Extra Pequeno (xs) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/public/css/app.tailwind.css" />
   <script>
-    tailwind.config = {
+    window.tailwind = window.tailwind || {}; tailwind.config = {
       theme: {
         screens: {
           'xs': '375px',
@@ -293,18 +293,19 @@
         <!-- LOGOTIPO AMPLIADO & RESPONSIVO -->
         <a href="#" class="flex items-center space-x-3 sm:space-x-4 group min-w-0">
           <div class="w-11 h-11 xs:w-12 xs:h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-amber-50 via-gold-100 to-amber-100 border-2 border-gold-400 flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:border-gold-500 transition-all flex-shrink-0">
-            <svg class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-gold-700 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+            <svg class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-gold-700 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+              <!-- Balança da Justiça (símbolo do escritório) -->
+              <path d="M12 3.2v17.6"/>
+              <path d="M8 20.8h8"/>
+              <path d="M5 6.6h14"/>
+              <circle cx="12" cy="3.2" r="1.15"/>
+              <path d="M5 6.6 2.6 12M5 6.6 7.4 12"/>
+              <path d="M2.2 12c0 1.7 5.6 1.7 5.6 0"/>
+              <path d="M19 6.6 16.6 12M19 6.6 21.4 12"/>
+              <path d="M16.2 12c0 1.7 5.6 1.7 5.6 0"/>
             </svg>
           </div>
-          <div class="truncate">
-            <span class="block font-serif text-lg xs:text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-navy-950 group-hover:text-gold-600 transition-colors truncate">
-              JORGE ALVIM
-            </span>
-            <span class="block text-[9px] xs:text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-gold-700 font-bold -mt-0.5 truncate">
-              ADVOCACIA & CONSULTORIA
-            </span>
-          </div>
+          <span class="sr-only">Jorge Alvim Advocacia — página inicial</span>
         </a>
 
         <!-- Menu Desktop -->
@@ -422,6 +423,15 @@
     </div>
   </header>
 
+  <!-- Nome do escritório (movido para baixo da barra de menu) -->
+  <div class="bg-gradient-to-b from-white to-warm-50 border-b border-gold-200/50">
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col items-center text-center">
+      <span class="font-serif text-2xl xs:text-3xl sm:text-4xl font-extrabold tracking-tight text-navy-950 leading-none">JORGE ALVIM</span>
+      <span class="mt-1 text-[10px] xs:text-xs sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.35em] text-gold-700 font-bold">ADVOCACIA &amp; CONSULTORIA</span>
+      <span class="mt-2 block w-16 h-0.5 rounded-full bg-gradient-to-r from-transparent via-gold-400 to-transparent"></span>
+    </div>
+  </div>
+
   <main>
     <!-- ================= HERO SECTION RESPONSIVO ================= -->
     <section id="inicio" class="relative min-h-[85vh] flex items-center justify-center py-12 xs:py-16 sm:py-20 lg:py-24 overflow-hidden bg-gradient-to-b from-warm-100 via-white to-warm-50">
@@ -496,10 +506,11 @@
               <div class="relative rounded-2xl bg-warm-50 border border-slate-200 overflow-hidden shadow-card-hover">
                 
                 <div class="relative h-72 xs:h-80 sm:h-96 w-full overflow-hidden">
-                  <img 
-                    src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80" 
-                    alt="Dr. Jorge Alvim - Advogado" 
-                    class="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-700"
+                  <img
+                    src="https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?auto=format&fit=crop&w=800&q=80"
+                    alt="Colunas clássicas de fórum — símbolo do Direito"
+                    loading="lazy"
+                    class="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700"
                   />
                   
                   <div class="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 p-3.5 sm:p-4 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 shadow-md">
