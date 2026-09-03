@@ -30,6 +30,7 @@ try {
 }
 
 const app = express();
+app.disable('x-powered-by'); // não expor a stack (Express)
 const PORT = process.env.PORT || 3000;
 
 // Função Auxiliar para Extração Segura de IP
@@ -1544,9 +1545,17 @@ const storage = multer.diskStorage({
   }
 });
 
+// Bloqueia tipos executáveis/scripts que poderiam ser servidos e executados no navegador.
+const BLOCKED_UPLOAD_EXT = /\.(html?|xhtml|svg|js|mjs|php[0-9]?|phtml|phar|exe|bat|cmd|sh|com|scr|jar|msi|dll|htaccess)$/i;
 const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB por arquivo (suporta fotos de alta resolução de smartphones)
+  fileFilter(req, file, cb) {
+    if (BLOCKED_UPLOAD_EXT.test(file.originalname || '')) {
+      return cb(new Error('Tipo de arquivo não permitido por segurança.'));
+    }
+    cb(null, true);
+  },
 });
 
 // Configuração de Proxy Reverso e Confiança
@@ -1558,7 +1567,25 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // Geolocalização liberada para a PRÓPRIA origem (o site usa no modal de boas-vindas);
+  // câmera e microfone seguem bloqueados.
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+  // Content-Security-Policy: permite exatamente os recursos externos usados hoje
+  // (Tailwind CDN, Google Fonts, jsDelivr, Facebook, Unsplash, QR, APIs .gov/CEP…)
+  // e bloqueia o restante. 'unsafe-inline'/'unsafe-eval' são necessários enquanto o
+  // Tailwind roda via CDN e há scripts inline nas páginas.
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'self'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://connect.facebook.net",
+    "connect-src 'self' https:",
+    "frame-src 'self' https:"
+  ].join('; '));
   next();
 });
 
@@ -1586,7 +1613,7 @@ app.use(express.urlencoded({ extended: true }));
 // Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório
 app.use('/storage/clients', express.static(STORAGE_DIR));
 app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
-app.use('/js', express.static(path.join(__dirname, 'public', 'js')));
+app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: '7d' }));
 
 // Roteadores Modulares
 app.use(rocketsRouter);
@@ -1724,7 +1751,30 @@ app.get('/artigos', (req, res) => {
 
 // ================= ROTAS DE AUTENTICAÇÃO =================
 
-app.post('/api/auth/login', (req, res) => {
+// Rate-limiting simples em memória para rotas de login (anti força-bruta).
+const loginHits = new Map();
+function loginRateLimit(req, res, next) {
+  try {
+    const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000; // janela de 15 minutos
+    const maxAttempts = 15;
+    var rec = loginHits.get(ip);
+    if (!rec || now > rec.reset) rec = { count: 0, reset: now + windowMs };
+    rec.count++;
+    loginHits.set(ip, rec);
+    if (loginHits.size > 5000) { // limpeza esporádica
+      for (const [k, v] of loginHits) if (now > v.reset) loginHits.delete(k);
+    }
+    if (rec.count > maxAttempts) {
+      res.setHeader('Retry-After', String(Math.ceil((rec.reset - now) / 1000)));
+      return res.status(429).json({ error: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.' });
+    }
+  } catch (_) { /* nunca bloquear por erro do limitador */ }
+  next();
+}
+
+app.post('/api/auth/login', loginRateLimit, (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -1839,6 +1889,10 @@ app.get('/api/users', requireAuth, (req, res) => {
         CASE WHEN role = 'master' THEN 1 ELSE 2 END,
         created_at ASC
     `).all();
+    // Só o usuário mestre (jorgealvimtecnologia) pode ver as senhas em texto;
+    // os demais devem redefinir a senha, nunca visualizá-la.
+    const isMaster = req.user && (req.user.role === 'master' || req.user.username === 'jorgealvimtecnologia');
+    if (!isMaster) rows.forEach(r => { r.plain_password = ''; });
     return res.json({ success: true, users: rows });
   } catch (error) {
     console.error('[ERRO] Falha ao listar usuários:', error);
@@ -2266,6 +2320,8 @@ app.get('/api/access-control/matrix', requireAuth, (req, res) => {
       if (u.username) userPassMap.set(u.username, u.plain_password || '123456');
     });
 
+    // Só o usuário mestre vê as senhas; os demais devem redefinir.
+    const isMasterView = req.user && (req.user.role === 'master' || req.user.username === 'jorgealvimtecnologia');
     const matrix = rows.map(r => {
       const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
       let passwordPreview = userPassMap.get(r.user_id) || userPassMap.get(r.user_identifier);
@@ -2283,7 +2339,7 @@ app.get('/api/access-control/matrix', requireAuth, (req, res) => {
 
       return {
         ...r,
-        plain_password: passwordPreview,
+        plain_password: isMasterView ? passwordPreview : '',
         is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01' || (r.user_name || '').toLowerCase().includes('jorge alvim'),
         badge_label: tpl.badge_label,
         badge_class: tpl.badge_class,
@@ -6242,7 +6298,7 @@ app.post('/api/admin/whatsapp/test', requireAuth, async (req, res) => {
 });
 
 // 2. Login do Cliente (por CPF, CNPJ ou E-mail + Senha)
-app.post('/api/client-portal/login', (req, res) => {
+app.post('/api/client-portal/login', loginRateLimit, (req, res) => {
   try {
     const { login, password } = req.body;
     if (!login || !password) {
