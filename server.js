@@ -15,6 +15,11 @@ import {
 } from './src/middleware/auth.js';
 import { logAudit } from './src/middleware/audit.js';
 import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
+import { notificationsRouter, startDeadlineScanner } from './src/modules/notifications/notifications.routes.js';
+import { esignRouter } from './src/modules/esign/esign.routes.js';
+import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
+import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
+import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1617,6 +1622,11 @@ app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: '7
 
 // Roteadores Modulares
 app.use(rocketsRouter);
+app.use(notificationsRouter);
+app.use(esignRouter);
+app.use(lgpdRouter);
+app.use(dashboardRouter);
+app.use(analyticsRouter);
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {
@@ -12664,6 +12674,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🗄️  Banco SQLite:    leads.db (tabelas: leads, users, clients)`);
   console.log(`📁  Ficheiros:       storage/clients/`);
   console.log(`====================================================`);
+  // Inicia a varredura periódica de prazos fatais (central de notificações).
+  try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
 });
 
 // Manter o loop de eventos ativo continuamente

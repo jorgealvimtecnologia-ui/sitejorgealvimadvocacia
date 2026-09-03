@@ -2274,10 +2274,11 @@
             🔒
           </div>
           <p class="text-[11px] sm:text-xs text-slate-600 leading-relaxed">
-            <strong class="text-navy-950">Privacidade &amp; Dados:</strong> 
-            Utilizamos apenas dados técnicos de navegação essenciais (sessão e autenticação) para garantir a segurança do portal, em conformidade com a 
+            <strong class="text-navy-950">Privacidade &amp; Cookies:</strong>
+            Usamos dados técnicos essenciais (sessão e segurança) e, se você <strong>aceitar</strong>, métricas de navegação
+            <strong>anônimas</strong> (cliques em botões-chave, sem identificar você) para melhorar o site — em conformidade com a
             <strong>LGPD (Lei 13.709/2018)</strong>. Nenhum dado é compartilhado com terceiros sem seu consentimento.
-            <a href="#" class="text-gold-700 font-bold hover:underline ml-0.5">Saiba mais →</a>
+            <a href="/privacidade" class="text-gold-700 font-bold hover:underline ml-0.5">Política de Privacidade →</a>
           </p>
         </div>
 
@@ -2307,11 +2308,15 @@
     // ================= LGPD BANNER =================
     function lgpdAccept() {
       sessionStorage.setItem('ja_lgpd_consent', 'accepted');
+      // Ativa o analytics anônimo de navegação (só após consentimento).
+      if (window.jaAnalytics) window.jaAnalytics.grant();
       hideLgpdBanner();
     }
 
     function lgpdReject() {
       sessionStorage.setItem('ja_lgpd_consent', 'essential');
+      // Mantém apenas o essencial; registra a recusa (sem rastrear navegação).
+      if (window.jaAnalytics) window.jaAnalytics.deny();
       hideLgpdBanner();
     }
 
@@ -2407,6 +2412,7 @@
     });
   </script>
 
+  <script src="/js/analytics.js"></script>
   <script defer src="/js/enhance-ui.js"></script>
 </body>
 </html>
