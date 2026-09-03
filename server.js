@@ -20,6 +20,7 @@ import { esignRouter } from './src/modules/esign/esign.routes.js';
 import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
+import { syncRouter, syncComunicaApi, startSyncScheduler } from './src/modules/sync/sync.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1627,6 +1628,7 @@ app.use(esignRouter);
 app.use(lgpdRouter);
 app.use(dashboardRouter);
 app.use(analyticsRouter);
+app.use(syncRouter);
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {
@@ -9828,122 +9830,16 @@ app.get('/api/court/publications/search-live', requireAuth, async (req, res) => 
   }
 });
 
-// 3. Endpoint: Sincronizar Publicações de Todos os Advogados do Escritório
+// 3. Endpoint: Sincronizar Publicações (delega ao Motor de Sincronização)
+//    Aceita numeroOab/ufOab/nomeAdvogado (body ou query) para mirar uma OAB.
 app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
   try {
-    // Filtro opcional por uma OAB específica (via body ou query).
-    // Quando informado, sincroniza SOMENTE essa OAB (paginando todas as publicações).
     const src = { ...(req.query || {}), ...(req.body || {}) };
     const targetOab = src.numeroOab ? String(src.numeroOab).replace(/\D/g, '') : null;
     const targetUf = (src.ufOab || 'MG').toUpperCase();
     const targetName = src.nomeAdvogado || null;
 
-    let lawyers = [
-      { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
-      { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
-      { id: 'MEM-2026-0002', name: 'Dra. Mariana Fonseca Alvim', oab: '210450', uf: 'MG' },
-      { id: 'MEM-2026-0006', name: 'Dr. Roberto Medeiros Fonseca', oab: '165430', uf: 'MG' },
-      { id: 'MEM-2026-0007', name: 'Dra. Camila Vasconcelos', oab: '225890', uf: 'MG' }
-    ];
-
-    // Buscar também os membros cadastrados na tabela office_members com OAB
-    const dbMembers = db.prepare(`SELECT id, name, oab_number, oab_uf FROM office_members WHERE status = 'Ativo' AND oab_number IS NOT NULL AND oab_number != ''`).all();
-    dbMembers.forEach(m => {
-      const cleanOab = String(m.oab_number).replace(/\D/g, '');
-      if (cleanOab && !lawyers.some(l => l.oab === cleanOab)) {
-        lawyers.push({
-          id: m.id,
-          name: m.name,
-          oab: cleanOab,
-          uf: m.oab_uf || 'MG'
-        });
-      }
-    });
-
-    // Se veio uma OAB-alvo, restringe a sincronização apenas a ela.
-    if (targetOab) {
-      const known = lawyers.find(l => l.oab === targetOab);
-      lawyers = [ known || { id: 'OAB-' + targetOab, name: targetName || `OAB/${targetUf} ${targetOab}`, oab: targetOab, uf: targetUf } ];
-    }
-
-    let totalSaved = 0;
-    let totalFound = 0;
-    const errors = [];
-
-    const insertPublicationStmt = db.prepare(`
-      INSERT OR IGNORE INTO court_publications (
-        id, comunicacao_id, numero_processo, numeroprocessocommascara,
-        sigla_tribunal, nome_orgao, tipo_comunicacao, data_disponibilizacao,
-        data_publicacao, texto, nome_classe, destinatarios_json,
-        advogado_oab, advogado_nome, lawyer_id, client_id, lawsuit_id,
-        status, created_at, updated_at
-      ) VALUES (
-        @id, @comunicacao_id, @numero_processo, @numeroprocessocommascara,
-        @sigla_tribunal, @nome_orgao, @tipo_comunicacao, @data_disponibilizacao,
-        @data_publicacao, @texto, @nome_classe, @destinatarios_json,
-        @advogado_oab, @advogado_nome, @lawyer_id, @client_id, @lawsuit_id,
-        'nao_lido', datetime('now'), datetime('now')
-      )
-    `);
-
-    for (const lawyer of lawyers) {
-      try {
-        const ITENS = 100, MAX_PAGES = 60; // trava de segurança (~6.000 publicações por OAB)
-        let pagina = 0;
-        while (++pagina <= MAX_PAGES) {
-        const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=${lawyer.oab}&ufOab=${lawyer.uf}&pagina=${pagina}&itensPorPagina=${ITENS}`;
-        const apiRes = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'JorgeAlvimAdvocacia/1.0' } });
-        
-        if (apiRes.ok) {
-          const data = await apiRes.json();
-          const items = data.items || [];
-          totalFound += items.length;
-
-          items.forEach(item => {
-            const pubId = `PUB-${item.id}`;
-            const cleanNum = (item.numero_processo || '').replace(/\D/g, '');
-
-            // Tentar vincular com processo interno se já existir
-            let matchedLawsuitId = null;
-            let matchedClientId = null;
-            if (cleanNum) {
-              const matchedLawsuit = db.prepare(`SELECT id, client_id FROM lawsuits WHERE REPLACE(REPLACE(REPLACE(cnj_number, '.', ''), '-', ''), '/', '') = ? OR cnj_number LIKE ?`).get(cleanNum, `%${cleanNum}%`);
-              if (matchedLawsuit) {
-                matchedLawsuitId = matchedLawsuit.id;
-                matchedClientId = matchedLawsuit.client_id;
-              }
-            }
-
-            const info = insertPublicationStmt.run({
-              id: pubId,
-              comunicacao_id: item.id,
-              numero_processo: item.numero_processo || '',
-              numeroprocessocommascara: item.numeroprocessocommascara || item.numero_processo || '',
-              sigla_tribunal: item.siglaTribunal || 'TJMG',
-              nome_orgao: item.nomeOrgao || '',
-              tipo_comunicacao: item.tipoComunicacao || 'Intimação',
-              data_disponibilizacao: item.data_disponibilizacao || '',
-              data_publicacao: item.datadisponibilizacao || item.data_disponibilizacao || '',
-              texto: item.texto || '',
-              nome_classe: item.nomeClasse || '',
-              destinatarios_json: JSON.stringify(item.destinatarios || []),
-              advogado_oab: `OAB/${lawyer.uf} ${lawyer.oab}`,
-              advogado_nome: lawyer.name,
-              lawyer_id: lawyer.id,
-              client_id: matchedClientId,
-              lawsuit_id: matchedLawsuitId
-            });
-
-            if (info.changes > 0) totalSaved++;
-          });
-
-          if (items.length < ITENS) break;  // última página desta OAB alcançada
-        } else { break; }                    // resposta não-OK: encerra paginação desta OAB
-        }                                    // fim do while (paginação)
-      } catch (e) {
-        errors.push(`OAB ${lawyer.oab}: ${e.message}`);
-      }
-    }
+    const r = await syncComunicaApi({ targetOab, targetUf, targetName });
 
     logAudit(req, {
       event_type: 'SINCRONIZACAO',
@@ -9951,17 +9847,17 @@ app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
       module: 'INTIMACOES',
       resource_id: 'COMUNICAAPI-DJEN',
       user_name: req.user ? req.user.name : 'Operador',
-      description: `Sincronização de intimações do DJEN/PJe concluída: ${totalSaved} novas publicações salvas de ${totalFound} encontradas.`,
-      details: { totalFound, totalSaved, lawyersChecked: lawyers.length, errors }
+      description: `Sincronização de intimações do DJEN/PJe concluída: ${r.totalSaved} novas publicações salvas de ${r.totalFound} encontradas.`,
+      details: r
     });
 
     return res.json({
       success: true,
-      message: `Sincronização concluída! ${totalSaved} novas intimações importadas (${totalFound} analisadas).`,
-      totalSaved,
-      totalFound,
-      lawyersChecked: lawyers.length,
-      errors
+      message: `Sincronização concluída! ${r.totalSaved} novas intimações importadas (${r.totalFound} analisadas).`,
+      totalSaved: r.totalSaved,
+      totalFound: r.totalFound,
+      lawyersChecked: r.lawyersChecked,
+      errors: r.errors
     });
   } catch (err) {
     console.error('[ERRO] Falha ao sincronizar publicações:', err);
@@ -12695,6 +12591,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
   // Inicia a varredura periódica de prazos fatais (central de notificações).
   try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
+  // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
+  try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
 });
 
 // Manter o loop de eventos ativo continuamente

@@ -514,6 +514,16 @@
           <h2 class="font-serif text-xl font-bold text-navy-950">Visão Geral do Escritório</h2>
           <button onclick="loadDashboardOverview()" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100">↻ Atualizar</button>
         </div>
+        <div class="bg-gradient-to-r from-amber-50 to-white rounded-2xl border border-gold-300 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="text-lg">🔄</span>
+            <div>
+              <div class="font-bold text-navy-950 text-sm">Sincronização automática</div>
+              <div id="sync-status-text" class="text-xs text-slate-500">Verificando…</div>
+            </div>
+          </div>
+          <button id="btn-sync-all" onclick="runFullSyncNow()" class="text-xs font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 text-white hover:from-amber-600 hover:to-gold-600 shadow-sm">Sincronizar Tudo agora</button>
+        </div>
         <div id="dash-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -20200,7 +20210,37 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           ['Notificações não lidas', c.notificacoes_nao_lidas, '#tab:notifications']
         ].map(([l, v]) => `<div class="flex justify-between border-b border-slate-50 pb-1"><span>${l}</span><span class="font-bold text-navy-950">${v}</span></div>`).join('');
         loadDashboardFunnel();
+        loadSyncStatus();
       } catch (e) { console.error('[dashboard]', e); }
+    }
+    async function loadSyncStatus() {
+      const el = document.getElementById('sync-status-text');
+      if (!el) return;
+      try {
+        const d = await jget('/api/sync/status');
+        if (d.running) { el.textContent = 'Sincronizando agora…'; return; }
+        const s = d.status;
+        if (!s) { el.textContent = 'Ainda não sincronizado nesta sessão. Roda automaticamente a cada 12h.'; return; }
+        const when = s.finished_at ? fmtDate(s.finished_at) : '—';
+        el.innerHTML = `Última: <strong>${when}</strong> • ${s.publicacoes_novas || 0} intimação(ões) nova(s), ${s.prazos_criados || 0} prazo(s) na agenda`;
+      } catch (e) { el.textContent = 'Status indisponível.'; }
+    }
+    async function runFullSyncNow() {
+      const btn = document.getElementById('btn-sync-all');
+      const el = document.getElementById('sync-status-text');
+      btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Sincronizando…';
+      if (el) el.textContent = 'Buscando publicações na ComunicaAPI/DJEN…';
+      try {
+        const { ok, data } = await jsend('/api/sync/run', 'POST');
+        if (ok && data.success) {
+          if (el) el.innerHTML = `✅ ${data.publicacoes_novas || 0} intimação(ões) nova(s), ${data.prazos_criados || 0} prazo(s) criado(s).`;
+          loadDashboardOverview();
+          refreshNotifBadge();
+        } else {
+          if (el) el.textContent = data.error || 'Falha ao sincronizar.';
+        }
+      } catch (e) { if (el) el.textContent = 'Erro de conexão.'; }
+      finally { btn.disabled = false; btn.textContent = orig; }
     }
     async function loadDashboardFunnel() {
       const box = document.getElementById('dash-funnel');
