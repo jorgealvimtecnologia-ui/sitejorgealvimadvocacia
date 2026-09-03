@@ -9831,7 +9831,14 @@ app.get('/api/court/publications/search-live', requireAuth, async (req, res) => 
 // 3. Endpoint: Sincronizar Publicações de Todos os Advogados do Escritório
 app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
   try {
-    const lawyers = [
+    // Filtro opcional por uma OAB específica (via body ou query).
+    // Quando informado, sincroniza SOMENTE essa OAB (paginando todas as publicações).
+    const src = { ...(req.query || {}), ...(req.body || {}) };
+    const targetOab = src.numeroOab ? String(src.numeroOab).replace(/\D/g, '') : null;
+    const targetUf = (src.ufOab || 'MG').toUpperCase();
+    const targetName = src.nomeAdvogado || null;
+
+    let lawyers = [
       { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
       { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
       { id: 'MEM-2026-0002', name: 'Dra. Mariana Fonseca Alvim', oab: '210450', uf: 'MG' },
@@ -9852,6 +9859,12 @@ app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
         });
       }
     });
+
+    // Se veio uma OAB-alvo, restringe a sincronização apenas a ela.
+    if (targetOab) {
+      const known = lawyers.find(l => l.oab === targetOab);
+      lawyers = [ known || { id: 'OAB-' + targetOab, name: targetName || `OAB/${targetUf} ${targetOab}`, oab: targetOab, uf: targetUf } ];
+    }
 
     let totalSaved = 0;
     let totalFound = 0;
@@ -9875,7 +9888,10 @@ app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
 
     for (const lawyer of lawyers) {
       try {
-        const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=${lawyer.oab}&ufOab=${lawyer.uf}&pagina=1&itensPorPagina=25`;
+        const ITENS = 100, MAX_PAGES = 60; // trava de segurança (~6.000 publicações por OAB)
+        let pagina = 0;
+        while (++pagina <= MAX_PAGES) {
+        const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=${lawyer.oab}&ufOab=${lawyer.uf}&pagina=${pagina}&itensPorPagina=${ITENS}`;
         const apiRes = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'JorgeAlvimAdvocacia/1.0' } });
         
         if (apiRes.ok) {
@@ -9920,7 +9936,10 @@ app.post('/api/court/publications/sync', requireAuth, async (req, res) => {
 
             if (info.changes > 0) totalSaved++;
           });
-        }
+
+          if (items.length < ITENS) break;  // última página desta OAB alcançada
+        } else { break; }                    // resposta não-OK: encerra paginação desta OAB
+        }                                    // fim do while (paginação)
       } catch (e) {
         errors.push(`OAB ${lawyer.oab}: ${e.message}`);
       }
