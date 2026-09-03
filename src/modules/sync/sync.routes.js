@@ -37,6 +37,29 @@ db.exec(`
   );
 `);
 
+// Fetch para a ComunicaAPI/DJEN com suporte a PROXY no Brasil (env COMUNICA_PROXY).
+// Necessário porque o DJEN bloqueia acesso de fora do Brasil (o servidor fica na França),
+// enquanto o DataJud é aberto. Sem proxy configurado, faz fetch direto (funciona do Brasil).
+let _comunicaDispatcher = null;
+let _proxyInitTried = false;
+async function comunicaFetch(url, opts) {
+  const proxy = process.env.COMUNICA_PROXY;
+  if (proxy) {
+    if (!_comunicaDispatcher && !_proxyInitTried) {
+      _proxyInitTried = true;
+      try {
+        const { ProxyAgent } = await import('undici');
+        _comunicaDispatcher = new ProxyAgent(proxy);
+        console.log('🇧🇷 [SYNC] ComunicaAPI roteada via proxy brasileiro.');
+      } catch (e) {
+        console.warn('[SYNC] Proxy BR indisponível (pacote undici?):', e.message);
+      }
+    }
+    if (_comunicaDispatcher) return fetch(url, { ...opts, dispatcher: _comunicaDispatcher });
+  }
+  return fetch(url, opts);
+}
+
 const OFFICE_LAWYERS = [
   { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
   { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
@@ -99,7 +122,7 @@ export async function syncComunicaApi({ targetOab, targetUf, targetName, notify 
       let pagina = 0;
       while (++pagina <= MAX_PAGES) {
         const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroOab=${lawyer.oab}&ufOab=${lawyer.uf}&pagina=${pagina}&itensPorPagina=${ITENS}`;
-        const apiRes = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'JorgeAlvimAdvocacia/1.0' } });
+        const apiRes = await comunicaFetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'JorgeAlvimAdvocacia/1.0' } });
         if (!apiRes.ok) break;
         const data = await apiRes.json();
         const items = data.items || [];
