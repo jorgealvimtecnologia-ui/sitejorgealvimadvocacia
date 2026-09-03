@@ -21,6 +21,22 @@ export const syncRouter = express.Router();
 //  alerta o advogado sobre intimações novas para que ele lance o prazo.
 // ============================================================================
 
+// Histórico das rodadas de sincronização (para a visão de status no painel).
+db.exec(`
+  CREATE TABLE IF NOT EXISTS sync_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    started_at TEXT,
+    finished_at TEXT,
+    publicacoes_novas INTEGER DEFAULT 0,
+    prazos_criados INTEGER DEFAULT 0,
+    publicacoes_religadas INTEGER DEFAULT 0,
+    movimentos_novos INTEGER DEFAULT 0,
+    trigger TEXT DEFAULT 'auto',   -- 'auto' | 'manual'
+    errors_json TEXT,
+    created_at TEXT NOT NULL
+  );
+`);
+
 const OFFICE_LAWYERS = [
   { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
   { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
@@ -251,6 +267,12 @@ export async function runFullSync(reqOrNull = null) {
       errors: ext.errors, tasks
     };
     saveStatus(status);
+    try {
+      db.prepare(`INSERT INTO sync_runs (started_at, finished_at, publicacoes_novas, prazos_criados, publicacoes_religadas, movimentos_novos, trigger, errors_json, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+        startedAt, status.finished_at, ext.totalSaved, rec.created, rel.linked, movimentosNovos,
+        reqOrNull ? 'manual' : 'auto', JSON.stringify(ext.errors || []), new Date().toISOString());
+    } catch (e) { /* histórico é best-effort */ }
 
     if (movimentosNovos > 0) {
       createNotification({
@@ -308,4 +330,14 @@ syncRouter.post('/api/sync/run', requireAuth, async (req, res) => {
 /** GET /api/sync/status — status da última sincronização. */
 syncRouter.get('/api/sync/status', requireAuth, (req, res) => {
   return res.json({ success: true, status: getSyncStatus(), running: _syncing });
+});
+
+/** GET /api/sync/history — histórico das últimas rodadas. */
+syncRouter.get('/api/sync/history', requireAuth, (req, res) => {
+  try {
+    const rows = db.prepare(`SELECT id, started_at, finished_at, publicacoes_novas, prazos_criados, publicacoes_religadas, movimentos_novos, trigger FROM sync_runs ORDER BY id DESC LIMIT 20`).all();
+    return res.json({ success: true, runs: rows });
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao carregar histórico.' });
+  }
 });

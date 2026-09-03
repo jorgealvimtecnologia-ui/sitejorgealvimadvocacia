@@ -278,6 +278,22 @@ esignRouter.post('/api/esign/public/:token/sign', (req, res) => {
 
     logEvent(r.id, 'assinado', req, `Assinado por ${signer_name_confirm.trim()} (${signature_type})`);
 
+    // SINCRONIZAÇÃO INTERNA: contrato de honorários assinado → ativa o cliente
+    // vinculado (por client_id explícito ou casando o CPF/CNPJ do signatário).
+    let linkedClientId = r.client_id || null;
+    try {
+      if (!linkedClientId && r.signer_cpf) {
+        const doc = String(r.signer_cpf).replace(/\D/g, '');
+        if (doc) {
+          const cli = db.prepare(`SELECT id FROM clients WHERE REPLACE(REPLACE(REPLACE(cpf,'.',''),'-',''),'/','') = ? OR REPLACE(REPLACE(REPLACE(cnpj,'.',''),'-',''),'/','') = ?`).get(doc, doc);
+          if (cli) linkedClientId = cli.id;
+        }
+      }
+      if (linkedClientId && r.doc_type === 'contrato_honorarios') {
+        db.prepare(`UPDATE clients SET contract_status = 'Ativo', updated_at = ? WHERE id = ?`).run(signedAt, linkedClientId);
+      }
+    } catch (e) { /* vínculo é best-effort */ }
+
     createNotification({
       category: 'assinatura', level: 'info',
       title: `✍️ Documento assinado: ${r.doc_title}`,

@@ -524,6 +524,10 @@
           </div>
           <button id="btn-sync-all" onclick="runFullSyncNow()" class="text-xs font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 text-white hover:from-amber-600 hover:to-gold-600 shadow-sm">Sincronizar Tudo agora</button>
         </div>
+        <details class="bg-white rounded-2xl border border-slate-200 shadow-sm" ontoggle="if(this.open) loadSyncHistory()">
+          <summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-navy-950">🕑 Histórico de sincronização</summary>
+          <div id="sync-history" class="px-4 pb-4 text-xs text-slate-600">Abrir para carregar…</div>
+        </details>
         <div id="dash-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -20225,6 +20229,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         el.innerHTML = `Última: <strong>${when}</strong> • ${s.publicacoes_novas || 0} intimação(ões), ${s.prazos_criados || 0} prazo(s), ${s.movimentos_novos || 0} andamento(s)`;
       } catch (e) { el.textContent = 'Status indisponível.'; }
     }
+    async function loadSyncHistory() {
+      const box = document.getElementById('sync-history');
+      if (!box) return;
+      box.textContent = 'Carregando…';
+      try {
+        const d = await jget('/api/sync/history');
+        if (!d.success || !d.runs.length) { box.innerHTML = '<span class="text-slate-400">Nenhuma rodada registrada ainda.</span>'; return; }
+        box.innerHTML = `<table class="w-full text-left"><thead><tr class="text-slate-400 border-b border-slate-100">
+          <th class="py-1 font-semibold">Quando</th><th class="font-semibold">Origem</th><th class="font-semibold text-right">Intim.</th><th class="font-semibold text-right">Prazos</th><th class="font-semibold text-right">Andam.</th><th class="font-semibold text-right">Religadas</th></tr></thead><tbody>` +
+          d.runs.map(r => `<tr class="border-b border-slate-50">
+            <td class="py-1">${fmtDate(r.finished_at || r.started_at)}</td>
+            <td>${r.trigger === 'manual' ? '👤 manual' : '🤖 auto'}</td>
+            <td class="text-right">${r.publicacoes_novas || 0}</td>
+            <td class="text-right">${r.prazos_criados || 0}</td>
+            <td class="text-right">${r.movimentos_novos || 0}</td>
+            <td class="text-right">${r.publicacoes_religadas || 0}</td></tr>`).join('') + '</tbody></table>';
+      } catch (e) { box.textContent = 'Erro ao carregar histórico.'; }
+    }
     async function runFullSyncNow() {
       const btn = document.getElementById('btn-sync-all');
       const el = document.getElementById('sync-status-text');
@@ -20236,6 +20258,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           if (el) el.innerHTML = `✅ ${data.publicacoes_novas || 0} intimação(ões), ${data.prazos_criados || 0} prazo(s), ${data.movimentos_novos || 0} andamento(s).`;
           loadDashboardOverview();
           refreshNotifBadge();
+          loadSyncHistory();
         } else {
           if (el) el.textContent = data.error || 'Falha ao sincronizar.';
         }
