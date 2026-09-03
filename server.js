@@ -21,6 +21,7 @@ import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
 import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } from './src/modules/sync/sync.routes.js';
+import { adminRequestsRouter } from './src/modules/adminrequests/adminrequests.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1629,6 +1630,7 @@ app.use(lgpdRouter);
 app.use(dashboardRouter);
 app.use(analyticsRouter);
 app.use(syncRouter);
+app.use(adminRequestsRouter);
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {

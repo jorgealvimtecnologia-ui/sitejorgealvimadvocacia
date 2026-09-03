@@ -56,14 +56,16 @@ export function createNotification({
     const now = new Date().toISOString();
     if (dedupe_key) {
       const existing = db.prepare(`SELECT * FROM notifications WHERE dedupe_key = ?`).get(dedupe_key);
-      if (existing) return existing;
+      if (existing) { existing._isNew = false; return existing; }
     }
     const info = db.prepare(`
       INSERT INTO notifications
         (category, level, title, message, link, resource_type, resource_id, target_user_id, dedupe_key, is_read, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
     `).run(category, level, title, message, link, resource_type, resource_id, target_user_id, dedupe_key, now);
-    return db.prepare(`SELECT * FROM notifications WHERE id = ?`).get(info.lastInsertRowid);
+    const row = db.prepare(`SELECT * FROM notifications WHERE id = ?`).get(info.lastInsertRowid);
+    if (row) row._isNew = true;
+    return row;
   } catch (err) {
     // Se colidiu no índice UNIQUE por corrida, apenas ignora.
     if (!String(err.message || '').includes('UNIQUE')) {
@@ -135,7 +137,7 @@ export function scanDeadlines() {
         resource_id: String(ev.id),
         dedupe_key: `prazo:calendar:${ev.id}:<=${bucket}d`
       });
-      if (res && res.created_at === now) created++;
+      if (res && res._isNew) created++;
     }
   } catch (e) {
     console.warn('[NOTIFICAÇÕES] Varredura de agenda falhou:', e.message);
@@ -164,10 +166,36 @@ export function scanDeadlines() {
         resource_id: String(p.id),
         dedupe_key: `prazo:publicacao:${p.id}:<=${bucket}d`
       });
-      if (res && res.created_at === now) created++;
+      if (res && res._isNew) created++;
     }
   } catch (e) {
     console.warn('[NOTIFICAÇÕES] Varredura de publicações falhou:', e.message);
+  }
+
+  // 3) Requerimentos administrativos com prazo (ex.: exigência) ainda em aberto.
+  try {
+    const reqs = db.prepare(`
+      SELECT id, title, agency_name, deadline_date, responsible, status
+      FROM admin_requests
+      WHERE deadline_date IS NOT NULL AND deadline_date != ''
+        AND status NOT IN ('concluido', 'indeferido', 'arquivado')
+    `).all();
+    for (const r of reqs) {
+      const daysLeft = daysUntil(r.deadline_date);
+      const bucket = bucketFor(daysLeft);
+      if (bucket === null) continue;
+      const level = daysLeft <= 1 ? 'critical' : (daysLeft <= 3 ? 'warning' : 'info');
+      const res = createNotification({
+        category: 'prazo', level,
+        title: `🏛️ Requerimento — ${urgencyLabel(daysLeft)}`,
+        message: [r.title, r.agency_name, r.responsible ? `Resp.: ${r.responsible}` : null].filter(Boolean).join(' • '),
+        link: '#tab:admin-requests', resource_type: 'admin_request', resource_id: String(r.id),
+        dedupe_key: `prazo:requerimento:${r.id}:<=${bucket}d`
+      });
+      if (res && res._isNew) created++;
+    }
+  } catch (e) {
+    console.warn('[NOTIFICAÇÕES] Varredura de requerimentos falhou:', e.message);
   }
 
   return created;

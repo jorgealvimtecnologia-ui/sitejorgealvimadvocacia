@@ -502,6 +502,12 @@
           <span>LGPD</span>
         </button>
 
+        <!-- Aba: Requerimentos Administrativos -->
+        <button id="tab-btn-admin-requests" onclick="switchTab('admin-requests')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-all border border-slate-200 bg-white cursor-pointer">
+          <span>🏛️</span>
+          <span>Requerimentos Adm.</span>
+        </button>
+
       </div>
     </header>
 
@@ -604,6 +610,59 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="p-4 border-b border-slate-100 font-bold text-navy-950">Solicitações de titulares</div>
           <div id="lgpd-list" class="divide-y divide-slate-100 text-sm">Carregando…</div>
+        </div>
+      </section>
+
+      <!-- ================= ABA: REQUERIMENTOS ADMINISTRATIVOS ================= -->
+      <section id="tab-content-admin-requests" class="hidden space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-serif text-xl font-bold text-navy-950">Requerimentos Administrativos</h2>
+            <p class="text-xs text-slate-500">Controle de pedidos de clientes em órgãos federais, estaduais e municipais (não judiciais).</p>
+          </div>
+          <button onclick="openAdminReqForm()" class="text-xs font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 text-white hover:from-amber-600 hover:to-gold-600 shadow-sm">+ Novo requerimento</button>
+        </div>
+        <div id="areq-stats" class="grid grid-cols-2 lg:grid-cols-5 gap-3"></div>
+
+        <!-- Formulário (oculto até clicar em Novo) -->
+        <div id="areq-form" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <h3 class="font-bold text-navy-950 mb-3" id="areq-form-title">Novo requerimento</h3>
+          <input type="hidden" id="areq-id" />
+          <div class="grid sm:grid-cols-2 gap-3">
+            <input id="areq-title" placeholder="Objeto do requerimento *" class="border border-slate-300 rounded-lg px-3 py-2 text-sm sm:col-span-2" />
+            <input id="areq-client" placeholder="Cliente" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            <input id="areq-agency" placeholder="Órgão * (ex.: INSS, Prefeitura de JF)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            <select id="areq-sphere" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="federal">Federal</option>
+              <option value="estadual">Estadual</option>
+              <option value="municipal">Municipal</option>
+            </select>
+            <input id="areq-type" placeholder="Tipo (aposentadoria, alvará, certidão…)" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            <input id="areq-protocol" placeholder="Nº do protocolo" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            <select id="areq-status" class="border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
+            <label class="text-xs text-slate-500 flex flex-col">Data do protocolo<input id="areq-filed" type="date" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm mt-0.5" /></label>
+            <label class="text-xs text-slate-500 flex flex-col">Prazo (exigência/resposta)<input id="areq-deadline" type="date" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm mt-0.5" /></label>
+            <input id="areq-responsible" placeholder="Responsável" class="border border-slate-300 rounded-lg px-3 py-2 text-sm sm:col-span-2" />
+            <textarea id="areq-desc" rows="2" placeholder="Observações" class="border border-slate-300 rounded-lg px-3 py-2 text-sm sm:col-span-2"></textarea>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="saveAdminReq()" class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700">Salvar</button>
+            <button onclick="closeAdminReqForm()" class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm">Cancelar</button>
+            <span id="areq-msg" class="text-sm self-center"></span>
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="flex flex-wrap gap-2 items-center">
+          <input id="areq-search" oninput="loadAdminRequests()" placeholder="Buscar objeto, órgão, protocolo, cliente…" class="flex-1 min-w-[200px] border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          <select id="areq-filter-status" onchange="loadAdminRequests()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm"><option value="all">Todos os status</option></select>
+          <select id="areq-filter-sphere" onchange="loadAdminRequests()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <option value="all">Todas as esferas</option><option value="federal">Federal</option><option value="estadual">Estadual</option><option value="municipal">Municipal</option>
+          </select>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div id="areq-list" class="divide-y divide-slate-100 text-sm">Carregando…</div>
         </div>
       </section>
 
@@ -9262,7 +9321,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       if (btnRockets) btnRockets.className = inactiveClass;
 
       // Novas abas (dashboard, assinaturas, LGPD, notificações) — módulos de gestão.
-      ['dashboard', 'esign', 'lgpd', 'notifications'].forEach(function (t) {
+      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests'].forEach(function (t) {
         const c = document.getElementById('tab-content-' + t);
         const b = document.getElementById('tab-btn-' + t);
         if (c) c.classList.add('hidden');
@@ -9354,6 +9413,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         document.getElementById('tab-content-notifications').classList.remove('hidden');
         document.getElementById('tab-btn-notifications').className = activeClass;
         loadNotificationsList();
+      } else if (tab === 'admin-requests') {
+        document.getElementById('tab-content-admin-requests').classList.remove('hidden');
+        document.getElementById('tab-btn-admin-requests').className = activeClass;
+        loadAdminRequests();
       }
 
       renderTabChart(tab);
@@ -20394,6 +20457,120 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           : `<div class="font-bold text-navy-950 mb-2">${d.total} registro(s) em ${d.sources.length} fonte(s):</div>` +
             d.sources.map(s => `<div class="mb-1"><span class="font-semibold">${esc(s.source)}</span> <span class="text-slate-400">(${s.table})</span>: <span class="text-slate-700">${s.count}</span></div>`).join('');
       } catch (e) { box.textContent = 'Erro na busca.'; }
+    }
+
+    // ---------------- REQUERIMENTOS ADMINISTRATIVOS ----------------
+    let _areqStatuses = {}, _areqSpheres = {}, _areqSelectsReady = false;
+    const AREQ_BADGE = { protocolado: 'bg-slate-100 text-slate-700', em_analise: 'bg-blue-100 text-blue-800', exigencia: 'bg-amber-100 text-amber-800', deferido: 'bg-emerald-100 text-emerald-800', indeferido: 'bg-red-100 text-red-800', recurso: 'bg-purple-100 text-purple-800', concluido: 'bg-emerald-100 text-emerald-800', arquivado: 'bg-slate-100 text-slate-500' };
+    function daysLeftLabel(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T23:59:59'); if (isNaN(d)) return '';
+      const diff = Math.round((d - new Date(new Date().toDateString())) / 86400000);
+      if (diff < 0) return `<span class="text-red-600 font-bold">vencido ${Math.abs(diff)}d</span>`;
+      if (diff === 0) return '<span class="text-red-600 font-bold">vence hoje</span>';
+      if (diff <= 7) return `<span class="text-amber-600 font-bold">${diff}d</span>`;
+      return `<span class="text-slate-400">${diff}d</span>`;
+    }
+    async function loadAdminRequests() {
+      try {
+        const g = id => document.getElementById(id);
+        const params = new URLSearchParams();
+        if (g('areq-search').value.trim()) params.set('q', g('areq-search').value.trim());
+        if (g('areq-filter-status').value !== 'all') params.set('status', g('areq-filter-status').value);
+        if (g('areq-filter-sphere').value !== 'all') params.set('sphere', g('areq-filter-sphere').value);
+        const d = await jget('/api/admin-requests?' + params.toString());
+        if (!d.success) return;
+        _areqStatuses = d.statuses; _areqSpheres = d.spheres;
+        if (!_areqSelectsReady) {
+          const opts = Object.entries(d.statuses).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+          g('areq-status').innerHTML = opts;
+          g('areq-filter-status').innerHTML = '<option value="all">Todos os status</option>' + opts;
+          _areqSelectsReady = true;
+        }
+        const st = d.stats;
+        const card = (l, v, t) => `<div class="bg-white p-3 rounded-xl border border-slate-200 text-center"><div class="text-lg font-bold ${t || 'text-navy-950'}">${v || 0}</div><div class="text-[11px] text-slate-500">${l}</div></div>`;
+        g('areq-stats').innerHTML = card('Total', st.total) + card('Em aberto', st.em_aberto, 'text-blue-600') + card('Em exigência', st.exigencia, 'text-amber-600') + card('Prazo ≤7d', st.prazo_proximo, 'text-amber-600') + card('Vencidos', st.vencidos, 'text-red-600');
+        g('areq-list').innerHTML = d.requests.length ? d.requests.map(r => `
+          <div class="p-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="font-semibold text-navy-950">${esc(r.title)} <span class="text-xs text-slate-400">${esc(r.id)}</span></div>
+                <div class="text-xs text-slate-500">${esc(r.agency_name)} • ${esc((_areqSpheres[r.agency_sphere] || r.agency_sphere))}${r.client_name ? ' • ' + esc(r.client_name) : ''}${r.protocol_number ? ' • protocolo ' + esc(r.protocol_number) : ''}</div>
+                <div class="text-xs text-slate-500 mt-0.5">${r.deadline_date ? 'Prazo: ' + fmtDate(r.deadline_date) + ' ' + daysLeftLabel(r.deadline_date) : '<span class="text-slate-300">sem prazo</span>'}${r.responsible ? ' • ' + esc(r.responsible) : ''}</div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${AREQ_BADGE[r.status] || 'bg-slate-100 text-slate-600'} flex-shrink-0">${esc(_areqStatuses[r.status] || r.status)}</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-2 text-[11px]">
+              <button onclick="editAdminReq('${r.id}')" class="text-blue-700 underline">editar</button>
+              <button onclick="changeAdminReqStatus('${r.id}')" class="text-amber-700 underline">mudar status</button>
+              <button onclick="addAdminReqUpdate('${r.id}')" class="text-slate-600 underline">+ andamento</button>
+              <button onclick="viewAdminReqUpdates('${r.id}')" class="text-slate-600 underline">andamentos</button>
+              <button onclick="deleteAdminReq('${r.id}')" class="text-red-600 underline">excluir</button>
+            </div>
+          </div>`).join('') : '<div class="p-4 text-slate-400">Nenhum requerimento. Clique em "+ Novo requerimento".</div>';
+      } catch (e) { console.error('[areq]', e); }
+    }
+    function openAdminReqForm() { document.getElementById('areq-form').classList.remove('hidden'); document.getElementById('areq-form').scrollIntoView({ block: 'center' }); }
+    function closeAdminReqForm() {
+      const g = id => document.getElementById(id);
+      ['areq-id', 'areq-title', 'areq-client', 'areq-agency', 'areq-type', 'areq-protocol', 'areq-filed', 'areq-deadline', 'areq-responsible', 'areq-desc'].forEach(i => g(i).value = '');
+      g('areq-sphere').value = 'federal'; if (g('areq-status').options.length) g('areq-status').selectedIndex = 0;
+      g('areq-form-title').textContent = 'Novo requerimento'; g('areq-msg').textContent = '';
+      g('areq-form').classList.add('hidden');
+    }
+    async function editAdminReq(id) {
+      const g = i => document.getElementById(i);
+      const d = await jget('/api/admin-requests/' + id);
+      if (!d.success) return;
+      const r = d.request;
+      g('areq-id').value = r.id; g('areq-title').value = r.title || ''; g('areq-client').value = r.client_name || '';
+      g('areq-agency').value = r.agency_name || ''; g('areq-sphere').value = r.agency_sphere || 'federal';
+      g('areq-type').value = r.request_type || ''; g('areq-protocol').value = r.protocol_number || '';
+      g('areq-status').value = r.status || 'protocolado'; g('areq-filed').value = (r.filed_date || '').slice(0, 10);
+      g('areq-deadline').value = (r.deadline_date || '').slice(0, 10); g('areq-responsible').value = r.responsible || '';
+      g('areq-desc').value = r.description || '';
+      g('areq-form-title').textContent = 'Editar requerimento ' + r.id;
+      openAdminReqForm();
+    }
+    async function saveAdminReq() {
+      const g = i => document.getElementById(i);
+      const msg = g('areq-msg'); msg.textContent = ''; msg.className = 'text-sm self-center';
+      const body = { title: g('areq-title').value.trim(), client_name: g('areq-client').value.trim(), agency_name: g('areq-agency').value.trim(),
+        agency_sphere: g('areq-sphere').value, request_type: g('areq-type').value.trim(), protocol_number: g('areq-protocol').value.trim(),
+        status: g('areq-status').value, filed_date: g('areq-filed').value || null, deadline_date: g('areq-deadline').value || null,
+        responsible: g('areq-responsible').value.trim(), description: g('areq-desc').value.trim() };
+      if (!body.title || !body.agency_name) { msg.textContent = 'Informe objeto e órgão.'; msg.className = 'text-sm self-center text-red-600'; return; }
+      const id = g('areq-id').value;
+      const { ok, data } = id ? await jsend('/api/admin-requests/' + id, 'PUT', body) : await jsend('/api/admin-requests', 'POST', body);
+      if (!ok) { msg.textContent = data.error || 'Falha.'; msg.className = 'text-sm self-center text-red-600'; return; }
+      closeAdminReqForm(); loadAdminRequests(); refreshNotifBadge();
+    }
+    async function changeAdminReqStatus(id) {
+      const keys = Object.keys(_areqStatuses);
+      const list = keys.map((k, i) => `${i + 1}) ${_areqStatuses[k]}`).join('\n');
+      const pick = prompt('Novo status:\n' + list + '\n\nDigite o número:');
+      if (!pick) return;
+      const k = keys[parseInt(pick, 10) - 1];
+      if (!k) return;
+      await jsend('/api/admin-requests/' + id + '/status', 'PATCH', { status: k });
+      loadAdminRequests();
+    }
+    async function addAdminReqUpdate(id) {
+      const desc = prompt('Descreva o andamento:');
+      if (!desc) return;
+      await jsend('/api/admin-requests/' + id + '/updates', 'POST', { description: desc });
+      alert('Andamento registrado.');
+    }
+    async function viewAdminReqUpdates(id) {
+      const d = await jget('/api/admin-requests/' + id);
+      if (!d.success) return;
+      const txt = d.updates.length ? d.updates.map(u => `• ${fmtDate(u.update_date)} — ${u.description}`).join('\n') : 'Nenhum andamento registrado.';
+      alert('Andamentos de ' + id + ':\n\n' + txt);
+    }
+    async function deleteAdminReq(id) {
+      if (!confirm('Excluir o requerimento ' + id + '?')) return;
+      await jsend('/api/admin-requests/' + id, 'DELETE');
+      loadAdminRequests();
     }
 
     // ---------------- POLLING DO SINO ----------------
