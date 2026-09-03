@@ -107,6 +107,56 @@ const insertPublicationStmt = db.prepare(`
   )
 `);
 
+// Salva UM item da ComunicaAPI (dedupe + vínculo ao processo + alerta). Retorna true se novo.
+function saveComunicaItem(item, lawyer, notify = true) {
+  const pubId = `PUB-${item.id}`;
+  const cleanNum = (item.numero_processo || '').replace(/\D/g, '');
+  let matchedLawsuitId = null, matchedClientId = null;
+  if (cleanNum) {
+    try {
+      const ml = db.prepare(`SELECT id, client_id FROM lawsuits WHERE REPLACE(REPLACE(REPLACE(cnj_number, '.', ''), '-', ''), '/', '') = ? OR cnj_number LIKE ?`).get(cleanNum, `%${cleanNum}%`);
+      if (ml) { matchedLawsuitId = ml.id; matchedClientId = ml.client_id; }
+    } catch (e) { /* ignora */ }
+  }
+  const info = insertPublicationStmt.run({
+    id: pubId, comunicacao_id: item.id,
+    numero_processo: item.numero_processo || '',
+    numeroprocessocommascara: item.numeroprocessocommascara || item.numero_processo || '',
+    sigla_tribunal: item.siglaTribunal || 'TJMG', nome_orgao: item.nomeOrgao || '',
+    tipo_comunicacao: item.tipoComunicacao || 'Intimação',
+    data_disponibilizacao: item.data_disponibilizacao || '',
+    data_publicacao: item.datadisponibilizacao || item.data_disponibilizacao || '',
+    texto: item.texto || '', nome_classe: item.nomeClasse || '',
+    destinatarios_json: JSON.stringify(item.destinatarios || []),
+    advogado_oab: `OAB/${lawyer.uf} ${lawyer.oab}`, advogado_nome: lawyer.name,
+    lawyer_id: lawyer.id, client_id: matchedClientId, lawsuit_id: matchedLawsuitId
+  });
+  const isNew = info.changes > 0;
+  if (isNew && notify) {
+    createNotification({
+      category: 'prazo', level: 'warning',
+      title: `📢 Nova intimação — ${item.tipoComunicacao || 'publicação'}`,
+      message: `${item.numeroprocessocommascara || item.numero_processo || 'processo'} • ${item.siglaTribunal || ''} • ${lawyer.name}. Revise e lance o prazo.`,
+      link: '#tab:publications', resource_type: 'court_publication', resource_id: pubId,
+      dedupe_key: `intimacao:nova:${pubId}`
+    });
+  }
+  return isNew;
+}
+
+/**
+ * OPÇÃO B: ingere itens da ComunicaAPI JÁ BAIXADOS (por um cliente no Brasil),
+ * já que o servidor (na França) não consegue baixar do DJEN. Mesmo dedupe/vínculo.
+ */
+export function ingestComunicaItems({ oab, uf = 'MG', nome, items = [] }) {
+  const cleanOab = String(oab || '').replace(/\D/g, '');
+  const known = resolveLawyers({}).find(l => l.oab === cleanOab);
+  const lawyer = known || { id: 'OAB-' + cleanOab, name: nome || `OAB/${uf} ${cleanOab}`, oab: cleanOab, uf };
+  let saved = 0;
+  for (const item of items) { if (item && item.id != null && saveComunicaItem(item, lawyer, true)) saved++; }
+  return { found: items.length, saved };
+}
+
 /**
  * EXTERNO → INTERNO: puxa publicações da ComunicaAPI (paginado), grava com dedupe,
  * vincula ao processo interno e emite alerta para cada intimação NOVA.
@@ -130,40 +180,7 @@ export async function syncComunicaApi({ targetOab, targetUf, targetName, notify 
         totalFound += items.length;
 
         for (const item of items) {
-          const pubId = `PUB-${item.id}`;
-          const cleanNum = (item.numero_processo || '').replace(/\D/g, '');
-          let matchedLawsuitId = null, matchedClientId = null;
-          if (cleanNum) {
-            try {
-              const ml = db.prepare(`SELECT id, client_id FROM lawsuits WHERE REPLACE(REPLACE(REPLACE(cnj_number, '.', ''), '-', ''), '/', '') = ? OR cnj_number LIKE ?`).get(cleanNum, `%${cleanNum}%`);
-              if (ml) { matchedLawsuitId = ml.id; matchedClientId = ml.client_id; }
-            } catch (e) { /* ignora */ }
-          }
-          const info = insertPublicationStmt.run({
-            id: pubId, comunicacao_id: item.id,
-            numero_processo: item.numero_processo || '',
-            numeroprocessocommascara: item.numeroprocessocommascara || item.numero_processo || '',
-            sigla_tribunal: item.siglaTribunal || 'TJMG', nome_orgao: item.nomeOrgao || '',
-            tipo_comunicacao: item.tipoComunicacao || 'Intimação',
-            data_disponibilizacao: item.data_disponibilizacao || '',
-            data_publicacao: item.datadisponibilizacao || item.data_disponibilizacao || '',
-            texto: item.texto || '', nome_classe: item.nomeClasse || '',
-            destinatarios_json: JSON.stringify(item.destinatarios || []),
-            advogado_oab: `OAB/${lawyer.uf} ${lawyer.oab}`, advogado_nome: lawyer.name,
-            lawyer_id: lawyer.id, client_id: matchedClientId, lawsuit_id: matchedLawsuitId
-          });
-          if (info.changes > 0) {
-            totalSaved++;
-            if (notify) {
-              createNotification({
-                category: 'prazo', level: 'warning',
-                title: `📢 Nova intimação — ${item.tipoComunicacao || 'publicação'}`,
-                message: `${item.numeroprocessocommascara || item.numero_processo || 'processo'} • ${item.siglaTribunal || ''} • ${lawyer.name}. Revise e lance o prazo.`,
-                link: '#tab:publications', resource_type: 'court_publication', resource_id: pubId,
-                dedupe_key: `intimacao:nova:${pubId}`
-              });
-            }
-          }
+          if (saveComunicaItem(item, lawyer, notify)) totalSaved++;
         }
         if (items.length < ITENS) break;
       }
@@ -353,6 +370,26 @@ syncRouter.post('/api/sync/run', requireAuth, async (req, res) => {
 /** GET /api/sync/status — status da última sincronização. */
 syncRouter.get('/api/sync/status', requireAuth, (req, res) => {
   return res.json({ success: true, status: getSyncStatus(), running: _syncing });
+});
+
+/** POST /api/court/publications/ingest — recebe intimações baixadas no Brasil (Opção B). */
+syncRouter.post('/api/court/publications/ingest', requireAuth, (req, res) => {
+  try {
+    const b = req.body || {};
+    const batches = Array.isArray(b.batches) ? b.batches : [b];
+    let found = 0, saved = 0;
+    for (const bt of batches) {
+      if (!bt || !Array.isArray(bt.items)) continue;
+      const r = ingestComunicaItems(bt);
+      found += r.found; saved += r.saved;
+    }
+    const rec = reconcileDeadlinesToCalendar();
+    const rel = relinkOrphanPublications();
+    return res.json({ success: true, found, saved, prazos_criados: rec.created, religadas: rel.linked });
+  } catch (err) {
+    console.error('[SYNC] Falha na ingestão de intimações:', err);
+    return res.status(500).json({ error: 'Erro ao ingerir intimações: ' + err.message });
+  }
 });
 
 /** GET /api/sync/history — histórico das últimas rodadas. */

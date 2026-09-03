@@ -1613,8 +1613,8 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '25mb' })); // lotes de intimações (ingest) podem ser grandes
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório
 app.use('/storage/clients', express.static(STORAGE_DIR));
