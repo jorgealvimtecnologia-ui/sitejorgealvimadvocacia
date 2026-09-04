@@ -1679,6 +1679,60 @@ function sendFreshFile(res, fileName) {
   return res.sendFile(path.join(__dirname, fileName));
 }
 
+// ---------------------------------------------------------------------------
+// Injeção de SEO/Analytics no index.html a partir do .env.
+// O index.html traz placeholders (META_PIXEL_ID_HERE, etc.). Se as variáveis
+// não estiverem definidas, os blocos são REMOVIDOS — assim não sobra
+// `fbq('init','META_PIXEL_ID_HERE')` disparando erro no console nem o pixel
+// <noscript> fazendo request quebrada ao Facebook em toda visita. Quando o
+// cliente preencher os IDs no .env, os blocos passam a valer sem editar HTML.
+// Cache por mtime: relê o arquivo só quando ele muda.
+// ---------------------------------------------------------------------------
+let __indexHtmlCache = { mtimeMs: 0, envSig: '', html: null };
+function renderIndexHtml() {
+  const file = path.join(__dirname, 'index.html');
+  const stat = fs.statSync(file);
+  const pixel = (process.env.META_PIXEL_ID || '').trim();
+  const ga = (process.env.GA_MEASUREMENT_ID || '').trim();
+  const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '').trim();
+  const gscVerify = (process.env.GSC_VERIFICATION || '').trim();
+  const envSig = [pixel, ga, fbVerify, gscVerify].join('|');
+
+  if (__indexHtmlCache.html && __indexHtmlCache.mtimeMs === stat.mtimeMs && __indexHtmlCache.envSig === envSig) {
+    return __indexHtmlCache.html;
+  }
+
+  let html = fs.readFileSync(file, 'utf8');
+
+  // Meta Pixel (Facebook/Instagram)
+  if (pixel) {
+    html = html.split('META_PIXEL_ID_HERE').join(pixel);
+  } else {
+    html = html.replace(/<!-- Meta Pixel Code[\s\S]*?<\/script>/, '<!-- Meta Pixel desativado (defina META_PIXEL_ID no .env) -->');
+    html = html.replace(/\s*<!-- Fallback do Meta Pixel[\s\S]*?<\/noscript>/, '');
+  }
+
+  // Verificação de domínio do Meta Business
+  if (fbVerify) html = html.split('META_BUSINESS_VERIFICATION_KEY_HERE').join(fbVerify);
+  else html = html.replace(/\s*<meta name="facebook-domain-verification"[^>]*>/, '');
+
+  // Verificação do Google Search Console via meta tag (a verificação por arquivo
+  // /google...html já está ativa; a meta só entra se GSC_VERIFICATION for definida).
+  if (gscVerify) html = html.split('GSC_VERIFICATION_KEY_HERE').join(gscVerify);
+  else html = html.replace(/\s*<meta name="google-site-verification"[^>]*>/, '');
+
+  // Google Analytics 4 (injetado só quando GA_MEASUREMENT_ID for definido)
+  if (ga) {
+    const gaSnippet = `  <!-- Google Analytics 4 -->\n` +
+      `  <script async src="https://www.googletagmanager.com/gtag/js?id=${ga}"></script>\n` +
+      `  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga}');</script>\n</head>`;
+    html = html.replace('</head>', gaSnippet);
+  }
+
+  __indexHtmlCache = { mtimeMs: stat.mtimeMs, envSig, html };
+  return html;
+}
+
 // Rota para Service Worker (sempre fresco)
 app.get('/sw.js', (req, res) => {
   res.set({
@@ -1721,7 +1775,18 @@ app.get('/34862b9289f761b05eb3d22ee2cd7176.txt', (req, res) => {
 
 // Página principal do site institucional
 app.get('/', (req, res) => {
-  sendFreshFile(res, 'index.html');
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  try {
+    res.type('html').send(renderIndexHtml());
+  } catch (e) {
+    console.warn('[SEO] Falha ao renderizar index.html com env, servindo estático:', e.message);
+    sendFreshFile(res, 'index.html');
+  }
 });
 
 app.get('/painel', (req, res) => {

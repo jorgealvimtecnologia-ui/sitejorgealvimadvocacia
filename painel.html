@@ -13377,7 +13377,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       const ctxMonthly = document.getElementById('financeMonthlyChart');
       if (ctxMonthly) {
         if (finMonthlyChartInstance) finMonthlyChartInstance.destroy();
-        
+        // Também destrói instância remanescente criada por safeCreateChart/renderTabChart
+        // na mesma canvas, evitando o erro "Canvas is already in use".
+        const orphanFin = (typeof Chart.getChart === 'function') ? Chart.getChart(ctxMonthly) : null;
+        if (orphanFin) orphanFin.destroy();
+        if (window.panelCharts && window.panelCharts['financeMonthlyChart']) delete window.panelCharts['financeMonthlyChart'];
+
         const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         const currentMonthIdx = new Date().getMonth();
         const realizedData = labels.map((_, idx) => idx <= currentMonthIdx ? Math.round(18000 + idx * 3500 + (idx % 2 === 0 ? 4000 : -2000)) : null);
@@ -13911,7 +13916,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center space-x-1.5">
                 <button 
-                  onclick="openNewNfseModal('${clientId}', ${inst.id}, ${inst.amount})" 
+                  onclick="openNewNfseModal('${currentSelectedFinClientId || ''}', ${inst.id}, ${inst.amount})"
                   class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-300 transition-colors"
                   title="Emitir Nota Fiscal (NFS-e Asaas) ou Recibo Timbrado OAB para esta parcela"
                 >
@@ -19975,6 +19980,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         window.panelCharts[canvasId].destroy();
         delete window.panelCharts[canvasId];
       }
+      // Destrói qualquer instância Chart.js ainda ligada a esta canvas por outro
+      // fluxo (ex.: renderFinancialBICharts), evitando "Canvas is already in use".
+      const orphan = (typeof Chart.getChart === 'function') ? Chart.getChart(canvas) : null;
+      if (orphan) orphan.destroy();
       try {
         window.panelCharts[canvasId] = new Chart(canvas, config);
       } catch (err) {
