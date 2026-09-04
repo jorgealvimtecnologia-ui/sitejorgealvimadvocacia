@@ -12713,6 +12713,71 @@ app.use((err, req, res, next) => {
   next();
 });
 
+// ---------------------------------------------------------------------------
+// Índices de performance — mantêm as consultas rápidas conforme o volume cresce.
+// Criados no boot (idempotente via IF NOT EXISTS). Cada um em try próprio para
+// que uma tabela ausente nunca impeça a criação dos demais.
+// ---------------------------------------------------------------------------
+(function ensurePerformanceIndexes() {
+  const indexes = [
+    // Intimações / DJEN (tabela de maior volume)
+    `CREATE INDEX IF NOT EXISTS idx_pub_client ON court_publications(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_pub_lawsuit ON court_publications(lawsuit_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_pub_oab ON court_publications(advogado_oab)`,
+    `CREATE INDEX IF NOT EXISTS idx_pub_status ON court_publications(status)`,
+    `CREATE INDEX IF NOT EXISTS idx_pub_data ON court_publications(data_disponibilizacao)`,
+    `CREATE INDEX IF NOT EXISTS idx_pub_comunicacao ON court_publications(comunicacao_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_pub_processo ON court_publications(numero_processo)`,
+    // Processos
+    `CREATE INDEX IF NOT EXISTS idx_lawsuit_client ON lawsuits(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_lawsuit_cnj ON lawsuits(cnj_number)`,
+    `CREATE INDEX IF NOT EXISTS idx_lawsuit_status ON lawsuits(status)`,
+    `CREATE INDEX IF NOT EXISTS idx_movement_lawsuit ON lawsuit_movements(lawsuit_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_movement_deadline ON lawsuit_movements(deadline_date)`,
+    // Clientes (buscas de login e listagem)
+    `CREATE INDEX IF NOT EXISTS idx_client_cpf ON clients(cpf)`,
+    `CREATE INDEX IF NOT EXISTS idx_client_cnpj ON clients(cnpj)`,
+    `CREATE INDEX IF NOT EXISTS idx_client_email ON clients(email)`,
+    `CREATE INDEX IF NOT EXISTS idx_client_status ON clients(contract_status)`,
+    // Financeiro
+    `CREATE INDEX IF NOT EXISTS idx_inst_client ON contract_installments(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_inst_status ON contract_installments(status)`,
+    `CREATE INDEX IF NOT EXISTS idx_inst_due ON contract_installments(due_date)`,
+    `CREATE INDEX IF NOT EXISTS idx_inst_asaas ON contract_installments(asaas_payment_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_fin_client ON financial_transactions(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_fin_status ON financial_transactions(status)`,
+    `CREATE INDEX IF NOT EXISTS idx_fin_due ON financial_transactions(due_date)`,
+    `CREATE INDEX IF NOT EXISTS idx_nfse_client ON nfse_invoices(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_nfse_status ON nfse_invoices(status)`,
+    // Agenda / prazos
+    `CREATE INDEX IF NOT EXISTS idx_cal_start ON calendar_events(start_datetime)`,
+    `CREATE INDEX IF NOT EXISTS idx_cal_client ON calendar_events(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_cal_status ON calendar_events(status)`,
+    // Leads / captação
+    `CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)`,
+    `CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at)`,
+    // RH
+    `CREATE INDEX IF NOT EXISTS idx_emp_cpf ON hr_employees(cpf)`,
+    `CREATE INDEX IF NOT EXISTS idx_emp_office ON hr_employees(office_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_clock_emp ON hr_time_clock(employee_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_clock_date ON hr_time_clock(record_date)`,
+    // Auditoria / mensagens / visitas
+    `CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_audit_module ON audit_logs(module)`,
+    `CREATE INDEX IF NOT EXISTS idx_msg_client ON client_messages(client_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_visits_date ON site_visits(visit_date)`,
+    `CREATE INDEX IF NOT EXISTS idx_visits_status ON site_visits(status)`,
+    // Blog
+    `CREATE INDEX IF NOT EXISTS idx_blog_slug ON blog_posts(slug)`,
+    `CREATE INDEX IF NOT EXISTS idx_blog_pub ON blog_posts(is_published)`,
+  ];
+  let ok = 0;
+  for (const stmt of indexes) {
+    try { db.exec(stmt); ok++; } catch (e) { /* tabela ausente: ignora este índice */ }
+  }
+  console.log(`⚡ [DB] Índices de performance garantidos (${ok}/${indexes.length}).`);
+})();
+
 // Inicialização do Servidor
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
