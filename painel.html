@@ -11716,20 +11716,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           day: '2-digit', month: '2-digit', year: 'numeric'
         });
 
-        const passText = u.plain_password || (isMaster ? 'jorgealvim' : '123456');
+        // SEGURANÇA: a senha é protegida (hash PBKDF2) e nunca é exibida.
+        // Para definir/trocar, use o botão "Redefinir senha".
         const passCell = `
           <td class="px-5 py-4 whitespace-nowrap">
-            <div class="inline-flex items-center space-x-2 bg-amber-50/90 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-mono font-black text-amber-950 shadow-2xs">
-              <span>🔑</span>
-              <span id="user-plain-pass-${u.id}" class="select-all tracking-wider">${passText}</span>
-              <button 
-                type="button" 
-                onclick="navigator.clipboard.writeText('${passText}'); alert('Senha copiada: ${passText}');" 
-                class="text-[11px] text-amber-700 hover:text-amber-950 ml-1 px-1.5 py-0.5 rounded hover:bg-amber-200 transition-colors cursor-pointer" 
-                title="Copiar senha"
-              >
-                📋
-              </button>
+            <div class="inline-flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-slate-500 shadow-2xs" title="Senha protegida por hash PBKDF2. Use 'Redefinir senha' para definir uma nova.">
+              <span>🔒</span>
+              <span class="tracking-widest">••••••••</span>
             </div>
           </td>
         `;
@@ -11767,8 +11760,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-900 border border-amber-300 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   title="Alterar dados e redefinir senha"
                 >
-                  <span>✏️</span>
-                  <span>Alterar Senha</span>
+                  <span>🔑</span>
+                  <span>Redefinir senha</span>
                 </button>
                 ${deleteButton}
               </div>
@@ -11828,7 +11821,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       document.getElementById('eu-id').value = user.id;
       document.getElementById('eu-username').value = user.username;
       document.getElementById('eu-name').value = user.name;
-      document.getElementById('eu-password').value = user.plain_password || '';
+      document.getElementById('eu-password').value = ''; // nunca pré-preenche; digite para redefinir
       document.getElementById('edit-user-error').classList.add('hidden');
       document.getElementById('edit-user-modal').classList.remove('hidden');
       setTimeout(() => { document.getElementById('eu-password')?.focus(); }, 100);

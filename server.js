@@ -1178,14 +1178,31 @@ try {
 }
 
 // Funções Auxiliares de Criptografia de Senha
+// PBKDF2-HMAC-SHA512 com sal por usuário. 210k iterações (padrão OWASP atual).
+const PBKDF2_ITER = 210000;         // formato forte atual
+const PBKDF2_ITER_LEGACY = 10000;   // hashes antigos — aceitos no login e migrados na hora
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
-  const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, PBKDF2_ITER, 64, 'sha512').toString('hex');
   return { hash, salt };
 }
 
+// Verifica a senha aceitando formatos legados (PBKDF2 10k e SHA-256 sem sal),
+// para não travar ninguém. O upgrade ao formato forte é feito no login (ver isStrongHash).
 function verifyPassword(password, storedHash, salt) {
-  const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-  return hash === storedHash;
+  if (!storedHash || password == null) return false;
+  if (salt) {
+    if (crypto.pbkdf2Sync(password, salt, PBKDF2_ITER, 64, 'sha512').toString('hex') === storedHash) return true;
+    if (crypto.pbkdf2Sync(password, salt, PBKDF2_ITER_LEGACY, 64, 'sha512').toString('hex') === storedHash) return true;
+  }
+  // Legado: SHA-256 sem sal (colaboradores / versões antigas)
+  if (crypto.createHash('sha256').update(password).digest('hex') === storedHash) return true;
+  return false;
+}
+
+// True somente quando o hash já está no formato forte atual. Usado no login para
+// decidir se é preciso reescrever a senha (migração transparente de formato).
+function isStrongHash(password, storedHash, salt) {
+  return !!salt && crypto.pbkdf2Sync(password, salt, PBKDF2_ITER, 64, 'sha512').toString('hex') === storedHash;
 }
 
 // Inicialização / Garantia do Usuário Mestre Padrão
@@ -1194,8 +1211,8 @@ try {
   const masterCheck = db.prepare(`SELECT id FROM users WHERE username = ? OR id = ?`).get('jorgealvimtecnologia', 'USR-MASTER-01');
   if (!masterCheck) {
     db.prepare(`
-      INSERT INTO users (id, username, password_hash, salt, name, role, created_at, plain_password)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       'USR-MASTER-01',
       'jorgealvimtecnologia',
@@ -1203,8 +1220,7 @@ try {
       salt,
       'Dr. Jorge Alvim (Mestre)',
       'master',
-      new Date().toISOString(),
-      'jorgealvim'
+      new Date().toISOString()
     );
     console.log('👑 [AUTH] Usuário Mestre "jorgealvimtecnologia" criado com sucesso.');
   } else {
@@ -1217,14 +1233,10 @@ try {
     console.log('👑 [AUTH] Papel do Usuário Mestre "jorgealvimtecnologia" sincronizado.');
   }
 
-  // SEGURANÇA: o preenchimento de senhas previsíveis (mariana123, 123456, ...) só ocorre
-  // em desenvolvimento. Em produção nunca semeamos senhas fracas conhecidas.
-  if (process.env.NODE_ENV !== 'production') {
-    db.exec(`
-      UPDATE users SET plain_password = 'cliente123' WHERE plain_password IS NULL AND role = 'cliente';
-      UPDATE users SET plain_password = '123456' WHERE plain_password IS NULL;
-    `);
-  }
+  // SEGURANÇA: senhas nunca são guardadas em texto puro. Limpa qualquer valor
+  // legado remanescente na coluna plain_password (users e access_permissions).
+  try { db.exec(`UPDATE users SET plain_password = NULL WHERE plain_password IS NOT NULL;`); } catch (e) {}
+  try { db.exec(`UPDATE access_permissions SET plain_password = NULL WHERE plain_password IS NOT NULL;`); } catch (e) {}
 } catch (err) {
   console.error('Erro ao verificar usuário mestre:', err);
 }
@@ -1912,6 +1924,15 @@ app.post('/api/auth/login', loginRateLimit, (req, res) => {
       return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
     }
 
+    // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
+    try {
+      const matched = verifyPassword(rawPassword, user.password_hash, user.salt) ? rawPassword : compactPassword;
+      if (!isStrongHash(matched, user.password_hash, user.salt)) {
+        const up = hashPassword(matched);
+        db.prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`).run(up.hash, up.salt, user.id);
+      }
+    } catch (e) { /* upgrade é best-effort; não bloqueia o login */ }
+
     const token = createSession(user);
 
     logAudit(req, {
@@ -1972,16 +1993,15 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/users', requireAuth, (req, res) => {
   try {
     const rows = db.prepare(`
-      SELECT id, username, name, role, created_at, COALESCE(plain_password, '123456') AS plain_password 
-      FROM users 
-      ORDER BY 
+      SELECT id, username, name, role, created_at
+      FROM users
+      ORDER BY
         CASE WHEN role = 'master' THEN 1 ELSE 2 END,
         created_at ASC
     `).all();
-    // Só o usuário mestre (jorgealvimtecnologia) pode ver as senhas em texto;
-    // os demais devem redefinir a senha, nunca visualizá-la.
-    const isMaster = req.user && (req.user.role === 'master' || req.user.username === 'jorgealvimtecnologia');
-    if (!isMaster) rows.forEach(r => { r.plain_password = ''; });
+    // SEGURANÇA: senhas nunca são retornadas (nem para o mestre). Para trocar,
+    // usa-se "Redefinir senha" (PUT /api/users/:id), que grava novo hash PBKDF2.
+    rows.forEach(r => { r.plain_password = ''; });
     return res.json({ success: true, users: rows });
   } catch (error) {
     console.error('[ERRO] Falha ao listar usuários:', error);
@@ -2013,8 +2033,8 @@ app.post('/api/users', requireAuth, (req, res) => {
     const userId = 'USR-' + Date.now();
 
     db.prepare(`
-      INSERT INTO users (id, username, password_hash, salt, name, role, created_at, plain_password)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       userId,
       cleanUsername,
@@ -2022,8 +2042,7 @@ app.post('/api/users', requireAuth, (req, res) => {
       salt,
       name.trim(),
       role || 'admin',
-      new Date().toISOString(),
-      cleanPassword
+      new Date().toISOString()
     );
 
     logAudit(req, {
@@ -2068,10 +2087,10 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
       const cleanPassword = password.trim();
       const { hash, salt } = hashPassword(cleanPassword);
       db.prepare(`
-        UPDATE users 
-        SET name = ?, password_hash = ?, salt = ?, role = ?, plain_password = ? 
+        UPDATE users
+        SET name = ?, password_hash = ?, salt = ?, role = ?
         WHERE id = ?
-      `).run(updatedName, hash, salt, updatedRole, cleanPassword, id);
+      `).run(updatedName, hash, salt, updatedRole, id);
     } else {
       db.prepare(`
         UPDATE users 
@@ -2402,33 +2421,12 @@ app.get('/api/access-control/matrix', requireAuth, (req, res) => {
       clients: rows.filter(r => r.role_template === 'cliente').length
     };
 
-    // Mapeamento rápido de senhas de usuários do painel para desenvolvimento / testes
-    const userPassMap = new Map();
-    db.prepare(`SELECT id, username, plain_password FROM users`).all().forEach(u => {
-      userPassMap.set(u.id, u.plain_password || '123456');
-      if (u.username) userPassMap.set(u.username, u.plain_password || '123456');
-    });
-
-    // Só o usuário mestre vê as senhas; os demais devem redefinir.
-    const isMasterView = req.user && (req.user.role === 'master' || req.user.username === 'jorgealvimtecnologia');
+    // SEGURANÇA: a matriz não expõe senhas. Para trocar, usa-se "Redefinir senha".
     const matrix = rows.map(r => {
       const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
-      let passwordPreview = userPassMap.get(r.user_id) || userPassMap.get(r.user_identifier);
-      if (!passwordPreview) {
-        if (r.role_template === 'master' || (r.user_name || '').toLowerCase().includes('jorge alvim')) {
-          passwordPreview = 'jorgealvim';
-        } else if (r.role_template === 'cliente') {
-          passwordPreview = 'CPF / CNPJ';
-        } else if (r.user_type === 'empregado') {
-          passwordPreview = 'Data Nasc.';
-        } else {
-          passwordPreview = '123456';
-        }
-      }
-
       return {
         ...r,
-        plain_password: isMasterView ? passwordPreview : '',
+        plain_password: '',
         is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01' || (r.user_name || '').toLowerCase().includes('jorge alvim'),
         badge_label: tpl.badge_label,
         badge_class: tpl.badge_class,
@@ -6446,9 +6444,9 @@ app.post('/api/client-portal/login', loginRateLimit, (req, res) => {
       }
     }
 
-    const isDefaultPass = (password === '123456' || password === 'jorgealvim');
-    const valid = isDefaultPass || verifyPassword(password, client.password_hash, client.salt);
-    
+    // SEGURANÇA: sem senha universal. Valida apenas a senha real do cliente.
+    const valid = verifyPassword(password, client.password_hash, client.salt);
+
     if (!valid) {
       logAudit(req, {
         event_type: 'AUTENTICACAO',
@@ -6462,6 +6460,14 @@ app.post('/api/client-portal/login', loginRateLimit, (req, res) => {
       });
       return res.status(401).json({ error: 'Senha incorreta. Verifique suas credenciais.' });
     }
+
+    // Upgrade transparente do hash para o formato forte, se necessário.
+    try {
+      if (!isStrongHash(password, client.password_hash, client.salt)) {
+        const up = hashPassword(password);
+        db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(up.hash, up.salt, new Date().toISOString(), client.id);
+      }
+    } catch (e) { /* best-effort */ }
 
     const token = createClientSession(client);
 
@@ -11474,8 +11480,8 @@ app.post('/api/hr/time-clock/sign', requireAuth, (req, res) => {
     // Validar a senha do usuário logado
     const currentUserId = req.user.userId || req.user.id;
     const currentUser = db.prepare(`SELECT * FROM users WHERE id = ? OR username = ?`).get(currentUserId || '', req.user.username || '');
-    const hashedAttempt = crypto.createHash('sha256').update(password).digest('hex');
-    const isMasterAuth = (password === 'jorgealvim' || (currentUser && currentUser.password === hashedAttempt));
+    // SEGURANÇA: reautentica com a senha real do operador logado (sem senha universal).
+    const isMasterAuth = currentUser && verifyPassword(password, currentUser.password_hash, currentUser.salt);
 
     if (!isMasterAuth) {
       return res.status(401).json({ error: 'Senha incorreta. Não foi possível assinar o cartão de ponto.' });
@@ -12015,20 +12021,34 @@ app.post('/api/hr/employee/login', (req, res) => {
     // 1) Senha Mestre do Escritório 'jorgealvim', 'jorge alvim', '123456', 'admin'
     // 2) CPF em dígitos limpos (primeiro acesso)
     // 3) Senha do usuário na tabela `users` se houver vínculo
-    const hashedAttempt = crypto.createHash('sha256').update(rawPassword).digest('hex');
     const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(name) LIKE ? OR username = ? OR id = ?`).get(`%${employee.name.toLowerCase()}%`, cleanId, employee.id);
-    
-    const isMaster = ['jorgealvim', 'jorgealvimtecnologia', '123456', 'admin', 'jorgealvimadvocacia'].includes(compactPassword) || rawPassword.toLowerCase() === 'jorge alvim';
-    const isCpfAuth = cleanNumbers.length > 0 && (compactPassword === cleanNumbers || rawPassword === cleanNumbers);
-    const isUserAuth = linkedUser && (
-      verifyPassword(rawPassword, linkedUser.password_hash, linkedUser.salt) ||
-      verifyPassword(compactPassword, linkedUser.password_hash, linkedUser.salt) ||
-      linkedUser.password_hash === hashedAttempt
-    );
+    // O master virtual (EMP-MASTER-01) autentica pela senha REAL do usuário mestre.
+    const authUser = linkedUser || (employee.id === 'EMP-MASTER-01'
+      ? db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get()
+      : null);
 
-    if (!isMaster && !isCpfAuth && !isUserAuth && compactPassword !== 'jorgealvim') {
-      return res.status(401).json({ error: 'Senha incorreta. Use "jorge alvim", "jorgealvim" ou seu CPF (somente números).' });
+    // SEGURANÇA: sem senhas universais. Só senha real (com upgrade) ou CPF no 1º acesso.
+    const isUserAuth = authUser && (
+      verifyPassword(rawPassword, authUser.password_hash, authUser.salt) ||
+      (compactPassword !== rawPassword && verifyPassword(compactPassword, authUser.password_hash, authUser.salt))
+    );
+    // Primeiro acesso do colaborador: CPF (somente dígitos), enquanto não houver senha própria.
+    const isCpfAuth = !authUser && cleanNumbers.length > 0 && (compactPassword === cleanNumbers || rawPassword === cleanNumbers);
+
+    if (!isUserAuth && !isCpfAuth) {
+      return res.status(401).json({ error: 'Senha incorreta. Use sua senha cadastrada ou, no primeiro acesso, seu CPF (somente números).' });
     }
+
+    // Upgrade transparente do hash do usuário vinculado, se necessário.
+    try {
+      if (isUserAuth && authUser) {
+        const matched = verifyPassword(rawPassword, authUser.password_hash, authUser.salt) ? rawPassword : compactPassword;
+        if (!isStrongHash(matched, authUser.password_hash, authUser.salt)) {
+          const up = hashPassword(matched);
+          db.prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`).run(up.hash, up.salt, authUser.id);
+        }
+      }
+    } catch (e) { /* best-effort */ }
 
     const token = createEmployeeSession(employee);
 
@@ -12216,11 +12236,13 @@ app.post('/api/hr/employee/sign-time', requireEmployeeAuth, (req, res) => {
       return res.status(404).json({ error: 'Colaborador não encontrado.' });
     }
 
+    // SEGURANÇA: o colaborador confirma com o próprio CPF (sem senha universal).
     const cleanCpfDigits = (employee.cpf || '').replace(/\D/g, '');
-    const isPassValid = password === 'jorgealvim' || password === '123456' || (cleanCpfDigits && password === cleanCpfDigits);
+    const attemptDigits = String(password || '').replace(/\D/g, '');
+    const isPassValid = !!cleanCpfDigits && attemptDigits === cleanCpfDigits;
 
     if (!isPassValid) {
-      return res.status(401).json({ error: 'Senha incorreta. Não foi possível assinar eletronicamente o cartão de ponto.' });
+      return res.status(401).json({ error: 'Senha incorreta. Confirme com o seu CPF (somente números) para assinar o cartão de ponto.' });
     }
 
     const nowIso = new Date().toISOString();
