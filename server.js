@@ -1709,6 +1709,11 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
 });
 
+// Verificação de propriedade do Google Search Console (método arquivo HTML).
+app.get('/google964cd851b1cb11b6.html', (req, res) => {
+  res.type('text/html').send('google-site-verification: google964cd851b1cb11b6.html');
+});
+
 // Página principal do site institucional
 app.get('/', (req, res) => {
   sendFreshFile(res, 'index.html');
