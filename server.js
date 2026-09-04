@@ -1714,6 +1714,11 @@ app.get('/google964cd851b1cb11b6.html', (req, res) => {
   res.type('text/html').send('google-site-verification: google964cd851b1cb11b6.html');
 });
 
+// IndexNow — chave para notificar Bing/Yahoo/DuckDuckGo/Yandex sobre URLs novas.
+app.get('/34862b9289f761b05eb3d22ee2cd7176.txt', (req, res) => {
+  res.type('text/plain').send('34862b9289f761b05eb3d22ee2cd7176');
+});
+
 // Página principal do site institucional
 app.get('/', (req, res) => {
   sendFreshFile(res, 'index.html');
