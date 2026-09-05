@@ -24,13 +24,18 @@ ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/pre
 if errorlevel 1 goto :erro
 echo.
 
-echo [2/3] Enviando server.js, paginas publicas e a pasta src/ (modulos)...
-scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src %SRV%:%REMOTE%/
+echo [2/3] Enviando server.js, paginas publicas, src/ (modulos) e public/ (assets)...
+scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src public %SRV%:%REMOTE%/
 if errorlevel 1 goto :erro
 echo.
+echo    Conferindo modulos essenciais no servidor...
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "for f in modules/kanban/kanban.routes.js modules/blog/blog.routes.js shared/net.js shared/ids.js; do [ -f %REMOTE%/src/$f ] && echo \"   OK  src/$f\" || echo \"   FALTA src/$f  <-- ATENCAO\"; done"
+echo.
 
-echo [3/3] Reiniciando o servico...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "systemctl restart advocacia && sleep 2 && printf 'Status do servico: ' && systemctl is-active advocacia"
+echo [3/3] Ajustando permissoes, reiniciando e checando saude...
+REM IMPORTANTE: o scp cria pastas novas como root/700; sem isto o www-data
+REM nao consegue "entrar" nas pastas e o Node quebra com "module not found".
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "U=$(systemctl cat advocacia | sed -n 's/^User=//p'); U=${U:-www-data}; chown -R $U:$U %REMOTE%/src %REMOTE%/public 2>/dev/null; chmod -R a+rX %REMOTE%/src %REMOTE%/public; chmod a+r %REMOTE%/server.js %REMOTE%/*.html; systemctl restart advocacia && sleep 2 && printf 'Status do servico: ' && systemctl is-active advocacia && printf 'Health: ' && curl -s -o /dev/null -w '%%{http_code}\n' http://localhost:3000/health"
 if errorlevel 1 goto :erro
 echo.
 

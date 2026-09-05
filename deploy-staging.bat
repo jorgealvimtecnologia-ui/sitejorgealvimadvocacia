@@ -35,8 +35,8 @@ scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html inde
 if errorlevel 1 goto :erro
 echo.
 
-echo [3/3] Reiniciando o servico de staging...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "systemctl restart %SERVICE% && sleep 2 && printf 'Status do staging: ' && systemctl is-active %SERVICE%"
+echo [3/3] Ajustando permissoes, reiniciando e checando saude...
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "U=$(systemctl cat %SERVICE% | sed -n 's/^User=//p'); U=${U:-www-data}; chown -R $U:$U %REMOTE%/src %REMOTE%/public 2>/dev/null; chmod -R a+rX %REMOTE%/src %REMOTE%/public; chmod a+r %REMOTE%/server.js %REMOTE%/*.html; systemctl restart %SERVICE% && sleep 2 && printf 'Status do staging: ' && systemctl is-active %SERVICE%"
 if errorlevel 1 goto :erro
 echo.
 

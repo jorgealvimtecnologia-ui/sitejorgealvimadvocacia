@@ -62,7 +62,9 @@ jobs:
           S: ${{ secrets.DEPLOY_SERVICE }}
         run: |
           ssh -i ~/.ssh/id_deploy "$U@$H" "D=$P/backups/predeploy-\$(date +%Y%m%d-%H%M%S); mkdir -p \$D && cp -r $P/server.js $P/painel.html $P/index.html $P/blog.html $P/cliente.html $P/colaborador.html $P/src \$D/ 2>/dev/null; echo \$D > $P/backups/LAST && echo Backup: \$D"
-          scp -i ~/.ssh/id_deploy -r server.js painel.html index.html blog.html cliente.html colaborador.html src "$U@$H:$P/"
+          scp -i ~/.ssh/id_deploy -r server.js painel.html index.html blog.html cliente.html colaborador.html src public "$U@$H:$P/"
+          # scp cria pastas novas como root/700; corrige dono+travessia p/ o usuario do servico.
+          ssh -i ~/.ssh/id_deploy "$U@$H" "SU=\$(systemctl cat $S | sed -n 's/^User=//p'); SU=\${SU:-www-data}; chown -R \$SU:\$SU $P/src $P/public 2>/dev/null; chmod -R a+rX $P/src $P/public; chmod a+r $P/server.js $P/*.html"
           ssh -i ~/.ssh/id_deploy "$U@$H" "systemctl restart $S && sleep 2 && systemctl is-active $S"
 
       - name: Health check pós-deploy
