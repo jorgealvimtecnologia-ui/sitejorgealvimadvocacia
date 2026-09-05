@@ -21230,8 +21230,18 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       'audit-kpi-creations':{t:'Auditoria — criações',r:function(){return arr('currentAuditLogs').filter(function(x){return (x.event_type||'')==='CRIACAO';});}},
       'audit-kpi-updates':{t:'Auditoria — alterações',r:function(){return arr('currentAuditLogs').filter(function(x){return (x.event_type||'')==='ALTERACAO';});}},
       'audit-kpi-deletions':{t:'Auditoria — exclusões',r:function(){return arr('currentAuditLogs').filter(function(x){return (x.event_type||'')==='EXCLUSAO';});}},
-      // Pré-clientes / visitas
-      'pub-stat-total':{t:'Intimações & DJEN',r:function(){return arr('publicationsState');}}
+      // Intimações
+      'pub-stat-total':{t:'Intimações & DJEN',r:function(){return arr('publicationsState');}},
+      // RH / Colaboradores
+      'hr-stat-total-emp':{t:'Colaboradores (RH)',r:function(){return arr('hrState.employees');}},
+      'hr-stat-gross-payroll':{t:'Folha — colaboradores (bruto)',r:function(){return arr('hrState.employees');}},
+      'hr-stat-net-payroll':{t:'Folha — colaboradores (líquido)',r:function(){return arr('hrState.employees');}},
+      // Agenda / Eventos
+      'cal-stat-total':{t:'Agenda — eventos do mês',r:function(){return arr('calendarState.events');}},
+      'cal-stat-deadlines':{t:'Agenda — prazos',r:function(){return arr('calendarState.events').filter(function(e){return /prazo|deadline/i.test(e.event_type||'');});}},
+      'cal-stat-hearings':{t:'Agenda — audiências/sessões',r:function(){return arr('calendarState.events').filter(function(e){return /audi|sess|hearing/i.test(e.event_type||'');});}},
+      // Visitas / Pré-clientes
+      'visits-count-badge':{t:'Visitas ao site',r:function(){return arr('currentVisitsList');}}
     };
 
     var SKIP=['id','files','password_hash','salt','plain_password','details','details_json','errors_json','texto','content','cover_image','destinatarios_json','ical_uid','reset_token','reset_token_expires','asaas_pix_qrcode','asaas_pix_copy_paste','asaas_bank_slip_url','asaas_invoice_url','hash_signature','signature_hash','xml_url','pdf_url','updated_at'];
