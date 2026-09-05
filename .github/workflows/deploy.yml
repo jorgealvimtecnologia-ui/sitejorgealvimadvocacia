@@ -11,7 +11,13 @@ name: Deploy (manual)
 #   DEPLOY_USER      -> root
 #   DEPLOY_PATH      -> /var/www/advocacia   (ou .../advocacia-staging)
 #   DEPLOY_SERVICE   -> advocacia            (ou advocacia-staging)
+#   DEPLOY_PORT      -> 3000  (opcional; usado no health check)
 # Sem esses secrets, o job para no passo de verificação (não faz nada).
+#
+# AUTO-ROLLBACK: o passo de deploy roda scripts/deploy-remote.sh no servidor, que
+# reinicia e checa /health; se falhar, RESTAURA o último backup automaticamente e o
+# job falha (mas o site continua no ar na versão anterior). Versão implantada fica
+# registrada em backups/DEPLOYED (data/hora + commit).
 
 on:
   workflow_dispatch:
@@ -54,22 +60,36 @@ jobs:
           chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Backup completo (rollback) + envio + restart
+      - name: Backup completo + envio + deploy com AUTO-ROLLBACK
         env:
           H: ${{ secrets.DEPLOY_HOST }}
           U: ${{ secrets.DEPLOY_USER }}
           P: ${{ secrets.DEPLOY_PATH }}
           S: ${{ secrets.DEPLOY_SERVICE }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
         run: |
-          ssh -i ~/.ssh/id_deploy "$U@$H" "D=$P/backups/predeploy-\$(date +%Y%m%d-%H%M%S); mkdir -p \$D && cp -r $P/server.js $P/painel.html $P/index.html $P/blog.html $P/cliente.html $P/colaborador.html $P/src \$D/ 2>/dev/null; echo \$D > $P/backups/LAST && echo Backup: \$D"
-          scp -i ~/.ssh/id_deploy -r server.js painel.html index.html blog.html cliente.html colaborador.html src public "$U@$H:$P/"
-          # scp cria pastas novas como root/700; corrige dono+travessia p/ o usuario do servico.
-          ssh -i ~/.ssh/id_deploy "$U@$H" "SU=\$(systemctl cat $S | sed -n 's/^User=//p'); SU=\${SU:-www-data}; chown -R \$SU:\$SU $P/src $P/public 2>/dev/null; chmod -R a+rX $P/src $P/public; chmod a+r $P/server.js $P/*.html"
-          ssh -i ~/.ssh/id_deploy "$U@$H" "systemctl restart $S && sleep 2 && systemctl is-active $S"
+          set -e
+          SHA=$(git rev-parse --short HEAD)
+          PORT="${PORT:-3000}"
+          # 1) Backup completo (para rollback) — grava backups/LAST.
+          ssh -i ~/.ssh/id_deploy "$U@$H" "D=$P/backups/predeploy-\$(date +%Y%m%d-%H%M%S); mkdir -p \$D && cp -r $P/server.js $P/painel.html $P/index.html $P/blog.html $P/cliente.html $P/colaborador.html $P/src $P/public \$D/ 2>/dev/null; echo \$D > $P/backups/LAST && echo Backup: \$D"
+          # 2) Envio dos arquivos (inclui scripts/ com o deploy-remote.sh).
+          scp -i ~/.ssh/id_deploy -r server.js painel.html index.html blog.html cliente.html colaborador.html src public scripts "$U@$H:$P/"
+          # 3) Deploy inteligente no servidor: perms -> restart -> health;
+          #    se o health falhar, REVERTE automaticamente para o último backup.
+          #    Exit 0=OK, 1=revertido (site no ar na versão anterior), 2/3=falha grave.
+          set +e
+          ssh -i ~/.ssh/id_deploy "$U@$H" "chmod +x $P/scripts/deploy-remote.sh 2>/dev/null; bash $P/scripts/deploy-remote.sh $P $S $PORT $SHA"
+          RC=$?
+          set -e
+          if [ "$RC" = "0" ]; then echo "::notice::Deploy OK (commit $SHA no ar)."; exit 0; fi
+          if [ "$RC" = "1" ]; then echo "::error::Deploy falhou no health check e foi REVERTIDO automaticamente. Site no ar na versão anterior."; exit 1; fi
+          echo "::error::Falha grave no deploy/rollback (código $RC). Intervenção manual necessária."; exit 1
 
-      - name: Health check pós-deploy
+      - name: Health check externo pós-deploy
+        if: success()
         env:
           H: ${{ secrets.DEPLOY_HOST }}
         run: |
           sleep 2
-          curl -fsS "https://$H/health" || echo "aviso: health check externo não respondeu (verifique manualmente)"
+          curl -fsS "https://$H/health" && echo " (OK)" || echo "aviso: health externo não respondeu (verifique DNS/nginx)"

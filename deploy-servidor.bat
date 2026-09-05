@@ -20,27 +20,46 @@ echo Servidor...: %SRV%  (%REMOTE%)
 echo.
 
 echo [1/3] Fazendo backup COMPLETO no servidor (para rollback)...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/predeploy-$(date +%%Y%%m%%d-%%H%%M%%S); mkdir -p $D && cp -r %REMOTE%/server.js %REMOTE%/painel.html %REMOTE%/index.html %REMOTE%/blog.html %REMOTE%/cliente.html %REMOTE%/colaborador.html %REMOTE%/src $D/ 2>/dev/null; echo $D > %REMOTE%/backups/LAST && echo    Backup criado em: $D"
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/predeploy-$(date +%%Y%%m%%d-%%H%%M%%S); mkdir -p $D && cp -r %REMOTE%/server.js %REMOTE%/painel.html %REMOTE%/index.html %REMOTE%/blog.html %REMOTE%/cliente.html %REMOTE%/colaborador.html %REMOTE%/src %REMOTE%/public $D/ 2>/dev/null; echo $D > %REMOTE%/backups/LAST && echo    Backup criado em: $D"
 if errorlevel 1 goto :erro
 echo.
 
-echo [2/3] Enviando server.js, paginas publicas, src/ (modulos) e public/ (assets)...
-scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src public %SRV%:%REMOTE%/
+echo [2/3] Enviando server.js, paginas publicas, src/ (modulos), public/ (assets) e scripts/...
+scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src public scripts %SRV%:%REMOTE%/
 if errorlevel 1 goto :erro
 echo.
-REM (A verificacao de saude no passo [3/3] ja confirma que todos os modulos
-REM  carregaram: se algum faltar, o Health nao volta 200.)
 
-echo [3/3] Ajustando permissoes, reiniciando e checando saude...
-REM IMPORTANTE: o scp cria pastas novas como root/700; sem isto o www-data
-REM nao consegue "entrar" nas pastas e o Node quebra com "module not found".
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "U=$(systemctl cat advocacia | sed -n 's/^User=//p'); U=${U:-www-data}; chown -R $U:$U %REMOTE%/src %REMOTE%/public 2>/dev/null; chmod -R a+rX %REMOTE%/src %REMOTE%/public; chmod a+r %REMOTE%/server.js %REMOTE%/*.html; systemctl restart advocacia && sleep 2 && printf 'Status do servico: ' && systemctl is-active advocacia && printf 'Health: ' && curl -s -o /dev/null -w '%%{http_code}\n' http://localhost:3000/health"
-if errorlevel 1 goto :erro
+echo [3/3] Ajustando permissoes, reiniciando e checando saude (com AUTO-ROLLBACK)...
+REM Captura o commit atual para registrar a versao implantada.
+set "SHA=manual"
+for /f %%i in ('git rev-parse --short HEAD 2^>nul') do set "SHA=%%i"
+REM deploy-remote.sh (no servidor): perms -> restart -> health; se falhar, REVERTE
+REM automaticamente para o ultimo backup. Codigos: 0=OK, 1=revertido, 2/3=falha grave.
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "chmod +x %REMOTE%/scripts/deploy-remote.sh 2>/dev/null; bash %REMOTE%/scripts/deploy-remote.sh %REMOTE% advocacia 3000 %SHA%"
+if errorlevel 2 goto :grave
+if errorlevel 1 goto :revertido
 echo.
 
 echo ============================================================
-echo   PRONTO! Se apareceu "active" acima, o deploy deu certo.
+echo   PRONTO! Deploy no ar (Health 200). Versao: %SHA%
 echo ============================================================
+goto :fim
+
+:revertido
+echo.
+echo ------------------------------------------------------------
+echo   ATENCAO: o deploy falhou no health check e foi REVERTIDO
+echo   automaticamente. O SITE ESTA NO AR na versao ANTERIOR.
+echo   Corrija o codigo e rode o deploy novamente. (Nada quebrado.)
+echo ------------------------------------------------------------
+goto :fim
+
+:grave
+echo.
+echo ------------------------------------------------------------
+echo   FALHA GRAVE: deploy E rollback falharam. O site pode estar
+echo   fora. Rode reparar-servidor.bat e me envie o print acima.
+echo ------------------------------------------------------------
 goto :fim
 
 :erro

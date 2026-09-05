@@ -27,7 +27,7 @@ if /I not "%CONFIR%"=="SIM" (
 echo.
 
 echo [1/2] Restaurando arquivos do ultimo backup...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=$(cat %REMOTE%/backups/LAST 2>/dev/null); if [ -z \"$D\" ] || [ ! -d \"$D\" ]; then echo '   ERRO: nenhum backup encontrado em backups/LAST'; exit 1; fi; echo \"   Restaurando de: $D\"; cp -r $D/server.js $D/painel.html $D/index.html $D/blog.html $D/cliente.html $D/colaborador.html $D/src %REMOTE%/ 2>/dev/null; echo '   Arquivos restaurados.'"
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=$(cat %REMOTE%/backups/LAST 2>/dev/null); if [ -z \"$D\" ] || [ ! -d \"$D\" ]; then echo '   ERRO: nenhum backup encontrado em backups/LAST'; exit 1; fi; echo \"   Restaurando de: $D\"; cp -r $D/server.js $D/painel.html $D/index.html $D/blog.html $D/cliente.html $D/colaborador.html $D/src $D/public %REMOTE%/ 2>/dev/null; U=$(systemctl cat advocacia | sed -n 's/^User=//p'); U=${U:-www-data}; chown -R $U:$U %REMOTE%/src %REMOTE%/public 2>/dev/null; chmod -R a+rX %REMOTE%/src %REMOTE%/public; echo '   Arquivos restaurados (com permissoes).'"
 if errorlevel 1 goto :erro
 echo.
 

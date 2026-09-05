@@ -8,17 +8,33 @@ O app roda no VPS Contabo (`161.97.71.14`) como serviço systemd `advocacia` em
 
 Dê dois cliques em **`deploy-servidor.bat`**. Ele agora:
 1. Faz **backup completo** de tudo que envia (server.js, painel.html, as 4 páginas
-   públicas e `src/`) em `/var/www/advocacia/backups/predeploy-<data-hora>` e grava
-   esse caminho em `backups/LAST`.
-2. Envia os arquivos por `scp`.
-3. Reinicia o serviço e mostra o status (`active` = ok).
+   públicas, `src/` e `public/`) em `/var/www/advocacia/backups/predeploy-<data-hora>` e
+   grava esse caminho em `backups/LAST`.
+2. Envia os arquivos por `scp` (inclui `scripts/`).
+3. Roda `scripts/deploy-remote.sh` no servidor: ajusta permissões, reinicia, e faz o
+   **health check** — com **AUTO-ROLLBACK**.
 
-## Rollback (desfazer um deploy)
+## Auto-rollback (o pipeline se cura sozinho)
 
-Deu problema depois de publicar? Dê dois cliques em **`reverter-deploy.bat`**.
-Ele lê `backups/LAST`, restaura aquele backup por cima dos arquivos atuais e reinicia
-o serviço. **O banco de dados (`leads.db`) não é tocado** — só o código. Confirmação
-"SIM" é exigida antes de agir.
+O `deploy-servidor.bat` (e o workflow de CI/CD) executam `scripts/deploy-remote.sh` no
+servidor, que:
+1. Ajusta permissões (`chown`/`chmod`), reinicia o serviço e checa `http://localhost:3000/health`.
+2. Se voltar **200** → grava a versão implantada (data/hora + commit) em `backups/DEPLOYED`
+   e termina OK.
+3. Se **NÃO** voltar 200 → **restaura automaticamente** o último backup (`backups/LAST`),
+   reinicia e recheca. Resultado: o site volta sozinho para a versão anterior que
+   funcionava. A tela do `.bat` mostra "**REVERTIDO automaticamente**".
+4. Se até o rollback falhar → avisa para rodar `reparar-servidor.bat` (falha grave).
+
+Ou seja: um deploy quebrado **não derruba o site** — ele se desfaz sozinho. O banco de
+dados (`leads.db`) nunca é tocado; só o código.
+
+### Rollback manual (opcional)
+Se quiser reverter um deploy que subiu OK mas você não quer mais, dê dois cliques em
+**`reverter-deploy.bat`** (restaura `backups/LAST`, pede confirmação "SIM").
+
+### Qual versão está no ar?
+`cat /var/www/advocacia/backups/DEPLOYED` mostra data/hora + commit do que está rodando.
 
 ## Staging (homologação) — a configurar UMA vez
 
