@@ -20659,15 +20659,19 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       blog:{label:'Blog & Moderação',emoji:'💬'},
       audit:{label:'Auditoria & Logs',emoji:'🛡️'},
       lgpd:{label:'LGPD & Privacidade',emoji:'🔒'},
-      notifications:{label:'Alertas & Prazos',emoji:'🔔'}
+      notifications:{label:'Alertas & Prazos',emoji:'🔔'},
+      editor:{label:'Editor de Texto',emoji:'📝'},
+      calc:{label:'Calculadora',emoji:'🧮'}
     };
+    var TOOLS={editor:1,calc:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
       {label:'Clientes & Atendimento',emoji:'👥',items:['leads','pre-clients','clients','rockets']},
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','audit','lgpd','notifications']}
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','audit','lgpd','notifications']},
+      {label:'Ferramentas',emoji:'🧰',items:['editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
       publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
@@ -20846,7 +20850,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         +'<button class="jaw-max" title="Maximizar">▢</button>'
         +'<button class="jaw-close" title="Fechar">✕</button></div></div>'
         +'<div class="jaw-winbody"></div><div class="jaw-resize"></div>';
-      el.insertBefore(buildToolbar(id), el.querySelector('.jaw-winbody'));
+      if(!TOOLS[id]) el.insertBefore(buildToolbar(id), el.querySelector('.jaw-winbody'));
       desktop.appendChild(el);
       var w={el:el,body:el.querySelector('.jaw-winbody'),minimized:false,max:false};
       el.addEventListener('mousedown',function(){ focusWin(id); },true);
@@ -20858,11 +20862,84 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       return w;
     }
 
+    function buildEditor(){
+      var box=document.createElement('div'); box.style.cssText='display:flex;flex-direction:column;height:100%;min-height:420px';
+      var bar=document.createElement('div'); bar.style.cssText='display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px';
+      var area=document.createElement('div'); var KEY='ja_editor_content';
+      var status=document.createElement('div'); status.style.cssText='font-size:11px;color:#94a3b8;margin-top:6px';
+      function save(explicit){ try{ localStorage.setItem(KEY,area.innerHTML); }catch(e){} status.textContent=explicit?('Salvo ✓ '+new Date().toLocaleTimeString('pt-BR')):'Rascunho salvo automaticamente'; }
+      function fmt(html,cmd,val,title){ var btn=document.createElement('button'); btn.type='button'; btn.title=title||''; btn.innerHTML=html;
+        btn.style.cssText='min-width:32px;height:30px;border:1px solid #cbd5e1;background:#fff;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;color:#334155;padding:0 8px';
+        btn.addEventListener('mousedown',function(e){e.preventDefault();});
+        btn.addEventListener('click',function(){ area.focus(); document.execCommand(cmd,false,val||null); save(); }); return btn; }
+      bar.appendChild(fmt('<b>N</b>','bold',null,'Negrito'));
+      bar.appendChild(fmt('<i>I</i>','italic',null,'Itálico'));
+      bar.appendChild(fmt('<u>S</u>','underline',null,'Sublinhado'));
+      bar.appendChild(fmt('•','insertUnorderedList',null,'Lista'));
+      bar.appendChild(fmt('1.','insertOrderedList',null,'Lista numerada'));
+      bar.appendChild(fmt('T','formatBlock','H2','Título'));
+      bar.appendChild(fmt('¶','formatBlock','P','Parágrafo'));
+      bar.appendChild(fmt('⯇','justifyLeft',null,'Alinhar à esquerda'));
+      bar.appendChild(fmt('≡','justifyCenter',null,'Centralizar'));
+      bar.appendChild(fmt('⯈','justifyRight',null,'Alinhar à direita'));
+      var color=document.createElement('input'); color.type='color'; color.value='#1e293b'; color.title='Cor do texto';
+      color.style.cssText='width:32px;height:30px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;cursor:pointer;padding:2px';
+      color.addEventListener('input',function(){ area.focus(); document.execCommand('foreColor',false,color.value); save(); });
+      bar.appendChild(color);
+      function act(txt,fn,bg){ var btn=document.createElement('button'); btn.type='button'; btn.textContent=txt;
+        btn.style.cssText='height:30px;border:1px solid #cbd5e1;background:'+(bg||'#fff')+';border-radius:7px;cursor:pointer;font-size:11.5px;font-weight:700;color:#334155;padding:0 10px';
+        btn.addEventListener('click',fn); return btn; }
+      function downloadDoc(){ var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>'+area.innerHTML+'</body></html>';
+        var blob=new Blob(['﻿'+html],{type:'application/msword'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+        a.download='documento-'+new Date().toISOString().slice(0,10)+'.doc'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); }
+      function printDoc(){ var w=window.open('','_blank','width=820,height=700'); if(!w){ alert('Permita pop-ups para imprimir.'); return; }
+        w.document.write('<html><head><meta charset="utf-8"><title>Documento</title></head><body style="font-family:Georgia,serif;padding:26px;line-height:1.6">'+area.innerHTML+'</body></html>'); w.document.close(); setTimeout(function(){ w.focus(); w.print(); },400); }
+      bar.appendChild(act('💾 Salvar',function(){ save(true); },'#dcfce7'));
+      bar.appendChild(act('⬇️ Baixar .doc',downloadDoc));
+      bar.appendChild(act('🖨️ Imprimir',printDoc));
+      bar.appendChild(act('🧹 Limpar',function(){ if(confirm('Limpar todo o texto?')){ area.innerHTML='<p></p>'; save(true); } },'#fee2e2'));
+      area.contentEditable='true'; area.spellcheck=true;
+      area.style.cssText='flex:1;min-height:320px;overflow:auto;border:1px solid #cbd5e1;border-radius:10px;padding:16px;background:#fff;font-size:14px;line-height:1.6;color:#1e293b;outline:none';
+      try{ area.innerHTML=localStorage.getItem(KEY)||'<p></p>'; }catch(e){ area.innerHTML='<p></p>'; }
+      area.addEventListener('input',function(){ save(); });
+      box.appendChild(bar); box.appendChild(area); box.appendChild(status);
+      return box;
+    }
+    function buildCalc(){
+      var box=document.createElement('div'); box.style.cssText='max-width:300px;margin:10px auto';
+      var disp=document.createElement('input'); disp.type='text'; disp.readOnly=true; disp.value='0';
+      disp.style.cssText='width:100%;box-sizing:border-box;text-align:right;font-size:26px;font-weight:700;padding:14px;border:1px solid #cbd5e1;border-radius:10px;background:#0f172a;color:#fff;margin-bottom:10px;font-family:monospace';
+      var grid=document.createElement('div'); grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:8px';
+      var expr='';
+      function refresh(){ disp.value=expr||'0'; }
+      function press(t){
+        if(t==='C'){ expr=''; }
+        else if(t==='⌫'){ expr=(expr==='Erro')?'':expr.slice(0,-1); }
+        else if(t==='='){ try{ var s=expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/,/g,'.');
+            if(!/^[0-9+\-*/%.() ]+$/.test(s)){ expr='Erro'; } else { var r=Function('"use strict";return('+s+')')(); expr=(r===undefined||r===null||!isFinite(r))?'Erro':String(Math.round(r*1e10)/1e10); } }catch(e){ expr='Erro'; } }
+        else { if(expr==='Erro') expr=''; expr+=t; }
+        refresh();
+      }
+      ['C','⌫','%','÷','7','8','9','×','4','5','6','-','1','2','3','+','0','.','='].forEach(function(k){
+        var btn=document.createElement('button'); btn.type='button'; btn.textContent=k;
+        var isOp=['÷','×','-','+','%'].indexOf(k)>=0, isFn=(k==='C'||k==='⌫'), isEq=(k==='=');
+        btn.style.cssText='height:52px;border:1px solid #cbd5e1;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;'+
+          (isEq?'background:linear-gradient(to right,#f59e0b,#d4a017);color:#0f172a;':isOp?'background:#e0e7ff;color:#3730a3;':isFn?'background:#fee2e2;color:#991b1b;':'background:#fff;color:#1e293b;');
+        if(k==='0') btn.style.gridColumn='span 2';
+        btn.addEventListener('click',function(){ press(k); });
+        grid.appendChild(btn);
+      });
+      box.appendChild(disp); box.appendChild(grid);
+      return box;
+    }
+    var BUILDERS={editor:buildEditor,calc:buildCalc};
+
     function openModule(id){
       var meta=MODULES[id]; if(!meta||!desktop) return;
       var w=windows[id];
       if(!w){ w=createWindow(id,meta); windows[id]=w; order.push(id); }
       var content=document.getElementById('tab-content-'+id);
+      if(!content && BUILDERS[id]){ content=BUILDERS[id](); content.id='tab-content-'+id; content.className='space-y-6'; storage.appendChild(content); }
       if(content){ if(content.parentNode!==w.body) w.body.appendChild(content); content.classList.remove('hidden'); }
       w.minimized=false; w.el.style.display='flex';
       focusWin(id); loadData(id); updateEmpty();
