@@ -196,6 +196,17 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('Financeiro/Financial (módulo extraído)', () => {
+  it('GET /api/financial/transactions com token → 200', async () => {
+    const r = await auth(request(app).get('/api/financial/transactions'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('sem token → 401', async () => {
+    const r = await request(app).get('/api/financial/transactions');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('RH/HR (módulo extraído)', () => {
   it('GET /api/hr/dashboard com token → 200', async () => {
     const r = await auth(request(app).get('/api/hr/dashboard'), masterToken);
