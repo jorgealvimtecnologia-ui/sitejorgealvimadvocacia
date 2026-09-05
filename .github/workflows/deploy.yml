@@ -1,0 +1,73 @@
+name: Deploy (manual)
+
+# CI/CD opcional com rollback. É DISPARADO À MÃO (workflow_dispatch), nunca
+# automaticamente, para não publicar sem querer. Antes de enviar, roda os testes;
+# faz backup completo no servidor (para rollback via reverter-deploy.bat) e só então
+# copia os arquivos e reinicia o serviço.
+#
+# PARA ATIVAR: em Settings > Secrets and variables > Actions, crie os secrets:
+#   DEPLOY_SSH_KEY   -> a chave privada SSH (id_ed25519_161_97_71_14)
+#   DEPLOY_HOST      -> 161.97.71.14
+#   DEPLOY_USER      -> root
+#   DEPLOY_PATH      -> /var/www/advocacia   (ou .../advocacia-staging)
+#   DEPLOY_SERVICE   -> advocacia            (ou advocacia-staging)
+# Sem esses secrets, o job para no passo de verificação (não faz nada).
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Ambiente'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, producao]
+
+jobs:
+  deploy:
+    name: Testar e publicar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Rodar testes (barra deploy quebrado)
+        run: npm test
+
+      - name: Verificar secrets de deploy
+        run: |
+          if [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ] || [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "::error::Secrets de deploy ausentes. Configure DEPLOY_* em Settings > Secrets (veja docs/INFRA.md)."
+            exit 1
+          fi
+
+      - name: Preparar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Backup completo (rollback) + envio + restart
+        env:
+          H: ${{ secrets.DEPLOY_HOST }}
+          U: ${{ secrets.DEPLOY_USER }}
+          P: ${{ secrets.DEPLOY_PATH }}
+          S: ${{ secrets.DEPLOY_SERVICE }}
+        run: |
+          ssh -i ~/.ssh/id_deploy "$U@$H" "D=$P/backups/predeploy-\$(date +%Y%m%d-%H%M%S); mkdir -p \$D && cp -r $P/server.js $P/painel.html $P/index.html $P/blog.html $P/cliente.html $P/colaborador.html $P/src \$D/ 2>/dev/null; echo \$D > $P/backups/LAST && echo Backup: \$D"
+          scp -i ~/.ssh/id_deploy -r server.js painel.html index.html blog.html cliente.html colaborador.html src "$U@$H:$P/"
+          ssh -i ~/.ssh/id_deploy "$U@$H" "systemctl restart $S && sleep 2 && systemctl is-active $S"
+
+      - name: Health check pós-deploy
+        env:
+          H: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          sleep 2
+          curl -fsS "https://$H/health" || echo "aviso: health check externo não respondeu (verifique manualmente)"

@@ -196,6 +196,24 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('Blog (módulo extraído)', () => {
+  it('GET /api/blog/posts (público) responde lista', async () => {
+    const r = await request(app).get('/api/blog/posts');
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body.posts) || Array.isArray(r.body.articles) || r.body.success);
+  });
+
+  it('GET /api/blog/categories responde', async () => {
+    const r = await request(app).get('/api/blog/categories');
+    assert.equal(r.status, 200);
+  });
+
+  it('rota admin de blog exige autenticação (401 sem token)', async () => {
+    const r = await request(app).get('/api/admin/blog/comments');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('Validação do Kanban', () => {
   it('criar cartão sem título → 400', async () => {
     const r = await auth(request(app).post('/api/kanban'), masterToken).send({ column_key: 'todo' });

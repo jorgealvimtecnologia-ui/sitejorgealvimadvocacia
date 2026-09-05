@@ -19,8 +19,8 @@ echo Pasta local: %~dp0
 echo Servidor...: %SRV%  (%REMOTE%)
 echo.
 
-echo [1/3] Fazendo backup no servidor...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/predeploy-$(date +%%Y%%m%%d-%%H%%M); mkdir -p $D && cp %REMOTE%/server.js %REMOTE%/painel.html $D/ && echo    Backup criado em: $D"
+echo [1/3] Fazendo backup COMPLETO no servidor (para rollback)...
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/predeploy-$(date +%%Y%%m%%d-%%H%%M%%S); mkdir -p $D && cp -r %REMOTE%/server.js %REMOTE%/painel.html %REMOTE%/index.html %REMOTE%/blog.html %REMOTE%/cliente.html %REMOTE%/colaborador.html %REMOTE%/src $D/ 2>/dev/null; echo $D > %REMOTE%/backups/LAST && echo    Backup criado em: $D"
 if errorlevel 1 goto :erro
 echo.
 
