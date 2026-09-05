@@ -196,6 +196,17 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('RH/HR (módulo extraído)', () => {
+  it('GET /api/hr/dashboard com token → 200', async () => {
+    const r = await auth(request(app).get('/api/hr/dashboard'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('sem token → 401', async () => {
+    const r = await request(app).get('/api/hr/employees');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('Agenda/Calendar (módulo extraído)', () => {
   it('GET /api/calendar/events com token → 200', async () => {
     const r = await auth(request(app).get('/api/calendar/events'), masterToken);
