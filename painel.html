@@ -20666,9 +20666,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       notifications:{label:'Alertas & Prazos',emoji:'🔔'},
       editor:{label:'Editor de Texto',emoji:'📝'},
       calc:{label:'Calculadora',emoji:'🧮'},
-      kanban:{label:'Fluxo de Trabalho (Kanban 5W2H)',emoji:'🗂️'}
+      kanban:{label:'Fluxo de Trabalho (Kanban 5W2H)',emoji:'🗂️'},
+      explorer:{label:'Explorar Arquivos',emoji:'🗃️'}
     };
-    var TOOLS={editor:1,calc:1,kanban:1};
+    var TOOLS={editor:1,calc:1,kanban:1,explorer:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
       {label:'Clientes & Atendimento',emoji:'👥',items:['leads','pre-clients','clients','rockets']},
@@ -20676,7 +20677,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
       {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','audit','lgpd','notifications']},
-      {label:'Ferramentas',emoji:'🧰',items:['kanban','editor','calc']}
+      {label:'Ferramentas',emoji:'🧰',items:['explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
       publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
@@ -21090,7 +21091,58 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       load();
       return box;
     }
-    var BUILDERS={editor:buildEditor,calc:buildCalc,kanban:buildKanban};
+    function buildExplorer(){
+      var box=document.createElement('div'); box.style.cssText='display:flex;flex-direction:column;height:100%;min-height:460px;font-size:13px';
+      var state={path:'',parent:null,entries:[],sel:null};
+      function api(url,opts){ opts=opts||{}; opts.headers=Object.assign({'Content-Type':'application/json'},(typeof getAuthHeaders==='function'?getAuthHeaders():{}),opts.headers||{}); return fetch(url,opts).then(function(r){return r.json();}); }
+      function human(b){ if(!b) return '—'; var u=['B','KB','MB','GB'],i=0; while(b>=1024&&i<3){b/=1024;i++;} return b.toFixed(i?1:0)+' '+u[i]; }
+      function dt(ms){ if(!ms) return '—'; var d=new Date(ms); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+      function tb(label,emoji,fn){ var b=document.createElement('button'); b.type='button'; b.title=label; b.setAttribute('aria-label',label);
+        b.style.cssText='display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;color:#334155;cursor:pointer';
+        b.innerHTML='<span>'+emoji+'</span><span>'+label+'</span>'; b.addEventListener('click',fn); return b; }
+      var bar=document.createElement('div'); bar.style.cssText='display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px';
+      var crumb=document.createElement('div'); crumb.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:6px 10px;background:#0f172a;color:#e2e8f0;border-radius:8px;margin-bottom:8px;font-size:12px;font-family:monospace';
+      var scroll=document.createElement('div'); scroll.style.cssText='flex:1;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;background:#fff';
+      var table=document.createElement('table'); table.style.cssText='width:100%;border-collapse:collapse';
+      table.innerHTML='<thead><tr>'
+        +'<th style="text-align:left;padding:8px 10px;position:sticky;top:0;background:#f1f5f9;border-bottom:2px solid #e2e8f0;font-size:11px;color:#475569">Nome</th>'
+        +'<th style="text-align:right;padding:8px 10px;position:sticky;top:0;background:#f1f5f9;border-bottom:2px solid #e2e8f0;font-size:11px;color:#475569;width:110px">Tamanho</th>'
+        +'<th style="text-align:left;padding:8px 10px;position:sticky;top:0;background:#f1f5f9;border-bottom:2px solid #e2e8f0;font-size:11px;color:#475569;width:170px">Modificado</th></tr></thead><tbody></tbody>';
+      scroll.appendChild(table);
+      var tbody=table.querySelector('tbody');
+      var status=document.createElement('div'); status.style.cssText='font-size:11px;color:#94a3b8;margin-top:6px';
+
+      bar.appendChild(tb('Nova pasta','📁',function(){ var n=prompt('Nome da nova pasta:'); if(n){ api('/api/explorer/mkdir',{method:'POST',body:JSON.stringify({path:state.path,name:n.trim()})}).then(function(d){ if(d.success){wmToast&&wmToast('Pasta criada.');load(state.path);}else wmToast&&wmToast(d.error||'Erro'); }); } }));
+      bar.appendChild(tb('Renomear','✏️',function(){ if(!state.sel){wmToast&&wmToast('Selecione um item.');return;} var n=prompt('Novo nome:',state.sel.name); if(n&&n.trim()!==state.sel.name){ api('/api/explorer/rename',{method:'POST',body:JSON.stringify({path:state.sel.path,newName:n.trim()})}).then(function(d){ if(d.success){wmToast&&wmToast('Renomeado.');load(state.path);}else wmToast&&wmToast(d.error||'Erro'); }); } }));
+      bar.appendChild(tb('Mover','↪️',function(){ if(!state.sel){wmToast&&wmToast('Selecione um item.');return;} var dest=prompt('Mover para qual pasta? (caminho a partir da raiz; vazio = raiz)',state.path); if(dest===null)return; api('/api/explorer/move',{method:'POST',body:JSON.stringify({path:state.sel.path,dest:dest.trim()})}).then(function(d){ if(d.success){wmToast&&wmToast('Movido.');load(state.path);}else wmToast&&wmToast(d.error||'Erro'); }); }));
+      bar.appendChild(tb('Excluir','🗑️',function(){ if(!state.sel){wmToast&&wmToast('Selecione um item.');return;} if(!confirm('Excluir "'+state.sel.name+'"'+(state.sel.type==='dir'?' e todo o conteúdo?':' ?')))return; api('/api/explorer/delete',{method:'DELETE',body:JSON.stringify({path:state.sel.path})}).then(function(d){ if(d.success){wmToast&&wmToast('Excluído.');load(state.path);}else wmToast&&wmToast(d.error||'Erro'); }); }));
+      bar.appendChild(tb('Baixar','⬇️',function(){ if(!state.sel||state.sel.type==='dir'){wmToast&&wmToast('Selecione um arquivo.');return;} var h=Object.assign({},(typeof getAuthHeaders==='function'?getAuthHeaders():{})); fetch('/api/explorer/download?path='+encodeURIComponent(state.sel.path),{headers:h}).then(function(r){return r.blob();}).then(function(bl){ var a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download=state.sel.name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); }); }));
+      bar.appendChild(tb('Atualizar','🔄',function(){ load(state.path); }));
+
+      function crumbLink(label,p){ var s=document.createElement('span'); s.textContent=label; s.style.cssText='cursor:pointer;color:#facc15'; s.addEventListener('click',function(){ load(p); }); return s; }
+      function renderCrumb(){ crumb.innerHTML=''; crumb.appendChild(crumbLink('🗄️ Sistema','')); var parts=(state.path||'').split('/').filter(Boolean); var acc='';
+        parts.forEach(function(seg){ acc=acc?acc+'/'+seg:seg; var sep=document.createElement('span'); sep.textContent=' / '; sep.style.color='#64748b'; crumb.appendChild(sep); crumb.appendChild(crumbLink(seg,acc)); }); }
+      function render(){
+        renderCrumb(); tbody.innerHTML=''; state.sel=null;
+        if(state.parent!==null){ var up=document.createElement('tr'); up.style.cursor='pointer';
+          up.innerHTML='<td style="padding:7px 10px;border-bottom:1px solid #f1f5f9">📁 <b>..</b> <span style="color:#94a3b8">(voltar)</span></td><td></td><td></td>';
+          up.addEventListener('dblclick',function(){ load(state.parent); }); up.addEventListener('click',function(){ load(state.parent); }); tbody.appendChild(up); }
+        if(!state.entries.length){ var e=document.createElement('tr'); e.innerHTML='<td colspan="3" style="padding:24px;text-align:center;color:#94a3b8">Pasta vazia</td>'; tbody.appendChild(e); }
+        state.entries.forEach(function(it){ var tr=document.createElement('tr'); tr.style.cursor='pointer';
+          tr.innerHTML='<td style="padding:7px 10px;border-bottom:1px solid #f1f5f9">'+(it.type==='dir'?'📁':'📄')+' '+it.name+'</td>'
+            +'<td style="padding:7px 10px;border-bottom:1px solid #f1f5f9;text-align:right;color:#64748b;font-variant-numeric:tabular-nums">'+(it.type==='dir'?'—':human(it.size))+'</td>'
+            +'<td style="padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#64748b">'+dt(it.mtime)+'</td>';
+          tr.addEventListener('click',function(){ [].slice.call(tbody.querySelectorAll('tr')).forEach(function(x){x.style.background='';}); tr.style.background='#fef3c7'; state.sel=it; });
+          tr.addEventListener('dblclick',function(){ if(it.type==='dir') load(it.path); });
+          tbody.appendChild(tr); });
+        status.textContent=state.entries.length+' item(ns) · dados do sistema (documentos de clientes e drive do escritório)';
+      }
+      function load(p){ api('/api/explorer/list?path='+encodeURIComponent(p||'')).then(function(d){ if(!d.success){ wmToast&&wmToast(d.error||'Erro ao listar.'); return; } state.path=d.path; state.parent=d.parent; state.entries=d.entries; render(); }).catch(function(){ wmToast&&wmToast('Falha ao carregar o explorador.'); }); }
+      box.appendChild(bar); box.appendChild(crumb); box.appendChild(scroll); box.appendChild(status);
+      load('');
+      return box;
+    }
+    var BUILDERS={editor:buildEditor,calc:buildCalc,kanban:buildKanban,explorer:buildExplorer};
 
     function openModule(id){
       var meta=MODULES[id]; if(!meta||!desktop) return;
@@ -21145,7 +21197,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
-      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings' };
+      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', explorer:'tab_settings' };
     var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){

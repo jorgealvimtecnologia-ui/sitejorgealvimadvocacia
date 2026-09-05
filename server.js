@@ -1629,6 +1629,42 @@ app.use(cors({
 app.use(express.json({ limit: '25mb' })); // lotes de intimações (ingest) podem ser grandes
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
+// Health check (monitoramento externo / uptime)
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString(), uptime_s: Math.round(process.uptime()) }));
+
+// -------- RBAC no backend: gate por perfil (defesa em profundidade) ----------
+// O MESTRE sempre passa (produção só tem o mestre → sem impacto). Perfis restritos
+// com matriz de acesso são barrados nas rotas dos módulos que não têm afinidade.
+const PATH_PERMS = [
+  [/^\/api\/clients/, 'tab_clients'], [/^\/api\/leads/, 'tab_leads'],
+  [/^\/api\/lawsuits/, 'tab_lawsuits'], [/^\/api\/court/, 'tab_publications'],
+  [/^\/api\/calendar/, 'tab_calendar'], [/^\/api\/financial/, 'tab_financial'],
+  [/^\/api\/nfse/, 'tab_financial'], [/^\/api\/esign/, 'tab_financial'],
+  [/^\/api\/hr\/employee\/login/, null], [/^\/api\/hr/, 'tab_hr'],
+  [/^\/api\/drive/, 'tab_drive'], [/^\/api\/offices/, 'tab_offices'],
+  [/^\/api\/users/, 'tab_users'], [/^\/api\/judicial/, 'tab_radar'],
+  [/^\/api\/lgpd/, 'tab_settings'], [/^\/api\/admin-requests/, 'tab_lawsuits'],
+  [/^\/api\/explorer/, 'tab_settings']
+];
+app.use((req, res, next) => {
+  try {
+    if (!req.path.startsWith('/api/')) return next();
+    if (/^\/api\/(auth|access-control|client-portal|visits|blog|dashboard|notifications|kanban)/.test(req.path)) return next();
+    const rule = PATH_PERMS.find(p => p[0].test(req.path));
+    if (!rule || rule[1] === null) return next();
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || req.headers['x-access-token']);
+    const s = validateToken(token);
+    if (!s) return next(); // sem sessão: o requireAuth da rota devolve 401
+    const isMaster = s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master' || (s.name || '').toLowerCase().includes('jorge alvim');
+    if (isMaster) return next();
+    let perm = null; try { perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(s.userId); } catch (e) {}
+    if (!perm) return next(); // sem matriz: mantém comportamento permissivo (não quebra)
+    if (perm[rule[1]]) return next();
+    return res.status(403).json({ error: 'Acesso negado: seu perfil não tem permissão para este módulo.' });
+  } catch (e) { return next(); }
+});
+
 // Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório
 app.use('/storage/clients', express.static(STORAGE_DIR));
 app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
@@ -2017,8 +2053,8 @@ app.post('/api/users', requireAuth, (req, res) => {
       return res.status(400).json({ error: 'Nome, login e senha são obrigatórios.' });
     }
 
-    if (password.length < 4) {
-      return res.status(400).json({ error: 'A senha deve ter no mínimo 4 caracteres.' });
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres.' });
     }
 
     const cleanUsername = username.trim().toLowerCase();
@@ -2081,8 +2117,8 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
     const passwordChanged = !!(password && password.trim().length > 0);
 
     if (passwordChanged) {
-      if (password.trim().length < 4) {
-        return res.status(400).json({ error: 'A nova senha deve ter no mínimo 4 caracteres.' });
+      if (password.trim().length < 8) {
+        return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres.' });
       }
       const cleanPassword = password.trim();
       const { hash, salt } = hashPassword(cleanPassword);
@@ -12772,6 +12808,66 @@ app.use((err, req, res, next) => {
     return res.status(500).json({ error: err.message || 'Erro interno no servidor.' });
   }
   next();
+});
+
+// ---------------------------------------------------------------------------
+// EXPLORADOR DE ARQUIVOS — gerenciador estilo Windows (sandbox em /storage)
+// ---------------------------------------------------------------------------
+const EXPLORER_ROOT = path.join(__dirname, 'storage');
+try { fs.mkdirSync(EXPLORER_ROOT, { recursive: true }); } catch (e) {}
+function expResolve(rel) {
+  rel = String(rel || '').replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+$/, '');
+  const abs = path.resolve(EXPLORER_ROOT, rel);
+  if (abs !== EXPLORER_ROOT && !abs.startsWith(EXPLORER_ROOT + path.sep)) throw new Error('Caminho inválido.');
+  return abs;
+}
+function expRel(abs) { return abs === EXPLORER_ROOT ? '' : path.relative(EXPLORER_ROOT, abs).split(path.sep).join('/'); }
+const expBadName = (n) => !n || /[\\/]/.test(n) || n === '.' || n === '..' || n.length > 120;
+
+app.get('/api/explorer/list', requireAuth, (req, res) => {
+  try {
+    const dir = expResolve(req.query.path || '');
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return res.status(400).json({ error: 'Pasta não encontrada.' });
+    const entries = fs.readdirSync(dir, { withFileTypes: true }).map(d => {
+      const abs = path.join(dir, d.name); let s = {}; try { s = fs.statSync(abs); } catch (e) {}
+      return { name: d.name, type: d.isDirectory() ? 'dir' : 'file', size: d.isDirectory() ? 0 : (s.size || 0), mtime: s.mtimeMs || 0, path: expRel(abs) };
+    }).sort((a, b) => a.type === b.type ? a.name.localeCompare(b.name) : (a.type === 'dir' ? -1 : 1));
+    return res.json({ success: true, path: expRel(dir), parent: dir === EXPLORER_ROOT ? null : expRel(path.dirname(dir)), entries });
+  } catch (e) { return res.status(400).json({ error: e.message }); }
+});
+app.post('/api/explorer/mkdir', requireAuth, (req, res) => {
+  try { const { path: p, name } = req.body || {}; if (expBadName(name)) return res.status(400).json({ error: 'Nome inválido.' });
+    const dir = expResolve((p || '') + '/' + name); if (fs.existsSync(dir)) return res.status(400).json({ error: 'Já existe uma pasta com esse nome.' });
+    fs.mkdirSync(dir, { recursive: false }); return res.json({ success: true, path: expRel(dir) });
+  } catch (e) { return res.status(400).json({ error: e.message }); }
+});
+app.post('/api/explorer/rename', requireAuth, (req, res) => {
+  try { const { path: p, newName } = req.body || {}; if (expBadName(newName)) return res.status(400).json({ error: 'Nome inválido.' });
+    const src = expResolve(p); if (src === EXPLORER_ROOT) return res.status(400).json({ error: 'Operação não permitida na raiz.' });
+    const dst = path.join(path.dirname(src), newName); if (fs.existsSync(dst)) return res.status(400).json({ error: 'Já existe um item com esse nome.' });
+    fs.renameSync(src, dst); return res.json({ success: true, path: expRel(dst) });
+  } catch (e) { return res.status(400).json({ error: e.message }); }
+});
+app.post('/api/explorer/move', requireAuth, (req, res) => {
+  try { const { path: p, dest } = req.body || {}; const src = expResolve(p); if (src === EXPLORER_ROOT) return res.status(400).json({ error: 'Operação não permitida na raiz.' });
+    const destDir = expResolve(dest || ''); if (!fs.statSync(destDir).isDirectory()) return res.status(400).json({ error: 'Destino inválido.' });
+    const dst = path.join(destDir, path.basename(src));
+    if (dst === src) return res.json({ success: true, path: expRel(dst) });
+    if (dst.startsWith(src + path.sep)) return res.status(400).json({ error: 'Não é possível mover uma pasta para dentro dela mesma.' });
+    if (fs.existsSync(dst)) return res.status(400).json({ error: 'Já existe um item com esse nome no destino.' });
+    fs.renameSync(src, dst); return res.json({ success: true, path: expRel(dst) });
+  } catch (e) { return res.status(400).json({ error: e.message }); }
+});
+app.delete('/api/explorer/delete', requireAuth, (req, res) => {
+  try { const p = (req.body && req.body.path) || req.query.path; const abs = expResolve(p);
+    if (abs === EXPLORER_ROOT) return res.status(400).json({ error: 'Operação não permitida na raiz.' });
+    fs.rmSync(abs, { recursive: true, force: true }); return res.json({ success: true });
+  } catch (e) { return res.status(400).json({ error: e.message }); }
+});
+app.get('/api/explorer/download', requireAuth, (req, res) => {
+  try { const abs = expResolve(req.query.path); if (fs.statSync(abs).isDirectory()) return res.status(400).json({ error: 'Não é possível baixar uma pasta.' });
+    return res.download(abs);
+  } catch (e) { return res.status(400).json({ error: e.message }); }
 });
 
 // ---------------------------------------------------------------------------
