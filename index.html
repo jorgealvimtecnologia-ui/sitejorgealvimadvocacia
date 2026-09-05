@@ -269,6 +269,16 @@
   </script>
   <!-- Camada de polimento visual compartilhada -->
   <link rel="stylesheet" href="/public/css/enhance.css" />
+  <style>
+    /* Menu responsivo confiável (independe de utilitários Tailwind compilados):
+       menu completo só a partir de 1280px; abaixo disso, o hambúrguer. */
+    #nav-desktop{display:none}
+    #nav-hamburger{display:flex}
+    @media (min-width:1280px){
+      #nav-desktop{display:flex!important}
+      #nav-hamburger{display:none!important}
+    }
+  </style>
 </head>
 
 <body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
@@ -324,7 +334,7 @@
         </a>
 
         <!-- Menu Desktop -->
-        <nav class="hidden lg:flex items-center space-x-1 xl:space-x-2 text-sm font-semibold text-slate-700">
+        <nav id="nav-desktop" class="items-center space-x-1 xl:space-x-2 text-sm font-semibold text-slate-700">
           <a href="#inicio" class="relative px-3 py-2 rounded-lg hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200 group">
             <span>Início</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
@@ -376,7 +386,7 @@
         </div>
 
         <!-- Botão Hambúrguer Mobile -->
-        <div class="flex lg:hidden">
+        <div id="nav-hamburger" class="flex">
           <button id="mobile-menu-toggle" type="button" aria-label="Abrir Menu Principal" class="p-2 rounded-xl text-slate-700 hover:text-gold-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-gold-500">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
@@ -388,7 +398,7 @@
     </div>
 
     <!-- Drawer Mobile Menu Fullscreen Otimizado (Design Claro) -->
-    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-white/98 backdrop-blur-2xl text-slate-800 flex flex-col justify-between p-6 overflow-y-auto min-h-[100dvh] border-l border-slate-200">
+    <div id="mobile-menu" class="hidden fixed inset-0 z-50 bg-white text-slate-800 flex flex-col justify-between p-6 overflow-y-auto min-h-[100dvh] border-l border-slate-200" style="background-color:#ffffff;">
       <div>
         <div class="flex items-center justify-between pb-6 border-b border-slate-200">
           <div class="flex items-center space-x-3">
