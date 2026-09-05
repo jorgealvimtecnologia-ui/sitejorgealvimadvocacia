@@ -47,3 +47,31 @@ export function generateNextLawsuitId() {
 
   return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
 }
+
+// Gerador de ID para Cadastro de Clientes Completos: JA-CLI-2026-0001
+// Gerador de ID para Cadastro de Clientes Completos: JA-CLI-2026-0001
+export function generateNextClientFullId() {
+  const currentYear = new Date().getFullYear();
+  const prefix = `JA-CLI-${currentYear}-`;
+  
+  const records = db.prepare(`SELECT id FROM clients`).all();
+  let maxNum = 0;
+  if (records && records.length > 0) {
+    records.forEach(r => {
+      const match = (r.id || '').match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+  }
+  
+  let nextNum = maxNum + 1;
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  const checkStmt = db.prepare(`SELECT id FROM clients WHERE id = ?`);
+  while (checkStmt.get(candidate)) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  }
+  return candidate;
+}
