@@ -44,6 +44,8 @@ import { leadsRouter } from './src/modules/leads/leads.routes.js';
 import { visitsRouter } from './src/modules/visits/visits.routes.js';
 import { juridicoRouter, seedCourtHolidays } from './src/modules/juridico/juridico.routes.js';
 import { accessRouter, syncAllAccessPermissions } from './src/modules/access/access.routes.js';
+import { authRouter } from './src/modules/auth/auth.routes.js';
+import { loginRateLimit } from './src/shared/login-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1387,6 +1389,7 @@ app.use(leadsRouter);
 app.use(visitsRouter);
 app.use(juridicoRouter);
 app.use(accessRouter);
+app.use(authRouter);
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {
@@ -1596,201 +1599,9 @@ app.get('/artigos', (req, res) => {
 
 // ================= ROTAS DE AUTENTICAÇÃO =================
 
-// Rate-limiting simples em memória para rotas de login (anti força-bruta).
-const loginHits = new Map();
-function loginRateLimit(req, res, next) {
-  try {
-    const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
-    const now = Date.now();
-    const windowMs = 15 * 60 * 1000; // janela de 15 minutos
-    const maxAttempts = 15;
-    var rec = loginHits.get(ip);
-    if (!rec || now > rec.reset) rec = { count: 0, reset: now + windowMs };
-    rec.count++;
-    loginHits.set(ip, rec);
-    if (loginHits.size > 5000) { // limpeza esporádica
-      for (const [k, v] of loginHits) if (now > v.reset) loginHits.delete(k);
-    }
-    if (rec.count > maxAttempts) {
-      res.setHeader('Retry-After', String(Math.ceil((rec.reset - now) / 1000)));
-      return res.status(429).json({ error: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.' });
-    }
-  } catch (_) { /* nunca bloquear por erro do limitador */ }
-  next();
-}
+// login-guard (rate-limit + bloqueio progressivo) movido para src/shared/login-guard.js
 
-// ---------------------------------------------------------------------------
-// BLOQUEIO PROGRESSIVO por FALHAS (defesa em profundidade, além do rate-limit
-// por IP acima). Conta falhas consecutivas por (IP + usuário) e impõe uma espera
-// que CRESCE a cada faixa de erros. Um login bem-sucedido zera o contador. Assim
-// um ataque de força bruta fica exponencialmente mais lento sem punir quem
-// simplesmente errou a senha uma ou duas vezes.
-// ---------------------------------------------------------------------------
-const loginFailures = new Map(); // chave `${ip}|${usuario}` -> { fails, lockUntil }
-function loginLockKey(ip, username) {
-  return `${ip}|${String(username || '').toLowerCase().trim()}`;
-}
-function progressiveLockMs(fails) {
-  if (fails < 5) return 0;            // 1–4 falhas: sem punição
-  if (fails < 8) return 30 * 1000;   // 5–7: 30 segundos
-  if (fails < 12) return 2 * 60 * 1000;  // 8–11: 2 minutos
-  if (fails < 20) return 15 * 60 * 1000; // 12–19: 15 minutos
-  return 60 * 60 * 1000;             // 20+: 1 hora
-}
-function loginLockRemaining(ip, username) {
-  const rec = loginFailures.get(loginLockKey(ip, username));
-  if (rec && rec.lockUntil && Date.now() < rec.lockUntil) {
-    return Math.ceil((rec.lockUntil - Date.now()) / 1000); // segundos restantes
-  }
-  return 0;
-}
-function registerLoginFailure(ip, username) {
-  const k = loginLockKey(ip, username);
-  const rec = loginFailures.get(k) || { fails: 0, lockUntil: 0 };
-  rec.fails += 1;
-  const d = progressiveLockMs(rec.fails);
-  rec.lockUntil = d > 0 ? Date.now() + d : 0;
-  loginFailures.set(k, rec);
-  if (loginFailures.size > 5000) { // limpeza esporádica
-    const now = Date.now();
-    for (const [key, v] of loginFailures) if (!v.lockUntil || now > v.lockUntil) loginFailures.delete(key);
-  }
-  return rec;
-}
-function clearLoginFailures(ip, username) {
-  loginFailures.delete(loginLockKey(ip, username));
-}
-
-app.post('/api/auth/login', loginRateLimit, (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Informe o usuário e a senha.' });
-    }
-
-    const rawUsername = String(username).trim();
-    const cleanUsername = rawUsername.toLowerCase();
-    const compactUsername = cleanUsername.replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
-
-    const rawPassword = String(password).trim();
-    const compactPassword = rawPassword.toLowerCase().replace(/\s+/g, '');
-
-    // Bloqueio progressivo: se este (IP + usuário) está em cooldown por falhas, recusa.
-    const reqIp = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
-    const lockLeft = loginLockRemaining(reqIp, cleanUsername);
-    if (lockLeft > 0) {
-      res.setHeader('Retry-After', String(lockLeft));
-      return res.status(429).json({ error: `Muitas tentativas. Aguarde ${lockLeft}s e tente novamente.` });
-    }
-
-    // Busca flexível de usuário por username exato, aliases (jorgealvim, admin, mestre) ou nome
-    let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
-
-    if (!user) {
-      if (['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim', 'jorge'].includes(compactUsername)) {
-        user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
-      } else if (compactUsername.includes('mariana')) {
-        user = db.prepare(`SELECT * FROM users WHERE username LIKE '%mariana%' OR name LIKE '%mariana%'`).get();
-      } else if (compactUsername.includes('gabriela')) {
-        user = db.prepare(`SELECT * FROM users WHERE username LIKE '%gabriela%' OR name LIKE '%gabriela%'`).get();
-      } else {
-        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(name)) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ?`).get(`%${cleanUsername}%`, `%${compactUsername}%`);
-      }
-    }
-
-    // SEGURANÇA: sem senhas-mestre hardcoded. A autenticação valida SOMENTE o hash
-    // PBKDF2 armazenado. Aceitamos a senha exata ou sua versão compacta (sem espaços),
-    // para tolerar variações de digitação, mas nunca uma senha fixa universal.
-    const isPasswordValid = user && (
-      verifyPassword(rawPassword, user.password_hash, user.salt) ||
-      (compactPassword !== rawPassword && verifyPassword(compactPassword, user.password_hash, user.salt))
-    );
-
-    if (!user || !isPasswordValid) {
-      const fail = registerLoginFailure(reqIp, cleanUsername);
-      logAudit(req, {
-        event_type: 'AUTENTICACAO',
-        event_name: 'FALHA_LOGIN_ADMIN',
-        module: 'USUARIOS',
-        user_name: cleanUsername,
-        user_role: 'desconhecido',
-        description: `Tentativa de login com credenciais inválidas para '${cleanUsername}' (falha #${fail.fails}).`
-      });
-      // Se esta falha disparou/renovou um cooldown, informa o tempo de espera.
-      const left = loginLockRemaining(reqIp, cleanUsername);
-      if (left > 0) {
-        res.setHeader('Retry-After', String(left));
-        return res.status(429).json({ error: `Muitas tentativas. Aguarde ${left}s e tente novamente.` });
-      }
-      return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
-    }
-
-    // Login válido: zera o contador de falhas deste (IP + usuário).
-    clearLoginFailures(reqIp, cleanUsername);
-
-    // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
-    try {
-      const matched = verifyPassword(rawPassword, user.password_hash, user.salt) ? rawPassword : compactPassword;
-      if (!isStrongHash(matched, user.password_hash, user.salt)) {
-        const up = hashPassword(matched);
-        db.prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`).run(up.hash, up.salt, user.id);
-      }
-    } catch (e) { /* upgrade é best-effort; não bloqueia o login */ }
-
-    const token = createSession(user);
-
-    logAudit(req, {
-      event_type: 'AUTENTICACAO',
-      event_name: 'LOGIN_ADMIN',
-      module: 'USUARIOS',
-      resource_id: user.id,
-      user_name: user.name,
-      user_role: user.role,
-      description: `Operador ${user.name} (${user.username}) autenticou-se com sucesso no painel.`
-    });
-
-    return res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error('[ERRO] Falha no login:', error);
-    return res.status(500).json({ error: 'Erro interno no servidor.' });
-  }
-});
-
-app.get('/api/auth/me', requireAuth, (req, res) => {
-  return res.json({ success: true, user: req.user });
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') 
-    ? authHeader.substring(7) 
-    : (req.query.token || req.headers['x-access-token']);
-
-  if (token) {
-    const sess = sessions.get(token);
-    if (sess) {
-      logAudit(req, {
-        event_type: 'AUTENTICACAO',
-        event_name: 'LOGOUT_ADMIN',
-        module: 'USUARIOS',
-        user_name: sess.name,
-        user_role: sess.role,
-        description: `Operador ${sess.name} encerrou a sessão no painel administrativo.`
-      });
-    }
-    destroySession(token);
-  }
-  return res.json({ success: true, message: 'Sessão encerrada com sucesso.' });
-});
+// ===== AUTH (login/me/logout): extraído para src/modules/auth/auth.routes.js =====
 
 // ===== USUÁRIOS & ACESSO: extraído para src/modules/access/access.routes.js =====
 
