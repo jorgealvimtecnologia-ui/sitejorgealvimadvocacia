@@ -278,14 +278,34 @@
       #nav-desktop{display:flex!important}
       #nav-hamburger{display:none!important}
     }
+    /* ===== Acessibilidade (WCAG 2.1) ===== */
+    /* Link "pular para o conteúdo": invisível até receber foco por teclado. */
+    .skip-link{position:absolute;left:8px;top:-48px;z-index:1000;background:#0B192C;color:#fff;
+      padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;
+      transition:top .15s ease}
+    .skip-link:focus{top:8px;outline:3px solid #C9A227;outline-offset:2px}
+    /* Indicador de foco visível e consistente para navegação por teclado. */
+    a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,
+    textarea:focus-visible,[tabindex]:focus-visible,[role="button"]:focus-visible{
+      outline:3px solid #C9A227;outline-offset:2px;border-radius:4px}
+    /* Respeita quem pede menos animação (vestibular/enjoo). */
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+        transition-duration:.001ms!important;scroll-behavior:auto!important}
+    }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 </head>
 
 <body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
 
+  <!-- Acessibilidade: pular direto para o conteúdo principal (foco por teclado) -->
+  <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
+
   <!-- Fallback do Meta Pixel (Facebook / Instagram) -->
   <noscript>
-    <img loading="lazy" decoding="async"height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=META_PIXEL_ID_HERE&ev=PageView&noscript=1"/>
+    <img loading="lazy" decoding="async" alt="" height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=META_PIXEL_ID_HERE&ev=PageView&noscript=1"/>
   </noscript>
 
   <!-- ================= TOP BAR INFORMATIVA RESPONSIVA (DESIGN CLARO) ================= -->
@@ -387,7 +407,7 @@
 
         <!-- Botão Hambúrguer Mobile -->
         <div id="nav-hamburger" class="flex">
-          <button id="mobile-menu-toggle" type="button" aria-label="Abrir Menu Principal" class="p-2 rounded-xl text-slate-700 hover:text-gold-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-gold-500">
+          <button id="mobile-menu-toggle" type="button" aria-label="Abrir Menu Principal" aria-controls="mobile-menu" aria-expanded="false" class="p-2 rounded-xl text-slate-700 hover:text-gold-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-gold-500">
             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
             </svg>
@@ -457,7 +477,7 @@
     </div>
   </div>
 
-  <main>
+  <main id="conteudo" tabindex="-1">
     <!-- ================= HERO SECTION RESPONSIVO ================= -->
     <section id="inicio" class="relative min-h-[85vh] flex items-center justify-center py-12 xs:py-16 sm:py-20 lg:py-24 overflow-hidden bg-gradient-to-b from-warm-100 via-white to-warm-50">
       <div class="absolute inset-0 z-0">
@@ -1014,7 +1034,7 @@
                   <span class="font-serif font-extrabold text-gold-700 text-lg leading-none">1</span>
                 </div>
                 <div class="pt-1">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-600">Início</span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-800">Início</span>
                   <h3 class="text-base sm:text-lg font-bold text-navy-950 leading-tight">Agendamento da Consulta</h3>
                 </div>
               </div>
@@ -1037,7 +1057,7 @@
                   <span class="font-serif font-extrabold text-gold-700 text-lg leading-none">2</span>
                 </div>
                 <div class="pt-1">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-600">Reunião Inicial</span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-800">Reunião Inicial</span>
                   <h3 class="text-base sm:text-lg font-bold text-navy-950 leading-tight">Consulta Jurídica Inicial</h3>
                 </div>
               </div>
@@ -1060,7 +1080,7 @@
                   <span class="font-serif font-extrabold text-gold-700 text-lg leading-none">3</span>
                 </div>
                 <div class="pt-1">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-600">Análise Técnica</span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-800">Análise Técnica</span>
                   <h3 class="text-base sm:text-lg font-bold text-navy-950 leading-tight">Estudo do Caso e Documentos</h3>
                 </div>
               </div>
@@ -1083,7 +1103,7 @@
                   <span class="font-serif font-extrabold text-gold-700 text-lg leading-none">4</span>
                 </div>
                 <div class="pt-1">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-600">Proposta</span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-800">Proposta</span>
                   <h3 class="text-base sm:text-lg font-bold text-navy-950 leading-tight">Apresentação da Proposta</h3>
                 </div>
               </div>
@@ -1106,7 +1126,7 @@
                   <span class="font-serif font-extrabold text-gold-700 text-lg leading-none">5</span>
                 </div>
                 <div class="pt-1">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-600">Contratação</span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-800">Contratação</span>
                   <h3 class="text-base sm:text-lg font-bold text-navy-950 leading-tight">Procuração e Contrato de Honorários</h3>
                 </div>
               </div>
@@ -1129,7 +1149,7 @@
                   <span class="font-serif font-extrabold text-gold-700 text-lg leading-none">6</span>
                 </div>
                 <div class="pt-1">
-                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-600">Ação Jurídica</span>
+                  <span class="text-[10px] font-bold uppercase tracking-widest text-gold-800">Ação Jurídica</span>
                   <h3 class="text-base sm:text-lg font-bold text-navy-950 leading-tight">Protocolo e Início da Ação</h3>
                 </div>
               </div>
@@ -1200,7 +1220,7 @@
                 </span>
               </div>
               <div class="p-5 sm:p-6 space-y-2">
-                <span class="text-[11px] text-slate-400 font-medium">📅 Juiz de Fora e MG • 3 min</span>
+                <span class="text-[11px] text-slate-500 font-medium">📅 Juiz de Fora e MG • 3 min</span>
                 <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
                   <a href="/blog/como-funciona-defesa-cnh-juiz-de-fora" class="hover:text-gold-700 transition-colors">
                     Como Funciona a Defesa contra Suspensão e Cassação de CNH
@@ -1230,7 +1250,7 @@
                 </span>
               </div>
               <div class="p-5 sm:p-6 space-y-2">
-                <span class="text-[11px] text-slate-400 font-medium">📅 Zona da Mata & Aeroportos • 4 min</span>
+                <span class="text-[11px] text-slate-500 font-medium">📅 Zona da Mata & Aeroportos • 4 min</span>
                 <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
                   <a href="/blog/direitos-consumidor-voos-transportes-indenizacao" class="hover:text-gold-700 transition-colors">
                     Direitos do Passageiro: Indenizações por Voo Cancelado e Extravio
@@ -1260,7 +1280,7 @@
                 </span>
               </div>
               <div class="p-5 sm:p-6 space-y-2">
-                <span class="text-[11px] text-slate-400 font-medium">📅 Cartórios de Juiz de Fora • 3 min</span>
+                <span class="text-[11px] text-slate-500 font-medium">📅 Cartórios de Juiz de Fora • 3 min</span>
                 <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
                   <a href="/blog/inventario-extrajudicial-cartorio-juiz-de-fora" class="hover:text-gold-700 transition-colors">
                     Inventário em Cartório em Juiz de Fora: Passo a Passo e Custas
@@ -1342,7 +1362,7 @@
 
               <!-- Redes Sociais -->
               <div>
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Siga nas Redes Sociais</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Siga nas Redes Sociais</p>
                 <div class="flex items-center space-x-2">
 
                   <!-- Instagram -->
@@ -1449,7 +1469,7 @@
         <!-- ================= QUATRO BOXES DE ANÚNCIOS ================= -->
         <div class="border-t border-slate-200 pt-10 sm:pt-14">
           <div class="text-center mb-8">
-            <span class="inline-block px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+            <span class="inline-block px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
               Parceiros &amp; Informações Úteis
             </span>
           </div>
@@ -1555,7 +1575,7 @@
 
           <!-- Redes Sociais -->
           <div class="pt-1">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Siga nas Redes Sociais</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-2.5">Siga nas Redes Sociais</p>
             <div class="flex items-center space-x-2.5">
 
               <!-- Instagram -->
@@ -1630,18 +1650,18 @@
 
       </div>
 
-      <div class="pt-6 sm:pt-8 border-t border-slate-200 text-[10px] sm:text-[11px] text-slate-500 space-y-3">
+      <div class="pt-6 sm:pt-8 border-t border-slate-200 text-[10px] sm:text-[11px] text-slate-600 space-y-3">
         <p class="leading-relaxed">
           <strong>Aviso Ético e Legal:</strong> Este site possui finalidade estritamente informativa e institucional, em total conformidade com o Provimento nº 205/2021 e o Código de Ética e Disciplina da Ordem dos Advogados do Brasil (OAB). Nenhuma informação veiculada neste endereço deve ser interpretada como consulta jurídica formal ou promessa de resultado garantido.
         </p>
-        <div class="flex flex-col sm:flex-row justify-between items-center pt-3 text-slate-500 text-xs gap-3">
+        <div class="flex flex-col sm:flex-row justify-between items-center pt-3 text-slate-600 text-xs gap-3">
           <div>
             &copy; 2026 Jorge Alvim Advocacia. Todos os direitos reservados.
           </div>
 
           <!-- Redes Sociais (barra inferior) -->
           <div class="flex items-center space-x-3">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">Siga-nos:</span>
+            <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider hidden sm:inline">Siga-nos:</span>
             <a href="https://instagram.com/jorgealvimadvocacia" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"
               class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:border-pink-400 flex items-center justify-center text-slate-400 hover:text-pink-600 transition-all shadow-sm">
               <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
@@ -1751,7 +1771,7 @@
               <span class="font-semibold text-slate-800 truncate text-[11px] sm:text-xs">${file.name}</span>
               <span class="text-slate-400 text-[10px] sm:text-[11px] flex-shrink-0">(${sizeMb} MB)</span>
             </div>
-            <button type="button" onclick="removeFile(${index})" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-base leading-none transition-colors" title="Remover Arquivo">
+            <button type="button" onclick="removeFile(${index})" aria-label="Remover arquivo ${file.name}" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-base leading-none transition-colors" title="Remover Arquivo">
               &times;
             </button>
           </div>
@@ -1784,21 +1804,33 @@
       const navLinks = document.querySelectorAll('.mobile-nav-link');
 
       if (toggleBtn && mobileMenu) {
-        toggleBtn.addEventListener('click', () => {
+        const setExpanded = (open) => {
+          toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          mobileMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+        };
+        const openMenu = () => {
           mobileMenu.classList.remove('hidden');
           document.body.classList.add('overflow-hidden');
-        });
-        if (closeBtn) {
-          closeBtn.addEventListener('click', () => {
-            mobileMenu.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-          });
-        }
-        navLinks.forEach(link => {
-          link.addEventListener('click', () => {
-            mobileMenu.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-          });
+          setExpanded(true);
+          if (closeBtn) closeBtn.focus(); // move o foco para dentro do menu
+        };
+        const closeMenu = () => {
+          mobileMenu.classList.add('hidden');
+          document.body.classList.remove('overflow-hidden');
+          setExpanded(false);
+          toggleBtn.focus(); // devolve o foco ao botão que abriu
+        };
+        setExpanded(false);
+        toggleBtn.addEventListener('click', openMenu);
+        if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+        navLinks.forEach(link => link.addEventListener('click', () => {
+          mobileMenu.classList.add('hidden');
+          document.body.classList.remove('overflow-hidden');
+          setExpanded(false);
+        }));
+        // Fecha com a tecla Esc (padrão de diálogo/menu).
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) closeMenu();
         });
       }
 
@@ -2163,7 +2195,7 @@
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-amber-200/80 relative space-y-5 my-auto max-h-[92vh] overflow-y-auto">
       
       <!-- Botão Fechar -->
-      <button onclick="closeWelcomeModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar">&times;</button>
+      <button onclick="closeWelcomeModal()" aria-label="Fechar" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar">&times;</button>
       
       <!-- Topo com Saudação Elegante -->
       <div class="text-center space-y-2.5 pb-3 border-b border-amber-100">
@@ -2213,7 +2245,7 @@
   <!-- ================= MODAL DE LOGIN DO ADMINISTRADOR ================= -->
   <div id="admin-login-modal" class="hidden fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative">
-      <button onclick="closeAdminLoginModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      <button onclick="closeAdminLoginModal()" aria-label="Fechar" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
       <div class="text-center space-y-3 pb-5 border-b border-slate-100">
         <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-amber-50 to-gold-100 border-2 border-gold-400 flex items-center justify-center text-gold-700 shadow-sm">
@@ -2384,7 +2416,7 @@
                     </span>
                   </div>
                   <div class="p-5 sm:p-6 space-y-2">
-                    <span class="text-[11px] text-slate-400 font-medium">📅 ${dateStr} • ${post.views_count || 1} visualizações</span>
+                    <span class="text-[11px] text-slate-500 font-medium">📅 ${dateStr} • ${post.views_count || 1} visualizações</span>
                     <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 leading-snug">
                       <a href="/blog/${post.slug}" class="hover:text-gold-700 transition-colors">
                         ${post.title}

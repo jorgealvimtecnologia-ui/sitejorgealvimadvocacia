@@ -86,9 +86,23 @@
       width: 0 !important;
       height: 0 !important;
     }
+    /* ===== Acessibilidade (WCAG 2.1) ===== */
+    .skip-link{position:absolute;left:8px;top:-48px;z-index:10000;background:#0B192C;color:#fff;
+      padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;transition:top .15s ease}
+    .skip-link:focus{top:8px;outline:3px solid #C9A227;outline-offset:2px}
+    a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,
+    textarea:focus-visible,[tabindex]:focus-visible,[role="button"]:focus-visible{
+      outline:3px solid #C9A227;outline-offset:2px;border-radius:4px}
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+        transition-duration:.001ms!important;scroll-behavior:auto!important}
+    }
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased overflow-x-hidden flex flex-col">
+  <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
 
   <!-- ================= TELA DE LOGIN ADMINISTRATIVO (DESIGN CLARO) ================= -->
   <div id="login-view" class="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-slate-100 via-white to-amber-50/50">
@@ -512,7 +526,7 @@
     </header>
 
     <!-- Conteúdo Principal -->
-    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 flex-1">
+    <main id="conteudo" tabindex="-1" class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 flex-1">
 
       <!-- ================= ABA: VISÃO GERAL (DASHBOARD EXECUTIVO) ================= -->
       <section id="tab-content-dashboard" class="hidden space-y-6">
@@ -20696,7 +20710,12 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
     function wmToast(msg){
       var t=document.getElementById('jaw-toast');
-      if(!t){ t=document.createElement('div'); t.id='jaw-toast'; document.body.appendChild(t); }
+      if(!t){
+        t=document.createElement('div'); t.id='jaw-toast';
+        // Acessibilidade: leitores de tela anunciam o aviso sem roubar o foco.
+        t.setAttribute('role','status'); t.setAttribute('aria-live','polite'); t.setAttribute('aria-atomic','true');
+        document.body.appendChild(t);
+      }
       t.textContent=msg; t.classList.add('show'); clearTimeout(t._h);
       t._h=setTimeout(function(){ t.classList.remove('show'); },2400);
     }
