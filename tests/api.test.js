@@ -196,6 +196,19 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('Processos/Lawsuits (módulo extraído)', () => {
+  it('GET /api/lawsuits com token → 200 e lista', async () => {
+    const r = await auth(request(app).get('/api/lawsuits'), masterToken);
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body.lawsuits) || r.body.success);
+  });
+
+  it('GET /api/lawsuits sem token → 401', async () => {
+    const r = await request(app).get('/api/lawsuits');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('Blog (módulo extraído)', () => {
   it('GET /api/blog/posts (público) responde lista', async () => {
     const r = await request(app).get('/api/blog/posts');

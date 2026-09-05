@@ -29,3 +29,21 @@ export function generateNextClientId() {
   }
   return candidate;
 }
+
+// Gerador de ID para Processos Judiciais: PROC-2026-0001
+export function generateNextLawsuitId() {
+  const currentYear = new Date().getFullYear();
+  const prefix = `PROC-${currentYear}-`;
+
+  const records = db.prepare(`SELECT id FROM lawsuits WHERE id LIKE ?`).all(`${prefix}%`);
+  if (!records || records.length === 0) {
+    return `${prefix}0001`;
+  }
+
+  const maxNum = records.reduce((max, r) => {
+    const numPart = parseInt(r.id.replace(prefix, ''), 10);
+    return !isNaN(numPart) && numPart > max ? numPart : max;
+  }, 0);
+
+  return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+}
