@@ -28,9 +28,8 @@ echo [2/3] Enviando server.js, paginas publicas, src/ (modulos) e public/ (asset
 scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src public %SRV%:%REMOTE%/
 if errorlevel 1 goto :erro
 echo.
-echo    Conferindo modulos essenciais no servidor...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "for f in modules/kanban/kanban.routes.js modules/blog/blog.routes.js shared/net.js shared/ids.js; do [ -f %REMOTE%/src/$f ] && echo \"   OK  src/$f\" || echo \"   FALTA src/$f  <-- ATENCAO\"; done"
-echo.
+REM (A verificacao de saude no passo [3/3] ja confirma que todos os modulos
+REM  carregaram: se algum faltar, o Health nao volta 200.)
 
 echo [3/3] Ajustando permissoes, reiniciando e checando saude...
 REM IMPORTANTE: o scp cria pastas novas como root/700; sem isto o www-data
