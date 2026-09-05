@@ -133,8 +133,10 @@
       try {
         const res = await fetch(`/api/lookup/cep/${clean}`);
         const data = await res.json();
-        if (data.success && data.address) {
-          const a = data.address;
+        // A API /api/lookup/cep retorna os campos no nível raiz (street/neighborhood/
+        // city/state). Aceitamos também o formato aninhado data.address por robustez.
+        if (data.success && (data.address || data.street || data.city)) {
+          const a = data.address || data;
           if (streetId && document.getElementById(streetId)) document.getElementById(streetId).value = a.street || '';
           if (neighId && document.getElementById(neighId)) document.getElementById(neighId).value = a.neighborhood || '';
           if (cityId && document.getElementById(cityId)) document.getElementById(cityId).value = a.city || '';

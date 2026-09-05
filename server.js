@@ -1565,9 +1565,11 @@ app.use((req, res, next) => {
 app.use('/storage/clients', express.static(STORAGE_DIR));
 app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
 app.use('/storage/marketing', express.static(path.join(__dirname, 'storage', 'marketing')));
-app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: '7d' }));
 app.use('/img', express.static(path.join(__dirname, 'public', 'img'), { maxAge: '7d' }));
-
+// /js contém o JS da APLICAÇÃO (painel/*.js, api.js) que muda a cada deploy.
+// maxAge:0 + ETag = o browser REVALIDA a cada carga (304 se não mudou, barato) e
+// pega updates imediatamente após o deploy — sem ficar preso a cache antigo.
+app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: 0, etag: true }));
 
 // Roteadores Modulares
 app.use(rocketsRouter);
