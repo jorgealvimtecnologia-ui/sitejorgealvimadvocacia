@@ -24,8 +24,8 @@ ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/pre
 if errorlevel 1 goto :erro
 echo.
 
-echo [2/3] Enviando server.js, painel.html e paginas publicas...
-scp -i "%KEY%" -o StrictHostKeyChecking=accept-new server.js painel.html index.html blog.html cliente.html colaborador.html %SRV%:%REMOTE%/
+echo [2/3] Enviando server.js, paginas publicas e a pasta src/ (modulos)...
+scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src %SRV%:%REMOTE%/
 if errorlevel 1 goto :erro
 echo.
 
