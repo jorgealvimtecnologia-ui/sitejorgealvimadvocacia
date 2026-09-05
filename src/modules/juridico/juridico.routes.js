@@ -751,7 +751,7 @@ juridicoRouter.post('/api/judicial/import-to-office', requireAuth, (req, res) =>
 // =========================================================================
 
 // Semeador de Feriados Forenses e Nacionais (2025, 2026, 2027)
-function seedCourtHolidays() {
+export function seedCourtHolidays() {
   try {
     const existing = db.prepare(`SELECT count(*) as count FROM court_holidays`).get();
     if (existing && existing.count > 0) return;
@@ -828,7 +828,7 @@ function seedCourtHolidays() {
     console.warn('Aviso ao semear feriados:', err.message);
   }
 }
-seedCourtHolidays();
+// (seedCourtHolidays é chamado no boot pelo server.js, dentro do app.listen)
 
 // Helper: Verifica se uma data é dia útil forense (não é sábado, domingo, feriado nem recesso forense)
 function isCourtBusinessDay(dateObj, holidaysMap) {

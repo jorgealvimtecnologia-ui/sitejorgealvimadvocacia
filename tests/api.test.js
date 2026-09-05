@@ -116,6 +116,21 @@ describe('CRUD de Clientes (mestre)', () => {
   });
 });
 
+describe('Usuários & Acesso (módulo extraído)', () => {
+  it('GET /api/users com token → 200', async () => {
+    const r = await auth(request(app).get('/api/users'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('GET /api/access-control/matrix com token → 200', async () => {
+    const r = await auth(request(app).get('/api/access-control/matrix'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('GET /api/access-control/my-permissions com token → 200', async () => {
+    const r = await auth(request(app).get('/api/access-control/my-permissions'), masterToken);
+    assert.equal(r.status, 200);
+  });
+});
+
 describe('RBAC — perfil restrito', () => {
   let secToken = '';
 
