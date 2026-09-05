@@ -21094,6 +21094,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
     function openModule(id){
       var meta=MODULES[id]; if(!meta||!desktop) return;
+      if(!moduleAllowed(id)){ if(typeof wmToast==='function') wmToast('Você não tem permissão para acessar este módulo.'); closeAllMenus(); return; }
       var w=windows[id];
       if(!w){ w=createWindow(id,meta); windows[id]=w; order.push(id); }
       var content=document.getElementById('tab-content-'+id);
@@ -21130,12 +21131,45 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         var btn=document.createElement('button'); btn.innerHTML='<span>'+g.emoji+'</span><span>'+g.label+'</span><span style="opacity:.6">▾</span>';
         var dd=document.createElement('div'); dd.className='jaw-dropdown';
         g.items.forEach(function(id){ var m=MODULES[id]; if(!m) return;
-          var mb=document.createElement('button'); mb.innerHTML='<span>'+m.emoji+'</span><span>'+m.label+'</span>';
+          var mb=document.createElement('button'); mb.setAttribute('data-mid', id); mb.innerHTML='<span>'+m.emoji+'</span><span>'+m.label+'</span>';
           mb.addEventListener('click',function(){ openModule(id); }); dd.appendChild(mb); });
         btn.addEventListener('click',function(e){ e.stopPropagation(); var wasOpen=wrap.classList.contains('open'); closeAllMenus(); if(!wasOpen) wrap.classList.add('open'); });
         wrap.appendChild(btn); wrap.appendChild(dd); bar.appendChild(wrap);
       });
       return bar;
+    }
+
+    // ---- Controle de acesso (RBAC): restringe módulos por perfil do usuário ----
+    var WM_MASTER=true, WM_ALLOWED=null;
+    var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', clients:'tab_clients', docs:'tab_clients',
+      lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
+      drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
+      finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
+      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings' };
+    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
+    function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
+    function applyPerms(){
+      document.querySelectorAll('#jaw-menubar .jaw-group').forEach(function(g){
+        var vis=0; g.querySelectorAll('.jaw-dropdown button').forEach(function(b){
+          var mid=b.getAttribute('data-mid');
+          if(mid && !moduleAllowed(mid)){ b.style.display='none'; } else { b.style.display=''; vis++; }
+        });
+        g.style.display = vis ? '' : 'none';
+      });
+      order.slice().forEach(function(id){ if(!moduleAllowed(id)) closeWin(id); });
+    }
+    function fetchPerms(){
+      try{
+        fetch('/api/access-control/my-permissions',{headers:(typeof getAuthHeaders==='function'?getAuthHeaders():{})})
+          .then(function(r){return r.json();}).then(function(d){
+            if(!d||!d.success) return;
+            if(d.is_master){ WM_MASTER=true; WM_ALLOWED=null; }
+            else { WM_MASTER=false; WM_ALLOWED={}; var p=d.permissions||{};
+              Object.keys(MODULE_PERM).forEach(function(id){ if(p[MODULE_PERM[id]]) WM_ALLOWED[id]=1; }); }
+            applyPerms();
+            if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})) openModule('dashboard');
+          }).catch(function(){});
+      }catch(e){}
     }
 
     function init(){
@@ -21162,10 +21196,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       window.openModule=openModule;
       window.wmAction=wmAction;
       updateEmpty();
-      if(typeof getToken==='function' && getToken()) openModule('dashboard');
+      if(typeof getToken==='function' && getToken()){ openModule('dashboard'); fetchPerms(); }
       if(typeof window.showPanelScreen==='function'){
         var _sps=window.showPanelScreen;
-        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); if(!order.length) openModule('dashboard'); return r; };
+        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); if(!order.length) openModule('dashboard'); fetchPerms(); return r; };
       }
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
