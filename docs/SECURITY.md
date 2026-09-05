@@ -58,3 +58,23 @@ Camadas independentes de proteção, de forma que a falha de uma não derrube o 
 | A08 | Integridade de dados/software | Deploy com backup pré-deploy; migrations versionadas. |
 | A09 | Falhas de log/monitoramento | Trilha de auditoria (`logAudit`) + `/health`. |
 | A10 | SSRF | Sem fetch de URLs controladas pelo usuário nas rotas do painel. |
+
+## Rotina de segurança por release
+
+Rodar **antes de cada deploy de produção** (leva poucos minutos):
+
+1. **`npm audit`** — `npm run audit` (produção, high+). Deve dar **0**. Se acender, avaliar
+   `npm audit fix` (sem `--force`) e revisar o que muda.
+2. **Testes** — `npm test` deve estar **verde** (inclui login, RBAC, política de senha,
+   bloqueio progressivo). A CI também roda isso a cada push/PR.
+3. **Lint** — `npm run lint` sem **erros** (avisos toleráveis).
+4. **Revisão rápida OWASP Top 10** — passar os olhos na tabela acima; qualquer rota nova
+   deve entrar com `requireAuth`/RBAC, validação de entrada (`validate`) e prepared
+   statements (nunca concatenar SQL).
+5. **Segredos** — conferir que nada sensível (chaves Asaas, tokens) foi commitado; tudo
+   no `.env` do servidor.
+6. **Deploy** — `deploy-servidor.bat` (faz backup pré-deploy; rollback via
+   `reverter-deploy.bat` se preciso).
+
+> Periodicidade mínima recomendada mesmo sem release novo: rodar o passo 1 (`npm audit`)
+> a cada 1–2 meses, pois vulnerabilidades de dependências surgem com o tempo.

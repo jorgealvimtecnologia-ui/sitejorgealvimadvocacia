@@ -82,6 +82,45 @@ describe('Autenticação', () => {
     assert.equal(r.status, 200);
     assert.ok(r.body.user);
   });
+
+  it('logout invalida o token', async () => {
+    const login = await request(app).post('/api/auth/login').send(MASTER);
+    const tk = login.body.token;
+    const out = await auth(request(app).post('/api/auth/logout'), tk);
+    assert.equal(out.status, 200);
+    const after = await auth(request(app).get('/api/auth/me'), tk);
+    assert.equal(after.status, 401);
+  });
+});
+
+describe('Portal do Cliente (módulo extraído)', () => {
+  it('login sem identificador → 400', async () => {
+    const r = await request(app).post('/api/client-portal/login').send({ password: 'x' });
+    assert.equal(r.status, 400);
+  });
+  it('/me sem token → 401', async () => {
+    const r = await request(app).get('/api/client-portal/me');
+    assert.equal(r.status, 401);
+  });
+  it('reset-password sem código → 400', async () => {
+    const r = await request(app).post('/api/client-portal/reset-password').send({ login: 'x' });
+    assert.equal(r.status, 400);
+  });
+});
+
+describe('Admin (módulo extraído)', () => {
+  it('GET /api/admin/audit-logs com token → 200', async () => {
+    const r = await auth(request(app).get('/api/admin/audit-logs'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('GET /api/admin/visits com token → 200', async () => {
+    const r = await auth(request(app).get('/api/admin/visits'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('sem token → 401', async () => {
+    const r = await request(app).get('/api/admin/audit-logs');
+    assert.equal(r.status, 401);
+  });
 });
 
 describe('CRUD de Clientes (mestre)', () => {
