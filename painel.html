@@ -20612,7 +20612,11 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .jaw-ctrls button:hover{background:rgba(255,255,255,.35)}
     .jaw-ctrls button.jaw-close:hover{background:#dc2626}
-    .jaw-winbody{flex:1;overflow:auto;padding:14px;background:#fff}
+    .jaw-winbody{flex:1;overflow-y:scroll;overflow-x:auto;padding:14px;background:#fff;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:#cbd5e1 #f1f5f9}
+    .jaw-winbody::-webkit-scrollbar{width:12px;height:12px}
+    .jaw-winbody::-webkit-scrollbar-track{background:#f1f5f9;border-radius:8px}
+    .jaw-winbody::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;border:3px solid #f1f5f9}
+    .jaw-winbody::-webkit-scrollbar-thumb:hover{background:#94a3b8}
     .jaw-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;
       background:linear-gradient(135deg,transparent 50%,#94a3b8 50%,#94a3b8 60%,transparent 60%,transparent 70%,#94a3b8 70%,#94a3b8 80%,transparent 80%)}
     #jaw-taskbar{position:fixed;left:0;right:0;bottom:0;z-index:450;display:flex;align-items:center;gap:6px;
