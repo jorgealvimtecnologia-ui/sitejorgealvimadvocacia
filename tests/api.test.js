@@ -155,6 +155,47 @@ describe('RBAC — perfil restrito', () => {
   });
 });
 
+describe('Política de senha (4–12 caracteres)', () => {
+  const novo = (senha, sufixo) => auth(request(app).post('/api/users'), masterToken).send({
+    username: `pol_${sufixo}`, password: senha, name: `Pol ${sufixo}`, role: 'secretaria',
+  });
+
+  it('senha com 3 caracteres → 400', async () => {
+    const r = await novo('abc', 'curta');
+    assert.equal(r.status, 400);
+  });
+
+  it('senha com 13 caracteres → 400', async () => {
+    const r = await novo('a'.repeat(13), 'longa');
+    assert.equal(r.status, 400);
+  });
+
+  it('senha com 4 caracteres (limite mínimo) → 201', async () => {
+    const r = await novo('abcd', 'min4');
+    assert.equal(r.status, 201);
+  });
+
+  it('senha com 12 caracteres (limite máximo) → 201', async () => {
+    const r = await novo('a'.repeat(12), 'max12');
+    assert.equal(r.status, 201);
+  });
+});
+
+describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
+  it('5ª falha consecutiva entra em cooldown (429 + Retry-After)', async () => {
+    const alvo = { username: 'bruteforce_test_user', password: 'senha-errada' };
+    // Falhas 1–4: credenciais inválidas → 401 (ainda sem punição).
+    for (let i = 1; i <= 4; i++) {
+      const r = await request(app).post('/api/auth/login').send(alvo);
+      assert.equal(r.status, 401, `tentativa ${i} deveria ser 401`);
+    }
+    // 5ª falha: dispara o cooldown progressivo → 429 com Retry-After.
+    const r5 = await request(app).post('/api/auth/login').send(alvo);
+    assert.equal(r5.status, 429);
+    assert.ok(Number(r5.headers['retry-after']) > 0, 'deve informar Retry-After em segundos');
+  });
+});
+
 describe('Validação do Kanban', () => {
   it('criar cartão sem título → 400', async () => {
     const r = await auth(request(app).post('/api/kanban'), masterToken).send({ column_key: 'todo' });

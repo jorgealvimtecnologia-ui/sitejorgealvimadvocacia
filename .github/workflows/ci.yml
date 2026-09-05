@@ -32,6 +32,13 @@ jobs:
       - name: Testes de integração (node:test + Supertest)
         run: npm test
 
+      - name: Auditoria de dependências (npm audit — produção, high+)
+        # Sinaliza vulnerabilidades high/critical nas dependências de produção
+        # (OWASP A06: componentes vulneráveis). Informativo para não travar a
+        # entrega por avisos fora do nosso controle; revisar quando acender.
+        run: npm run audit
+        continue-on-error: true
+
       - name: Build do front (Vite) — informativo, não bloqueia
         # O deploy de produção é por cópia de arquivos (o Express serve os .html
         # diretamente); o build do Vite não faz parte do pipeline de produção e

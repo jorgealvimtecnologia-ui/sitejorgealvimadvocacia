@@ -16,8 +16,9 @@ import { DatabaseSync } from 'node:sqlite';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const newPass = (process.env.NEWPASS || process.argv[2] || '').trim();
 
-if (!newPass || newPass.length < 4) {
-  console.error('✗ Senha inválida. Informe ao menos 4 caracteres (variável NEWPASS).');
+// Política do sistema: 4 a 12 caracteres (mesma regra do painel/portais).
+if (!newPass || newPass.length < 4 || newPass.length > 12) {
+  console.error('✗ Senha inválida. Informe de 4 a 12 caracteres (variável NEWPASS).');
   process.exit(1);
 }
 

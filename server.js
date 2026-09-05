@@ -24,6 +24,7 @@ import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } fro
 import { adminRequestsRouter } from './src/modules/adminrequests/adminrequests.routes.js';
 import { kanbanRouter } from './src/modules/kanban/kanban.routes.js';
 import { runMigrations } from './src/db/migrate.js';
+import { validatePassword, PASSWORD_MIN, PASSWORD_MAX } from './src/shared/password-policy.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1916,6 +1917,48 @@ function loginRateLimit(req, res, next) {
   next();
 }
 
+// ---------------------------------------------------------------------------
+// BLOQUEIO PROGRESSIVO por FALHAS (defesa em profundidade, além do rate-limit
+// por IP acima). Conta falhas consecutivas por (IP + usuário) e impõe uma espera
+// que CRESCE a cada faixa de erros. Um login bem-sucedido zera o contador. Assim
+// um ataque de força bruta fica exponencialmente mais lento sem punir quem
+// simplesmente errou a senha uma ou duas vezes.
+// ---------------------------------------------------------------------------
+const loginFailures = new Map(); // chave `${ip}|${usuario}` -> { fails, lockUntil }
+function loginLockKey(ip, username) {
+  return `${ip}|${String(username || '').toLowerCase().trim()}`;
+}
+function progressiveLockMs(fails) {
+  if (fails < 5) return 0;            // 1–4 falhas: sem punição
+  if (fails < 8) return 30 * 1000;   // 5–7: 30 segundos
+  if (fails < 12) return 2 * 60 * 1000;  // 8–11: 2 minutos
+  if (fails < 20) return 15 * 60 * 1000; // 12–19: 15 minutos
+  return 60 * 60 * 1000;             // 20+: 1 hora
+}
+function loginLockRemaining(ip, username) {
+  const rec = loginFailures.get(loginLockKey(ip, username));
+  if (rec && rec.lockUntil && Date.now() < rec.lockUntil) {
+    return Math.ceil((rec.lockUntil - Date.now()) / 1000); // segundos restantes
+  }
+  return 0;
+}
+function registerLoginFailure(ip, username) {
+  const k = loginLockKey(ip, username);
+  const rec = loginFailures.get(k) || { fails: 0, lockUntil: 0 };
+  rec.fails += 1;
+  const d = progressiveLockMs(rec.fails);
+  rec.lockUntil = d > 0 ? Date.now() + d : 0;
+  loginFailures.set(k, rec);
+  if (loginFailures.size > 5000) { // limpeza esporádica
+    const now = Date.now();
+    for (const [key, v] of loginFailures) if (!v.lockUntil || now > v.lockUntil) loginFailures.delete(key);
+  }
+  return rec;
+}
+function clearLoginFailures(ip, username) {
+  loginFailures.delete(loginLockKey(ip, username));
+}
+
 app.post('/api/auth/login', loginRateLimit, (req, res) => {
   try {
     const { username, password } = req.body;
@@ -1929,7 +1972,15 @@ app.post('/api/auth/login', loginRateLimit, (req, res) => {
 
     const rawPassword = String(password).trim();
     const compactPassword = rawPassword.toLowerCase().replace(/\s+/g, '');
-    
+
+    // Bloqueio progressivo: se este (IP + usuário) está em cooldown por falhas, recusa.
+    const reqIp = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
+    const lockLeft = loginLockRemaining(reqIp, cleanUsername);
+    if (lockLeft > 0) {
+      res.setHeader('Retry-After', String(lockLeft));
+      return res.status(429).json({ error: `Muitas tentativas. Aguarde ${lockLeft}s e tente novamente.` });
+    }
+
     // Busca flexível de usuário por username exato, aliases (jorgealvim, admin, mestre) ou nome
     let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
 
@@ -1954,16 +2005,26 @@ app.post('/api/auth/login', loginRateLimit, (req, res) => {
     );
 
     if (!user || !isPasswordValid) {
+      const fail = registerLoginFailure(reqIp, cleanUsername);
       logAudit(req, {
         event_type: 'AUTENTICACAO',
         event_name: 'FALHA_LOGIN_ADMIN',
         module: 'USUARIOS',
         user_name: cleanUsername,
         user_role: 'desconhecido',
-        description: `Tentativa de login com credenciais inválidas para '${cleanUsername}'.`
+        description: `Tentativa de login com credenciais inválidas para '${cleanUsername}' (falha #${fail.fails}).`
       });
+      // Se esta falha disparou/renovou um cooldown, informa o tempo de espera.
+      const left = loginLockRemaining(reqIp, cleanUsername);
+      if (left > 0) {
+        res.setHeader('Retry-After', String(left));
+        return res.status(429).json({ error: `Muitas tentativas. Aguarde ${left}s e tente novamente.` });
+      }
       return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
     }
+
+    // Login válido: zera o contador de falhas deste (IP + usuário).
+    clearLoginFailures(reqIp, cleanUsername);
 
     // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
     try {
@@ -2058,8 +2119,9 @@ app.post('/api/users', requireAuth, (req, res) => {
       return res.status(400).json({ error: 'Nome, login e senha são obrigatórios.' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'A senha deve ter no mínimo 8 caracteres.' });
+    {
+      const pol = validatePassword(password);
+      if (!pol.ok) return res.status(400).json({ error: pol.error });
     }
 
     const cleanUsername = username.trim().toLowerCase();
@@ -2122,9 +2184,8 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
     const passwordChanged = !!(password && password.trim().length > 0);
 
     if (passwordChanged) {
-      if (password.trim().length < 8) {
-        return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres.' });
-      }
+      const pol = validatePassword(password);
+      if (!pol.ok) return res.status(400).json({ error: pol.error });
       const cleanPassword = password.trim();
       const { hash, salt } = hashPassword(cleanPassword);
       db.prepare(`
@@ -6241,8 +6302,9 @@ app.post('/api/client-portal/register', (req, res) => {
       return res.status(400).json({ error: 'Nome/Razão Social, E-mail, Telefone/WhatsApp e Senha são obrigatórios.' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'A senha deve conter no mínimo 6 caracteres.' });
+    {
+      const pol = validatePassword(password);
+      if (!pol.ok) return res.status(400).json({ error: pol.error });
     }
 
     const type = client_type === 'PJ' ? 'PJ' : 'PF';
@@ -6531,9 +6593,10 @@ app.post('/api/client-portal/login', loginRateLimit, (req, res) => {
       return res.status(401).json({ error: 'Cadastro não encontrado com este CPF, CNPJ, Telefone ou E-mail.' });
     }
 
-    // Se o cliente ainda não tem senha cadastrada, define a senha digitada se tiver >= 6 dígitos ou senha padrão
+    // Se o cliente ainda não tem senha cadastrada, define a senha digitada se cumprir
+    // a política (4–12 caracteres); caso contrário aplica a senha padrão de 1º acesso.
     if (!client.password_hash || !client.salt) {
-      if (password && password.length >= 6) {
+      if (password && validatePassword(password).ok) {
         const newPass = hashPassword(password);
         db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(newPass.hash, newPass.salt, new Date().toISOString(), client.id);
         client.password_hash = newPass.hash;
@@ -6791,8 +6854,9 @@ app.post('/api/client-portal/change-password', requireClientAuth, (req, res) => 
       return res.status(400).json({ error: 'Informe a senha atual e a nova senha.' });
     }
 
-    if (new_password.length < 6) {
-      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' });
+    {
+      const pol = validatePassword(new_password);
+      if (!pol.ok) return res.status(400).json({ error: pol.error });
     }
 
     const client = db.prepare(`SELECT full_name, cpf, cnpj, password_hash, salt FROM clients WHERE id = ?`).get(clientId);
@@ -6897,8 +6961,9 @@ app.post('/api/client-portal/reset-password', (req, res) => {
       return res.status(400).json({ error: 'Informe o identificador (CPF/E-mail), código de recuperação e a nova senha.' });
     }
 
-    if (new_password.length < 6) {
-      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' });
+    {
+      const pol = validatePassword(new_password);
+      if (!pol.ok) return res.status(400).json({ error: pol.error });
     }
 
     const cleanInput = login.trim();
