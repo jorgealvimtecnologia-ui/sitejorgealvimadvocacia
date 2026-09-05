@@ -2688,6 +2688,67 @@ app.get('/api/clients/:id', requireAuth, (req, res) => {
 /**
  * 2. POST /api/clients - Cadastrar novo cliente completo + contrato com upload de documentos
  */
+// Importação em massa de clientes (CSV → linhas normalizadas no frontend).
+app.post('/api/clients/import', requireAuth, (req, res) => {
+  try {
+    const rows = Array.isArray(req.body && req.body.rows) ? req.body.rows : [];
+    if (!rows.length) return res.status(400).json({ error: 'Nenhuma linha para importar.' });
+    if (rows.length > 2000) return res.status(400).json({ error: 'Limite de 2000 clientes por importação.' });
+    const now = new Date().toISOString();
+    const stmt = db.prepare(`
+      INSERT INTO clients (
+        id, client_type, full_name, cpf, rg, cnpj, street, number, neighborhood, city, state, cep,
+        email, phone, nationality, marital_status, profession,
+        contract_value, installments_count, installment_value, amount_paid, balance_due, contract_status,
+        created_at, updated_at
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?)
+    `);
+    let imported = 0; const errors = [];
+    db.exec('BEGIN');
+    try {
+      rows.forEach((r, i) => {
+        const name = (r.full_name || '').toString().trim();
+        const phone = (r.phone || '').toString().trim();
+        if (!name || !phone) { errors.push({ linha: i + 1, motivo: 'Nome e telefone são obrigatórios' }); return; }
+        const cnpj = (r.cnpj || '').toString().trim();
+        const cValue = parseFloat(String(r.contract_value || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        const aPaid = parseFloat(String(r.amount_paid || '').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+        const instCount = parseInt(r.installments_count, 10) || 1;
+        stmt.run(
+          generateNextClientFullId(),
+          (r.client_type || (cnpj ? 'PJ' : 'PF')),
+          name,
+          (r.cpf || '').toString().trim(),
+          (r.rg || '').toString().trim(),
+          cnpj,
+          (r.street || '').toString().trim(),
+          (r.number || '').toString().trim(),
+          (r.neighborhood || '').toString().trim(),
+          (r.city || '').toString().trim(),
+          (r.state || 'MG').toString().trim(),
+          (r.cep || '').toString().trim(),
+          (r.email || '').toString().trim(),
+          phone,
+          (r.nationality || 'brasileiro(a)').toString().trim(),
+          (r.marital_status || 'solteiro(a)').toString().trim(),
+          (r.profession || '').toString().trim(),
+          cValue, instCount, (cValue > 0 && instCount > 0 ? cValue / instCount : 0), aPaid, Math.max(0, cValue - aPaid),
+          (r.contract_status || 'Ativo').toString().trim(),
+          now, now
+        );
+        imported++;
+      });
+      db.exec('COMMIT');
+    } catch (e) { db.exec('ROLLBACK'); throw e; }
+    logAudit(req, { event_type: 'CRIACAO', event_name: 'IMPORTAR_CLIENTES', module: 'CLIENTES',
+      description: `Importação em massa: ${imported} cliente(s) inserido(s), ${errors.length} ignorado(s).` });
+    return res.json({ success: true, imported, errors });
+  } catch (error) {
+    console.error('[ERRO] Falha na importação de clientes:', error);
+    return res.status(500).json({ error: 'Erro na importação: ' + error.message });
+  }
+});
+
 app.post('/api/clients', requireAuth, (req, res, next) => {
   req.clientId = generateNextClientFullId();
   next();
