@@ -196,6 +196,17 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('Escritórios/Offices (módulo extraído)', () => {
+  it('GET /api/offices com token → 200', async () => {
+    const r = await auth(request(app).get('/api/offices'), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('sem token → 401', async () => {
+    const r = await request(app).get('/api/offices');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('Explorer (módulo extraído)', () => {
   it('GET /api/explorer/list com token → 200', async () => {
     const r = await auth(request(app).get('/api/explorer/list?path='), masterToken);
