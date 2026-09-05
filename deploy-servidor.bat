@@ -35,7 +35,7 @@ set "SHA=manual"
 for /f %%i in ('git rev-parse --short HEAD 2^>nul') do set "SHA=%%i"
 REM deploy-remote.sh (no servidor): perms -> restart -> health; se falhar, REVERTE
 REM automaticamente para o ultimo backup. Codigos: 0=OK, 1=revertido, 2/3=falha grave.
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "chmod +x %REMOTE%/scripts/deploy-remote.sh 2>/dev/null; bash %REMOTE%/scripts/deploy-remote.sh %REMOTE% advocacia 3000 %SHA%"
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "sed -i 's/\r$//' %REMOTE%/scripts/deploy-remote.sh 2>/dev/null; bash %REMOTE%/scripts/deploy-remote.sh %REMOTE% advocacia 3000 %SHA%"
 if errorlevel 2 goto :grave
 if errorlevel 1 goto :revertido
 echo.

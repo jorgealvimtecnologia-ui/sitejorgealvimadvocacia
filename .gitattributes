@@ -1,0 +1,2 @@
+# Força LF nos scripts de shell — eles rodam no servidor Linux e quebram com CRLF.
+*.sh text eol=lf
