@@ -56,7 +56,9 @@ function getClientIp(req) {
 // Configuração de Pastas de Armazenamento
 const STORAGE_DIR = path.join(__dirname, 'storage', 'clients');
 const STORAGE_DRIVE_DIR = path.join(__dirname, 'storage', 'office_drive');
-const DB_PATH = path.join(__dirname, 'leads.db');
+// DB_PATH pode ser sobrescrito por variável de ambiente (usado nos testes
+// automatizados, que rodam contra um banco temporário isolado — nunca o leads.db real).
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'leads.db');
 
 if (!fs.existsSync(STORAGE_DIR)) {
   fs.mkdirSync(STORAGE_DIR, { recursive: true });
@@ -5363,7 +5365,7 @@ app.post('/api/financial/nfse/asaas/issue', requireAuth, async (req, res) => {
 
     // Gerar Hash Criptográfico de Assinatura Digital
     const hashSignature = crypto.createHash('sha256').update(`NFSE-ASAAS-${client.id}-${invoiceVal}-${Date.now()}-${Math.random()}`).digest('hex');
-    const verificationCode = `V-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    let verificationCode = `V-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     let asaasInvoiceId = null;
     let asaasStatus = 'SCHEDULED';
@@ -12944,20 +12946,29 @@ try { runMigrations(db, path.join(__dirname, 'src', 'db', 'migrations')); } catc
 })();
 
 // Inicialização do Servidor
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`====================================================`);
-  console.log(`🏛️  Servidor Jorge Alvim Advocacia Ativo!`);
-  console.log(`🌐  Site Oficial:    http://localhost:${PORT}`);
-  console.log(`📊  Painel Clientes: http://localhost:${PORT}/painel`);
-  console.log(`🔐  Login Mestre:    jorgealvimtecnologia`);
-  console.log(`🗄️  Banco SQLite:    leads.db (tabelas: leads, users, clients)`);
-  console.log(`📁  Ficheiros:       storage/clients/`);
-  console.log(`====================================================`);
-  // Inicia a varredura periódica de prazos fatais (central de notificações).
-  try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
-  // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
-  try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
-});
+// Em NODE_ENV=test o Supertest importa o `app` diretamente e não abrimos a porta
+// (evita conflito de porta e mantém os timers desligados para o Vitest encerrar).
+const IS_TEST = process.env.NODE_ENV === 'test';
+let server = null;
+if (!IS_TEST) {
+  server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`====================================================`);
+    console.log(`🏛️  Servidor Jorge Alvim Advocacia Ativo!`);
+    console.log(`🌐  Site Oficial:    http://localhost:${PORT}`);
+    console.log(`📊  Painel Clientes: http://localhost:${PORT}/painel`);
+    console.log(`🔐  Login Mestre:    jorgealvimtecnologia`);
+    console.log(`🗄️  Banco SQLite:    leads.db (tabelas: leads, users, clients)`);
+    console.log(`📁  Ficheiros:       storage/clients/`);
+    console.log(`====================================================`);
+    // Inicia a varredura periódica de prazos fatais (central de notificações).
+    try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
+    // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
+    try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
+  });
 
-// Manter o loop de eventos ativo continuamente
-setInterval(() => {}, 1000 * 60 * 60);
+  // Manter o loop de eventos ativo continuamente
+  setInterval(() => {}, 1000 * 60 * 60);
+}
+
+// Exportado para os testes automatizados (Supertest importa o app sem subir a porta).
+export { app, db, server };

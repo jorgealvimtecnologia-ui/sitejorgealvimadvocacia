@@ -1,10 +1,19 @@
 node_modules
 .DS_Store
+dist
 dist-ssr
 *.local
 .env
 .env.*
 !.env.example
+
+# Configuração local do Claude Code / assistente
+.claude/
+
+# Artefatos de teste (Playwright / cobertura)
+playwright-report/
+test-results/
+coverage/
 
 # Banco de dados SQLite (dados sensíveis de clientes — NUNCA versionar)
 *.db

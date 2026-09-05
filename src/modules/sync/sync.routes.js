@@ -91,21 +91,31 @@ export function resolveLawyers({ targetOab, targetUf = 'MG', targetName } = {}) 
   return lawyers;
 }
 
-const insertPublicationStmt = db.prepare(`
-  INSERT OR IGNORE INTO court_publications (
-    id, comunicacao_id, numero_processo, numeroprocessocommascara,
-    sigla_tribunal, nome_orgao, tipo_comunicacao, data_disponibilizacao,
-    data_publicacao, texto, nome_classe, destinatarios_json,
-    advogado_oab, advogado_nome, lawyer_id, client_id, lawsuit_id,
-    status, created_at, updated_at
-  ) VALUES (
-    @id, @comunicacao_id, @numero_processo, @numeroprocessocommascara,
-    @sigla_tribunal, @nome_orgao, @tipo_comunicacao, @data_disponibilizacao,
-    @data_publicacao, @texto, @nome_classe, @destinatarios_json,
-    @advogado_oab, @advogado_nome, @lawyer_id, @client_id, @lawsuit_id,
-    'nao_lido', datetime('now'), datetime('now')
-  )
-`);
+// Preparação PREGUIÇOSA: a tabela `court_publications` é criada pelo server.js.
+// Como este router é importado ANTES de o server.js criar as tabelas, preparar
+// aqui no topo quebraria num banco novo (deploy limpo / testes). Preparamos no
+// primeiro uso, quando a tabela já existe.
+let _insertPublicationStmt = null;
+function getInsertPublicationStmt() {
+  if (!_insertPublicationStmt) {
+    _insertPublicationStmt = db.prepare(`
+      INSERT OR IGNORE INTO court_publications (
+        id, comunicacao_id, numero_processo, numeroprocessocommascara,
+        sigla_tribunal, nome_orgao, tipo_comunicacao, data_disponibilizacao,
+        data_publicacao, texto, nome_classe, destinatarios_json,
+        advogado_oab, advogado_nome, lawyer_id, client_id, lawsuit_id,
+        status, created_at, updated_at
+      ) VALUES (
+        @id, @comunicacao_id, @numero_processo, @numeroprocessocommascara,
+        @sigla_tribunal, @nome_orgao, @tipo_comunicacao, @data_disponibilizacao,
+        @data_publicacao, @texto, @nome_classe, @destinatarios_json,
+        @advogado_oab, @advogado_nome, @lawyer_id, @client_id, @lawsuit_id,
+        'nao_lido', datetime('now'), datetime('now')
+      )
+    `);
+  }
+  return _insertPublicationStmt;
+}
 
 // Salva UM item da ComunicaAPI (dedupe + vínculo ao processo + alerta). Retorna true se novo.
 function saveComunicaItem(item, lawyer, notify = true) {
@@ -118,7 +128,7 @@ function saveComunicaItem(item, lawyer, notify = true) {
       if (ml) { matchedLawsuitId = ml.id; matchedClientId = ml.client_id; }
     } catch (e) { /* ignora */ }
   }
-  const info = insertPublicationStmt.run({
+  const info = getInsertPublicationStmt().run({
     id: pubId, comunicacao_id: item.id,
     numero_processo: item.numero_processo || '',
     numeroprocessocommascara: item.numeroprocessocommascara || item.numero_processo || '',

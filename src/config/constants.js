@@ -7,7 +7,10 @@ const __dirname = path.dirname(__filename);
 export const ROOT_DIR = path.resolve(__dirname, '..', '..');
 
 export const PORT = process.env.PORT || 3000;
-export const DB_PATH = path.join(ROOT_DIR, 'leads.db');
+// DB_PATH pode ser sobrescrito por variável de ambiente (mesmo override do server.js),
+// para que os dois acessos ao banco apontem para o MESMO arquivo — incl. o banco
+// temporário e isolado usado pelos testes automatizados.
+export const DB_PATH = process.env.DB_PATH || path.join(ROOT_DIR, 'leads.db');
 export const STORAGE_DIR = path.join(ROOT_DIR, 'storage', 'clients');
 export const STORAGE_DRIVE_DIR = path.join(ROOT_DIR, 'storage', 'office_drive');
 export const PUBLIC_DIR = ROOT_DIR;

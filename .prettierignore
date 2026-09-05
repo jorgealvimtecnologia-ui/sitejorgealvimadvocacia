@@ -1,0 +1,10 @@
+node_modules
+dist
+public
+storage
+backups
+*.min.js
+painel.html
+sw.js
+leads.db
+package-lock.json

@@ -1,0 +1,40 @@
+name: CI
+
+# Roda em pushes e Pull Requests para a branch principal.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Lint + Testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 24
+        # Node 24 é necessário: o servidor usa o builtin `node:sqlite`.
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: ESLint (falha em ERROS; avisos não bloqueiam)
+        run: npm run lint
+
+      - name: Testes de integração (node:test + Supertest)
+        run: npm test
+
+      - name: Build do front (Vite) — informativo, não bloqueia
+        # O deploy de produção é por cópia de arquivos (o Express serve os .html
+        # diretamente); o build do Vite não faz parte do pipeline de produção e
+        # hoje falha ao parsear o HTML legado. Mantemos como sinal, sem gatear a CI.
+        run: npm run build
+        continue-on-error: true
