@@ -20579,5 +20579,247 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     setInterval(() => { if (getToken()) refreshNotifBadge(); }, 120000);
     setTimeout(() => { if (getToken()) refreshNotifBadge(); }, 3000);
   </script>
+
+  <!-- ================= GERENCIADOR DE JANELAS (estilo Windows) ================= -->
+  <style id="jaw-styles">
+    #jaw-menubar{position:sticky;top:0;z-index:400;display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+      background:#0f172a;padding:6px 12px;border-bottom:2px solid #d4a017}
+    #jaw-menubar .jaw-start{color:#facc15;font-weight:800;font-size:12px;margin-right:6px;letter-spacing:.03em}
+    .jaw-group{position:relative}
+    .jaw-group>button{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid transparent;
+      color:#e2e8f0;font-size:12px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
+    .jaw-group>button:hover{background:#1e293b;border-color:#334155}
+    .jaw-group.open>button{background:#1e293b;border-color:#d4a017;color:#fff}
+    .jaw-dropdown{position:absolute;top:calc(100% + 4px);left:0;min-width:230px;background:#fff;border:1px solid #cbd5e1;
+      border-radius:10px;box-shadow:0 12px 32px rgba(2,6,23,.28);padding:6px;z-index:500;display:none}
+    .jaw-group.open .jaw-dropdown{display:block}
+    .jaw-dropdown button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;border:0;
+      font-size:12.5px;font-weight:600;color:#1e293b;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .jaw-dropdown button:hover{background:#fef3c7;color:#92400e}
+    #jaw-desktop{position:relative;width:100%;min-height:calc(100vh - 200px);background:#eef2f7;
+      background-image:radial-gradient(#dbe2ea 1px,transparent 1px);background-size:22px 22px;overflow:hidden}
+    #jaw-desktop .jaw-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#94a3b8;
+      font-size:13px;font-weight:600;pointer-events:none}
+    .jaw-window{position:absolute;display:flex;flex-direction:column;background:#fff;border:1px solid #94a3b8;border-radius:12px;
+      box-shadow:0 14px 40px rgba(2,6,23,.30);overflow:hidden;min-width:320px;min-height:200px}
+    .jaw-window.active{border-color:#d4a017;box-shadow:0 18px 50px rgba(2,6,23,.40)}
+    .jaw-titlebar{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:move;user-select:none;
+      padding:7px 10px;background:#334155;color:#fff}
+    .jaw-window.active .jaw-titlebar{background:linear-gradient(to right,#f59e0b,#d4a017)}
+    .jaw-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .jaw-ctrls{display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .jaw-ctrls button{width:24px;height:22px;border:0;border-radius:6px;background:rgba(255,255,255,.18);color:#fff;
+      font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .jaw-ctrls button:hover{background:rgba(255,255,255,.35)}
+    .jaw-ctrls button.jaw-close:hover{background:#dc2626}
+    .jaw-winbody{flex:1;overflow:auto;padding:14px;background:#fff}
+    .jaw-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;
+      background:linear-gradient(135deg,transparent 50%,#94a3b8 50%,#94a3b8 60%,transparent 60%,transparent 70%,#94a3b8 70%,#94a3b8 80%,transparent 80%)}
+    #jaw-taskbar{position:fixed;left:0;right:0;bottom:0;z-index:450;display:flex;align-items:center;gap:6px;
+      background:#0f172a;border-top:2px solid #d4a017;padding:5px 10px;min-height:40px;overflow-x:auto}
+    #jaw-taskbar .jaw-tb-label{color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-right:4px;flex-shrink:0}
+    .jaw-taskbtn{display:inline-flex;align-items:center;gap:6px;background:#1e293b;border:1px solid #334155;color:#e2e8f0;
+      font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+    .jaw-taskbtn:hover{background:#334155}
+    .jaw-taskbtn.active{background:linear-gradient(to right,#f59e0b,#d4a017);border-color:#d4a017;color:#0f172a;font-weight:800}
+    .jaw-taskbtn.min{opacity:.6}
+    body{padding-bottom:46px}
+  </style>
+  <script>
+  (function(){
+    var MODULES={
+      dashboard:{label:'Visão Geral',emoji:'📊'},
+      leads:{label:'Atendimentos & Leads',emoji:'📥'},
+      'pre-clients':{label:'Pré-Clientes & Tráfego',emoji:'🎯'},
+      clients:{label:'Clientes & Contratos',emoji:'👥'},
+      rockets:{label:'Foguetes',emoji:'🚀'},
+      lawsuits:{label:'Processos & Prazos (CNJ)',emoji:'⚖️'},
+      publications:{label:'Intimações & DJEN',emoji:'📢'},
+      calendar:{label:'Agenda & Prazos',emoji:'📅'},
+      judicial:{label:'Radar Judicial',emoji:'🔍'},
+      docs:{label:'Gerador de Documentos',emoji:'📄'},
+      'admin-requests':{label:'Requerimentos Adm.',emoji:'🏛️'},
+      finance:{label:'Financeiro & Caixa',emoji:'💰'},
+      nfse:{label:'Notas Fiscais (NFS-e)',emoji:'🧾'},
+      esign:{label:'Assinaturas',emoji:'✍️'},
+      hr:{label:'RH & Pessoal',emoji:'👔'},
+      offices:{label:'Escritórios',emoji:'🏢'},
+      drive:{label:'Drive do Escritório',emoji:'📁'},
+      users:{label:'Usuários & Senhas',emoji:'🔐'},
+      blog:{label:'Blog & Moderação',emoji:'💬'},
+      audit:{label:'Auditoria & Logs',emoji:'🛡️'},
+      lgpd:{label:'LGPD & Privacidade',emoji:'🔒'},
+      notifications:{label:'Alertas & Prazos',emoji:'🔔'}
+    };
+    var GROUPS=[
+      {label:'Visão Geral',emoji:'📊',items:['dashboard']},
+      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','pre-clients','clients','rockets']},
+      {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
+      {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
+      {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','audit','lgpd','notifications']}
+    ];
+    var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
+      publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
+      blog:'loadAdminBlogPosts',audit:'initAuditTab','pre-clients':'initPreClientsTab',judicial:'initJudicialTab',
+      offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
+      dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
+      notifications:'loadNotificationsList','admin-requests':'loadAdminRequests'};
+
+    var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
+
+    function call(name){ try{ if(typeof window[name]==='function') window[name](); }catch(e){ console.warn('[WM] '+name,e); } }
+    function loadData(id){
+      if(id==='users'){ call('loadAccessControlMatrix'); call('loadUsers'); }
+      else if(LOADERS[id]){ call(LOADERS[id]); }
+      try{ if(typeof renderTabChart==='function') renderTabChart(id); }catch(e){}
+    }
+
+    function updateEmpty(){
+      var e=desktop.querySelector('.jaw-empty');
+      var anyVisible=order.some(function(id){return windows[id] && !windows[id].minimized;});
+      if(!e){ e=document.createElement('div'); e.className='jaw-empty';
+        e.innerHTML='🗔  Selecione um módulo no menu acima para abrir uma janela.'; desktop.appendChild(e); }
+      e.style.display=anyVisible?'none':'block';
+    }
+
+    function focusWin(id){
+      var w=windows[id]; if(!w) return;
+      w.el.style.zIndex=(++zTop);
+      Object.keys(windows).forEach(function(k){ windows[k].el.classList.toggle('active',k===id); });
+      renderTaskbar();
+    }
+    function minimizeWin(id){
+      var w=windows[id]; if(!w) return; w.minimized=true; w.el.style.display='none'; w.el.classList.remove('active');
+      var top=null,tz=-1;
+      order.forEach(function(k){ var o=windows[k]; if(o&&!o.minimized){ var z=parseInt(o.el.style.zIndex||0,10); if(z>=tz){tz=z;top=k;} } });
+      if(top) focusWin(top); else { updateEmpty(); renderTaskbar(); }
+    }
+    function toggleMax(id){
+      var w=windows[id]; if(!w) return;
+      if(w.max){ w.el.style.left=w.prev.l+'px'; w.el.style.top=w.prev.t+'px'; w.el.style.width=w.prev.w+'px'; w.el.style.height=w.prev.h+'px'; w.max=false; }
+      else{ w.prev={l:w.el.offsetLeft,t:w.el.offsetTop,w:w.el.offsetWidth,h:w.el.offsetHeight};
+        w.el.style.left='0px'; w.el.style.top='0px'; w.el.style.width=desktop.clientWidth+'px'; w.el.style.height=desktop.clientHeight+'px'; w.max=true; }
+      focusWin(id);
+    }
+    function closeWin(id){
+      var w=windows[id]; if(!w) return;
+      var content=document.getElementById('tab-content-'+id);
+      if(content){ content.classList.add('hidden'); storage.appendChild(content); }
+      w.el.remove(); delete windows[id]; order=order.filter(function(x){return x!==id;});
+      updateEmpty(); renderTaskbar();
+    }
+
+    function makeDrag(handle,w){
+      handle.addEventListener('mousedown',function(ev){
+        if(ev.target.closest('.jaw-ctrls')) return;
+        if(w.max) return; ev.preventDefault();
+        var sx=ev.clientX, sy=ev.clientY, ol=w.el.offsetLeft, ot=w.el.offsetTop;
+        function mv(e){ var nl=ol+(e.clientX-sx), nt=ot+(e.clientY-sy);
+          nl=Math.max(0,Math.min(nl,desktop.clientWidth-60)); nt=Math.max(0,Math.min(nt,desktop.clientHeight-36));
+          w.el.style.left=nl+'px'; w.el.style.top=nt+'px'; }
+        function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); }
+        document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+      });
+    }
+    function makeResize(handle,w){
+      handle.addEventListener('mousedown',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        var sx=ev.clientX, sy=ev.clientY, ow=w.el.offsetWidth, oh=w.el.offsetHeight;
+        function mv(e){ w.el.style.width=Math.max(320,ow+(e.clientX-sx))+'px'; w.el.style.height=Math.max(200,oh+(e.clientY-sy))+'px'; }
+        function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); }
+        document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+      });
+    }
+
+    function createWindow(id,meta){
+      var el=document.createElement('div'); el.className='jaw-window'; el.id='jaw-win-'+id;
+      var n=order.length; var dw=desktop.clientWidth||1000, dh=desktop.clientHeight||600;
+      var ww=Math.min(940,dw-40), wh=Math.min(600,dh-30);
+      el.style.width=ww+'px'; el.style.height=wh+'px';
+      el.style.left=Math.min(20+n*28,Math.max(0,dw-ww-10))+'px';
+      el.style.top=Math.min(16+n*26,Math.max(0,dh-wh-10))+'px';
+      el.innerHTML='<div class="jaw-titlebar"><div class="jaw-title"><span>'+meta.emoji+'</span><span>'+meta.label+'</span></div>'
+        +'<div class="jaw-ctrls"><button class="jaw-min" title="Minimizar">—</button>'
+        +'<button class="jaw-max" title="Maximizar">▢</button>'
+        +'<button class="jaw-close" title="Fechar">✕</button></div></div>'
+        +'<div class="jaw-winbody"></div><div class="jaw-resize"></div>';
+      desktop.appendChild(el);
+      var w={el:el,body:el.querySelector('.jaw-winbody'),minimized:false,max:false};
+      el.addEventListener('mousedown',function(){ focusWin(id); },true);
+      makeDrag(el.querySelector('.jaw-titlebar'),w);
+      makeResize(el.querySelector('.jaw-resize'),w);
+      el.querySelector('.jaw-min').addEventListener('click',function(e){e.stopPropagation();minimizeWin(id);});
+      el.querySelector('.jaw-max').addEventListener('click',function(e){e.stopPropagation();toggleMax(id);});
+      el.querySelector('.jaw-close').addEventListener('click',function(e){e.stopPropagation();closeWin(id);});
+      return w;
+    }
+
+    function openModule(id){
+      var meta=MODULES[id]; if(!meta||!desktop) return;
+      var w=windows[id];
+      if(!w){ w=createWindow(id,meta); windows[id]=w; order.push(id); }
+      var content=document.getElementById('tab-content-'+id);
+      if(content){ if(content.parentNode!==w.body) w.body.appendChild(content); content.classList.remove('hidden'); }
+      w.minimized=false; w.el.style.display='flex';
+      focusWin(id); loadData(id); updateEmpty();
+      closeAllMenus();
+    }
+
+    function renderTaskbar(){
+      if(!taskbar) return;
+      taskbar.innerHTML='<span class="jaw-tb-label">Janelas</span>';
+      order.forEach(function(id){
+        var w=windows[id]; if(!w) return; var meta=MODULES[id];
+        var b=document.createElement('button');
+        b.className='jaw-taskbtn'+(w.el.classList.contains('active')&&!w.minimized?' active':'')+(w.minimized?' min':'');
+        b.innerHTML='<span>'+meta.emoji+'</span><span>'+meta.label+'</span>';
+        b.addEventListener('click',function(){
+          if(w.minimized){ w.minimized=false; w.el.style.display='flex'; focusWin(id); updateEmpty(); }
+          else if(w.el.classList.contains('active')){ minimizeWin(id); }
+          else{ focusWin(id); }
+        });
+        taskbar.appendChild(b);
+      });
+    }
+
+    function closeAllMenus(){ document.querySelectorAll('#jaw-menubar .jaw-group.open').forEach(function(g){g.classList.remove('open');}); }
+    function buildMenu(){
+      var bar=document.createElement('div'); bar.id='jaw-menubar';
+      bar.innerHTML='<span class="jaw-start">JORGE ALVIM · MÓDULOS</span>';
+      GROUPS.forEach(function(g){
+        var wrap=document.createElement('div'); wrap.className='jaw-group';
+        var btn=document.createElement('button'); btn.innerHTML='<span>'+g.emoji+'</span><span>'+g.label+'</span><span style="opacity:.6">▾</span>';
+        var dd=document.createElement('div'); dd.className='jaw-dropdown';
+        g.items.forEach(function(id){ var m=MODULES[id]; if(!m) return;
+          var mb=document.createElement('button'); mb.innerHTML='<span>'+m.emoji+'</span><span>'+m.label+'</span>';
+          mb.addEventListener('click',function(){ openModule(id); }); dd.appendChild(mb); });
+        btn.addEventListener('click',function(e){ e.stopPropagation(); var wasOpen=wrap.classList.contains('open'); closeAllMenus(); if(!wasOpen) wrap.classList.add('open'); });
+        wrap.appendChild(btn); wrap.appendChild(dd); bar.appendChild(wrap);
+      });
+      return bar;
+    }
+
+    function init(){
+      var main=document.querySelector('main'); if(!main||document.getElementById('jaw-desktop')) return;
+      var oldbar=document.getElementById('tabs-horizontal-bar'); if(oldbar) oldbar.style.display='none';
+      Object.keys(MODULES).forEach(function(id){ var c=document.getElementById('tab-content-'+id); if(c) c.classList.add('hidden'); });
+      var menubar=buildMenu(); main.parentNode.insertBefore(menubar,main);
+      desktop=document.createElement('div'); desktop.id='jaw-desktop'; main.parentNode.insertBefore(desktop,main);
+      storage=main; main.style.display='none';
+      taskbar=document.createElement('div'); taskbar.id='jaw-taskbar'; document.body.appendChild(taskbar);
+      document.addEventListener('click',closeAllMenus);
+      window.switchTab=function(id){ return openModule(id); };
+      window.openModule=openModule;
+      updateEmpty();
+      if(typeof getToken==='function' && getToken()) openModule('dashboard');
+      if(typeof window.showPanelScreen==='function'){
+        var _sps=window.showPanelScreen;
+        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); if(!order.length) openModule('dashboard'); return r; };
+      }
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+  })();
+  </script>
 </body>
 </html>
