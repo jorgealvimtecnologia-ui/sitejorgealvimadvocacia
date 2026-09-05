@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
-import { DatabaseSync } from 'node:sqlite';
+import { db } from './src/config/db.js';
 import { execFile } from 'node:child_process';
 import { 
   sessions, createSession, validateToken, requireAuth, requireMaster,
@@ -71,9 +71,8 @@ const PORT = process.env.PORT || 3000;
 // Configuração de Pastas de Armazenamento
 const STORAGE_DIR = path.join(__dirname, 'storage', 'clients');
 const STORAGE_DRIVE_DIR = path.join(__dirname, 'storage', 'office_drive');
-// DB_PATH pode ser sobrescrito por variável de ambiente (usado nos testes
-// automatizados, que rodam contra um banco temporário isolado — nunca o leads.db real).
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'leads.db');
+// A conexão do banco (e o DB_PATH, com override por env) vive em src/config/db.js —
+// fonte ÚNICA. server.js e todos os módulos usam a MESMA conexão (fim dos "dois cérebros").
 
 if (!fs.existsSync(STORAGE_DIR)) {
   fs.mkdirSync(STORAGE_DIR, { recursive: true });
@@ -100,8 +99,7 @@ const uploadDrive = multer({
   limits: { fileSize: 100 * 1024 * 1024 }
 });
 
-// Inicialização do Banco de Dados SQLite Local
-const db = new DatabaseSync(DB_PATH);
+// Banco: conexão única importada de src/config/db.js (ver import no topo).
 
 // 1. Tabela de Leads / Atendimentos do Site
 db.exec(`
