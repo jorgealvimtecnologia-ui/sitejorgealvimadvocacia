@@ -196,6 +196,17 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('Leads (módulo extraído)', () => {
+  it('POST /api/leads (público) cria atendimento → 201', async () => {
+    const r = await request(app).post('/api/leads').send({ name: 'Lead Teste', phone: '32988887777', area: 'Civil' });
+    assert.equal(r.status, 201);
+  });
+  it('GET /api/leads sem token → 401', async () => {
+    const r = await request(app).get('/api/leads');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('Financeiro/Financial (módulo extraído)', () => {
   it('GET /api/financial/transactions com token → 200', async () => {
     const r = await auth(request(app).get('/api/financial/transactions'), masterToken);
