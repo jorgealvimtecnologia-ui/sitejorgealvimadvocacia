@@ -196,6 +196,21 @@ describe('Bloqueio progressivo de login (defesa em profundidade)', () => {
   });
 });
 
+describe('Explorer (módulo extraído)', () => {
+  it('GET /api/explorer/list com token → 200', async () => {
+    const r = await auth(request(app).get('/api/explorer/list?path='), masterToken);
+    assert.equal(r.status, 200);
+  });
+  it('path traversal bloqueado (../) → 400', async () => {
+    const r = await auth(request(app).get('/api/explorer/list?path=../..'), masterToken);
+    assert.equal(r.status, 400);
+  });
+  it('sem token → 401', async () => {
+    const r = await request(app).get('/api/explorer/list?path=');
+    assert.equal(r.status, 401);
+  });
+});
+
 describe('Processos/Lawsuits (módulo extraído)', () => {
   it('GET /api/lawsuits com token → 200 e lista', async () => {
     const r = await auth(request(app).get('/api/lawsuits'), masterToken);
