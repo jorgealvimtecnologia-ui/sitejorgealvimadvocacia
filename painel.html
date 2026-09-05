@@ -20624,6 +20624,16 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     .jaw-taskbtn.active{background:linear-gradient(to right,#f59e0b,#d4a017);border-color:#d4a017;color:#0f172a;font-weight:800}
     .jaw-taskbtn.min{opacity:.6}
     body{padding-bottom:46px}
+    .jaw-toolbar{display:flex;align-items:stretch;gap:0;padding:5px 8px;background:#f8fafc;border-bottom:1px solid #e2e8f0;overflow-x:auto;flex-shrink:0}
+    .jaw-tb-group{display:flex;flex-direction:column;align-items:center;padding:0 6px;flex-shrink:0}
+    .jaw-tb-row{display:flex;gap:3px}
+    .jaw-tb-cap{font-size:9px;color:#94a3b8;margin-top:3px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+    .jaw-tb-sep{width:1px;background:#e2e8f0;margin:2px 3px;flex-shrink:0}
+    .jaw-tb-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:52px;background:transparent;border:1px solid transparent;border-radius:8px;padding:4px 4px;cursor:pointer;color:#334155;font-size:10.5px;font-weight:600;white-space:nowrap}
+    .jaw-tb-btn:hover{background:#fff;border-color:#cbd5e1}
+    .jaw-tb-btn .e{font-size:17px;line-height:1}
+    #jaw-toast{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,.35);z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+    #jaw-toast.show{opacity:1}
   </style>
   <script>
   (function(){
@@ -20667,6 +20677,98 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests'};
 
     var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
+
+    // Mapa "Novo": módulo -> função de abertura de cadastro já existente no painel.
+    var NOVO={clients:'openNewClientModal',lawsuits:'openNewLawsuitModal',calendar:'openCalendarEventModal',
+      blog:'openNewBlogPostModal',users:'openNewUserModal',finance:'openNewTransactionModal',
+      nfse:'openNewNfseModal',hr:'openNewEmployeeModal',offices:'openOfficeModal',docs:'openLegalDocModal'};
+
+    function wmToast(msg){
+      var t=document.getElementById('jaw-toast');
+      if(!t){ t=document.createElement('div'); t.id='jaw-toast'; document.body.appendChild(t); }
+      t.textContent=msg; t.classList.add('show'); clearTimeout(t._h);
+      t._h=setTimeout(function(){ t.classList.remove('show'); },2400);
+    }
+    function winBody(id){ return windows[id]?windows[id].body:null; }
+    function firstTable(b){ return b?b.querySelector('table'):null; }
+    function tableRows(tbl){
+      var rows=[]; tbl.querySelectorAll('tr').forEach(function(tr){
+        var cells=Array.prototype.map.call(tr.querySelectorAll('th,td'),function(c){return (c.innerText||'').replace(/\s+/g,' ').trim();});
+        if(cells.some(function(x){return x;})) rows.push(cells);
+      }); return rows;
+    }
+    function actNovo(id){ var fn=NOVO[id]; if(fn&&typeof window[fn]==='function'){ try{ window[fn](); }catch(e){ wmToast('Não foi possível abrir o cadastro.'); } } else wmToast('Este módulo não tem cadastro direto.'); }
+    function actSave(id){
+      var modals=Array.prototype.slice.call(document.querySelectorAll('[id$="-modal"],[id$="Modal"]'))
+        .filter(function(m){ return m.offsetParent!==null && !m.classList.contains('hidden'); });
+      for(var i=modals.length-1;i>=0;i--){
+        var btn=Array.prototype.slice.call(modals[i].querySelectorAll('button'))
+          .find(function(b){ return /salvar|cadastrar|guardar|gravar|criar|confirmar|atualizar dados/i.test(b.textContent); });
+        if(btn){ btn.click(); return; }
+      }
+      wmToast('Abra um cadastro ou edição para salvar.');
+    }
+    function actPrint(id){
+      var b=winBody(id); if(!b) return;
+      var css=Array.prototype.map.call(document.querySelectorAll('link[rel=stylesheet],style'),function(n){return n.outerHTML;}).join('');
+      var w=window.open('','_blank','width=900,height=700');
+      if(!w){ wmToast('Permita pop-ups para imprimir.'); return; }
+      w.document.write('<html><head><title>'+(MODULES[id].label||'Impressão')+'</title>'+css+'</head><body style="padding:18px;background:#fff">'+b.innerHTML+'</body></html>');
+      w.document.close(); setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){} },500);
+    }
+    function actExport(id){
+      var t=firstTable(winBody(id)); if(!t){ wmToast('Nada para exportar nesta janela.'); return; }
+      var csv=tableRows(t).map(function(r){ return r.map(function(c){ return '"'+c.replace(/"/g,'""')+'"'; }).join(';'); }).join('\n');
+      var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download=(MODULES[id].label||'export').replace(/[^\w-]+/g,'_')+'.csv';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); wmToast('Exportado em CSV.');
+    }
+    function actCopy(id){
+      var b=winBody(id); if(!b) return; var t=firstTable(b);
+      var txt=t?tableRows(t).map(function(r){return r.join('\t');}).join('\n'):(b.innerText||'').trim();
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){wmToast('Copiado para a área de transferência.');},function(){wmToast('Não foi possível copiar.');}); }
+      else wmToast('Cópia não suportada neste navegador.');
+    }
+    function actFind(id){
+      var b=winBody(id); if(!b) return;
+      var inp=b.querySelector('input[id*=search],input[id*=busca],input[type=search]')||b.querySelector('input[type=text]');
+      if(inp){ inp.focus(); try{ inp.select(); }catch(e){} wmToast('Busca ativada — digite para filtrar.'); } else wmToast('Este módulo não tem campo de busca.');
+    }
+    function actRefresh(id){ loadData(id); wmToast('Dados atualizados.'); }
+    function actDelete(id){ wmToast('Para excluir, use o botão de excluir (🗑️) na linha do registro.'); }
+    function actGerarDoc(id){ openModule('docs'); }
+    function actSend(id){ wmToast('Abra o registro do cliente para enviar por WhatsApp/e-mail.'); }
+    function wmAction(id,act){
+      switch(act){
+        case 'novo': return actNovo(id); case 'salvar': return actSave(id); case 'imprimir': return actPrint(id);
+        case 'exportar': return actExport(id); case 'copiar': return actCopy(id); case 'localizar': return actFind(id);
+        case 'atualizar': return actRefresh(id); case 'excluir': return actDelete(id);
+        case 'gerardoc': return actGerarDoc(id); case 'enviar': return actSend(id);
+      }
+    }
+    function tbBtn(label,emoji,act,id){
+      var b=document.createElement('button'); b.className='jaw-tb-btn'; b.type='button'; b.title=label;
+      b.innerHTML='<span class="e">'+emoji+'</span><span>'+label+'</span>';
+      b.addEventListener('click',function(e){ e.stopPropagation(); wmAction(id,act); });
+      return b;
+    }
+    function buildToolbar(id){
+      var tb=document.createElement('div'); tb.className='jaw-toolbar';
+      function grp(cap,btns){
+        var g=document.createElement('div'); g.className='jaw-tb-group';
+        var row=document.createElement('div'); row.className='jaw-tb-row';
+        btns.forEach(function(x){ if(x) row.appendChild(x); });
+        var c=document.createElement('div'); c.className='jaw-tb-cap'; c.textContent=cap;
+        g.appendChild(row); g.appendChild(c); return g;
+      }
+      function sep(){ var s=document.createElement('div'); s.className='jaw-tb-sep'; return s; }
+      tb.appendChild(grp('Arquivo',[ NOVO[id]?tbBtn('Novo','➕','novo',id):null, tbBtn('Salvar','💾','salvar',id), tbBtn('Imprimir','🖨️','imprimir',id), tbBtn('Exportar','⬇️','exportar',id) ]));
+      tb.appendChild(sep());
+      tb.appendChild(grp('Editar & registro',[ tbBtn('Copiar','📋','copiar',id), tbBtn('Localizar','🔎','localizar',id), tbBtn('Atualizar','🔄','atualizar',id), tbBtn('Excluir','🗑️','excluir',id) ]));
+      tb.appendChild(sep());
+      tb.appendChild(grp('Documentos',[ tbBtn('Gerar doc','📄','gerardoc',id), tbBtn('Enviar','✉️','enviar',id) ]));
+      return tb;
+    }
 
     function call(name){ try{ if(typeof window[name]==='function') window[name](); }catch(e){ console.warn('[WM] '+name,e); } }
     function loadData(id){
@@ -20744,6 +20846,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         +'<button class="jaw-max" title="Maximizar">▢</button>'
         +'<button class="jaw-close" title="Fechar">✕</button></div></div>'
         +'<div class="jaw-winbody"></div><div class="jaw-resize"></div>';
+      el.insertBefore(buildToolbar(id), el.querySelector('.jaw-winbody'));
       desktop.appendChild(el);
       var w={el:el,body:el.querySelector('.jaw-winbody'),minimized:false,max:false};
       el.addEventListener('mousedown',function(){ focusWin(id); },true);
@@ -20809,8 +20912,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       storage=main; main.style.display='none';
       taskbar=document.createElement('div'); taskbar.id='jaw-taskbar'; document.body.appendChild(taskbar);
       document.addEventListener('click',closeAllMenus);
+      document.addEventListener('keydown',function(e){
+        var active=null,az=-1;
+        Object.keys(windows).forEach(function(k){ var w=windows[k]; if(w&&!w.minimized){ var z=parseInt(w.el.style.zIndex||0,10); if(z>=az){ az=z; active=k; } } });
+        if(!active) return;
+        var k=(e.key||'').toLowerCase();
+        if(e.ctrlKey&&k==='s'){ e.preventDefault(); wmAction(active,'salvar'); }
+        else if(e.ctrlKey&&k==='p'){ e.preventDefault(); wmAction(active,'imprimir'); }
+        else if(e.ctrlKey&&k==='f'){ e.preventDefault(); wmAction(active,'localizar'); }
+        else if(e.ctrlKey&&k==='n'){ e.preventDefault(); wmAction(active,'novo'); }
+        else if(k==='f5'){ e.preventDefault(); wmAction(active,'atualizar'); }
+      });
       window.switchTab=function(id){ return openModule(id); };
       window.openModule=openModule;
+      window.wmAction=wmAction;
       updateEmpty();
       if(typeof getToken==='function' && getToken()) openModule('dashboard');
       if(typeof window.showPanelScreen==='function'){
