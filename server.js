@@ -12775,6 +12775,57 @@ app.use((err, req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
+// KANBAN — Fluxo de Trabalho 5W2H (quadro visual de tarefas com WIP e prioridade)
+// ---------------------------------------------------------------------------
+try {
+  db.exec(`CREATE TABLE IF NOT EXISTS kanban_cards (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    column_key TEXT NOT NULL DEFAULT 'todo',
+    priority TEXT DEFAULT 'normal',
+    w_what TEXT, w_why TEXT, w_where TEXT, w_when TEXT, w_who TEXT, h_how TEXT, h_howmuch TEXT,
+    deadline TEXT,
+    order_index INTEGER DEFAULT 0,
+    created_at TEXT, updated_at TEXT
+  )`);
+} catch (e) { console.warn('[KANBAN] Falha ao garantir tabela:', e.message); }
+
+app.get('/api/kanban', requireAuth, (req, res) => {
+  try {
+    const cards = db.prepare(`SELECT * FROM kanban_cards ORDER BY order_index ASC, created_at ASC`).all();
+    return res.json({ success: true, cards });
+  } catch (e) { return res.status(500).json({ error: e.message }); }
+});
+app.post('/api/kanban', requireAuth, (req, res) => {
+  try {
+    const b = req.body || {}; const now = new Date().toISOString();
+    const id = 'KAN-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+    db.prepare(`INSERT INTO kanban_cards (id,title,column_key,priority,w_what,w_why,w_where,w_when,w_who,h_how,h_howmuch,deadline,order_index,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+      id, (b.title || 'Sem título').toString().slice(0, 300), b.column_key || 'todo', b.priority || 'normal',
+      b.w_what || '', b.w_why || '', b.w_where || '', b.w_when || '', b.w_who || '', b.h_how || '', b.h_howmuch || '',
+      b.deadline || '', Date.now(), now, now);
+    logAudit(req, { event_type: 'CRIACAO', event_name: 'CRIAR_CARTAO_KANBAN', module: 'KANBAN', resource_id: id, description: `Novo cartão Kanban: ${(b.title || '').toString().slice(0,80)}` });
+    return res.json({ success: true, id });
+  } catch (e) { return res.status(500).json({ error: e.message }); }
+});
+app.put('/api/kanban/:id', requireAuth, (req, res) => {
+  try {
+    const b = req.body || {}; const ex = db.prepare(`SELECT * FROM kanban_cards WHERE id=?`).get(req.params.id);
+    if (!ex) return res.status(404).json({ error: 'Cartão não encontrado.' });
+    const pick = (k) => (b[k] !== undefined ? b[k] : ex[k]);
+    db.prepare(`UPDATE kanban_cards SET title=?,column_key=?,priority=?,w_what=?,w_why=?,w_where=?,w_when=?,w_who=?,h_how=?,h_howmuch=?,deadline=?,order_index=?,updated_at=? WHERE id=?`).run(
+      pick('title'), pick('column_key'), pick('priority'), pick('w_what'), pick('w_why'), pick('w_where'), pick('w_when'),
+      pick('w_who'), pick('h_how'), pick('h_howmuch'), pick('deadline'), pick('order_index'), new Date().toISOString(), req.params.id);
+    return res.json({ success: true });
+  } catch (e) { return res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/kanban/:id', requireAuth, (req, res) => {
+  try { db.prepare(`DELETE FROM kanban_cards WHERE id=?`).run(req.params.id); return res.json({ success: true }); }
+  catch (e) { return res.status(500).json({ error: e.message }); }
+});
+
+// ---------------------------------------------------------------------------
 // Índices de performance — mantêm as consultas rápidas conforme o volume cresce.
 // Criados no boot (idempotente via IF NOT EXISTS). Cada um em try próprio para
 // que uma tabela ausente nunca impeça a criação dos demais.

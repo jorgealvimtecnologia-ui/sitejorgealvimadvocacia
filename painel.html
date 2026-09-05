@@ -20661,9 +20661,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       lgpd:{label:'LGPD & Privacidade',emoji:'🔒'},
       notifications:{label:'Alertas & Prazos',emoji:'🔔'},
       editor:{label:'Editor de Texto',emoji:'📝'},
-      calc:{label:'Calculadora',emoji:'🧮'}
+      calc:{label:'Calculadora',emoji:'🧮'},
+      kanban:{label:'Fluxo de Trabalho (Kanban 5W2H)',emoji:'🗂️'}
     };
-    var TOOLS={editor:1,calc:1};
+    var TOOLS={editor:1,calc:1,kanban:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
       {label:'Clientes & Atendimento',emoji:'👥',items:['leads','pre-clients','clients','rockets']},
@@ -20671,7 +20672,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
       {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','audit','lgpd','notifications']},
-      {label:'Ferramentas',emoji:'🧰',items:['editor','calc']}
+      {label:'Ferramentas',emoji:'🧰',items:['kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
       publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
@@ -20999,7 +21000,93 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       box.appendChild(disp); box.appendChild(grid);
       return box;
     }
-    var BUILDERS={editor:buildEditor,calc:buildCalc};
+    function buildKanban(){
+      var COLS=[{key:'todo',label:'A fazer',wip:5},{key:'doing',label:'Em andamento',wip:3},{key:'waiting',label:'Aguardando',wip:0},{key:'done',label:'Concluído',wip:0}];
+      var PRIO={normal:{l:'Normal',c:'#475569',bg:'#f1f5f9',br:'#cbd5e1'},importante:{l:'Importante',c:'#b45309',bg:'#fef3c7',br:'#f59e0b'},urgente:{l:'Urgente',c:'#b91c1c',bg:'#fee2e2',br:'#ef4444'},critico:{l:'Urgente + importante',c:'#7f1d1d',bg:'#fecaca',br:'#dc2626'}};
+      var cards=[];
+      var box=document.createElement('div'); box.style.cssText='display:flex;flex-direction:column;height:100%;min-height:460px';
+      var head=document.createElement('div'); head.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap';
+      head.innerHTML='<button id="kb-new" style="background:linear-gradient(to right,#f59e0b,#d4a017);color:#0f172a;border:0;border-radius:9px;font-weight:800;font-size:12.5px;padding:8px 14px;cursor:pointer">➕ Novo cartão</button>'
+        +'<button id="kb-reload" style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:9px;font-weight:700;font-size:12px;padding:8px 12px;cursor:pointer;color:#334155">🔄 Atualizar</button>'
+        +'<span style="font-size:11px;color:#94a3b8">Arraste os cartões entre as colunas. Limite (WIP) evita sobrecarga.</span>';
+      var board=document.createElement('div'); board.style.cssText='display:flex;gap:10px;overflow-x:auto;flex:1;align-items:flex-start;padding-bottom:6px';
+      box.appendChild(head); box.appendChild(board);
+      function api(url,opts){ opts=opts||{}; opts.headers=Object.assign({'Content-Type':'application/json'},(typeof getAuthHeaders==='function'?getAuthHeaders():{}),opts.headers||{}); return fetch(url,opts).then(function(r){return r.json();}); }
+      function load(){ api('/api/kanban').then(function(d){ cards=(d&&d.cards)||[]; render(); }).catch(function(){ wmToast&&wmToast('Erro ao carregar o Kanban.'); }); }
+      function fmtDate(s){ if(!s) return ''; try{ if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10).split('-').reverse().join('/'); }catch(e){} return s; }
+      function render(){
+        board.innerHTML='';
+        COLS.forEach(function(col){
+          var list=cards.filter(function(c){return (c.column_key||'todo')===col.key;});
+          var over=col.wip>0 && list.length>col.wip;
+          var colEl=document.createElement('div'); colEl.style.cssText='flex:1;min-width:180px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:8px;display:flex;flex-direction:column;max-height:100%';
+          var badge=col.wip>0?('<span style="font-size:10px;font-weight:700;border-radius:20px;padding:1px 8px;'+(over?'background:#fee2e2;color:#b91c1c;border:1px solid #ef4444':'background:#eef2f7;color:#475569;border:1px solid #cbd5e1')+'">'+list.length+' / '+col.wip+'</span>'):('<span style="font-size:10px;font-weight:700;border-radius:20px;padding:1px 8px;background:#eef2f7;color:#475569;border:1px solid #cbd5e1">'+list.length+'</span>');
+          colEl.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12.5px;font-weight:800;color:#0f172a">'+col.label+'</span>'+badge+'</div>';
+          var listEl=document.createElement('div'); listEl.style.cssText='flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:40px';
+          listEl.addEventListener('dragover',function(e){ e.preventDefault(); listEl.style.background='#e0e7ff'; });
+          listEl.addEventListener('dragleave',function(){ listEl.style.background=''; });
+          listEl.addEventListener('drop',function(e){ e.preventDefault(); listEl.style.background=''; var id=e.dataTransfer.getData('text/plain'); var card=cards.find(function(x){return x.id===id;}); if(card && card.column_key!==col.key){ card.column_key=col.key; render(); api('/api/kanban/'+id,{method:'PUT',body:JSON.stringify({column_key:col.key})}); } });
+          list.forEach(function(c){ listEl.appendChild(cardEl(c)); });
+          colEl.appendChild(listEl); board.appendChild(colEl);
+        });
+      }
+      function cardEl(c){
+        var p=PRIO[c.priority]||PRIO.normal;
+        var el=document.createElement('div'); el.draggable=true;
+        el.style.cssText='background:#fff;border:1px solid #e2e8f0;border-left:3px solid '+p.br+';border-radius:8px;padding:8px 10px;cursor:pointer';
+        var dl=c.deadline?('<div style="font-size:10px;color:#b91c1c;margin-top:4px">📅 '+fmtDate(c.deadline)+'</div>'):'';
+        el.innerHTML='<div style="font-size:12px;font-weight:600;color:#0f172a">'+(c.title||'(sem título)')+'</div>'
+          +'<div style="display:flex;gap:6px;align-items:center;margin-top:5px"><span style="font-size:9px;font-weight:700;border-radius:20px;padding:1px 7px;background:'+p.bg+';color:'+p.c+'">'+p.l+'</span>'+(c.w_who?'<span style="font-size:10px;color:#64748b">'+c.w_who+'</span>':'')+'</div>'+dl;
+        el.addEventListener('dragstart',function(e){ e.dataTransfer.setData('text/plain',c.id); e.dataTransfer.effectAllowed='move'; });
+        el.addEventListener('click',function(){ openCard(c); });
+        return el;
+      }
+      function field(label,val,ph){ return '<label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin:8px 0 3px">'+label+'</label><textarea data-k="'+val+'" placeholder="'+(ph||'')+'" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:7px;font-size:12.5px;min-height:38px;resize:vertical"></textarea>'; }
+      function openCard(card){
+        var isNew=!card; card=card||{priority:'normal',column_key:'todo'};
+        var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
+        var m=document.createElement('div'); m.style.cssText='background:#fff;border-radius:14px;max-width:620px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(2,6,23,.4)';
+        m.innerHTML='<div style="padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><b style="color:#0f172a">🗂️ '+(isNew?'Novo cartão (5W2H)':'Editar cartão (5W2H)')+'</b><button id="kc-x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:#64748b">✕</button></div>'
+          +'<div style="padding:16px">'
+          +'<label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Título</label>'
+          +'<input id="kc-title" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-size:13px;font-weight:600"/>'
+          +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">'
+          +'<div style="flex:1;min-width:150px"><label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Coluna</label><select id="kc-col" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-size:12.5px">'+COLS.map(function(x){return '<option value="'+x.key+'">'+x.label+'</option>';}).join('')+'</select></div>'
+          +'<div style="flex:1;min-width:150px"><label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Prioridade (Eisenhower)</label><select id="kc-prio" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-size:12.5px">'+Object.keys(PRIO).map(function(k){return '<option value="'+k+'">'+PRIO[k].l+'</option>';}).join('')+'</select></div>'
+          +'<div style="flex:1;min-width:150px"><label style="display:block;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:3px">Prazo (When)</label><input id="kc-deadline" type="date" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:7px;font-size:12.5px"/></div>'
+          +'</div>'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">'
+          +field('What · o quê','w_what','O que precisa ser feito')+field('Why · por quê','w_why','Motivo / objetivo')
+          +field('Where · onde','w_where','Vara / sistema / local')+field('Who · quem','w_who','Responsável')
+          +field('How · como','h_how','Passos / método')+field('How much · quanto','h_howmuch','Horas / custo')
+          +'</div>'
+          +'</div>'
+          +'<div style="padding:14px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:8px">'
+          +'<button id="kc-del" style="padding:8px 14px;border:1px solid #fecaca;background:#fee2e2;color:#b91c1c;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer'+(isNew?';visibility:hidden':'')+'">🗑️ Excluir</button>'
+          +'<div style="display:flex;gap:8px"><button id="kc-cancel" style="padding:8px 14px;border:1px solid #cbd5e1;background:#fff;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer;color:#334155">Cancelar</button>'
+          +'<button id="kc-save" style="padding:8px 16px;border:0;background:#16a34a;color:#fff;border-radius:9px;font-weight:800;font-size:12.5px;cursor:pointer">Salvar</button></div></div>';
+        ov.appendChild(m); document.body.appendChild(ov);
+        m.querySelector('#kc-title').value=card.title||'';
+        m.querySelector('#kc-col').value=card.column_key||'todo';
+        m.querySelector('#kc-prio').value=card.priority||'normal';
+        m.querySelector('#kc-deadline').value=(card.deadline||'').slice(0,10);
+        ['w_what','w_why','w_where','w_who','h_how','h_howmuch'].forEach(function(k){ var t=m.querySelector('[data-k="'+k+'"]'); if(t) t.value=card[k]||''; });
+        function close(){ ov.remove(); }
+        m.querySelector('#kc-x').onclick=close; m.querySelector('#kc-cancel').onclick=close;
+        m.querySelector('#kc-save').onclick=function(){
+          var payload={ title:m.querySelector('#kc-title').value.trim()||'Sem título', column_key:m.querySelector('#kc-col').value, priority:m.querySelector('#kc-prio').value, deadline:m.querySelector('#kc-deadline').value };
+          ['w_what','w_why','w_where','w_who','h_how','h_howmuch'].forEach(function(k){ payload[k]=m.querySelector('[data-k="'+k+'"]').value; });
+          var req=isNew?api('/api/kanban',{method:'POST',body:JSON.stringify(payload)}):api('/api/kanban/'+card.id,{method:'PUT',body:JSON.stringify(payload)});
+          req.then(function(d){ if(d&&(d.success)){ close(); load(); wmToast&&wmToast(isNew?'Cartão criado.':'Cartão salvo.'); } else { alert((d&&d.error)||'Erro ao salvar.'); } });
+        };
+        m.querySelector('#kc-del').onclick=function(){ if(isNew) return; if(!confirm('Excluir este cartão?')) return; api('/api/kanban/'+card.id,{method:'DELETE'}).then(function(){ close(); load(); wmToast&&wmToast('Cartão excluído.'); }); };
+      }
+      head.querySelector('#kb-new').addEventListener('click',function(){ openCard(null); });
+      head.querySelector('#kb-reload').addEventListener('click',load);
+      load();
+      return box;
+    }
+    var BUILDERS={editor:buildEditor,calc:buildCalc,kanban:buildKanban};
 
     function openModule(id){
       var meta=MODULES[id]; if(!meta||!desktop) return;
