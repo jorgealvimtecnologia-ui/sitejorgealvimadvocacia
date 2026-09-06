@@ -14,6 +14,7 @@
     "test:watch": "node --test --watch \"tests/**/*.test.js\"",
     "test:health": "node scripts/test-system.js",
     "test:e2e": "playwright test",
+    "test:checklist": "playwright test e2e/production-checklist.spec.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "audit": "npm audit --omit=dev --audit-level=high",

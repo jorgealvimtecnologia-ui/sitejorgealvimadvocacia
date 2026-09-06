@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-BR" class="scroll-smooth overflow-x-hidden">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -157,7 +157,7 @@
       clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased">
+<body class="min-h-screen flex flex-col antialiased overflow-x-hidden">
   <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
 
   <!-- ================= TOP HEADER ================= -->
@@ -180,15 +180,15 @@
 
         <!-- Navegação Topo -->
         <div class="flex items-center space-x-2 sm:space-x-4">
-          <a href="/" class="text-xs sm:text-sm font-semibold text-slate-700 hover:text-gold-700 px-3 py-2 rounded-xl transition-colors">
+          <a href="/" class="text-xs sm:text-sm font-semibold text-slate-700 hover:text-gold-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-colors">
             Início
           </a>
-          <a href="/amazon" class="text-xs font-bold text-slate-800 hover:text-amber-700 px-3 py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-300 transition-all inline-flex items-center space-x-1.5 shadow-2xs">
+          <a href="/amazon" class="text-xs font-bold text-slate-800 hover:text-amber-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-300 transition-all inline-flex items-center space-x-1 shadow-2xs">
             <span class="text-amber-600">📦</span>
-            <span>Vitrine Amazon</span>
-            <span class="text-[9px] font-black uppercase bg-[#FF9900] text-slate-950 px-1.5 py-0.5 rounded tracking-tighter">Parceiro</span>
+            <span class="hidden sm:inline">Vitrine </span><span>Amazon</span>
+            <span class="text-[9px] font-black uppercase bg-[#FF9900] text-slate-950 px-1 py-0.5 rounded tracking-tighter">Parceiro</span>
           </a>
-          <a href="/cliente" class="text-xs font-bold text-emerald-950 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors hidden sm:inline-flex items-center space-x-1">
+          <a href="/cliente" class="text-xs font-bold text-emerald-950 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors hidden md:inline-flex items-center space-x-1">
             <span>👤</span>
             <span>Área do Cliente</span>
           </a>

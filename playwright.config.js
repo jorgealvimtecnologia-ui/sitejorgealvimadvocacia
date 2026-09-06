@@ -9,19 +9,20 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const PORT = process.env.E2E_PORT || 3100;
 const DB = process.env.E2E_DB || 'e2e-temp.db';
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
   timeout: 30000,
   fullyParallel: false,
   workers: 1,
-  reporter: process.env.CI ? 'list' : 'html',
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
+  webServer: process.env.BASE_URL ? undefined : {
     command: 'node server.js',
     url: `http://localhost:${PORT}/health`,
     reuseExistingServer: !process.env.CI,
