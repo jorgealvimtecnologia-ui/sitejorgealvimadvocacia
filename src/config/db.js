@@ -48,6 +48,10 @@ db.exec(`
 `);
 
 try { db.exec(`ALTER TABLE users ADD COLUMN plain_password TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE clients ADD COLUMN google_id TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT;`); } catch (e) {}
 
 // Documentos de Clientes (tabela própria deste módulo)
 db.exec(`

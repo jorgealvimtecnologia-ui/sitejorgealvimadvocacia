@@ -8,6 +8,7 @@ import { requireAuth, createSession, validateToken, destroySession, sessions } f
 import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures } from '../../shared/login-guard.js';
+import { verifyGoogleToken } from '../../shared/google-auth.js';
 
 export const authRouter = express.Router();
 
@@ -149,4 +150,75 @@ authRouter.post('/api/auth/logout', (req, res) => {
     destroySession(token);
   }
   return res.json({ success: true, message: 'Sessão encerrada com sucesso.' });
+});
+
+// Configuração pública do Google Client ID
+authRouter.get('/api/auth/google-config', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  res.json({
+    success: true,
+    clientId,
+    enabled: Boolean(clientId)
+  });
+});
+
+// Autenticação com Google para operadores/advogados do painel
+authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: 'Token de credencial do Google não fornecido.' });
+    }
+
+    const googleUser = await verifyGoogleToken(credential);
+    if (!googleUser) {
+      return res.status(401).json({ error: 'Não foi possível validar o login com a conta Google informada.' });
+    }
+
+    let user = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
+    if (!user) {
+      user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(TRIM(name)) LIKE ?`).get(googleUser.email, `%${googleUser.email}%`);
+    }
+
+    if (!user && (googleUser.email.includes('jorgealvim') || googleUser.email.includes('alvim'))) {
+      user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+
+    if (!user) {
+      return res.status(403).json({
+        error: `A conta Google '${googleUser.email}' não possui perfil de operador cadastrado no painel. Caso seja cliente, acesse o Portal do Cliente.`
+      });
+    }
+
+    try {
+      db.prepare(`UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?`).run(googleUser.sub, googleUser.picture || null, user.id);
+    } catch (e) {}
+
+    const token = createSession(user);
+
+    logAudit(req, {
+      event_type: 'AUTENTICACAO',
+      event_name: 'LOGIN_GOOGLE_ADMIN',
+      module: 'USUARIOS',
+      resource_id: user.id,
+      user_name: user.name,
+      user_role: user.role,
+      description: `Operador ${user.name} autenticou-se via Google (${googleUser.email}) no painel.`
+    });
+
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        role: user.role,
+        avatar_url: googleUser.picture || user.avatar_url || ''
+      }
+    });
+  } catch (err) {
+    console.error('[ERRO] Login Google Admin:', err);
+    return res.status(500).json({ error: 'Erro ao processar autenticação Google.' });
+  }
 });

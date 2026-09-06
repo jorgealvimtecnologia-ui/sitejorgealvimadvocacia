@@ -200,9 +200,25 @@ try {
   if (!cliCols.includes('profession')) {
     db.exec(`ALTER TABLE clients ADD COLUMN profession TEXT DEFAULT ''`);
   }
+  if (!cliCols.includes('google_id')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN google_id TEXT DEFAULT NULL`);
+  }
+  if (!cliCols.includes('avatar_url')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT DEFAULT NULL`);
+  }
 } catch (e) {
   console.warn('Verificação de migração de clients:', e);
 }
+
+try {
+  const usrCols = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
+  if (!usrCols.includes('google_id')) {
+    db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT NULL`);
+  }
+  if (!usrCols.includes('avatar_url')) {
+    db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL`);
+  }
+} catch (e) {}
 
 // 3.1 Tabela de Gestão de Escritórios (Pessoa Jurídica)
 db.exec(`
@@ -1297,12 +1313,12 @@ app.use((req, res, next) => {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'self'",
-    "img-src 'self' data: blob: https:",
+    "img-src 'self' data: blob: https: https://lh3.googleusercontent.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://connect.facebook.net",
-    "connect-src 'self' https:",
-    "frame-src 'self' https:"
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://accounts.google.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com",
+    "connect-src 'self' https: https://accounts.google.com https://oauth2.googleapis.com",
+    "frame-src 'self' https: https://accounts.google.com"
   ].join('; '));
   next();
 });

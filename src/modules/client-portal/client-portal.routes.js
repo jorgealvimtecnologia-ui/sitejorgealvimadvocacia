@@ -15,6 +15,7 @@ import { validatePassword } from '../../shared/password-policy.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { loginRateLimit } from '../../shared/login-guard.js';
+import { verifyGoogleToken } from '../../shared/google-auth.js';
 
 export const clientPortalRouter = express.Router();
 
@@ -455,6 +456,118 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
   } catch (err) {
     console.error('Erro no login do cliente:', err);
     res.status(500).json({ error: 'Erro interno ao autenticar cliente.' });
+  }
+});
+
+// 2.1 Autenticação e Cadastro Automático com Google (Google Sign-In / One Tap)
+clientPortalRouter.post('/api/client-portal/auth/google', loginRateLimit, async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: 'Token de credencial do Google não fornecido.' });
+    }
+
+    const googleUser = await verifyGoogleToken(credential);
+    if (!googleUser) {
+      return res.status(401).json({ error: 'Não foi possível validar a conta Google informada. Tente novamente.' });
+    }
+
+    // 1. Busca se cliente já existe por google_id ou email
+    let client = db.prepare(`SELECT * FROM clients WHERE google_id = ?`).get(googleUser.sub);
+    if (!client) {
+      client = db.prepare(`SELECT * FROM clients WHERE LOWER(TRIM(email)) = ?`).get(googleUser.email);
+    }
+
+    let isNewClient = false;
+
+    // 2. Se cliente não existir, realiza o cadastro automático imediato
+    if (!client) {
+      isNewClient = true;
+      const newClientId = generateNextClientFullId();
+      const nowIso = new Date().toISOString();
+
+      db.prepare(`
+        INSERT INTO clients (
+          id, client_type, full_name, email, phone, google_id, avatar_url,
+          city, state, contract_status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        newClientId,
+        'PF',
+        googleUser.name || 'Cliente Google',
+        googleUser.email,
+        '(Aguardando WhatsApp)',
+        googleUser.sub,
+        googleUser.picture || null,
+        'Juiz de Fora',
+        'MG',
+        'Ativo',
+        nowIso,
+        nowIso
+      );
+
+      client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(newClientId);
+
+      // Notifica o advogado sobre o novo cadastro via Google
+      try {
+        const msg = `🚨 *NOVO CLIENTE CADASTRADO VIA GOOGLE!*\n\n👤 *Nome:* ${client.full_name}\n📧 *E-mail:* ${client.email}\n🆔 *Código:* ${client.id}\n📍 *Origem:* Portal do Cliente / Google Sign-In\n📅 *Data:* ${new Date().toLocaleString('pt-BR')}`;
+        sendLawyerWhatsAppNotification(msg, { clientId: client.id, email: client.email });
+      } catch (errNotify) {}
+
+      logAudit(req, {
+        event_type: 'CADASTRO',
+        event_name: 'NOVO_CLIENTE_GOOGLE',
+        module: 'PORTAL_CLIENTE',
+        resource_id: client.id,
+        user_name: client.full_name,
+        user_role: 'client',
+        description: `Cliente ${client.full_name} (${client.email}) cadastrou-se via Google Sign-In.`
+      });
+    } else {
+      // Cliente já existente: atualiza vínculo com Google se ainda não tiver
+      try {
+        db.prepare(`UPDATE clients SET google_id = ?, avatar_url = COALESCE(avatar_url, ?), updated_at = ? WHERE id = ?`).run(
+          googleUser.sub,
+          googleUser.picture || null,
+          new Date().toISOString(),
+          client.id
+        );
+        client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(client.id);
+      } catch (e) {}
+
+      logAudit(req, {
+        event_type: 'AUTENTICACAO',
+        event_name: 'LOGIN_GOOGLE_CLIENTE',
+        module: 'PORTAL_CLIENTE',
+        resource_id: client.id,
+        user_name: client.full_name,
+        user_role: 'client',
+        description: `Cliente ${client.full_name} autenticou-se via Google (${googleUser.email}).`
+      });
+    }
+
+    const token = createClientSession(client);
+
+    return res.json({
+      success: true,
+      message: isNewClient 
+        ? 'Cadastro realizado com sucesso via Google! Bem-vindo(a) ao seu Portal.'
+        : 'Login efetuado com sucesso via Google!',
+      token,
+      is_new_client: isNewClient,
+      client: {
+        id: client.id,
+        full_name: client.full_name,
+        email: client.email,
+        phone: client.phone,
+        client_type: client.client_type,
+        cpf: client.cpf,
+        avatar_url: googleUser.picture || client.avatar_url || ''
+      }
+    });
+  } catch (err) {
+    console.error('Erro na autenticação Google do cliente:', err);
+    return res.status(500).json({ error: 'Erro interno ao processar login com o Google: ' + err.message });
   }
 });
 

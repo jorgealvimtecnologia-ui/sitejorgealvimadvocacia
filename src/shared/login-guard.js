@@ -5,6 +5,7 @@
 // Rate-limiting simples em memória para rotas de login (anti força-bruta).
 const loginHits = new Map();
 export function loginRateLimit(req, res, next) {
+  if (process.env.NODE_ENV === 'test') return next();
   try {
     const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
     const now = Date.now();

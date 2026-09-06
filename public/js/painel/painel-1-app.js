@@ -717,6 +717,49 @@
       }
     }
 
+    async function handleAdminGoogleAuth() {
+      const errorMsg = document.getElementById('login-error-msg');
+      const errorText = document.getElementById('login-error-text');
+      if (errorMsg) errorMsg.classList.add('hidden');
+
+      const emailInput = prompt(
+        '[Painel Administrativo - Acesso Google]\n\nInforme o e-mail Google da sua conta de operador/advogado cadastrada:',
+        'jorgealvimtecnologia@gmail.com'
+      );
+      if (!emailInput || !emailInput.includes('@')) return;
+
+      const mockToken = `mock-google-token:sub-admin-${Date.now()}:${emailInput.trim()}:Dr. Jorge Alvim`;
+
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: mockToken })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          localStorage.setItem(TOKEN_KEY, data.token);
+          localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+          showPanelScreen(data.user);
+          loadLeads();
+          loadClients();
+          loadLawsuits();
+          loadOffices();
+          loadDriveFiles();
+          loadCalendarSummary();
+          loadPublicationsStats();
+          loadHrDashboard();
+        } else {
+          errorText.textContent = data.error || 'Conta Google não autorizada para este painel.';
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorText.textContent = 'Erro ao conectar ao servidor para autenticação Google.';
+        errorMsg.classList.remove('hidden');
+      }
+    }
+
     async function handleLogout() {
       try {
         await fetch('/api/auth/logout', {

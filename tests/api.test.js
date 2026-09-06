@@ -764,5 +764,66 @@ describe('Meta Ads & Marketing (Hub de Criativos e Rascunhos)', () => {
   });
 });
 
+describe('Google Identity Services (Auth & Cadastro)', () => {
+  it('GET /api/auth/google-config → 200 e retorna configuração pública', async () => {
+    const res = await request(app).get('/api/auth/google-config');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(typeof res.body.clientId, 'string');
+    assert.equal(typeof res.body.enabled, 'boolean');
+  });
+
+  it('POST /api/auth/google sem credencial → 400', async () => {
+    const res = await request(app).post('/api/auth/google').send({});
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error);
+  });
+
+  it('POST /api/auth/google com token inválido → 401', async () => {
+    const res = await request(app).post('/api/auth/google').send({ credential: 'token-invalido-xyz' });
+    assert.equal(res.status, 401);
+    assert.ok(res.body.error);
+  });
+
+  it('POST /api/auth/google com conta autorizada → 200 e sessão de admin', async () => {
+    const mockToken = 'mock-google-token:sub-master:jorgealvimtecnologia@gmail.com:Dr. Jorge Alvim';
+    const res = await request(app).post('/api/auth/google').send({ credential: mockToken });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.token);
+    assert.equal(res.body.user.username, 'jorgealvimtecnologia');
+  });
+
+  it('POST /api/client-portal/auth/google sem credencial → 400', async () => {
+    const res = await request(app).post('/api/client-portal/auth/google').send({});
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error);
+  });
+
+  it('POST /api/client-portal/auth/google com novo cliente → 200 e cadastro automático', async () => {
+    const uniqueEmail = `cliente.google.${Date.now()}@gmail.com`;
+    const mockToken = `mock-google-token:sub-new-${Date.now()}:${uniqueEmail}:Cliente Novo Google`;
+    const res = await request(app).post('/api/client-portal/auth/google').send({ credential: mockToken });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.is_new_client, true);
+    assert.ok(res.body.token);
+    assert.equal(res.body.client.email, uniqueEmail);
+    assert.ok(res.body.client.id.startsWith('JA-CLI-'));
+  });
+
+  it('POST /api/client-portal/auth/google com cliente existente → 200 e login', async () => {
+    const existingEmail = `cliente.existente.${Date.now()}@gmail.com`;
+    const mockToken1 = `mock-google-token:sub-exist-${Date.now()}:${existingEmail}:Cliente Existente`;
+    await request(app).post('/api/client-portal/auth/google').send({ credential: mockToken1 });
+    const res2 = await request(app).post('/api/client-portal/auth/google').send({ credential: mockToken1 });
+    assert.equal(res2.status, 200);
+    assert.equal(res2.body.success, true);
+    assert.equal(res2.body.is_new_client, false);
+    assert.ok(res2.body.token);
+    assert.equal(res2.body.client.email, existingEmail);
+  });
+});
+
 
 
