@@ -987,6 +987,22 @@ juridicoRouter.post('/api/court/deadline/calculate', requireAuth, (req, res) => 
   }
 });
 
+// Alias da Fase 2 para Calculadora de Prazos
+juridicoRouter.post('/api/legaltech/calculate-deadline', requireAuth, (req, res) => {
+  try {
+    const { start_date, days = 15, regime = 'cpc', custom_holidays = [] } = req.body;
+    if (!start_date) {
+      return res.status(400).json({ error: 'Data de disponibilização ou início é obrigatória.' });
+    }
+
+    const result = calculateLegalDeadline(start_date, Number(days) || 15, regime, custom_holidays);
+    return res.json(result);
+  } catch (err) {
+    console.error('[ERRO] Falha no cálculo de prazo (legaltech):', err);
+    return res.status(500).json({ error: 'Erro ao calcular prazo: ' + err.message });
+  }
+});
+
 // 2. Endpoint: Buscar Publicações em Tempo Real na ComunicaAPI (PJe / DJEN)
 juridicoRouter.get('/api/court/publications/search-live', requireAuth, async (req, res) => {
   try {
@@ -1118,6 +1134,88 @@ juridicoRouter.patch('/api/court/publications/:id/status', requireAuth, (req, re
     return res.json({ success: true, message: `Status da publicação atualizado para ${status}.` });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 5.1 Endpoint: Triagem Rápida de Publicação do DJEN no Cockpit Matinal
+ * Ações: 'ciente' (marca como lido), 'arquivar' (marca como arquivado), 'lancar_prazo' (cria evento na agenda)
+ */
+juridicoRouter.post('/api/juridico/publications/:id/triage', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, deadline_date, notes } = req.body;
+
+    const pub = db.prepare(`SELECT * FROM court_publications WHERE id = ?`).get(id);
+    if (!pub) {
+      return res.status(404).json({ error: 'Publicação não encontrada.' });
+    }
+
+    if (action === 'ciente') {
+      db.prepare(`UPDATE court_publications SET status = 'lido', notes = COALESCE(notes || ' ', '') || ?, updated_at = datetime('now') WHERE id = ?`)
+        .run(`[Ciente em ${new Date().toISOString()}]`, id);
+      return res.json({ success: true, action: 'ciente', message: 'Publicação marcada como ciente.' });
+    }
+
+    if (action === 'arquivar') {
+      db.prepare(`UPDATE court_publications SET status = 'arquivado', notes = COALESCE(notes || ' ', '') || ?, updated_at = datetime('now') WHERE id = ?`)
+        .run(`[Arquivado em ${new Date().toISOString()}]`, id);
+      return res.json({ success: true, action: 'arquivar', message: 'Publicação arquivada.' });
+    }
+
+    if (action === 'lancar_prazo') {
+      if (!deadline_date) {
+        return res.status(400).json({ error: 'Data fatal é obrigatória para lançar prazo.' });
+      }
+
+      const eventId = `EVT-DJEN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const title = `Prazo DJEN: ${pub.tipo_comunicacao || 'Intimação'} - Proc: ${pub.numeroprocessocommascara || pub.numero_processo || 'S/N'}`;
+      const desc = `Prazo vinculado à publicação DJEN #${pub.id}. Órgão: ${pub.nome_orgao || 'Tribunal'}. ${notes || ''}`;
+
+      db.prepare(`
+        INSERT INTO calendar_events (
+          id, title, description, event_type, start_datetime, end_datetime,
+          all_day, location, meeting_url, lawyer_id, lawyer_name,
+          client_id, client_name, lawsuit_id, lawsuit_number,
+          priority, status, color, ical_uid, notes, created_at, updated_at
+        ) VALUES (
+          ?, ?, ?, 'prazo_fatal', ?, ?,
+          1, 'PJe / Tribunal', '', 'dr-jorge-alvim', 'Dr. Jorge Alvim',
+          ?, ?, ?, ?,
+          'fatal', 'agendado', '#dc2626', ?, ?, datetime('now'), datetime('now')
+        )
+      `).run(
+        eventId,
+        title,
+        desc,
+        `${deadline_date}T00:00`,
+        `${deadline_date}T23:59`,
+        pub.client_id || null,
+        pub.destinatario_nome || '',
+        pub.lawsuit_id || null,
+        pub.numeroprocessocommascara || pub.numero_processo || '',
+        `prazo-djen-${Date.now()}@jorgealvimadvocacia.com.br`,
+        notes || 'Triagem rápida do Cockpit Matinal.'
+      );
+
+      db.prepare(`UPDATE court_publications SET status = 'prazo_lancado', deadline_date = ?, updated_at = datetime('now') WHERE id = ?`)
+        .run(deadline_date, id);
+
+      logAudit(req, {
+        event_type: 'CRIACAO',
+        event_name: 'TRIAGEM_DJEN_LANCAR_PRAZO',
+        module: 'JURIDICO',
+        resource_id: id,
+        description: `Triagem DJEN da publicação #${id}: Prazo Fatal para ${deadline_date} lançado na agenda com sucesso.`
+      });
+
+      return res.json({ success: true, action: 'lancar_prazo', event_id: eventId, message: 'Prazo fatal lançado na agenda e publicação atualizada!' });
+    }
+
+    return res.status(400).json({ error: 'Ação inválida. Use ciente, arquivar ou lancar_prazo.' });
+  } catch (err) {
+    console.error('[TRIAGEM DJEN] Erro:', err);
+    return res.status(500).json({ error: 'Erro ao processar triagem: ' + err.message });
   }
 });
 

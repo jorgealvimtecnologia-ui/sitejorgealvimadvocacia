@@ -969,6 +969,364 @@ financialRouter.post('/api/financial/alvaras', requireAuth, (req, res) => {
   }
 });
 
+// Helper para converter valores monetários em texto por extenso
+function valorPorExtenso(valor) {
+  const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+  const especiais = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+  const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+  const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+  function converterCentena(n) {
+    if (n === 0) return '';
+    if (n === 100) return 'cem';
+    const c = Math.floor(n / 100);
+    const d = Math.floor((n % 100) / 10);
+    const u = n % 10;
+    const partes = [];
+    if (c > 0) partes.push(centenas[c]);
+    if (d === 1) {
+      partes.push(especiais[u]);
+    } else {
+      if (d > 1) partes.push(dezenas[d]);
+      if (u > 0) partes.push(unidades[u]);
+    }
+    return partes.join(' e ');
+  }
+
+  const v = Math.abs(Number(valor) || 0);
+  const inteira = Math.floor(v);
+  const centavos = Math.round((v - inteira) * 100);
+
+  if (inteira === 0 && centavos === 0) return 'zero reais';
+
+  const grupos = [];
+  let n = inteira;
+  const milhoes = Math.floor(n / 1000000);
+  n %= 1000000;
+  const milhares = Math.floor(n / 1000);
+  const resto = n % 1000;
+
+  if (milhoes > 0) {
+    grupos.push(milhoes === 1 ? 'um milhão' : `${converterCentena(milhoes)} milhões`);
+  }
+  if (milhares > 0) {
+    grupos.push(milhares === 1 ? 'mil' : `${converterCentena(milhares)} mil`);
+  }
+  if (resto > 0) {
+    grupos.push(converterCentena(resto));
+  }
+
+  let textoInteiro = grupos.join(' e ');
+  let textoReais = '';
+  if (inteira > 0) {
+    textoReais = inteira === 1 ? `${textoInteiro} real` : `${textoInteiro} reais`;
+  }
+
+  let textoCentavos = '';
+  if (centavos > 0) {
+    textoCentavos = centavos === 1 ? 'um centavo' : `${converterCentena(centavos)} centavos`;
+  }
+
+  if (textoReais && textoCentavos) return `${textoReais} e ${textoCentavos}`;
+  return textoReais || textoCentavos;
+}
+
+// 3. GET /api/financial/alvaras/:id/receipt - Prestação de Contas Timbrada & Recibo de Quitação de Alvará
+financialRouter.get('/api/financial/alvaras/:id/receipt', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const alvara = db.prepare(`
+      SELECT a.*, c.full_name as client_name, c.cpf, c.cnpj, c.street, c.number, c.neighborhood, c.city, c.state, c.cep, c.phone, c.email
+      FROM alvaras a
+      LEFT JOIN clients c ON a.client_id = c.id
+      WHERE a.id = ?
+    `).get(id);
+
+    if (!alvara) {
+      return res.status(404).json({ error: 'Alvará não encontrado.' });
+    }
+
+    const grossAmount = Number(alvara.gross_amount) || 0;
+    const feeAmount = Number(alvara.fee_amount) || 0;
+    const netAmount = Number(alvara.net_client_amount) || 0;
+    const feePct = Number(alvara.fee_percentage) || 30;
+    const extensoLiquido = valorPorExtenso(netAmount);
+
+    const statement = {
+      alvara_id: alvara.id,
+      client_name: alvara.client_name,
+      client_doc: alvara.cpf || alvara.cnpj || 'Não informado',
+      process_number: alvara.process_number || 'Não informado',
+      vara_tribunal: alvara.vara_tribunal || 'Juízo competente',
+      release_date: alvara.release_date || '',
+      transfer_date: alvara.transfer_date || '',
+      status: alvara.status || 'Pendente Repasse',
+      gross_amount: grossAmount,
+      fee_percentage: feePct,
+      fee_amount: feeAmount,
+      costs_deducted: 0.00,
+      net_client_amount: netAmount,
+      net_client_amount_extenso: extensoLiquido
+    };
+
+    if (req.query.format === 'json') {
+      return res.json({ success: true, statement, alvara });
+    }
+
+    // Formata valores em BRL
+    const fBrl = (val) => Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const dBr = (dStr) => {
+      if (!dStr) return '___/___/______';
+      const parts = dStr.split('T')[0].split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dStr;
+    };
+
+    const clientEndereco = [
+      alvara.street ? `${alvara.street}, nº ${alvara.number || 'S/N'}` : '',
+      alvara.neighborhood,
+      alvara.city ? `${alvara.city}/${alvara.state || 'MG'}` : '',
+      alvara.cep ? `CEP: ${alvara.cep}` : ''
+    ].filter(Boolean).join(' - ') || 'Endereço cadastrado nos autos';
+
+    const hoje = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Prestação de Contas - Alvará ${alvara.id} - ${alvara.client_name}</title>
+  <style>
+    @page { size: A4 portrait; margin: 18mm 16mm 18mm 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 13pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .page-container {
+      max-width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 25mm 20mm;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .no-print {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 210mm;
+      margin: 0 auto 15px auto;
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+    .btn-print {
+      background: #c59b27;
+      color: #000;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      font-size: 16pt;
+      letter-spacing: 1px;
+      margin: 0 0 4px 0;
+      color: #0f172a;
+      text-transform: uppercase;
+    }
+    .header p {
+      margin: 2px 0;
+      font-size: 10pt;
+      color: #475569;
+    }
+    .doc-title {
+      text-align: center;
+      font-size: 14pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 24px 0 20px 0;
+      letter-spacing: 0.5px;
+      text-decoration: underline;
+    }
+    .table-calc {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 12pt;
+    }
+    .table-calc th, .table-calc td {
+      border: 1px solid #94a3b8;
+      padding: 10px 14px;
+    }
+    .table-calc th {
+      background: #f8fafc;
+      text-align: left;
+    }
+    .row-highlight {
+      background: #f1f5f9;
+      font-weight: bold;
+    }
+    .text-right { text-align: right; }
+    .footer-dates {
+      margin-top: 35px;
+      text-align: center;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      page-break-inside: avoid;
+    }
+    .sign-box {
+      width: 45%;
+      text-align: center;
+      border-top: 1px solid #333;
+      padding-top: 6px;
+      font-size: 11pt;
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page-container { box-shadow: none; padding: 0; min-height: auto; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <div>
+      <strong>⚖️ Jorge Alvim Advocacia</strong> — Prestação de Contas Oficial de Alvará #${alvara.id}
+    </div>
+    <div>
+      <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+  </div>
+
+  <div class="page-container">
+    <div class="header">
+      <h1>Jorge Alvim Advocacia & Consultoria Jurídica</h1>
+      <p><strong>Dr. Jorge Eduardo da Silva Alvim</strong> — OAB/MG 222.943</p>
+      <p>Rua São Paulo, nº 45, Sala 302, Centro — Belo Horizonte/MG | CEP: 30170-130</p>
+      <p>Tel/WhatsApp: (31) 99120-1785 | E-mail: contato@jorgealvimadvocacia.com.br</p>
+    </div>
+
+    <div class="doc-title">
+      PRESTAÇÃO DE CONTAS & RECIBO DE QUITAÇÃO DE ALVARÁ JUDICIAL
+    </div>
+
+    <p>
+      Pelo presente instrumento, o escritório <strong>Jorge Alvim Advocacia</strong>, por meio de seu patrono 
+      constituído, vem prestar contas formais ao(à) Outorgante referente ao levantamento de valores judiciais, 
+      conforme discriminado a seguir:
+    </p>
+
+    <div style="background: #f8fafc; border-left: 4px solid #0f172a; padding: 10px 14px; margin: 15px 0;">
+      <p style="margin: 2px 0;"><strong>Processo Judicial nº:</strong> ${alvara.process_number || 'Em trâmite'}</p>
+      <p style="margin: 2px 0;"><strong>Juízo / Vara:</strong> ${alvara.vara_tribunal || 'Vara Competente'}</p>
+      <p style="margin: 2px 0;"><strong>Data da Liberação do Alvará:</strong> ${dBr(alvara.release_date)}</p>
+      <p style="margin: 2px 0;"><strong>Identificador do Alvará:</strong> #${alvara.id}</p>
+    </div>
+
+    <p><strong>DADOS DO(A) OUTORGANTE / BENEFICIÁRIO(A):</strong><br>
+      <strong>Nome:</strong> ${alvara.client_name}<br>
+      <strong>Inscrição CPF/CNPJ:</strong> ${alvara.cpf || alvara.cnpj || 'Conforme cadastro'}<br>
+      <strong>Endereço:</strong> ${clientEndereco}
+    </p>
+
+    <table class="table-calc">
+      <thead>
+        <tr>
+          <th>Discriminação dos Valores</th>
+          <th class="text-right" style="width: 35%;">Valor (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>(+) Valor Bruto Levantado em Juízo</strong> (Alvará/RPV/Precatório)</td>
+          <td class="text-right">${fBrl(grossAmount)}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>(-) Honorários Advocatícios Contratuais / Êxito</strong> (${feePct}%)<br>
+            <span style="font-size: 10pt; color: #64748b;">Conforme cláusula estipulada em Contrato de Honorários</span>
+          </td>
+          <td class="text-right" style="color: #b91c1c;">- ${fBrl(feeAmount)}</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>(-) Custas, Preparos e Despesas Adiantadas</strong><br>
+            <span style="font-size: 10pt; color: #64748b;">Diligências e custas processuais comprovadas</span>
+          </td>
+          <td class="text-right">- R$ 0,00</td>
+        </tr>
+        <tr class="row-highlight">
+          <td style="font-size: 13pt;"><strong>(=) VALOR LÍQUIDO REPASSADO AO CLIENTE</strong></td>
+          <td class="text-right" style="font-size: 13pt; color: #047857;"><strong>${fBrl(netAmount)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size: 11pt; color: #334155;">
+      <strong>Valor líquido por extenso:</strong> <em>${extensoLiquido}</em>.
+    </p>
+
+    <div style="margin-top: 25px; text-align: justify;">
+      <p>
+        <strong>TERMO DE QUITAÇÃO MÚTUA E SATISFAÇÃO:</strong><br>
+        O(A) Outorgante declara ter conferido e aprovado a presente prestação de contas, recebendo integralmente 
+        o valor líquido discriminado acima decorrente do êxito na referida demanda judicial. Por este ato, 
+        dá à sociedade de advogados e a todos os seus patronos ampla, geral, rasa e irrevogável quitação de 
+        todas as obrigações patrimoniais e financeiras relativas ao processo supracitado, nada mais tendo a 
+        reclamar em juízo ou fora dele a qualquer título ou pretexto.
+      </p>
+    </div>
+
+    <div class="footer-dates">
+      Belo Horizonte/MG, ${hoje}.
+    </div>
+
+    <div class="signatures">
+      <div class="sign-box">
+        <strong>JORGE ALVIM ADVOCACIA</strong><br>
+        Dr. Jorge Eduardo da Silva Alvim<br>
+        OAB/MG 222.943
+      </div>
+
+      <div class="sign-box">
+        <strong>${alvara.client_name.toUpperCase()}</strong><br>
+        CPF/CNPJ: ${alvara.cpf || alvara.cnpj || 'Beneficiário(a)'}<br>
+        Outorgante / Beneficiário(a)
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    return res.send(html);
+  } catch (error) {
+    console.error('[FINANCEIRO] Erro ao emitir prestação de contas de alvará:', error);
+    return res.status(500).json({ error: 'Erro ao gerar prestação de contas do alvará.' });
+  }
+});
+
 // ================= ROTAS DE NOTAS FISCAIS (NFS-E ASAAS) & RECIBOS/RPS TIMBRADOS =================
 
 // 1. GET /api/financial/nfse - Lista todas as notas fiscais e recibos emitidos

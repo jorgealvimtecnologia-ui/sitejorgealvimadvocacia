@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apresentação Visual das Melhorias — Jorge Alvim Advocacia</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes pulseRing {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(225, 29, 72, 0.18); }
+    }
+    .error-ring {
+      animation: pulseRing 1.5s infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 p-4 sm:p-8 font-sans antialiased min-h-screen">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Topo Institucional -->
+    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950/40 border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
+            <span>🏛️ Fase 1 Implementada com Sucesso</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Jorge Alvim Advocacia & Tecnologia</h1>
+          <p class="text-slate-400 text-sm mt-1">Apresentação Visual & Testes Interativos das Melhorias de Usabilidade</p>
+        </div>
+        <div class="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-right">
+          <div class="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            100% Operacional Localmente
+          </div>
+          <div class="text-[11px] text-slate-400 mt-0.5">50 Testes Aprovados • 0 Erros</div>
+        </div>
+      </div>
+
+      <!-- Navegação das Demonstrações -->
+      <div class="flex flex-wrap gap-2 mt-6 pt-6 border-t border-slate-800" id="nav-tabs">
+        <button onclick="switchDemo(1)" id="tab-1" class="tab-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all bg-amber-500 text-slate-950 shadow-md">
+          1. Auto-Save & Rascunho
+        </button>
+        <button onclick="switchDemo(2)" id="tab-2" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+          2. Ctrl+S & Anti-Duplo Clique
+        </button>
+        <button onclick="switchDemo(3)" id="tab-3" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+          3. Rastreamento de Erro
+        </button>
+        <button onclick="switchDemo(4)" id="tab-4" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+          4. Lixeira com Desfazer (10s)
+        </button>
+        <button onclick="switchDemo(5)" id="tab-5" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+          5. Impressão A4 Jurídica
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= DEMO 1: AUTO-SAVE & RASCUNHO ================= -->
+    <div id="demo-1" class="demo-card bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📝</span> Auto-Save Contínuo (Recuperação de Rascunhos)
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">O sistema salva os dados automaticamente a cada 1.2s no navegador. Se o navegador fechar, nada é perdido.</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-mono">localStorage</span>
+      </div>
+
+      <!-- Simulador de Formulário -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 relative">
+        <!-- Banner de Rascunho (Inicialmente oculto) -->
+        <div id="draft-banner" class="hidden p-3.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+          <div class="flex items-center gap-2">
+            <span class="text-base">📝</span>
+            <span>Identificamos um rascunho salvo deste cliente (<strong id="draft-time">hoje às 14:40</strong>).</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="restoreDemoDraft()" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition-colors">Restaurar Dados</button>
+            <button onclick="discardDemoDraft()" class="px-2 py-1 text-amber-300 hover:text-white text-xs">Descartar</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Nome Completo do Cliente</label>
+            <input type="text" id="demo-name" value="Dr. Marcos Vinicius Souza" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-400 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Telefone / WhatsApp</label>
+            <input type="text" id="demo-phone" value="(32) 99888-7766" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-400 focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Breve Resumo da Demanda</label>
+          <textarea id="demo-notes" rows="2" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:border-amber-400 focus:outline-none">Ação de indenização por cancelamento de voo no Aeroporto da Zona da Mata.</textarea>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div class="text-[11px] text-emerald-400 flex items-center gap-1.5" id="auto-save-status">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            Rascunho salvo em background
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="simulateCrash()" class="px-3.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition-all">
+              ⚡ Simular Queda / Fechamento da Aba
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= DEMO 2: CTRL+S & ANTI-DUPLO CLIQUE ================= -->
+    <div id="demo-2" class="demo-card hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>💾</span> Atalho Ctrl+S & Trava Anti-Duplo Clique
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Ao salvar, o botão ganha animação de carregamento e trava temporariamente para impedir duplicidade de cadastros.</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg font-mono">Ctrl + S</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 text-center">
+        <p class="text-xs text-slate-300">Pressione as teclas <kbd class="px-2 py-1 bg-slate-800 border border-slate-600 rounded font-mono text-amber-400 font-bold">Ctrl + S</kbd> no teclado ou clique no botão abaixo rapidamente várias vezes:</p>
+        
+        <div class="py-4">
+          <button id="demo-save-btn" onclick="triggerDemoSave()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-2xl text-sm shadow-lg transition-all transform active:scale-95 inline-flex items-center gap-2">
+            <span>Salvar Ficha do Processo</span>
+          </button>
+        </div>
+
+        <div id="save-feedback" class="text-xs text-slate-400 h-5 transition-all">
+          Aguardando ação...
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= DEMO 3: RASTREAMENTO DE ERRO ================= -->
+    <div id="demo-3" class="demo-card hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🎯</span> Rastreamento Visual de Erros com Scroll Suave
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Se o usuário esquecer um campo obrigatório, a tela rola suavemente até ele e destaca a borda em vermelho vibrante.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div class="space-y-4 max-h-60 overflow-y-auto p-2 border border-slate-800 rounded-xl" id="error-scroll-container">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">1. Tipo de Ação</label>
+            <input type="text" value="Ação Trabalhista - Rito Ordinário" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">2. Comarca de Origem</label>
+            <input type="text" value="Vara do Trabalho de Juiz de Fora/MG" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+          </div>
+          <div class="pt-8">
+            <label class="block text-xs font-bold text-rose-400 mb-1">⚠️ 3. Campo Obrigatório Faltante (Valor da Causa)</label>
+            <input type="text" id="demo-required-input" placeholder="R$ 0,00 (Preenchimento Obrigatório)" class="w-full px-3 py-2 bg-slate-950 border-2 border-slate-700 rounded-xl text-xs text-white">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">4. Número do Processo CNJ</label>
+            <input type="text" value="0010452-88.2026.5.03.0035" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+          </div>
+        </div>
+
+        <button onclick="triggerErrorTrace()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs shadow-md transition-colors">
+          Simular Tentativa de Gravação com Campo Vazio
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= DEMO 4: LIXEIRA COM DESFAZER ================= -->
+    <div id="demo-4" class="demo-card hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🗑️</span> Lixeira Segura com Desfazer (Undo de 10s)
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Exclusão não destrutiva com aviso de contagem regressiva para reverter cliques acidentais em 1 clique.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div id="demo-item-row" class="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+          <div>
+            <div class="text-xs font-bold text-white">Processo nº 0010452-88.2026.5.03.0035</div>
+            <div class="text-[11px] text-slate-400">Cliente: João Pedro de Almeida • Rito Ordinário</div>
+          </div>
+          <button onclick="triggerUndoDemo()" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold transition-all">
+            Excluir Registro
+          </button>
+        </div>
+
+        <!-- Banner Flutuante de Desfazer -->
+        <div id="undo-toast" class="hidden p-4 rounded-2xl bg-slate-950 text-white shadow-2xl border border-slate-700 text-xs font-semibold">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🗑️</span>
+              <span><strong>Processo #0010452</strong> movido para a lixeira.</span>
+            </div>
+            <button onclick="cancelUndo()" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg font-bold text-xs uppercase tracking-wider transition-all">
+              Desfazer (<span id="undo-count">10s</span>)
+            </button>
+          </div>
+          <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div id="undo-bar" class="bg-amber-500 h-full w-full transition-all duration-1000 ease-linear"></div>
+          </div>
+        </div>
+
+        <div id="undo-result" class="text-xs text-center text-slate-400 h-5"></div>
+      </div>
+    </div>
+
+    <!-- ================= DEMO 5: IMPRESSÃO A4 JURÍDICA ================= -->
+    <div id="demo-5" class="demo-card hidden bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🖨️</span> Modo de Impressão Jurídica Inteligente (A4 Limpo)
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Oculta menus e botões da tela, gerando uma folha timbrada oficial para protocolo ou juntada.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div class="bg-white text-slate-900 p-6 rounded-xl shadow-md space-y-3 font-serif max-w-lg mx-auto border border-slate-300">
+          <div class="text-center border-b pb-3 border-amber-600/30">
+            <div class="text-sm font-bold tracking-wide text-slate-950">JORGE ALVIM ADVOCACIA & CONSULTORIA</div>
+            <div class="text-[10px] text-amber-800 font-sans font-bold">OAB/MG • RELATÓRIO PROCESSUAL DE ACOMPANHAMENTO</div>
+          </div>
+          <div class="text-xs space-y-1 font-sans">
+            <div><strong>Cliente:</strong> Marcos Vinicius Souza</div>
+            <div><strong>Processo CNJ:</strong> 5001244-12.2026.8.13.0145</div>
+            <div><strong>Vara:</strong> 2ª Vara Cível da Comarca de Juiz de Fora / MG</div>
+            <div><strong>Fase Atual:</strong> Aguardando Audiência de Conciliação</div>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <button onclick="window.print()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs shadow-lg transition-all inline-flex items-center gap-2">
+            <span>🖨️ Abrir Visualização de Impressão A4</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchDemo(num) {
+      document.querySelectorAll('.demo-card').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-amber-500', 'text-slate-950', 'shadow-md');
+        b.classList.add('bg-slate-800', 'text-slate-300');
+      });
+
+      document.getElementById('demo-' + num).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + num);
+      activeBtn.classList.remove('bg-slate-800', 'text-slate-300');
+      activeBtn.classList.add('bg-amber-500', 'text-slate-950', 'shadow-md');
+    }
+
+    // Demo 1: Auto-save simulator
+    function simulateCrash() {
+      document.getElementById('demo-name').value = '';
+      document.getElementById('demo-phone').value = '';
+      document.getElementById('demo-notes').value = '';
+      document.getElementById('draft-banner').classList.remove('hidden');
+      document.getElementById('auto-save-status').innerHTML = '⚠️ Dados limpos após fechamento acidental.';
+      document.getElementById('auto-save-status').className = 'text-[11px] text-amber-400';
+    }
+
+    function restoreDemoDraft() {
+      document.getElementById('demo-name').value = 'Dr. Marcos Vinicius Souza';
+      document.getElementById('demo-phone').value = '(32) 99888-7766';
+      document.getElementById('demo-notes').value = 'Ação de indenização por cancelamento de voo no Aeroporto da Zona da Mata.';
+      document.getElementById('draft-banner').classList.add('hidden');
+      document.getElementById('auto-save-status').innerHTML = '✅ Rascunho restaurado com 100% de sucesso!';
+      document.getElementById('auto-save-status').className = 'text-[11px] text-emerald-400';
+    }
+
+    function discardDemoDraft() {
+      document.getElementById('draft-banner').classList.add('hidden');
+      document.getElementById('auto-save-status').innerHTML = 'Rascunho descartado.';
+      document.getElementById('auto-save-status').className = 'text-[11px] text-slate-400';
+    }
+
+    // Demo 2: Ctrl+S simulator
+    function triggerDemoSave() {
+      const btn = document.getElementById('demo-save-btn');
+      const feedback = document.getElementById('save-feedback');
+      
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg class="animate-spin h-4 w-4 text-slate-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Salvando dados com segurança...</span>
+      `;
+      feedback.textContent = '🔒 Botão temporariamente desabilitado para evitar clique duplo.';
+      feedback.className = 'text-xs text-amber-400 h-5';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Salvar Ficha do Processo</span>';
+        feedback.textContent = '✅ Salvo com sucesso às ' + new Date().toLocaleTimeString();
+        feedback.className = 'text-xs text-emerald-400 h-5';
+      }, 2000);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        triggerDemoSave();
+      }
+    });
+
+    // Demo 3: Error Trace
+    function triggerErrorTrace() {
+      const container = document.getElementById('error-scroll-container');
+      const targetInput = document.getElementById('demo-required-input');
+
+      targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetInput.focus();
+      targetInput.classList.add('error-ring', 'border-rose-500');
+
+      setTimeout(() => {
+        targetInput.classList.remove('error-ring');
+      }, 3500);
+    }
+
+    // Demo 4: Undo
+    let undoInterval = null;
+    function triggerUndoDemo() {
+      document.getElementById('demo-item-row').classList.add('opacity-40');
+      const toast = document.getElementById('undo-toast');
+      const countEl = document.getElementById('undo-count');
+      const bar = document.getElementById('undo-bar');
+      const result = document.getElementById('undo-result');
+
+      toast.classList.remove('hidden');
+      result.textContent = '';
+      bar.style.width = '100%';
+
+      let seconds = 10;
+      countEl.textContent = seconds + 's';
+
+      clearInterval(undoInterval);
+      setTimeout(() => { bar.style.width = '0%'; }, 50);
+
+      undoInterval = setInterval(() => {
+        seconds--;
+        countEl.textContent = seconds + 's';
+        if (seconds <= 0) {
+          clearInterval(undoInterval);
+          toast.classList.add('hidden');
+          document.getElementById('demo-item-row').classList.add('hidden');
+          result.textContent = 'Processo excluído permanentemente após 10 segundos.';
+          result.className = 'text-xs text-rose-400 text-center';
+        }
+      }, 1000);
+    }
+
+    function cancelUndo() {
+      clearInterval(undoInterval);
+      document.getElementById('undo-toast').classList.add('hidden');
+      document.getElementById('demo-item-row').classList.remove('opacity-40', 'hidden');
+      const result = document.getElementById('undo-result');
+      result.textContent = '✅ Exclusão desfeita com sucesso! O registro continua intacto.';
+      result.className = 'text-xs text-emerald-400 text-center';
+    }
+  </script>
+</body>
+</html>

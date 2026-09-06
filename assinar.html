@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Assinatura Digital de Documento | Jorge Alvim Advocacia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { 900: '#0b192c', 950: '#070f1e' },
+            gold: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-gold-500 selection:text-white">
+
+  <!-- Cabeçalho Institucional -->
+  <header class="bg-navy-950 text-white border-b border-gold-500/30 sticky top-0 z-20 shadow-md">
+    <div class="max-w-3xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-gold-400 flex items-center justify-center font-serif font-black text-navy-950 text-base shadow-sm">
+          JA
+        </div>
+        <div>
+          <h1 class="text-sm font-bold tracking-tight text-white leading-tight font-serif">Jorge Alvim Advocacia</h1>
+          <p class="text-[10px] text-gold-400 font-medium tracking-wider uppercase">Portal de Assinatura Eletrônica Segura</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1 text-[11px] bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-full font-semibold">
+        <span>🔒</span>
+        <span>Ambiente Seguro</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- Carregando Documento -->
+    <div id="loading-state" class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center space-y-3">
+      <div class="text-3xl animate-spin">⏳</div>
+      <h2 class="text-base font-bold text-navy-950 font-serif">Carregando Documento...</h2>
+      <p class="text-xs text-slate-500">Estamos preparando os termos e dados para sua validação digital.</p>
+    </div>
+
+    <!-- Erro / Link Inválido -->
+    <div id="error-state" class="hidden bg-rose-50 p-6 sm:p-8 rounded-3xl border border-rose-200 text-center space-y-3">
+      <div class="text-3xl">⚠️</div>
+      <h2 class="text-base font-bold text-rose-900 font-serif">Documento Não Encontrado</h2>
+      <p id="error-message" class="text-xs text-rose-700">O link de assinatura é inválido ou já expirou.</p>
+    </div>
+
+    <!-- Tela do Documento e Assinatura -->
+    <div id="doc-container" class="hidden space-y-6">
+      
+      <!-- Card Informativo -->
+      <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Documento Jurídico</span>
+            <h2 id="doc-title" class="text-base sm:text-lg font-black text-navy-950 font-serif">
+              Procuração Ad Judicia & Contrato de Honorários
+            </h2>
+          </div>
+          <div id="doc-status-badge" class="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+            Aguardando Assinatura
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
+          <div><strong>Signatário(a):</strong> <span id="doc-signer-name">—</span></div>
+          <div><strong>Documento / CPF:</strong> <span id="doc-signer-cpf">—</span></div>
+        </div>
+      </div>
+
+      <!-- Leitor do Texto do Documento -->
+      <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Teor Completo do Documento</h3>
+        <div id="doc-content" class="text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-wrap max-h-80 overflow-y-auto p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          Carregando termos...
+        </div>
+      </div>
+
+      <!-- Área de Assinatura Touch / Mouse -->
+      <div id="signature-section" class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div>
+          <h3 class="text-sm font-black text-navy-950 font-serif">Assine no Quadro Abaixo</h3>
+          <p class="text-xs text-slate-500">Desenhe sua assinatura com o dedo (no celular) ou com o mouse (no computador).</p>
+        </div>
+
+        <div class="relative border-2 border-dashed border-amber-400 bg-amber-50/30 rounded-2xl overflow-hidden touch-none">
+          <canvas id="signature-pad" class="w-full h-44 cursor-crosshair block bg-white"></canvas>
+          <div class="absolute bottom-2 right-2 flex space-x-2">
+            <button type="button" onclick="clearSignature()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors shadow-sm">
+              🧹 Limpar
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+          <div class="flex items-center space-x-1.5 font-bold text-slate-800">
+            <span>⚖️</span>
+            <span>Validade Jurídica Garantida</span>
+          </div>
+          <p>
+            Ao clicar em confirmar, você declara sua concordância plena com os termos acima e autoriza o registro criptográfico do seu IP, data/hora e hash de integridade (Lei nº 14.063/2020 e MP 2.200-2/2001).
+          </p>
+        </div>
+
+        <button 
+          id="btn-confirm-sign" 
+          onclick="submitSignature()" 
+          class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+        >
+          <span>✍️</span>
+          <span>Confirmar e Assinar Documento</span>
+        </button>
+      </div>
+
+      <!-- Tela de Sucesso Pós-Assinatura -->
+      <div id="success-section" class="hidden bg-emerald-50 p-6 sm:p-8 rounded-3xl border border-emerald-200 shadow-sm text-center space-y-4">
+        <div class="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center text-3xl mx-auto shadow-md">
+          ✓
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-emerald-950 font-serif">Documento Assinado com Sucesso!</h2>
+          <p class="text-xs text-emerald-800 mt-1">Sua assinatura foi registrada e criptografada com validade jurídica.</p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white border border-emerald-200 text-left text-xs text-slate-700 space-y-2 font-mono break-all">
+          <div><strong>Data/Hora:</strong> <span id="signed-at-text">—</span></div>
+          <div><strong>Hash SHA-256:</strong> <span id="signed-hash-text" class="text-[10px] text-slate-500">—</span></div>
+        </div>
+
+        <div class="text-xs text-slate-500">
+          Você já pode fechar esta página. O escritório Jorge Alvim Advocacia já recebeu a confirmação.
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>© 2026 Jorge Alvim Advocacia & Tecnologia. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    let token = '';
+    let canvas, ctx;
+    let isDrawing = false;
+    let hasSignature = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      token = urlParams.get('token');
+
+      if (!token) {
+        showError('Link de assinatura incompleto ou sem identificador válido.');
+        return;
+      }
+
+      initCanvas();
+      loadDocument();
+    });
+
+    function initCanvas() {
+      canvas = document.getElementById('signature-pad');
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        ctx.strokeStyle = '#070f1e';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function startDraw(e) {
+        isDrawing = true;
+        hasSignature = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        e.preventDefault();
+      }
+
+      function moveDraw(e) {
+        if (!isDrawing) return;
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        e.preventDefault();
+      }
+
+      function endDraw(e) {
+        if (isDrawing) {
+          ctx.closePath();
+          isDrawing = false;
+        }
+      }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', moveDraw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', moveDraw, { passive: false });
+      canvas.addEventListener('touchend', endDraw);
+    }
+
+    function clearSignature() {
+      if (!canvas || !ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasSignature = false;
+    }
+
+    async function loadDocument() {
+      try {
+        const res = await fetch(`/api/signatures/${token}`);
+        const data = await res.json();
+
+        document.getElementById('loading-state').classList.add('hidden');
+
+        if (res.ok && data.success) {
+          const doc = data.document;
+          document.getElementById('doc-container').classList.remove('hidden');
+          document.getElementById('doc-title').textContent = doc.document_title;
+          document.getElementById('doc-signer-name').textContent = doc.client_name;
+          document.getElementById('doc-signer-cpf').textContent = doc.client_cpf_cnpj || 'Não informado';
+          document.getElementById('doc-content').textContent = doc.document_content;
+
+          if (doc.status === 'assinado') {
+            document.getElementById('signature-section').classList.add('hidden');
+            document.getElementById('doc-status-badge').textContent = '✓ Documento Já Assinado';
+            document.getElementById('doc-status-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-200';
+            
+            document.getElementById('signed-at-text').textContent = new Date(doc.signed_at).toLocaleString('pt-BR');
+            document.getElementById('signed-hash-text').textContent = doc.audit_hash;
+            document.getElementById('success-section').classList.remove('hidden');
+          }
+        } else {
+          showError(data.error || 'Documento não encontrado.');
+        }
+      } catch (err) {
+        document.getElementById('loading-state').classList.add('hidden');
+        showError('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    async function submitSignature() {
+      if (!hasSignature) {
+        alert('Por favor, desenhe sua assinatura no quadro antes de confirmar.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirm-sign');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Registrando Assinatura Criptografada...</span>';
+
+      try {
+        const signatureImage = canvas.toDataURL('image/png');
+
+        const res = await fetch(`/api/signatures/${token}/sign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            signature_image: signatureImage
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          document.getElementById('signature-section').classList.add('hidden');
+          document.getElementById('doc-status-badge').textContent = '✓ Documento Assinado';
+          document.getElementById('doc-status-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-200';
+
+          document.getElementById('signed-at-text').textContent = new Date(data.signed_at).toLocaleString('pt-BR');
+          document.getElementById('signed-hash-text').textContent = data.audit_hash;
+          document.getElementById('success-section').classList.remove('hidden');
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<span>✍️ Confirmar e Assinar Documento</span>';
+          alert(data.error || 'Erro ao registrar assinatura.');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>✍️ Confirmar e Assinar Documento</span>';
+        alert('Erro ao enviar assinatura.');
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('loading-state').classList.add('hidden');
+      document.getElementById('error-state').classList.remove('hidden');
+      document.getElementById('error-message').textContent = msg;
+    }
+  </script>
+</body>
+</html>

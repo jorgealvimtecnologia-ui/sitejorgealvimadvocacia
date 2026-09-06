@@ -477,8 +477,8 @@
       if (tabRockets) tabRockets.classList.add('hidden');
       if (btnRockets) btnRockets.className = inactiveClass;
 
-      // Novas abas (dashboard, assinaturas, LGPD, notificações) — módulos de gestão.
-      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests'].forEach(function (t) {
+      // Novas abas (dashboard, assinaturas, LGPD, notificações, manutenção, meta-ads) — módulos de gestão.
+      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests', 'maintenance', 'meta-ads'].forEach(function (t) {
         const c = document.getElementById('tab-content-' + t);
         const b = document.getElementById('tab-btn-' + t);
         if (c) c.classList.add('hidden');
@@ -558,6 +558,7 @@
         document.getElementById('tab-content-dashboard').classList.remove('hidden');
         document.getElementById('tab-btn-dashboard').className = activeClass;
         loadDashboardOverview();
+        if (typeof window.loadMeuDiaHoje === 'function') window.loadMeuDiaHoje();
       } else if (tab === 'esign') {
         document.getElementById('tab-content-esign').classList.remove('hidden');
         document.getElementById('tab-btn-esign').className = activeClass;
@@ -574,6 +575,22 @@
         document.getElementById('tab-content-admin-requests').classList.remove('hidden');
         document.getElementById('tab-btn-admin-requests').className = activeClass;
         loadAdminRequests();
+      } else if (tab === 'maintenance') {
+        const c = document.getElementById('tab-content-maintenance');
+        const b = document.getElementById('tab-btn-maintenance');
+        if (c) c.classList.remove('hidden');
+        if (b) b.className = activeClass;
+        if (typeof window.loadMaintenanceHealth === 'function') {
+          window.loadMaintenanceHealth();
+        }
+      } else if (tab === 'meta-ads') {
+        const c = document.getElementById('tab-content-meta-ads');
+        const b = document.getElementById('tab-btn-meta-ads');
+        if (c) c.classList.remove('hidden');
+        if (b) b.className = activeClass;
+        if (typeof window.loadMetaAdsTab === 'function') {
+          window.loadMetaAdsTab();
+        }
       }
 
       renderTabChart(tab);
@@ -877,6 +894,36 @@
               <!-- Botões de Ação do Box (Incluindo Botão SALVAR direto no Box) -->
               <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
                 
+                <!-- Kit Inicial (1 Clique) -->
+                <button 
+                  onclick="openKitInicialModal('${client.id}')" 
+                  class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  title="Gerar Kit Inicial (Procuração, Contrato e Hipossuficiência) em 1 clique"
+                >
+                  <span>📄</span>
+                  <span>Kit Inicial</span>
+                </button>
+
+                <!-- Link Mágico de Documentos -->
+                <button 
+                  onclick="generateClientMagicUploadLink('${client.id}')" 
+                  class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  title="Enviar Link Mágico para o cliente enviar fotos/PDFs de documentos pelo WhatsApp"
+                >
+                  <span>📎</span>
+                  <span>Link Mágico</span>
+                </button>
+
+                <!-- Cobrar / PIX -->
+                <button 
+                  onclick="sendPixPaymentReminder('${client.id}', '${(client.full_name || '').replace(/'/g, "\\'")}', '${client.phone || ''}', '${client.balance_due || 0}')" 
+                  class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  title="Enviar lembrete amigável de honorários com chave PIX pelo WhatsApp"
+                >
+                  <span>💰</span>
+                  <span>Cobrar PIX</span>
+                </button>
+
                 <!-- BOTÃO SALVAR DIRETO NO BOX -->
                 <button 
                   onclick="saveInlineClient('${client.id}')" 
@@ -1417,6 +1464,81 @@
       document.getElementById('cli-balance-due').value = balDue.toFixed(2);
     }
 
+    let currentClientStep = 1;
+
+    function setClientStep(step) {
+      if (step < 1) step = 1;
+      if (step > 3) step = 3;
+      currentClientStep = step;
+
+      for (let i = 1; i <= 3; i++) {
+        const cont = document.getElementById(`cli-step-container-${i}`);
+        const tab = document.getElementById(`cli-step-tab-${i}`);
+        if (cont) {
+          if (i === step) cont.classList.remove('hidden');
+          else cont.classList.add('hidden');
+        }
+        if (tab) {
+          const numSpan = tab.querySelector('span:first-child');
+          if (i === step) {
+            tab.className = 'flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-amber-500 text-navy-950 font-bold border border-amber-400 shadow-xs cursor-pointer transition-all';
+            if (numSpan) numSpan.className = 'w-5 h-5 rounded-full bg-navy-950 text-amber-400 flex items-center justify-center text-[11px] font-mono';
+          } else {
+            tab.className = 'flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 cursor-pointer transition-all';
+            if (numSpan) numSpan.className = 'w-5 h-5 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-[11px] font-mono';
+          }
+        }
+      }
+
+      const prevBtn = document.getElementById('cli-prev-btn');
+      const nextBtn = document.getElementById('cli-next-btn');
+      const saveBtn = document.getElementById('cli-save-btn');
+
+      if (prevBtn) {
+        if (step === 1) prevBtn.classList.add('hidden');
+        else prevBtn.classList.remove('hidden');
+      }
+
+      if (nextBtn && saveBtn) {
+        if (step === 3) {
+          nextBtn.classList.add('hidden');
+          saveBtn.classList.remove('hidden');
+        } else {
+          nextBtn.classList.remove('hidden');
+          saveBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    function nextClientStep() {
+      if (currentClientStep === 1) {
+        const nameInput = document.getElementById('cli-fullname');
+        if (nameInput && !nameInput.value.trim()) {
+          nameInput.focus();
+          const errorDiv = document.getElementById('cli-error-msg');
+          const errorText = document.getElementById('cli-error-text');
+          if (errorDiv && errorText) {
+            errorText.textContent = 'Por favor, informe o Nome Completo ou Razão Social antes de avançar.';
+            errorDiv.classList.remove('hidden');
+          }
+          return;
+        }
+      }
+      const errorDiv = document.getElementById('cli-error-msg');
+      if (errorDiv) errorDiv.classList.add('hidden');
+      setClientStep(currentClientStep + 1);
+    }
+
+    function prevClientStep() {
+      const errorDiv = document.getElementById('cli-error-msg');
+      if (errorDiv) errorDiv.classList.add('hidden');
+      setClientStep(currentClientStep - 1);
+    }
+
+    window.setClientStep = setClientStep;
+    window.nextClientStep = nextClientStep;
+    window.prevClientStep = prevClientStep;
+
     function openNewClientModal() {
       document.getElementById('client-form').reset();
       document.getElementById('cli-edit-id').value = '';
@@ -1432,6 +1554,7 @@
       document.getElementById('cli-profession').value = '';
       toggleClientTypeUI();
       recalcContractBalances();
+      setClientStep(1);
 
       document.getElementById('client-modal').classList.remove('hidden');
     }
@@ -1512,6 +1635,7 @@
       }
 
       toggleClientTypeUI();
+      setClientStep(1);
       document.getElementById('client-modal').classList.remove('hidden');
     }
 
@@ -1524,9 +1648,23 @@
       const editId = document.getElementById('cli-edit-id').value;
       const isEditing = !!editId;
 
+      const fullName = (document.getElementById('cli-fullname')?.value || '').trim();
+      if (!fullName) {
+        setClientStep(1);
+        const nameInput = document.getElementById('cli-fullname');
+        if (nameInput) nameInput.focus();
+        const errorDiv = document.getElementById('cli-error-msg');
+        const errorText = document.getElementById('cli-error-text');
+        if (errorDiv && errorText) {
+          errorText.textContent = 'O Nome Completo ou Razão Social é obrigatório.';
+          errorDiv.classList.remove('hidden');
+        }
+        return;
+      }
+
       const formData = new FormData();
       formData.append('client_type', document.querySelector('input[name="client_type"]:checked')?.value || 'PF');
-      formData.append('full_name', document.getElementById('cli-fullname').value);
+      formData.append('full_name', fullName);
       formData.append('cpf', document.getElementById('cli-cpf').value);
       formData.append('rg', document.getElementById('cli-rg').value);
       formData.append('nationality', document.getElementById('cli-nationality').value);
@@ -1936,15 +2074,14 @@
                 >
                   📋 Copiar
                 </button>
-                <a 
-                  href="${tribunalUrl}" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  class="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold border border-blue-200 inline-flex items-center space-x-1"
-                  title="Abrir página de consulta do tribunal"
+                <button 
+                  type="button"
+                  onclick="openTribunalPortal('${law.cnj_number}')" 
+                  class="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold border border-blue-200 inline-flex items-center space-x-1 cursor-pointer"
+                  title="Copiar CNJ e abrir consulta oficial no Tribunal correspondente"
                 >
                   <span>🔗 Consultar Tribunal</span>
-                </a>
+                </button>
               </div>
             </div>
 
@@ -2055,11 +2192,21 @@
                         ` : ''}
                       </div>
 
-                      <div class="flex items-center space-x-2 self-end md:self-auto flex-shrink-0">
+                      <div class="flex items-center space-x-1.5 self-end md:self-auto flex-shrink-0">
+                        <!-- Botão de Notificação no WhatsApp com Autorização do Advogado -->
+                        <button 
+                          onclick="openAuthorizeMovementWhatsAppModal('${mov.id}')" 
+                          class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer ${mov.whatsapp_notified_at ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-green-50 hover:bg-green-100 text-green-800 border border-green-300 hover:shadow-xs'}"
+                          title="${mov.whatsapp_notified_at ? 'Notificação já autorizada. Clique para reenviar se desejar.' : 'Autorizar envio de notificação via WhatsApp ao cliente'}"
+                        >
+                          <span>${mov.whatsapp_notified_at ? '✓' : '📲'}</span>
+                          <span>${mov.whatsapp_notified_at ? 'Notificado' : 'WhatsApp'}</span>
+                        </button>
+
                         ${mov.deadline_date && mov.deadline_status !== 'Informativo' ? `
                           <button 
                             onclick="toggleMovementStatus('${mov.id}', '${mov.deadline_status}')" 
-                            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${mov.deadline_status === 'Cumprido' ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'}"
+                            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${mov.deadline_status === 'Cumprido' ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'}"
                             title="${mov.deadline_status === 'Cumprido' ? 'Reabrir prazo como pendente' : 'Marcar prazo como cumprido / peticionado'}"
                           >
                             ${mov.deadline_status === 'Cumprido' ? '↩ Reabrir' : '✓ Marcar Cumprido'}
@@ -2068,7 +2215,7 @@
 
                         <button 
                           onclick="deleteMovement('${mov.id}')" 
-                          class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" 
+                          class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" 
                           title="Excluir andamento"
                         >
                           🗑️
@@ -2354,7 +2501,14 @@
         if (res.ok && data.success) {
           closeMovementModal();
           await loadLawsuits();
-          alert('✅ Andamento / Prazo registrado com sucesso!');
+          const newMovementId = data.movementId || editId;
+          if (!isEditing && newMovementId) {
+            if (confirm('✅ Andamento registrado com sucesso!\n\nDeseja autorizar o envio de notificação no WhatsApp para o cliente agora?')) {
+              openAuthorizeMovementWhatsAppModal(newMovementId);
+            }
+          } else {
+            alert('✅ Andamento atualizado com sucesso!');
+          }
         } else {
           alert(data.error || 'Erro ao registrar andamento.');
         }
@@ -2398,6 +2552,159 @@
       } catch (err) {
         alert('Erro ao comunicar com o servidor.');
       }
+    }
+
+    // =============================================================================
+    // 📲 AUTORIZAÇÃO DE NOTIFICAÇÃO NO WHATSAPP PARA O CLIENTE (COM APROVAÇÃO DO ADVOGADO)
+    // =============================================================================
+
+    let currentNotifMovementId = null;
+
+    window.openAuthorizeMovementWhatsAppModal = async function(movementId) {
+      currentNotifMovementId = movementId;
+      let modal = document.getElementById('movement-whatsapp-auth-modal');
+      if (!modal) {
+        createMovementWhatsAppAuthModal();
+        modal = document.getElementById('movement-whatsapp-auth-modal');
+      }
+
+      modal.classList.remove('hidden');
+      document.getElementById('mwa-client-name').textContent = 'Carregando dados...';
+      document.getElementById('mwa-process-cnj').textContent = '...';
+      document.getElementById('mwa-message-preview').value = 'Carregando mensagem estruturada...';
+
+      try {
+        const res = await fetch(`/api/lawsuits/movements/${movementId}/preview-whatsapp`, {
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao carregar pré-visualização.');
+
+        document.getElementById('mwa-client-name').textContent = data.clientName;
+        document.getElementById('mwa-process-cnj').textContent = data.cnj_number || 'Sem número CNJ';
+        document.getElementById('mwa-phone-input').value = data.clientPhone || '';
+        document.getElementById('mwa-message-preview').value = data.suggestedMessage || '';
+
+        const statusBadge = document.getElementById('mwa-status-badge');
+        if (data.whatsapp_notified_at) {
+          statusBadge.textContent = '✓ Já notificado anteriormente';
+          statusBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300';
+        } else {
+          statusBadge.textContent = 'Aguardando sua autorização';
+          statusBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-900 border border-indigo-300';
+        }
+      } catch (err) {
+        alert('Erro ao carregar notificação: ' + err.message);
+        closeAuthorizeMovementWhatsAppModal();
+      }
+    };
+
+    window.closeAuthorizeMovementWhatsAppModal = function() {
+      const modal = document.getElementById('movement-whatsapp-auth-modal');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.handleConfirmAuthorizeWhatsApp = async function() {
+      if (!currentNotifMovementId) return;
+
+      const phone = document.getElementById('mwa-phone-input').value.trim();
+      const message = document.getElementById('mwa-message-preview').value.trim();
+
+      if (!phone) {
+        alert('Por favor, informe o WhatsApp do cliente para envio.');
+        return;
+      }
+      if (!message) {
+        alert('A mensagem de notificação não pode ficar em branco.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirm-authorize-whatsapp');
+      const origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Autorizando...';
+
+      try {
+        const res = await fetch(`/api/lawsuits/movements/${currentNotifMovementId}/authorize-whatsapp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ phone, message })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Falha ao autorizar.');
+
+        alert('✅ Notificação autorizada pelo advogado! Abrindo WhatsApp com o cliente...');
+        window.open(data.whatsapp_link, '_blank');
+        closeAuthorizeMovementWhatsAppModal();
+        await loadLawsuits();
+      } catch (err) {
+        alert('Erro ao autorizar disparo: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    };
+
+    function createMovementWhatsAppAuthModal() {
+      const div = document.createElement('div');
+      div.id = 'movement-whatsapp-auth-modal';
+      div.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/70 backdrop-blur-xs hidden';
+      div.innerHTML = `
+        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-scale-up">
+          <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div class="flex items-center space-x-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-300 flex items-center justify-center text-xl flex-shrink-0">
+                📲
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-2">
+                  <h3 class="font-serif font-bold text-base text-navy-950">
+                    Autorizar Notificação no WhatsApp
+                  </h3>
+                  <span id="mwa-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-900 border border-indigo-300 flex-shrink-0">
+                    Aguardando sua autorização
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5 truncate">
+                  Cliente: <span id="mwa-client-name" class="font-bold text-slate-700"></span> • CNJ: <span id="mwa-process-cnj" class="font-mono"></span>
+                </p>
+              </div>
+            </div>
+            <button onclick="closeAuthorizeMovementWhatsAppModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 text-lg cursor-pointer">✕</button>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-4 text-xs">
+            <div class="p-3 bg-amber-50/90 rounded-xl border border-amber-200 text-amber-900 leading-relaxed">
+              <strong>🔒 Controle Ético & Profissional:</strong> A notificação só é enviada após a sua autorização expressa. Você pode revisar, adicionar notas ou editar a mensagem abaixo antes de abrir a conversa.
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                WhatsApp do Cliente (com DDD):
+              </label>
+              <input type="text" id="mwa-phone-input" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Mensagem Amigável (Sem Juridiquês):
+              </label>
+              <textarea id="mwa-message-preview" rows="8" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono leading-relaxed focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"></textarea>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end space-x-2">
+            <button onclick="closeAuthorizeMovementWhatsAppModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-800 font-bold text-xs cursor-pointer">
+              Cancelar
+            </button>
+            <button id="btn-confirm-authorize-whatsapp" onclick="handleConfirmAuthorizeWhatsApp()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-2 cursor-pointer border border-emerald-500">
+              <span>✅</span>
+              <span>Autorizar & Disparar no WhatsApp</span>
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(div);
     }
 
     // =============================================================================

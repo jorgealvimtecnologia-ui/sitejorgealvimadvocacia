@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour Interativo das Melhorias — Jorge Alvim Advocacia</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.03); }
+    }
+    .badge-pulse { animation: pulseGlow 2s infinite ease-in-out; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen p-3 sm:p-6 select-none">
+
+  <!-- Container Principal -->
+  <div class="max-w-5xl mx-auto space-y-4">
+
+    <!-- Topbar Institucional com Controles Globais -->
+    <header class="bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/40 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+            🏛️ Jorge Alvim Advocacia & Legaltech
+          </span>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">
+            ✓ 80 Testes Aprovados
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+          Apresentação Interativa das Melhorias <span class="text-amber-400">Tela por Tela</span>
+        </h1>
+        <p class="text-xs text-slate-400 mt-0.5">
+          Navegue pelas 5 telas do sistema para inspecionar e testar cada melhoria implementada.
+        </p>
+      </div>
+
+      <!-- Barra de Controle Próximo / Anterior -->
+      <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl p-2 self-start md:self-auto">
+        <button onclick="prevStep()" id="btn-prev" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+          ⬅ Anterior
+        </button>
+        <span id="step-indicator" class="text-xs font-bold text-amber-400 px-2 font-mono">
+          1 / 5
+        </span>
+        <button onclick="nextStep()" id="btn-next" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all shadow-md">
+          Próxima ➡
+        </button>
+      </div>
+    </header>
+
+    <!-- Menu Seletor em Abas (Passo a Passo) -->
+    <nav class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <button onclick="goToStep(1)" id="tab-1" class="step-tab p-2.5 rounded-xl border text-left transition-all border-amber-500 bg-amber-500/10 text-amber-300">
+        <div class="text-[10px] uppercase font-bold text-amber-400">Página 1</div>
+        <div class="text-xs font-black truncate">Site Principal</div>
+        <div class="text-[10px] text-slate-400 truncate">Hero & Consulta Express</div>
+      </button>
+
+      <button onclick="goToStep(2)" id="tab-2" class="step-tab p-2.5 rounded-xl border text-left transition-all border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700">
+        <div class="text-[10px] uppercase font-bold text-slate-500">Página 2</div>
+        <div class="text-xs font-black truncate">Portal do Cliente</div>
+        <div class="text-[10px] text-slate-400 truncate">Fotos & 5 Fases</div>
+      </button>
+
+      <button onclick="goToStep(3)" id="tab-3" class="step-tab p-2.5 rounded-xl border text-left transition-all border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700">
+        <div class="text-[10px] uppercase font-bold text-slate-500">Página 3</div>
+        <div class="text-xs font-black truncate">Painel do Advogado</div>
+        <div class="text-[10px] text-slate-400 truncate">WhatsApp c/ Autorização</div>
+      </button>
+
+      <button onclick="goToStep(4)" id="tab-4" class="step-tab p-2.5 rounded-xl border text-left transition-all border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700">
+        <div class="text-[10px] uppercase font-bold text-slate-500">Página 4</div>
+        <div class="text-xs font-black truncate">Assinatura Eletrônica</div>
+        <div class="text-[10px] text-slate-400 truncate">Kit Inicial Digital</div>
+      </button>
+
+      <button onclick="goToStep(5)" id="tab-5" class="step-tab p-2.5 rounded-xl border text-left transition-all border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700">
+        <div class="text-[10px] uppercase font-bold text-slate-500">Página 5</div>
+        <div class="text-xs font-black truncate">Auditoria Cloud</div>
+        <div class="text-[10px] text-slate-400 truncate">Parecer & PDF Oficial</div>
+      </button>
+    </nav>
+
+    <!-- ================================================================= -->
+    <!-- SLIDE 1: SITE PRINCIPAL (index.html)                              -->
+    <!-- ================================================================= -->
+    <section id="slide-1" class="slide-content space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wide">
+              <span>🌐 index.html • Site Institucional & Captação</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-1">1. Hero Executivo, Banner de Acesso & Consulta Express</h2>
+            <p class="text-xs text-slate-400">Design focado em autoridade forense, conversão ágil e entrada no Portal do Cliente.</p>
+          </div>
+          <a href="http://localhost:3000/" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-colors">
+            <span>🔗 Abrir Página Real</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </div>
+
+        <!-- Demonstração Interativa das Melhorias -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Card 1: Banner de Acesso Rápido -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">📌 Card Destaque: Acesso ao Portal</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">100% Ativo</span>
+            </div>
+            <div class="bg-gradient-to-r from-amber-950/40 to-slate-900 border border-amber-500/30 rounded-xl p-4 text-center space-y-2">
+              <p class="text-xs text-amber-200 font-bold">Já é nosso cliente? Acompanhe seu processo online</p>
+              <p class="text-[11px] text-slate-400">Acesse andamentos descomplicados, audiências e documentos sem juridiquês.</p>
+              <a href="http://localhost:3000/cliente.html" target="_blank" class="inline-block px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-black shadow transition-all">
+                👤 Entrar no Portal do Cliente ➔
+              </a>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              <strong>Impacto:</strong> Clientes antigos agora encontram imediatamente o login sem precisar ligar ou enviar mensagens apenas para pedir o link do portal.
+            </p>
+          </div>
+
+          <!-- Card 2: Simulador da Consulta Express -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">⚡ Teste Interativo: Consulta Express (3 Campos)</span>
+              <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold">POST /api/leads</span>
+            </div>
+
+            <div class="space-y-2">
+              <input type="text" id="demo-lead-name" placeholder="Seu Nome Completo" value="Dr. Carlos Augusto Silva" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-amber-400 focus:outline-none">
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="demo-lead-phone" placeholder="WhatsApp (DDD)" value="(32) 99876-5432" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-amber-400 focus:outline-none">
+                <select id="demo-lead-area" class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:border-amber-400 focus:outline-none">
+                  <option value="Direito Civil">Direito Civil</option>
+                  <option value="Direito de Família">Direito de Família</option>
+                  <option value="Direito Imobiliário">Direito Imobiliário</option>
+                  <option value="Direito Bancário">Direito Bancário</option>
+                </select>
+              </div>
+              <button onclick="simularEnvioLead()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-all flex items-center justify-center gap-1.5">
+                <span>💬 Simular Geração de Protocolo & Disparo</span>
+              </button>
+            </div>
+
+            <div id="lead-result-box" class="hidden p-3 rounded-lg bg-emerald-950/50 border border-emerald-500/40 text-emerald-200 text-xs space-y-1">
+              <div class="font-bold flex items-center gap-1">
+                <span>✓ Protocolo Gerado:</span>
+                <span id="lead-protocolo-txt" class="font-mono text-amber-300">#JA-2026-9812</span>
+              </div>
+              <div class="text-[11px] text-slate-300">Registro gravado em leads.db e mensagem formatada pronta para o WhatsApp do Dr. Jorge Alvim.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Balão Flutuante de Boas-Vindas -->
+        <div class="mt-4 p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-base">
+              💬
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-200">Balão Flutuante de WhatsApp Humanizado</div>
+              <div class="text-[11px] text-slate-400">"Dr. Jorge Alvim Online • Dúvidas sobre seu caso? Clique para falar diretamente"</div>
+            </div>
+          </div>
+          <span class="text-[10px] px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md font-bold">Prov. 205/2021 OAB</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SLIDE 2: PORTAL DO CLIENTE (cliente.html)                         -->
+    <!-- ================================================================= -->
+    <section id="slide-2" class="slide-content hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wide">
+              <span>👤 cliente.html • Portal do Cliente & Transparência</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-1">2. Aba "Meus Documentos & Fotos" e Linha do Tempo em 5 Fases</h2>
+            <p class="text-xs text-slate-400">Empoderamento do cliente com envio de RG/fotos pelo celular e explicação sem juridiquês.</p>
+          </div>
+          <a href="http://localhost:3000/cliente.html" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-colors">
+            <span>🔗 Abrir Portal Real</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Card 1: Simulador da Aba Meus Documentos & Fotos -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">📸 Nova Aba: "📁 Meus Documentos & Fotos"</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">POST /upload-docs</span>
+            </div>
+
+            <div class="border-2 border-dashed border-slate-700 hover:border-amber-400 rounded-xl p-4 text-center cursor-pointer transition-colors bg-slate-900/50" onclick="simularUploadFoto()">
+              <div class="text-2xl mb-1">📷</div>
+              <div class="text-xs font-bold text-white">Toque aqui para simular envio de foto do celular</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Suporta fotos de RG, CPF, CNH ou Comprovante de Residência</div>
+            </div>
+
+            <!-- Lista de Arquivos Simulada -->
+            <div class="space-y-1.5" id="simulated-doc-list">
+              <div class="p-2 bg-slate-900 rounded-lg flex items-center justify-between text-xs border border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span class="text-amber-400">📄</span>
+                  <div>
+                    <div class="font-bold text-slate-200">RG_Frente_e_Verso.jpg</div>
+                    <div class="text-[10px] text-slate-400">Enviado em 06/09/2026 às 15:30 • 2.4 MB</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">✓ Recebido</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400">Permite ao cliente tirar foto diretamente da câmera do smartphone sem instalar nenhum aplicativo.</p>
+          </div>
+
+          <!-- Card 2: Linha do Tempo em 5 Fases Descomplicada -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">⚖️ Esteira Processual Descomplicada</span>
+              <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold">Zero Juridiquês</span>
+            </div>
+
+            <!-- Stepper Visual -->
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center gap-3 p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/40">
+                <span class="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs">1</span>
+                <div>
+                  <div class="font-bold text-emerald-300">1. Petição Inicial Protocolada</div>
+                  <div class="text-[10px] text-slate-400">Ação distribuída no fórum e aguardando juiz.</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 p-2 rounded-lg bg-blue-950/30 border border-blue-500/40">
+                <span class="w-6 h-6 rounded-full bg-blue-500 text-white font-black flex items-center justify-center text-xs badge-pulse">2</span>
+                <div>
+                  <div class="font-bold text-blue-300">2. Citação do Réu (Fase Atual)</div>
+                  <div class="text-[10px] text-slate-300">Oficial de justiça notificando a outra parte.</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-900 border border-slate-800 opacity-60">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-xs">3</span>
+                <div>
+                  <div class="font-bold text-slate-300">3. Audiência de Conciliação</div>
+                  <div class="text-[10px] text-slate-500">Tentativa de acordo amigável.</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-900 border border-slate-800 opacity-60">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-xs">4</span>
+                <div>
+                  <div class="font-bold text-slate-300">4. Decisão / Sentença do Juiz</div>
+                  <div class="text-[10px] text-slate-500">Julgamento do pedido formulado.</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-900 border border-slate-800 opacity-60">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 font-bold flex items-center justify-center text-xs">5</span>
+                <div>
+                  <div class="font-bold text-slate-300">5. Cumprimento & Pagamento (Alvará)</div>
+                  <div class="text-[10px] text-slate-500">Recebimento dos valores e encerramento.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SLIDE 3: PAINEL DO ADVOGADO (painel.html)                          -->
+    <!-- ================================================================= -->
+    <section id="slide-3" class="slide-content hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wide">
+              <span>💼 painel.html • Gestão Jurídica & Automação</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-1">3. WhatsApp com Autorização do Advogado & Kit Inicial em 1 Clique</h2>
+            <p class="text-xs text-slate-400">Segurança ética: nenhum andamento sai sem revisão prévia do advogado responsável.</p>
+          </div>
+          <a href="http://localhost:3000/painel.html" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-colors">
+            <span>🔗 Abrir Painel Real</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Card 1: Simulador de Autorização de WhatsApp -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">📲 Notificação WhatsApp com Autorização</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">POST /authorize-whatsapp</span>
+            </div>
+
+            <!-- Card de Andamento com Botão -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-slate-200">Processo: 5001234-88.2026.8.13.0145</span>
+                <span class="text-[10px] text-slate-400">TJMG • Hoje</span>
+              </div>
+              <p class="text-xs text-slate-300">"Juntada de Petição de Manifestação sobre Laudo Pericial."</p>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <span id="badge-status-whatsapp" class="text-[10px] text-amber-400 font-bold">⏳ Pendente de envio</span>
+                <button onclick="abrirModalAutorizacaoWhatsapp()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1">
+                  <span>📲 Notificar WhatsApp</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Modal Simulado de Pré-visualização -->
+            <div id="simulated-modal-whatsapp" class="hidden p-3.5 bg-slate-900 border border-amber-500/40 rounded-xl space-y-2 text-xs">
+              <div class="font-bold text-amber-300 flex items-center justify-between">
+                <span>👁️ Revisão & Autorização do Advogado</span>
+                <span class="text-[10px] text-slate-400">OAB/MG 222.943</span>
+              </div>
+              <div class="p-2 bg-slate-950 rounded border border-slate-800 font-mono text-[11px] text-slate-300 leading-relaxed">
+                Olá, Maria Aparecida! Informamos um novo andamento no seu processo (TJMG):<br>
+                📌 <em>Manifestação sobre Laudo Pericial juntada aos autos com sucesso.</em>
+              </div>
+              <div class="flex items-center justify-end gap-2 pt-1">
+                <button onclick="fecharModalWhatsapp()" class="px-2.5 py-1 text-slate-400 hover:text-white text-xs">Cancelar</button>
+                <button onclick="confirmarAutorizacaoWhatsapp()" class="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded text-xs">✓ Autorizar Disparo</button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">Evita disparos acidentais ou linguagem excessivamente técnica diretamente para o WhatsApp do cliente.</p>
+          </div>
+
+          <!-- Card 2: Kit Inicial em 1 Clique -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">⚖️ Kit Inicial (Procuração + Contrato + Hipossuficiência)</span>
+              <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold">1 Clique</span>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-white">1. Procuração Ad Judicia (Art. 105 CPC)</div>
+                  <div class="text-[10px] text-slate-400">Poderes gerais e específicos já preenchidos.</div>
+                </div>
+                <span class="text-amber-400 text-xs font-bold">PDF Pronto</span>
+              </div>
+
+              <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-white">2. Contrato de Honorários Advocatícios</div>
+                  <div class="text-[10px] text-slate-400">Cláusulas de êxito e fixação alinhadas à OAB.</div>
+                </div>
+                <span class="text-amber-400 text-xs font-bold">PDF Pronto</span>
+              </div>
+
+              <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-white">3. Declaração de Hipossuficiência (Art. 98)</div>
+                  <div class="text-[10px] text-slate-400">Pedido de gratuidade de justiça imediato.</div>
+                </div>
+                <span class="text-amber-400 text-xs font-bold">PDF Pronto</span>
+              </div>
+
+              <button onclick="simularDisparoKit()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-all flex items-center justify-center gap-1.5">
+                <span>🚀 Disparar Kit para Assinatura Eletrônica</span>
+              </button>
+
+              <div id="kit-status-msg" class="hidden p-2 rounded bg-blue-950/40 border border-blue-500/30 text-blue-200 text-[11px] text-center">
+                ✓ Link do Kit Inicial gerado e enviado via WhatsApp do cliente!
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SLIDE 4: ASSINATURA ELETRÔNICA (assinar.html)                      -->
+    <!-- ================================================================= -->
+    <section id="slide-4" class="slide-content hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wide">
+              <span>✍️ assinar.html • Assinatura Eletrônica & Compliance</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-1">4. Assinatura Digital Mobile (Lei 14.063/2020)</h2>
+            <p class="text-xs text-slate-400">Rubrica digital na tela do celular com registro de IP, data/hora e hash de integridade.</p>
+          </div>
+          <a href="http://localhost:3000/assinar.html" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-colors">
+            <span>🔗 Abrir Assinador Real</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- Simulador de Rubrica Digital -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">📱 Tela do Celular do Cliente</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">Touch / Mouse</span>
+            </div>
+
+            <!-- Canvas Simulado -->
+            <div class="bg-white rounded-xl p-3 text-slate-900 space-y-2 border border-slate-300">
+              <div class="text-[11px] font-bold text-slate-700 flex justify-between">
+                <span>Assine no retângulo abaixo:</span>
+                <span class="text-slate-400 font-normal">Dr. Jorge Alvim Advocacia</span>
+              </div>
+              <canvas id="signature-pad" width="360" height="120" class="w-full h-28 bg-slate-50 border border-slate-300 rounded cursor-crosshair"></canvas>
+              <div class="flex items-center justify-between text-[10px] text-slate-500">
+                <button onclick="clearCanvas()" class="text-rose-600 hover:underline">Limpar Rubrica</button>
+                <span>Lei 14.063/2020 Art. 5º</span>
+              </div>
+            </div>
+
+            <button onclick="confirmarAssinaturaDemo()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-all">
+              ✓ Confirmar Assinatura Digital do Kit
+            </button>
+          </div>
+
+          <!-- Carimbo de Evidências Forenses -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">🛡️ Metadados de Auditoria Forense</span>
+              <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold">Validade Jurídica</span>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between">
+                <span class="text-slate-400">Titular:</span>
+                <span class="font-bold text-slate-200">Maria Aparecida dos Santos</span>
+              </div>
+              <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between">
+                <span class="text-slate-400">Documento:</span>
+                <span class="font-bold text-slate-200">CPF ***.456.789-**</span>
+              </div>
+              <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between">
+                <span class="text-slate-400">IP de Conexão:</span>
+                <span class="font-mono text-amber-400">177.136.214.88 (Juiz de Fora/MG)</span>
+              </div>
+              <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between">
+                <span class="text-slate-400">Data/Hora (UTC-3):</span>
+                <span class="font-mono text-slate-200" id="live-audit-timestamp">06/09/2026 18:45:00</span>
+              </div>
+              <div class="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between">
+                <span class="text-slate-400">Hash SHA-256:</span>
+                <span class="font-mono text-[9px] text-emerald-400">e3b0c44298fc1c149afbf4c8996fb92427ae41e4...</span>
+              </div>
+            </div>
+
+            <div id="sign-feedback" class="hidden p-2 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-[11px] text-center font-bold">
+              ✓ Documentos autenticados e protocolados na pasta do cliente!
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================= -->
+    <!-- SLIDE 5: AUDITORIA CLOUD & PDF (auditoria_tecnica_arquitetura_cloud.pdf) -->
+    <!-- ================================================================= -->
+    <section id="slide-5" class="slide-content hidden space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wide">
+              <span>☁️ Infraestrutura & Engenharia de Software</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-1">5. Auditoria de Arquitetura Cloud & Parecer Técnico (2 Páginas)</h2>
+            <p class="text-xs text-slate-400">Diagnóstico da infraestrutura Contabo (Alemanha), SQLite WAL, mitigação Cloudflare e LGPD.</p>
+          </div>
+          <a href="http://localhost:3000/auditoria_tecnica_arquitetura_cloud.pdf" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-colors shadow">
+            <span>📄 Baixar PDF Oficial</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <!-- Coluna 1 -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <span>🗄️</span> Persistência & SQLite WAL
+            </div>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Leituras in-memory < 5ms com 41 índices. Alerta para necessidade de réplica externa fora da VPS Contabo.
+            </p>
+            <div class="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded font-bold inline-block">Velocidade NVMe</div>
+          </div>
+
+          <!-- Coluna 2 -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <div class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+              <span>⚡</span> Cloudflare Edge Caching
+            </div>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Elimina a latência de 250ms de Frankfurt para o Brasil através de proxy gratuito com presença em SP/RJ.
+            </p>
+            <div class="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded font-bold inline-block">Custo Zero</div>
+          </div>
+
+          <!-- Coluna 3 -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <div class="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+              <span>⚖️</span> LGPD Art. 16, I & OAB
+            </div>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              Substituição do Hard Delete por Soft Delete com trava que impede exclusão de clientes com processos ativos.
+            </p>
+            <div class="text-[10px] px-2 py-0.5 bg-rose-500/10 text-rose-400 rounded font-bold inline-block">Blindagem Legal</div>
+          </div>
+        </div>
+
+        <!-- Box de Destaque do Relatório -->
+        <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="text-xs text-slate-300">
+            <strong class="text-white">Documento Técnico Consolidado:</strong> Relatório em PDF gerado com layout executivo estrito de 2 páginas pronto para arquivamento e tomada de decisão gerencial.
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="http://localhost:3000/auditoria_tecnica_arquitetura_cloud.pdf" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs border border-slate-700">
+              Visualizar Online
+            </a>
+            <a href="http://localhost:3000/relatorio_unificado_atualizacoes_e_roadmap.pdf" target="_blank" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold rounded-lg text-xs border border-amber-500/30">
+              Ver Relatório Geral
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rodapé de Navegação com Atalhos -->
+    <footer class="text-center text-xs text-slate-500 pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-900">
+      <div>Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943 • Juiz de Fora - MG</div>
+      <div class="flex items-center gap-3 text-[11px]">
+        <span>Dica: Use as setas <strong>⬅</strong> e <strong>➡</strong> do teclado</span>
+        <span>•</span>
+        <button onclick="goToStep(1)" class="text-amber-400 hover:underline">Voltar ao Início</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Scripts Interativos de Navegação e Simulação -->
+  <script>
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    function updateView() {
+      // Ocultar todos os slides
+      for (let i = 1; i <= totalSteps; i++) {
+        const slide = document.getElementById(`slide-${i}`);
+        const tab = document.getElementById(`tab-${i}`);
+        if (slide) slide.classList.add('hidden');
+        if (tab) {
+          tab.classList.remove('border-amber-500', 'bg-amber-500/10', 'text-amber-300');
+          tab.classList.add('border-slate-800', 'bg-slate-900/60', 'text-slate-400');
+          const titleBadge = tab.querySelector('div:first-child');
+          if (titleBadge) {
+            titleBadge.classList.remove('text-amber-400');
+            titleBadge.classList.add('text-slate-500');
+          }
+        }
+      }
+
+      // Exibir slide ativo
+      const activeSlide = document.getElementById(`slide-${currentStep}`);
+      const activeTab = document.getElementById(`tab-${currentStep}`);
+      if (activeSlide) {
+        activeSlide.classList.remove('hidden');
+        activeSlide.classList.add('fade-in');
+      }
+      if (activeTab) {
+        activeTab.classList.remove('border-slate-800', 'bg-slate-900/60', 'text-slate-400');
+        activeTab.classList.add('border-amber-500', 'bg-amber-500/10', 'text-amber-300');
+        const titleBadge = activeTab.querySelector('div:first-child');
+        if (titleBadge) {
+          titleBadge.classList.remove('text-slate-500');
+          titleBadge.classList.add('text-amber-400');
+        }
+      }
+
+      // Atualizar contador e botões
+      document.getElementById('step-indicator').innerText = `${currentStep} / ${totalSteps}`;
+      document.getElementById('btn-prev').disabled = (currentStep === 1);
+      document.getElementById('btn-next').innerText = (currentStep === totalSteps) ? 'Reiniciar ↺' : 'Próxima ➡';
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+      } else {
+        currentStep = 1;
+      }
+      updateView();
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateView();
+      }
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      updateView();
+    }
+
+    // Teclado
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextStep();
+      if (e.key === 'ArrowLeft') prevStep();
+    });
+
+    // Simulador Lead
+    function simularEnvioLead() {
+      const name = document.getElementById('demo-lead-name').value;
+      const box = document.getElementById('lead-result-box');
+      const randomProto = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('lead-protocolo-txt').innerText = `#JA-2026-${randomProto}`;
+      box.classList.remove('hidden');
+      box.classList.add('fade-in');
+    }
+
+    // Simulador Upload
+    function simularUploadFoto() {
+      const list = document.getElementById('simulated-doc-list');
+      const newDoc = document.createElement('div');
+      newDoc.className = 'p-2 bg-emerald-950/40 rounded-lg flex items-center justify-between text-xs border border-emerald-500/40 fade-in';
+      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      newDoc.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="text-emerald-400">📷</span>
+          <div>
+            <div class="font-bold text-white">Comprovante_Residencia_Foto.jpg</div>
+            <div class="text-[10px] text-emerald-300">Enviado agora às ${time} • Câmera Smartphone</div>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">✓ Validado</span>
+      `;
+      list.prepend(newDoc);
+    }
+
+    // Simulador WhatsApp
+    function abrirModalAutorizacaoWhatsapp() {
+      document.getElementById('simulated-modal-whatsapp').classList.remove('hidden');
+    }
+    function fecharModalWhatsapp() {
+      document.getElementById('simulated-modal-whatsapp').classList.add('hidden');
+    }
+    function confirmarAutorizacaoWhatsapp() {
+      document.getElementById('simulated-modal-whatsapp').classList.add('hidden');
+      const badge = document.getElementById('badge-status-whatsapp');
+      badge.className = 'text-[10px] text-emerald-400 font-bold';
+      badge.innerText = '✓ Autorizado e Notificado às ' + new Date().toLocaleTimeString('pt-BR');
+    }
+
+    // Simulador Kit
+    function simularDisparoKit() {
+      const msg = document.getElementById('kit-status-msg');
+      msg.classList.remove('hidden');
+      msg.classList.add('fade-in');
+    }
+
+    // Canvas de Assinatura Simples
+    const canvas = document.getElementById('signature-pad');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#0F172A';
+
+      canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+      canvas.addEventListener('mousemove', (e) => { if (isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
+      window.addEventListener('mouseup', () => { isDrawing = false; });
+
+      // Touch para mobile
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        isDrawing = true;
+        ctx.beginPath();
+        ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      });
+      canvas.addEventListener('touchmove', (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        ctx.stroke();
+      });
+      canvas.addEventListener('touchend', () => { isDrawing = false; });
+    }
+
+    function clearCanvas() {
+      const canvas = document.getElementById('signature-pad');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function confirmarAssinaturaDemo() {
+      const fb = document.getElementById('sign-feedback');
+      fb.classList.remove('hidden');
+      fb.classList.add('fade-in');
+    }
+
+    // Atualizar relógio em tempo real
+    setInterval(() => {
+      const el = document.getElementById('live-audit-timestamp');
+      if (el) el.innerText = new Date().toLocaleString('pt-BR');
+    }, 1000);
+
+    // Iniciar
+    updateView();
+  </script>
+</body>
+</html>

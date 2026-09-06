@@ -540,6 +540,15 @@
         </button>
 
         <button 
+          id="btn-portal-tab-documents" 
+          onclick="switchPortalTab('documents')" 
+          class="flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
+        >
+          <span>📁</span>
+          <span>Meus Documentos (<span id="count-documents">0</span>)</span>
+        </button>
+
+        <button 
           id="btn-portal-tab-profile" 
           onclick="switchPortalTab('profile')" 
           class="flex-1 min-w-[140px] px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-navy-950 hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
@@ -849,12 +858,105 @@
 
       </div>
 
+      <!-- ================= ABA 4: MEUS DOCUMENTOS & ENVIO ================= -->
+      <div id="portal-tab-documents" class="hidden space-y-6">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h3 class="font-serif text-lg font-bold text-navy-950">Meus Documentos & Ficheiro Seguro</h3>
+            <p class="text-xs text-slate-500">Envie fotos de comprovantes, documentos pessoais e acesse as peças anexadas ao seu processo.</p>
+          </div>
+          <button 
+            type="button" 
+            onclick="document.getElementById('portal-file-input').click()" 
+            class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-gold-600 hover:from-amber-600 hover:to-gold-700 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+          >
+            <span>📤</span>
+            <span>Enviar Fotos / Arquivos</span>
+          </button>
+        </div>
+
+        <!-- Box de Upload Rápido (Drag & Drop / Mobile) -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-dashed border-gold-300/80 bg-gradient-to-b from-amber-50/30 to-white text-center space-y-4 shadow-sm hover:border-gold-500 transition-colors">
+          <div class="w-16 h-16 rounded-2xl bg-amber-100 text-gold-800 flex items-center justify-center text-3xl mx-auto border border-gold-300 shadow-2xs">
+            📲
+          </div>
+          <div class="max-w-md mx-auto space-y-1">
+            <h4 class="font-serif font-bold text-base text-navy-950">Envie Documentos Direto do Celular ou Computador</h4>
+            <p class="text-xs text-slate-500">
+              Fotos de RG, CNH, Comprovante de Residência, Contracheques, Extratos Bancários ou Peças em PDF (até 30MB).
+            </p>
+          </div>
+
+          <form id="portal-upload-form" onsubmit="handlePortalDocUpload(event)" class="space-y-3">
+            <input 
+              type="file" 
+              id="portal-file-input" 
+              multiple 
+              accept="image/*,application/pdf,.doc,.docx" 
+              onchange="handlePortalFilesSelected(this)" 
+              class="hidden" 
+            />
+            
+            <div id="portal-selected-files-preview" class="hidden max-w-lg mx-auto p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2">
+              <span class="font-bold text-navy-950 block">Arquivos selecionados para envio:</span>
+              <ul id="portal-selected-files-list" class="space-y-1 text-slate-600"></ul>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button 
+                type="button" 
+                onclick="document.getElementById('portal-file-input').click()" 
+                class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-300 transition-all cursor-pointer flex items-center space-x-1.5"
+              >
+                <span>📎</span>
+                <span>Escolher Fotos / Arquivos</span>
+              </button>
+              <button 
+                type="submit" 
+                id="portal-upload-submit-btn" 
+                class="hidden px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center space-x-1.5"
+              >
+                <span>🚀</span>
+                <span>Confirmar e Enviar ao Escritório</span>
+              </button>
+            </div>
+          </form>
+
+          <div id="portal-upload-feedback" class="hidden max-w-md mx-auto p-3 rounded-xl text-xs font-semibold"></div>
+        </div>
+
+        <!-- Lista de Documentos Anexados -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+              <h4 class="font-serif font-bold text-navy-950 text-base">Ficheiro de Documentos do Cliente</h4>
+              <p class="text-xs text-slate-500">Histórico de contratos, procurações e documentos protocolados.</p>
+            </div>
+            <button 
+              type="button" 
+              onclick="loadPortalDocuments()" 
+              class="text-xs text-gold-800 hover:text-gold-900 font-bold flex items-center space-x-1 cursor-pointer"
+            >
+              <span>🔄 Atualizar</span>
+            </button>
+          </div>
+
+          <div id="portal-documents-list" class="p-5 sm:p-6 divide-y divide-slate-100">
+            <div class="text-center py-6 text-slate-400 text-xs italic">
+              Nenhum documento anexado ainda.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
 
   </main>
 
   <!-- ================= MODAL: RECUPERAÇÃO DE SENHA ================= -->
-  <div id="forgot-password-modal" class="hidden fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="forgot-password-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl space-y-5">
       
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -917,7 +1019,7 @@
   </div>
 
   <!-- ================= MODAL: PIX DINÂMICO & FATURA ASAAS ================= -->
-  <div id="portal-pix-modal" class="hidden fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="portal-pix-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 border border-slate-200 shadow-2xl space-y-4 text-center">
       
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1263,9 +1365,41 @@
 
       // 4. Preencher Formulário de Meus Dados
       renderPortalProfileData(client);
+
+      // 5. Carregar Documentos Anexados
+      loadPortalDocuments();
     }
 
-    // ================= RENDERIZAR PROCESSOS & TIMELINE =================
+    // ================= RENDERIZAR PROCESSOS & TIMELINE VISUAL ESTILO RASTREAMENTO =================
+    function getProcessStageInfo(l) {
+      const statusLower = (l.status || '').toLowerCase();
+      const lastMov = (l.movements && l.movements[0]) ? (l.movements[0].title + ' ' + (l.movements[0].description || '')).toLowerCase() : '';
+
+      let stage = 1;
+      let stageText = '1. Distribuído / Petição Inicial';
+      let stageDesc = 'O processo foi protocolado e autuado no Tribunal pelo Dr. Jorge Alvim.';
+
+      if (statusLower.includes('conclu') || statusLower.includes('alvar') || statusLower.includes('pago') || statusLower.includes('arquiv') || lastMov.includes('trânsito em julgado') || lastMov.includes('alvará')) {
+        stage = 5;
+        stageText = '5. Conclusão / Pagamento / Alvará';
+        stageDesc = 'Fase final do processo: expedição de alvará judicial, cumprimento de valores ou baixa definitiva.';
+      } else if (statusLower.includes('senten') || statusLower.includes('julgado') || statusLower.includes('acórdão') || lastMov.includes('sentença') || lastMov.includes('julgado')) {
+        stage = 4;
+        stageText = '4. Decisão / Sentença';
+        stageDesc = 'O Magistrado proferiu julgamento de mérito sobre os pedidos da ação.';
+      } else if (statusLower.includes('audiência') || statusLower.includes('instru') || statusLower.includes('perícia') || lastMov.includes('audiência') || lastMov.includes('perito')) {
+        stage = 3;
+        stageText = '3. Instrução / Audiência';
+        stageDesc = 'Fase de produção de provas, perícias técnicas ou realização de audiência de conciliação/instrução.';
+      } else if (statusLower.includes('despacho') || statusLower.includes('citação') || statusLower.includes('concluso') || lastMov.includes('concluso') || lastMov.includes('despacho')) {
+        stage = 2;
+        stageText = '2. Com o Juiz / Em Análise';
+        stageDesc = 'O processo está concluso no gabinete do Juiz para despacho inicial, liminar ou citação da parte contrária.';
+      }
+
+      return { stage, stageText, stageDesc };
+    }
+
     function renderPortalLawsuits(lawsuits) {
       const container = document.getElementById('portal-lawsuits-list');
 
@@ -1285,6 +1419,37 @@
       }
 
       container.innerHTML = lawsuits.map(l => {
+        const stageInfo = getProcessStageInfo(l);
+        const percent = stageInfo.stage * 20;
+
+        const stages = [
+          { num: 1, label: 'Distribuído', icon: '📦' },
+          { num: 2, label: 'Com o Juiz', icon: '⚖️' },
+          { num: 3, label: 'Audiência / Provas', icon: '🏛️' },
+          { num: 4, label: 'Decisão / Sentença', icon: '📜' },
+          { num: 5, label: 'Pagamento / Final', icon: '💰' }
+        ];
+
+        const stepperHtml = stages.map(s => {
+          const isDone = s.num < stageInfo.stage;
+          const isCurrent = s.num === stageInfo.stage;
+          const circleClass = isDone 
+            ? 'bg-emerald-600 text-white border-emerald-600' 
+            : (isCurrent ? 'bg-gold-500 text-white border-gold-600 ring-4 ring-gold-100 animate-pulse' : 'bg-white text-slate-400 border-slate-300');
+          const textClass = isCurrent ? 'text-navy-950 font-extrabold' : (isDone ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium');
+
+          return `
+            <div class="flex-1 text-center relative z-10">
+              <div class="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${circleClass}">
+                ${isDone ? '✓' : s.icon}
+              </div>
+              <div class="text-[10px] sm:text-xs mt-2 ${textClass} leading-tight truncate px-1">
+                ${s.label}
+              </div>
+            </div>
+          `;
+        }).join('');
+
         const movementsHtml = l.movements && l.movements.length > 0 ? l.movements.map(m => `
           <div class="relative pl-6 pb-4 last:pb-0">
             <div class="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-gold-500 border-2 border-white shadow-xs"></div>
@@ -1321,10 +1486,59 @@
               </div>
             </div>
 
+            <!-- ================= ESTEIRA VISUAL ESTILO RASTREAMENTO / ENTREGA ================= -->
+            <div class="p-5 sm:p-6 bg-slate-50/60 border-b border-slate-200/80 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-navy-950 uppercase tracking-wider flex items-center space-x-1.5">
+                  <span>🚚</span>
+                  <span>Evolução do Processo (Estilo Rastreamento)</span>
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gold-100 text-gold-900 border border-gold-300">
+                  ${percent}% Concluído
+                </span>
+              </div>
+
+              <!-- Pipeline com Linha de Conexão -->
+              <div class="relative py-2">
+                <div class="absolute top-6 sm:top-7 left-6 right-6 h-1 bg-slate-200 z-0">
+                  <div class="h-1 bg-gradient-to-r from-gold-500 to-emerald-600 transition-all duration-500" style="width: ${percent - 10}%"></div>
+                </div>
+                <div class="flex items-start justify-between relative z-10">
+                  ${stepperHtml}
+                </div>
+              </div>
+
+              <!-- Explicação Leiga da Fase Atual + Guia das 5 Etapas -->
+              <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 text-xs space-y-2 shadow-2xs">
+                <div class="flex items-start space-x-3">
+                  <span class="text-lg flex-shrink-0">💡</span>
+                  <div>
+                    <span class="text-[10px] text-gold-700 font-bold uppercase tracking-wider block">Status em Linguagem Simples</span>
+                    <strong class="text-navy-950 font-bold block text-sm">${stageInfo.stageText}</strong>
+                    <p class="text-slate-600 mt-0.5 leading-relaxed">${stageInfo.stageDesc}</p>
+                  </div>
+                </div>
+
+                <details class="text-xs text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 cursor-pointer pt-2">
+                  <summary class="font-bold text-navy-950 flex items-center justify-between text-[11px]">
+                    <span>📖 Guia Rápido: O que acontece em cada uma das 5 fases do processo?</span>
+                    <span class="text-slate-400">▼</span>
+                  </summary>
+                  <div class="mt-2 pt-2 border-t border-slate-200/60 space-y-1.5 text-[11px] leading-relaxed">
+                    <div><strong>📦 1. Distribuído:</strong> O Dr. Jorge Alvim concluiu sua petição e protocolou a ação no Tribunal. O processo ganhou um número oficial no CNJ.</div>
+                    <div><strong>⚖️ 2. Com o Juiz:</strong> O juiz responsável analisa o processo, verifica pedidos urgentes (liminares) e notifica formalmente a outra parte para se manifestar.</div>
+                    <div><strong>🏛️ 3. Audiência / Provas:</strong> Fase de apresentação de provas, depoimentos de testemunhas, laudos periciais ou tentativa de acordo amigável.</div>
+                    <div><strong>📜 4. Decisão / Sentença:</strong> O juiz emite a sentença final julgando o caso. Se houver recurso, o escritório defende seus direitos nas instâncias superiores.</div>
+                    <div><strong>💰 5. Pagamento / Final:</strong> Vitória e cumprimento da decisão: momento de expedição de alvará judicial, pagamento de indenização ou quitação definitiva.</div>
+                  </div>
+                </details>
+              </div>
+            </div>
+
             <!-- Linha do Tempo dos Andamentos -->
             <div class="p-5 sm:p-6 space-y-3">
               <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block border-b border-slate-100 pb-2">
-                📜 Linha do Tempo de Andamentos (${l.movements ? l.movements.length : 0})
+                📜 Histórico Cronológico de Andamentos (${l.movements ? l.movements.length : 0})
               </span>
               <div class="relative border-l-2 border-slate-200 ml-1.5 mt-3">
                 ${movementsHtml}
@@ -1731,9 +1945,162 @@
       }
     }
 
+    // ================= DOCUMENTOS & ENVIO PELO PORTAL DO CLIENTE =================
+    async function loadPortalDocuments() {
+      const container = document.getElementById('portal-documents-list');
+      if (!container) return;
+
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/client-portal/documents', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          const docs = data.documents || [];
+          const countEl = document.getElementById('count-documents');
+          if (countEl) countEl.textContent = docs.length;
+
+          if (docs.length === 0) {
+            container.innerHTML = `
+              <div class="text-center py-8 text-slate-400 text-xs italic space-y-2">
+                <div class="text-2xl">📂</div>
+                <p class="font-semibold text-slate-600">Nenhum documento anexado ainda.</p>
+                <p class="text-[11px] text-slate-500">Utilize a área de upload acima para enviar fotos de comprovantes, CNH/RG ou extratos ao escritório.</p>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = docs.map(d => {
+            const ext = (d.file_name || '').split('.').pop().toLowerCase();
+            const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+            const isPdf = ext === 'pdf';
+            const icon = isPdf ? '📕' : (isImg ? '🖼️' : '📄');
+            const sizeKb = Math.round((d.file_size || 0) / 1024);
+            const sizeStr = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
+
+            return `
+              <div class="py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div class="flex items-center space-x-3 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xl flex-shrink-0 border border-slate-200">
+                    ${icon}
+                  </div>
+                  <div class="min-w-0">
+                    <strong class="text-xs sm:text-sm font-bold text-navy-950 block truncate" title="${d.original_name}">
+                      ${d.original_name}
+                    </strong>
+                    <span class="text-[11px] text-slate-500 flex items-center space-x-2 mt-0.5">
+                      <span>${sizeStr}</span>
+                      <span>•</span>
+                      <span>Enviado em: ${formatDate(d.created_at)}</span>
+                      ${d.is_legacy ? '<span class="px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">Contrato</span>' : '<span class="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">Enviado</span>'}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center space-x-2 self-end sm:self-center">
+                  <a 
+                    href="${d.url}" 
+                    target="_blank" 
+                    download="${d.original_name}" 
+                    class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-gold-50 border border-slate-200 hover:border-gold-300 text-xs font-bold text-slate-700 hover:text-gold-900 transition-colors shadow-2xs flex items-center space-x-1.5"
+                  >
+                    <span>⬇️</span>
+                    <span>Baixar / Visualizar</span>
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Erro ao carregar documentos do portal:', err);
+        container.innerHTML = '<div class="text-center py-4 text-rose-500 text-xs">Erro ao carregar documentos.</div>';
+      }
+    }
+
+    function handlePortalFilesSelected(input) {
+      const preview = document.getElementById('portal-selected-files-preview');
+      const list = document.getElementById('portal-selected-files-list');
+      const submitBtn = document.getElementById('portal-upload-submit-btn');
+
+      if (!input.files || input.files.length === 0) {
+        if (preview) preview.classList.add('hidden');
+        if (submitBtn) submitBtn.classList.add('hidden');
+        return;
+      }
+
+      if (list) {
+        list.innerHTML = Array.from(input.files).map(f => `
+          <li class="flex items-center justify-between text-[11px] py-1 border-b border-slate-200/60 last:border-0">
+            <span class="truncate max-w-xs">📄 ${f.name}</span>
+            <span class="text-slate-400 font-mono">${Math.round(f.size / 1024)} KB</span>
+          </li>
+        `).join('');
+      }
+
+      if (preview) preview.classList.remove('hidden');
+      if (submitBtn) submitBtn.classList.remove('hidden');
+    }
+
+    async function handlePortalDocUpload(e) {
+      e.preventDefault();
+      const input = document.getElementById('portal-file-input');
+      const submitBtn = document.getElementById('portal-upload-submit-btn');
+      const feedback = document.getElementById('portal-upload-feedback');
+      const token = localStorage.getItem(CLIENT_TOKEN_KEY);
+
+      if (!input || !input.files || input.files.length === 0) {
+        alert('Por favor, escolha ao menos uma foto ou documento para enviar.');
+        return;
+      }
+
+      const formData = new FormData();
+      for (let i = 0; i < input.files.length; i++) {
+        formData.append('documents', input.files[i]);
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>⏳ Enviando...</span>';
+
+      try {
+        const res = await fetch('/api/client-portal/upload-docs', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        const data = await res.json();
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🚀 Confirmar e Enviar ao Escritório</span>';
+
+        if (res.ok && data.success) {
+          feedback.className = 'max-w-md mx-auto p-3 rounded-xl text-xs font-semibold bg-emerald-50 border border-emerald-300 text-emerald-900 block';
+          feedback.textContent = `✅ ${data.message}`;
+          input.value = '';
+          handlePortalFilesSelected(input);
+          loadPortalDocuments();
+          setTimeout(() => { feedback.classList.add('hidden'); }, 6000);
+        } else {
+          feedback.className = 'max-w-md mx-auto p-3 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-300 text-rose-900 block';
+          feedback.textContent = `❌ ${data.error || 'Erro ao enviar documentos.'}`;
+          feedback.classList.remove('hidden');
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🚀 Confirmar e Enviar ao Escritório</span>';
+        feedback.className = 'max-w-md mx-auto p-3 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-300 text-rose-900 block';
+        feedback.textContent = '❌ Erro de conexão ao enviar documentos.';
+        feedback.classList.remove('hidden');
+      }
+    }
+
     // Alternador de Sub-Abas do Portal Logado
     function switchPortalTab(tab) {
-      const tabs = ['lawsuits', 'contract', 'messages', 'profile'];
+      const tabs = ['lawsuits', 'contract', 'messages', 'documents', 'profile'];
       tabs.forEach(t => {
         const sec = document.getElementById(`portal-tab-${t}`);
         const btn = document.getElementById(`btn-portal-tab-${t}`);
@@ -1749,6 +2116,9 @@
           }
         }
       });
+      if (tab === 'documents') {
+        loadPortalDocuments();
+      }
     }
 
     // Inicialização ao carregar

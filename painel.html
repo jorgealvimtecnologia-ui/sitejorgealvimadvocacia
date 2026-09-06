@@ -58,7 +58,305 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="/public/css/painel.css" />
+  <link rel="stylesheet" href="/public/css/painel.css?v=20260906-windows-cascade-drag" />
+  <style id="jaw-modal-zindex-override">
+    /* ==========================================================================
+       GARANTIA ABSOLUTA DE SOBREPOSIÇÃO: MODAIS ACIMA DE QUALQUER MENU OU TASKBAR
+       ========================================================================== */
+    .fixed.inset-0,
+    div[id$="-modal"],
+    div[id$="Modal"],
+    div[id^="modal-"],
+    #client-modal,
+    #lawsuit-modal,
+    #transaction-modal,
+    #alvara-modal,
+    #modal-request-field,
+    #modal-list-field-requests,
+    #office-modal,
+    #judicial-process-modal,
+    #pre-client-detail-modal,
+    #audit-details-modal,
+    #new-user-modal,
+    #edit-user-modal,
+    #message-modal,
+    #legal-doc-modal,
+    #movement-modal,
+    #doc-preview-modal,
+    #manual-pay-modal,
+    #asaas-charge-modal,
+    #nfse-issue-modal,
+    #nfse-preview-modal,
+    #blog-post-editor-modal,
+    #modal-calendar-event,
+    #modal-calendar-view,
+    #modal-calendar-sync,
+    #modal-deadline-calculator,
+    #modal-publication-view,
+    #hr-modal-time-sign,
+    #hr-modal-time-punch,
+    #hr-modal-payslip,
+    #hr-modal-vacation-form,
+    #hr-modal-employee,
+    #hr-modal-exam-form,
+    #modal-activity-draft,
+    #modal-labor-termination,
+    #rocket-new-modal,
+    #rocket-view-modal {
+      z-index: 999999 !important;
+    }
+
+    /* Menus e cabeçalho inferior a janelas maximizadas */
+    #jaw-menubar {
+      z-index: 300 !important;
+    }
+    #panel-view > header {
+      z-index: 200 !important;
+    }
+    #jaw-taskbar {
+      z-index: 650 !important;
+    }
+
+    /* Janelas e subabas maximizadas estilo Windows Desktop — ocupam 100% da tela do computador */
+    .jaw-window.jaw-maximized {
+      position: fixed !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100vw !important;
+      height: calc(100vh - 42px) !important;
+      max-width: 100vw !important;
+      max-height: calc(100vh - 42px) !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      z-index: 600 !important;
+      margin: 0 !important;
+    }
+    .jaw-window.jaw-maximized .jaw-winbody {
+      height: calc(100vh - 42px - 38px - 44px) !important;
+      max-height: none !important;
+      flex: 1 1 auto !important;
+      overflow-y: auto !important;
+      overflow-x: auto !important;
+    }
+
+    /* Profundidade, degradê e arrastar de janelas estilo Windows */
+    .jaw-window {
+      transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, opacity 0.2s;
+    }
+    .jaw-window:not(.active) {
+      opacity: 0.94 !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 8px 24px rgba(2, 6, 23, 0.18) !important;
+    }
+    .jaw-window:not(.active):hover {
+      opacity: 0.98 !important;
+      border-color: #94a3b8 !important;
+    }
+    .jaw-window.active {
+      opacity: 1 !important;
+      border-color: #d4a017 !important;
+      box-shadow: 0 24px 60px -10px rgba(2, 6, 23, 0.45), 0 0 0 1.5px rgba(212, 160, 23, 0.5) !important;
+    }
+    .jaw-window.jaw-dragging {
+      opacity: 0.95 !important;
+      box-shadow: 0 32px 75px -12px rgba(2, 6, 23, 0.6), 0 0 0 2px #f59e0b !important;
+      cursor: grabbing !important;
+      user-select: none !important;
+      transition: none !important;
+    }
+    .jaw-titlebar {
+      cursor: grab !important;
+      user-select: none !important;
+      background: linear-gradient(135deg, #334155, #1e293b) !important;
+      transition: background 0.2s ease !important;
+    }
+    .jaw-window.jaw-dragging .jaw-titlebar {
+      cursor: grabbing !important;
+    }
+    .jaw-window.active .jaw-titlebar {
+      background: linear-gradient(135deg, #d97706, #b45309, #d4a017) !important;
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.25) !important;
+    }
+
+    /* Aero Snap Ghost Preview estilo Windows */
+    #jaw-snap-ghost {
+      position: fixed;
+      display: none;
+      z-index: 640;
+      pointer-events: none;
+      background: radial-gradient(circle at center, rgba(217, 119, 6, 0.16), rgba(30, 41, 59, 0.28));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 2.5px dashed #d97706;
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(217, 119, 6, 0.35), inset 0 0 20px rgba(245, 158, 11, 0.2);
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #jaw-snap-ghost.active {
+      display: block !important;
+      animation: jawGhostPulse 1.2s infinite ease-in-out;
+    }
+    @keyframes jawGhostPulse {
+      0%, 100% { border-color: #d97706; box-shadow: 0 0 20px rgba(217, 119, 6, 0.3); }
+      50% { border-color: #facc15; box-shadow: 0 0 35px rgba(250, 204, 21, 0.5); }
+    }
+
+    /* Janelas com Aero Snap (50% Split Lado a Lado) */
+    .jaw-window.jaw-snapped {
+      position: fixed !important;
+      top: 0 !important;
+      height: calc(100vh - 42px) !important;
+      max-height: calc(100vh - 42px) !important;
+      width: 50vw !important;
+      max-width: 50vw !important;
+      border-radius: 0 !important;
+      z-index: 600 !important;
+      margin: 0 !important;
+    }
+    .jaw-window.jaw-snapped-left {
+      left: 0 !important;
+      border-right: 2px solid #d97706 !important;
+    }
+    .jaw-window.jaw-snapped-right {
+      left: 50vw !important;
+      border-left: 2px solid #d97706 !important;
+    }
+    .jaw-window.jaw-snapped .jaw-winbody {
+      height: calc(100vh - 42px - 38px - 44px) !important;
+      max-height: none !important;
+      flex: 1 1 auto !important;
+      overflow-y: auto !important;
+      overflow-x: auto !important;
+    }
+
+    /* Menu de Contexto Estilo Windows 11 Fluent */
+    #jaw-context-menu {
+      position: fixed;
+      display: none;
+      z-index: 850;
+      min-width: 240px;
+      max-width: 320px;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 20px 50px rgba(2, 6, 23, 0.6), 0 0 0 1px rgba(212, 160, 23, 0.25);
+      user-select: none;
+      font-family: inherit;
+    }
+    #jaw-context-menu.open {
+      display: block !important;
+      animation: jawCtxIn 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes jawCtxIn {
+      from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .jaw-ctx-header {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .jaw-ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.1s, color 0.1s;
+    }
+    .jaw-ctx-item:hover, .jaw-ctx-item:focus {
+      background: rgba(217, 119, 6, 0.22);
+      color: #fef08a;
+      outline: none;
+    }
+    .jaw-ctx-item.danger:hover {
+      background: rgba(225, 29, 72, 0.25);
+      color: #fecdd3;
+    }
+    .jaw-ctx-item .ctx-icon {
+      font-size: 15px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .jaw-ctx-item .ctx-shortcut {
+      margin-left: auto;
+      font-size: 10px;
+      color: #64748b;
+      font-family: monospace;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+    }
+    .jaw-ctx-sep {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 4px 6px;
+    }
+
+    /* Tela de Bloqueio Estilo Windows 11 */
+    #jaw-lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: radial-gradient(circle at top, #1e293b 0%, #0f172a 50%, #020617 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 20px;
+      color: #f8fafc;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #jaw-lock-screen.active {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+    .jaw-shake {
+      animation: jawShake 0.4s ease-in-out;
+    }
+    @keyframes jawShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+  
+    .modal-box-fullscreen {
+      max-width: 100vw !important;
+      width: 100vw !important;
+      min-height: 100vh !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      padding: 24px 32px !important;
+    }
+  </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased overflow-x-hidden flex flex-col">
   <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
@@ -201,12 +499,13 @@
               <option value="nfse">8. 🧾 Notas Fiscais (NFS-e)</option>
               <option value="blog">9. 💬 Blog & Moderação de Comentários</option>
               <option value="audit">10. 🛡️ Auditoria & Logs</option>
-              <option value="pre-clients">11. 🎯 Pré-Clientes & Tráfego</option>
+              <option value="pre-clients">11. 📊 Tráfego & Acessos (IPs)</option>
               <option value="judicial">12. 🔍 Radar Judicial (DataJud CNJ)</option>
               <option value="offices">13. 🏛️ Gestão de Escritórios</option>
               <option value="drive">14. 📁 Drive do Escritório</option>
               <option value="users">15. 🔐 Usuários & Permissões</option>
               <option value="hr">16. 👔 RH & Pessoal (CLT)</option>
+              <option value="meta-ads">17. 📢 Meta Ads & Marketing (Facebook & Instagram)</option>
             </select>
           </div>
 
@@ -216,6 +515,52 @@
             <span class="text-slate-500">Usuário:</span>
             <span id="current-user-display" class="font-bold text-navy-950">jorgealvimtecnologia</span>
           </div>
+
+          <!-- Botão Paleta de Comandos Ctrl+K (Fase 2) -->
+          <button 
+            onclick="openCommandPalette()" 
+            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-gold-50 hover:bg-gold-100 text-gold-950 text-xs font-bold border border-gold-300 transition-all cursor-pointer shadow-2xs active:scale-95" 
+            title="Abrir busca rápida e comandos (Atalho: Ctrl + K)">
+            <span>⚡</span>
+            <span class="hidden md:inline">Comandos</span>
+            <kbd class="hidden sm:inline font-mono text-[9px] bg-white px-1.5 py-0.5 rounded border border-gold-300 text-gold-800">Ctrl+K</kbd>
+          </button>
+
+          <!-- Alternador Modo Escuro / Branco (Fase 4) -->
+          <button 
+            id="theme-toggle-btn"
+            onclick="toggleTheme()" 
+            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95" 
+            title="Alternar entre Modo Escuro e Modo Claro">
+            <span>🌙</span>
+            <span class="hidden md:inline font-bold">Modo Escuro</span>
+          </button>
+
+          <!-- Ajuste de Fonte A- / A+ (Fase 4) -->
+          <div class="hidden xl:flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+            <button onclick="adjustFontSize('decrease')" class="px-2 py-1 rounded-lg hover:bg-white text-slate-700 font-bold transition-all cursor-pointer" title="Diminuir tamanho da fonte">A-</button>
+            <button onclick="adjustFontSize('reset')" class="px-1.5 py-1 rounded-lg hover:bg-white text-slate-600 text-[11px] font-semibold transition-all cursor-pointer" title="Tamanho padrão">A</button>
+            <button onclick="adjustFontSize('increase')" class="px-2 py-1 rounded-lg hover:bg-white text-slate-700 font-bold transition-all cursor-pointer" title="Aumentar tamanho da fonte">A+</button>
+          </div>
+
+          <!-- Pedir Novo Campo ao Programador (Fase 4) -->
+          <button 
+            onclick="openFieldRequestModal()" 
+            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 transition-all cursor-pointer shadow-2xs active:scale-95" 
+            title="Solicitar inclusão de novo campo específico ao programador">
+            <span>💡</span>
+            <span class="hidden sm:inline">Pedir Campo</span>
+          </button>
+
+          <!-- Bloqueio de Tela Estilo Windows (Segurança LGPD / Ctrl+L) -->
+          <button 
+            id="header-lock-btn"
+            onclick="window.lockSystem ? window.lockSystem() : null" 
+            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-black text-amber-300 text-xs font-bold border border-slate-700 transition-all cursor-pointer shadow-2xs active:scale-95" 
+            title="Bloquear painel de controle (Atalho: Ctrl + L ou Win + L)">
+            <span>🔒</span>
+            <span class="hidden sm:inline">Bloquear</span>
+          </button>
 
           <button onclick="refreshData()" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer" title="Atualizar dados">
             <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,17 +713,17 @@
           <span id="tab-audit-badge" class="px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-800 text-[10px] font-bold">Compliance</span>
         </button>
 
-        <!-- Aba 8: Pré-Clientes & Tráfego / Visitas -->
+        <!-- Aba 8: Tráfego & Acessos (IPs) -->
         <button 
           id="tab-btn-pre-clients" 
           onclick="switchTab('pre-clients')" 
           class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-all border border-slate-200 bg-white cursor-pointer"
         >
           <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
-          <span>Pré-Clientes & Tráfego</span>
-          <span id="tab-preclients-count" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">Visitas</span>
+          <span>Tráfego & Acessos (IPs)</span>
+          <span id="tab-preclients-count" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">IPs</span>
         </button>
 
         <!-- Aba 9: Radar Judicial & Busca Nacional (DataJud CNJ / MNI) -->
@@ -481,6 +826,18 @@
           <span>Requerimentos Adm.</span>
         </button>
 
+        <!-- Aba: Manutenção & Saúde do Sistema -->
+        <button id="tab-btn-maintenance" onclick="switchTab('maintenance')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-amber-700 hover:text-amber-900 hover:bg-amber-50 transition-all border border-amber-300 bg-amber-50/50 cursor-pointer">
+          <span>🛠️</span>
+          <span>Manutenção</span>
+        </button>
+
+        <!-- Aba: Meta Ads & Marketing (Facebook & Instagram) -->
+        <button id="tab-btn-meta-ads" onclick="switchTab('meta-ads')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-blue-700 hover:text-blue-900 hover:bg-blue-50 transition-all border border-blue-300 bg-blue-50/50 cursor-pointer" title="Gerenciador de Criativos e Rascunhos Meta Ads">
+          <span>📢</span>
+          <span>Meta Ads & Marketing</span>
+        </button>
+
       </div>
     </header>
 
@@ -491,8 +848,11 @@
       <section id="tab-content-dashboard" class="hidden space-y-6">
         <div class="flex items-center justify-between">
           <h2 class="font-serif text-xl font-bold text-navy-950">Visão Geral do Escritório</h2>
-          <button onclick="loadDashboardOverview()" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100">↻ Atualizar</button>
+          <button onclick="loadDashboardOverview(); window.loadMeuDiaHoje && window.loadMeuDiaHoje();" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100">↻ Atualizar</button>
         </div>
+
+        <!-- Cockpit Matinal do Advogado (Fase 2) -->
+        <div id="meu-dia-hoje-container"></div>
         <div class="bg-gradient-to-r from-amber-50 to-white rounded-2xl border border-gold-300 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <span class="text-lg">🔄</span>
@@ -2172,7 +2532,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       </section>
 
       <!-- ================= MODAL DE UPLOAD DE DOCUMENTO PARA O DRIVE ================= -->
-      <div id="drive-upload-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div id="drive-upload-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-[999999] flex items-center justify-center p-4 hidden" style="z-index: 999999 !important;">
         <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden animate-fadeIn">
           <!-- Cabeçalho -->
           <div class="p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-navy-950 text-white flex justify-between items-center">
@@ -3571,18 +3931,18 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       </section>
 
-      <!-- ================= ABA 8: PRÉ-CLIENTES & TRÁFEGO / VISITAS DO SITE ================= -->
+      <!-- ================= ABA 8: TRÁFEGO, ACESSOS & REGISTRO DE IPS ================= -->
       <section id="tab-content-pre-clients" class="hidden space-y-6">
         
         <!-- Banner e KPIs de Visitas -->
         <div class="bg-gradient-to-r from-amber-700 via-amber-900 to-navy-950 p-6 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold mb-2">
-              <span>👥 Registro de Pré-Clientes & Atendimento Inicial</span>
+              <span>📊 Telemetria de Acessos & Visitas</span>
             </div>
-            <h3 class="font-serif text-2xl font-bold text-white tracking-tight">Visitantes do Site, IPs e Pré-Clientes</h3>
+            <h3 class="font-serif text-2xl font-bold text-white tracking-tight">Tráfego de Visitantes & Registro de IPs</h3>
             <p class="text-xs text-amber-100/90 max-w-2xl mt-1">
-              Painel de auditoria de acessos: contagem por dia, mês e ano, registro de endereços IP com horário e localidade, consentimento de geolocalização e origem de acessos.
+              Painel de auditoria de acessos: contagem por dia, mês e ano, registro de endereços IP com horário e localidade, consentimento de geolocalização e telemetria de tráfego do site.
             </p>
           </div>
           <div class="flex items-center space-x-3">
@@ -4965,11 +5325,1028 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       </section>
 
+      <!-- ================= ABA: MANUTENÇÃO & SAÚDE DO SISTEMA (FASE 5) ================= -->
+      <section id="tab-content-maintenance" class="hidden space-y-6">
+        <!-- Cabeçalho / Hero Banner -->
+        <div class="bg-gradient-to-br from-navy-950 via-slate-900 to-navy-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+          <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <span class="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xl">🛠️</span>
+                <span class="text-xs font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Fase 5 · Operações & Infraestrutura</span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">Manutenção & Saúde do Sistema</h2>
+              <p class="text-sm text-slate-300 max-w-2xl font-medium leading-relaxed">
+                Central administrativa de monitoramento contínuo: integridade física do SQLite (WAL), compactação automática (VACUUM), gestão consistente de backups locais, auditoria e revogação de sessões ativas.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <button 
+                id="btn-maint-refresh"
+                onclick="loadMaintenanceHealth()" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 shadow-sm cursor-pointer active:scale-95">
+                <span>🔄</span>
+                <span>Atualizar Diagnóstico</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick KPI Cards Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-1">Tamanho leads.db</span>
+              <div id="maint-db-size" class="text-xl font-extrabold text-white font-mono">-- MB</div>
+              <span id="maint-db-journal" class="text-[10px] text-slate-400 mt-1 block">Modo: WAL</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-1">Integridade SQLite</span>
+              <div id="maint-db-integrity-badge" class="inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">OK</div>
+              <span id="maint-wal-size" class="text-[10px] text-slate-400 mt-1 block">Log WAL: --</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-1">Servidor Node.js</span>
+              <div id="maint-srv-node" class="text-xl font-extrabold text-white font-mono">v20+</div>
+              <span id="maint-srv-uptime" class="text-[10px] text-slate-400 mt-1 block">Uptime: --</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-1">Backups Salvos</span>
+              <div id="maint-bk-count" class="text-xl font-extrabold text-white font-mono">--</div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Local: ./backups</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linha 1: Manutenção do Banco SQLite & Modo de Emergência -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Card SQLite Health & Tools (Col 1 e 2) -->
+          <div class="lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-lg">💾</span>
+                <div>
+                  <h3 class="font-serif font-bold text-lg text-navy-950">Saúde & Otimização do SQLite</h3>
+                  <p class="text-xs text-slate-500 font-medium">Comandos operacionais de manutenção de baixo nível para máxima performance</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                <span class="text-[11px] font-bold text-slate-500 uppercase block mb-1">Tabelas Criadas</span>
+                <span id="maint-db-tables" class="text-lg font-extrabold text-slate-800">--</span>
+              </div>
+              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                <span class="text-[11px] font-bold text-slate-500 uppercase block mb-1">Páginas de Dados</span>
+                <span id="maint-db-pages" class="text-xs font-bold text-slate-800 block">--</span>
+              </div>
+              <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                <span class="text-[11px] font-bold text-slate-500 uppercase block mb-1">Espaço Livre (Freelist)</span>
+                <span id="maint-db-freelist" class="text-xs font-bold text-slate-800 block">--</span>
+              </div>
+            </div>
+
+            <!-- Ações Operacionais SQLite -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col justify-between space-y-3">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span>🩺</span> <span>Verificação de Integridade</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 mt-1">Executa <code class="text-[10px] bg-slate-200 px-1 py-0.5 rounded font-mono">PRAGMA integrity_check</code> checando a consistência de cada página B-Tree.</p>
+                </div>
+                <button 
+                  onclick="runDbIntegrity()"
+                  class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all shadow-sm cursor-pointer text-center">
+                  Executar Checagem
+                </button>
+              </div>
+
+              <div class="p-4 rounded-2xl border border-amber-200 bg-amber-50/30 hover:bg-amber-50/60 transition-all flex flex-col justify-between space-y-3">
+                <div>
+                  <h4 class="text-xs font-bold text-amber-900 flex items-center gap-2">
+                    <span>🧹</span> <span>Compactar Banco (VACUUM)</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 mt-1">Reorganiza fisicamente o arquivo do banco, eliminando espaços vazios de dados deletados.</p>
+                </div>
+                <button 
+                  onclick="runDbVacuum()"
+                  class="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-sm cursor-pointer text-center">
+                  Iniciar VACUUM
+                </button>
+              </div>
+
+              <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col justify-between space-y-3">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span>⚡</span> <span>WAL Checkpoint (TRUNCATE)</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 mt-1">Descarrega as transações pendentes do arquivo <code class="text-[10px] bg-slate-200 px-1 py-0.5 rounded font-mono">-wal</code> para o banco principal e trunca o log.</p>
+                </div>
+                <button 
+                  onclick="runDbCheckpoint()"
+                  class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all shadow-sm cursor-pointer text-center">
+                  Consolidar Checkpoint
+                </button>
+              </div>
+
+              <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col justify-between space-y-3">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span>🔄</span> <span>Reconstruir Índices (REINDEX)</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-500 mt-1">Recalcula todos os índices de pesquisa (clientes, processos, prazos e usuários) para máxima performance.</p>
+                </div>
+                <button 
+                  onclick="runDbReindex()"
+                  class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all shadow-sm cursor-pointer text-center">
+                  Recalcular Índices
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Modo Manutenção & Status (Col 3) -->
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between space-y-6">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 text-lg">🚧</span>
+                  <div>
+                    <h3 class="font-serif font-bold text-base text-navy-950">Modo Manutenção</h3>
+                    <p class="text-xs text-slate-500 font-medium">Bloqueio geral para intervenções</p>
+                  </div>
+                </div>
+                <span id="maint-mode-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">DESATIVADO</span>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">Estado da Trava Geral:</span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="maint-mode-toggle-checkbox" class="sr-only peer">
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                  </label>
+                </div>
+                <div id="maint-mode-status-text" class="text-xs font-semibold text-emerald-700">Sistema Operando Normalmente (Online)</div>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 block">Mensagem Exibida aos Usuários:</label>
+                <textarea 
+                  id="maint-mode-reason-input"
+                  rows="3" 
+                  placeholder="Ex: Sistema temporariamente em manutenção preventiva programada. Retorno em breve."
+                  class="w-full text-xs p-3 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none resize-none"></textarea>
+                <span class="text-[10px] text-slate-400 block">O perfil Master continuará com acesso total mesmo com o modo ativo.</span>
+              </div>
+            </div>
+
+            <button 
+              onclick="saveMaintenanceMode()"
+              class="w-full py-2.5 px-4 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-bold text-xs transition-all shadow-md cursor-pointer text-center">
+              💾 Salvar Configurações do Modo
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Linha 2: Central de Backups Sob Demanda -->
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 text-lg">🛡️</span>
+              <div>
+                <h3 class="font-serif font-bold text-lg text-navy-950">Central de Backups Sob Demanda</h3>
+                <p class="text-xs text-slate-500 font-medium">Snapshots consistentes em tempo real salvos no diretório local seguro <code class="font-mono text-[10px] bg-slate-100 px-1 py-0.5 rounded">./backups</code></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button 
+                id="btn-maint-create-backup"
+                onclick="createBackupNow()"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm cursor-pointer active:scale-95">
+                <span>➕</span>
+                <span>Gerar Backup Agora</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabela de Backups -->
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                  <th class="p-3">Arquivo do Backup</th>
+                  <th class="p-3">Tamanho</th>
+                  <th class="p-3">Data de Criação</th>
+                  <th class="p-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="maint-backups-table-body" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="4" class="p-4 text-center text-slate-400 text-xs">Carregando lista de backups...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Linha 3: Sessões Ativas & Auditoria & Armazenamento -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Sessões Ativas (Col 1 e 2) -->
+          <div class="lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 text-lg">👥</span>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-serif font-bold text-base text-navy-950">Sessões Ativas no Sistema</h3>
+                    <span id="maint-session-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">0</span>
+                  </div>
+                  <p class="text-xs text-slate-500 font-medium">Controle de acessos simultâneos e segurança operacional</p>
+                </div>
+              </div>
+              <button 
+                onclick="disconnectAllSessions()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-all border border-rose-200 cursor-pointer">
+                <span>🚪</span>
+                <span>Desconectar Todos os Outros</span>
+              </button>
+            </div>
+
+            <!-- Tabela de Sessões -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-200">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                    <th class="p-3">Usuário</th>
+                    <th class="p-3">IP</th>
+                    <th class="p-3">Navegador / Dispositivo</th>
+                    <th class="p-3 text-right">Data Login</th>
+                  </tr>
+                </thead>
+                <tbody id="maint-sessions-table-body" class="divide-y divide-slate-100">
+                  <tr>
+                    <td colspan="4" class="p-4 text-center text-slate-400 text-xs">Carregando sessões...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Auditoria & Armazenamento (Col 3) -->
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6 flex flex-col justify-between">
+            <div class="space-y-6">
+              
+              <!-- Bloco Purgar Logs -->
+              <div class="space-y-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">🗑️</span>
+                  <h4 class="text-xs font-bold text-navy-950 uppercase tracking-wider">Limpeza de Auditoria</h4>
+                </div>
+                <p class="text-xs text-slate-500">Exclua logs antigos de compliance para evitar crescimento indefinido do banco.</p>
+                <div class="flex items-center gap-2">
+                  <select id="maint-audit-retention-days" class="text-xs p-2 rounded-xl border border-slate-300 bg-white font-medium">
+                    <option value="30">Mais de 30 dias</option>
+                    <option value="60">Mais de 60 dias</option>
+                    <option value="90" selected>Mais de 90 dias</option>
+                    <option value="180">Mais de 180 dias</option>
+                  </select>
+                  <button 
+                    onclick="purgeAuditLogs()"
+                    class="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all border border-slate-300 cursor-pointer">
+                    Purgar Logs
+                  </button>
+                </div>
+              </div>
+
+              <hr class="border-slate-100">
+
+              <!-- Bloco Armazenamento e Órfãos -->
+              <div class="space-y-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">📁</span>
+                  <h4 class="text-xs font-bold text-navy-950 uppercase tracking-wider">Storage & Órfãos</h4>
+                </div>
+                <p class="text-xs text-slate-500">Analisa arquivos em disco comparando com referências no banco de dados.</p>
+                <button 
+                  onclick="scanStorageOrphans()"
+                  class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all border border-slate-300 cursor-pointer flex items-center justify-center gap-2">
+                  <span>🔍</span> <span>Escanear Armazenamento</span>
+                </button>
+                <div id="maint-storage-results" class="pt-1"></div>
+              </div>
+
+              <hr class="border-slate-100">
+
+              <!-- Servidor Specs -->
+              <div class="text-[11px] text-slate-500 space-y-1">
+                <div class="flex justify-between"><span>Plataforma:</span> <span id="maint-srv-platform" class="font-bold text-slate-700">Linux</span></div>
+                <div class="flex justify-between"><span>Memória:</span> <span id="maint-srv-memory" class="font-mono text-slate-700">--</span></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================= ABA: META ADS & MARKETING (FACEBOOK & INSTAGRAM) ================= -->
+      <section id="tab-content-meta-ads" class="hidden space-y-6">
+        <!-- Cabeçalho / Hero Banner Meta Ads -->
+        <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+          <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <span class="p-2.5 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xl">📢</span>
+                <span class="text-xs font-extrabold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">Meta Ads & Business Suite</span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">Meta Ads & Hub de Marketing</h2>
+              <p class="text-sm text-slate-300 max-w-2xl font-medium leading-relaxed">
+                Gestão de criativos, upload de mídias e disparo de rascunhos de anúncios (<code class="bg-slate-800 px-1.5 py-0.5 rounded text-amber-400">status: PAUSED</code>) diretamente para o Meta Ads Manager, com checagem preventiva de compliance ético OAB (Provimento 205/2021).
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <button 
+                onclick="loadMetaAdsTab()" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 shadow-sm cursor-pointer active:scale-95">
+                <span>🔄</span>
+                <span>Atualizar Materiais</span>
+              </button>
+              <button 
+                onclick="openMetaConfigModal()" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all border border-blue-400/30 shadow-sm cursor-pointer active:scale-95">
+                <span>⚙️</span>
+                <span>Configurar Meta API</span>
+              </button>
+              <a 
+                href="https://business.facebook.com/" 
+                target="_blank" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all border border-slate-700 shadow-sm cursor-pointer">
+                <span>🔗</span>
+                <span>Meta Business Suite</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- KPI Cards Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-300 block mb-1">Total de Materiais</span>
+              <div id="meta-kpi-total" class="text-xl font-extrabold text-white font-mono">0</div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Criativos cadastrados</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-300 block mb-1">Rascunhos Meta Ads</span>
+              <div id="meta-kpi-drafts" class="text-xl font-extrabold text-amber-400 font-mono">0</div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Modo PAUSED / Rascunho</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-300 block mb-1">Posts Orgânicos</span>
+              <div id="meta-kpi-organic" class="text-xl font-extrabold text-emerald-400 font-mono">0</div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Facebook & Instagram</span>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-3.5 border border-white/10 backdrop-blur-sm">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-300 block mb-1">Status da Conexão</span>
+              <div id="meta-api-status-badge" class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                🟡 Homologação
+              </div>
+              <span id="meta-api-status-detail" class="text-[10px] text-slate-400 mt-1 block truncate">Modo seguro ativo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Linha Principal: Formulário de Envio (Esq) + Live Smartphone Mockup (Dir) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          <!-- Formulário de Criação & Upload (7 Colunas) -->
+          <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 text-lg">✏️</span>
+                <div>
+                  <h3 class="font-serif font-bold text-lg text-navy-950">Criar Novo Material ou Anúncio</h3>
+                  <p class="text-xs text-slate-500 font-medium">Preencha os campos e acompanhe a pré-visualização em tempo real</p>
+                </div>
+              </div>
+              <button type="button" onclick="resetMetaForm()" class="text-xs text-slate-400 hover:text-slate-600 font-bold transition-colors">
+                Limpar Campos
+              </button>
+            </div>
+
+            <form id="form-meta-ad-create" onsubmit="handleMetaAdSubmit(event)" class="space-y-4">
+              <!-- Destino -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Destino do Material</label>
+                <select id="meta-ad-destination" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                  <option value="AD_DRAFT_PAUSED">🎯 Rascunho de Anúncio Pago no Meta Ads (status: PAUSED)</option>
+                  <option value="FACEBOOK_PAGE_POST">📘 Post Orgânico na Página do Facebook</option>
+                  <option value="INSTAGRAM_FEED">📸 Post Orgânico no Instagram Comercial</option>
+                  <option value="LOCAL_DRAFT">📁 Salvar apenas Rascunho Interno no Sistema</option>
+                </select>
+              </div>
+
+              <!-- Upload de Mídia -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Imagem ou Vídeo do Criativo</label>
+                <div class="relative border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-slate-50/50">
+                  <input type="file" id="meta-ad-media" accept="image/*,video/mp4,video/quicktime" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                  <div class="flex flex-col items-center justify-center gap-1 pointer-events-none">
+                    <span class="text-2xl">📸</span>
+                    <span class="text-xs font-bold text-slate-700">Arraste uma foto/vídeo ou clique para escolher</span>
+                    <span id="meta-media-filename-display" class="text-[11px] text-blue-600 font-semibold mt-0.5">Nenhum arquivo selecionado (JPG, PNG, MP4 até 40MB)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Título / Headline -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Título do Anúncio (Headline)</label>
+                <input 
+                  type="text" 
+                  id="meta-ad-title" 
+                  placeholder="Ex: Ação Revisional de Contratos Bancários: Entenda seus Direitos" 
+                  required
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-2xs">
+              </div>
+
+              <!-- Texto Principal / Copy -->
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-xs font-bold text-slate-700">Texto Principal / Mensagem (Copy)</label>
+                  <span class="text-[10px] text-slate-400">Diretrizes OAB Prov. 205/2021</span>
+                </div>
+                <textarea 
+                  id="meta-ad-message" 
+                  rows="4" 
+                  placeholder="Escreva aqui a mensagem informativa que acompanhará a imagem/vídeo no feed..." 
+                  required
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-2xs leading-relaxed"></textarea>
+              </div>
+
+              <!-- Link de Destino & CTA -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Link de Destino (URL)</label>
+                  <input 
+                    type="url" 
+                    id="meta-ad-link" 
+                    placeholder="https://jorgealvimadvocacia.com.br" 
+                    value="https://jorgealvimadvocacia.com.br"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-blue-500 shadow-2xs">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Botão de Ação (Chamada para Ação)</label>
+                  <select id="meta-ad-cta" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                    <option value="LEARN_MORE">Saiba mais</option>
+                    <option value="CONTACT_US">Fale conosco</option>
+                    <option value="MESSAGE_PAGE">Enviar mensagem</option>
+                    <option value="SIGN_UP">Cadastre-se</option>
+                    <option value="APPLY_NOW">Inscrever-se</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- PAINEL AMPLO DE SEGMENTAÇÃO DE PÚBLICO & ORÇAMENTO DIÁRIO -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 border border-blue-200/70 space-y-4 shadow-2xs">
+                <div class="flex items-center justify-between border-b border-blue-100 pb-2.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-base">🎯</span>
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Público-Alvo & Orçamento Diário</h4>
+                      <p class="text-[11px] text-slate-500">Defina a praça de atendimento, idade, nicho e teto diário de investimento</p>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                    Meta Ads Manager
+                  </span>
+                </div>
+
+                <!-- 1. Objetivo da Campanha -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Objetivo da Campanha</label>
+                  <select id="meta-ad-goal" onchange="syncMetaAudienceMockup()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                    <option value="OUTCOME_LEADS">💬 Mensagens no WhatsApp & Captação Ética (Recomendado)</option>
+                    <option value="OUTCOME_TRAFFIC">🔗 Tráfego Qualificado para o Site do Escritório</option>
+                    <option value="OUTCOME_AWARENESS">📣 Reconhecimento Institucional & Alcance de Marca</option>
+                  </select>
+                </div>
+
+                <!-- 2. Orçamento Diário em R$ -->
+                <div>
+                  <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700">Orçamento Diário de Veiculação (R$/dia)</label>
+                    <span id="meta-budget-display-badge" class="text-xs font-extrabold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full">
+                      R$ 20,00 / dia
+                    </span>
+                  </div>
+
+                  <!-- Botões Rápidos de Valor -->
+                  <div class="grid grid-cols-4 gap-2 mb-2">
+                    <button type="button" onclick="setMetaDailyBudget(10)" class="meta-budget-chip py-1.5 px-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
+                      R$ 10/dia
+                    </button>
+                    <button type="button" onclick="setMetaDailyBudget(20)" class="meta-budget-chip active py-1.5 px-2 rounded-xl text-xs font-bold border-2 border-blue-600 bg-blue-50 text-blue-800 transition-all text-center shadow-2xs">
+                      R$ 20/dia ⭐
+                    </button>
+                    <button type="button" onclick="setMetaDailyBudget(50)" class="meta-budget-chip py-1.5 px-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
+                      R$ 50/dia
+                    </button>
+                    <button type="button" onclick="setMetaDailyBudget(100)" class="meta-budget-chip py-1.5 px-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50 transition-all text-center">
+                      R$ 100/dia
+                    </button>
+                  </div>
+
+                  <!-- Campo Numérico Livre & Estimativa -->
+                  <div class="flex items-center gap-3">
+                    <div class="relative w-36 shrink-0">
+                      <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">R$</span>
+                      <input 
+                        type="number" 
+                        id="meta-ad-budget-input" 
+                        min="6" 
+                        max="5000" 
+                        step="1" 
+                        value="20" 
+                        oninput="onMetaBudgetInputChange(this.value)" 
+                        class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs font-extrabold text-slate-900 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                    </div>
+                    <div class="flex-1 bg-white/80 p-2 rounded-xl border border-blue-100 text-[11px] text-slate-600 space-y-0.5">
+                      <div class="flex justify-between items-center">
+                        <span class="font-medium">Alcance Estimado:</span>
+                        <span id="meta-reach-calc-display" class="font-bold text-emerald-700 font-mono">1.200 a 3.800 pessoas/dia</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="font-medium">Projeção Mensal (30d):</span>
+                        <span id="meta-monthly-calc-display" class="font-bold text-slate-800 font-mono">R$ 600,00</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Localização Geográfica & Raio -->
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div class="sm:col-span-7">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Cidade / Praça de Atendimento</label>
+                    <input 
+                      type="text" 
+                      id="meta-ad-city" 
+                      value="Juiz de Fora" 
+                      placeholder="Ex: Juiz de Fora, Belo Horizonte..." 
+                      oninput="syncMetaAudienceMockup()"
+                      class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-900 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                  </div>
+                  <div class="sm:col-span-5">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Raio de Abrangência</label>
+                    <select id="meta-ad-radius" onchange="syncMetaAudienceMockup()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                      <option value="15">+ 15 km (Centro e Arredores)</option>
+                      <option value="25">+ 25 km (Região Metropolitana)</option>
+                      <option value="40" selected>+ 40 km (Microrregião / Padrão)</option>
+                      <option value="80">+ 80 km (Zona da Mata / Regional)</option>
+                      <option value="0">Estado de Minas Gerais Inteiro</option>
+                      <option value="-1">Brasil Inteiro (Ações Nacionais)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 4. Perfil Demográfico (Idade e Gênero) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Idade Mínima</label>
+                    <select id="meta-ad-age-min" onchange="syncMetaAudienceMockup()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                      <option value="18">18 anos</option>
+                      <option value="21">21 anos</option>
+                      <option value="25" selected>25 anos</option>
+                      <option value="30">30 anos</option>
+                      <option value="35">35 anos</option>
+                      <option value="40">40 anos</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Idade Máxima</label>
+                    <select id="meta-ad-age-max" onchange="syncMetaAudienceMockup()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                      <option value="45">45 anos</option>
+                      <option value="55">55 anos</option>
+                      <option value="65" selected>65+ anos</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Gênero</label>
+                    <select id="meta-ad-gender" onchange="syncMetaAudienceMockup()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                      <option value="ALL" selected>Todos os Gêneros</option>
+                      <option value="WOMEN">Apenas Mulheres</option>
+                      <option value="MEN">Apenas Homens</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- 5. Nicho Jurídico & Interesses -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Área do Direito & Interesses do Público</label>
+                  <div class="flex flex-wrap gap-1.5" id="meta-interests-chips-container">
+                    <button type="button" onclick="toggleMetaInterestChip(this, 'Direito do Consumidor')" class="meta-interest-chip active px-2.5 py-1 rounded-full text-xs font-bold border border-blue-500 bg-blue-100 text-blue-800 transition-all flex items-center gap-1 shadow-2xs">
+                      <span>⚖️</span><span>Consumidor & Bancário</span>
+                    </button>
+                    <button type="button" onclick="toggleMetaInterestChip(this, 'Direito Trabalhista')" class="meta-interest-chip px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:border-blue-300 transition-all flex items-center gap-1">
+                      <span>💼</span><span>Trabalhista & CLT</span>
+                    </button>
+                    <button type="button" onclick="toggleMetaInterestChip(this, 'Família e Sucessões')" class="meta-interest-chip px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:border-blue-300 transition-all flex items-center gap-1">
+                      <span>👨‍👩‍👧</span><span>Família & Inventário</span>
+                    </button>
+                    <button type="button" onclick="toggleMetaInterestChip(this, 'Direito Imobiliário')" class="meta-interest-chip px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:border-blue-300 transition-all flex items-center gap-1">
+                      <span>🏠</span><span>Imobiliário & Contratos</span>
+                    </button>
+                    <button type="button" onclick="toggleMetaInterestChip(this, 'Previdenciário e INSS')" class="meta-interest-chip px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:border-blue-300 transition-all flex items-center gap-1">
+                      <span>🩺</span><span>Previdenciário & INSS</span>
+                    </button>
+                    <button type="button" onclick="toggleMetaInterestChip(this, 'Empresarial e PMEs')" class="meta-interest-chip px-2.5 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:border-blue-300 transition-all flex items-center gap-1">
+                      <span>🏢</span><span>Empresarial & PMEs</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Box Dinâmico de Compliance Ético OAB & Meta -->
+              <div id="meta-compliance-box" class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs space-y-1 transition-all">
+                <div class="flex items-center gap-1.5 text-emerald-800 font-bold">
+                  <span>🛡️</span>
+                  <span>Conformidade Ética OAB & Diretrizes Meta: APROVADO</span>
+                </div>
+                <p class="text-[11px] text-emerald-700">O texto respeita o caráter informativo do Provimento 205/2021 da OAB e as políticas antidiscriminação da Meta.</p>
+              </div>
+
+              <!-- Botão de Ação Principal -->
+              <div class="pt-2">
+                <button 
+                  type="submit" 
+                  id="btn-submit-meta-ad" 
+                  class="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+                  <span>🚀</span>
+                  <span>Enviar Material / Criar Rascunho no Meta Ads</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Coluna Mockup Smartphone (5 Colunas) -->
+          <div class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 flex flex-col items-center justify-start space-y-4">
+            <div class="w-full flex items-center justify-between border-b border-slate-100 pb-3">
+              <span class="text-xs font-bold text-navy-950 flex items-center gap-1.5">
+                <span>📱</span>
+                <span>Live Preview no Celular</span>
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200">
+                Feed Instagram / Facebook
+              </span>
+            </div>
+
+            <!-- Carcaça do Smartphone -->
+            <div class="w-full max-w-[320px] bg-slate-900 rounded-[38px] p-3 shadow-2xl border-4 border-slate-800 relative">
+              <!-- Notch -->
+              <div class="w-28 h-3.5 bg-slate-800 rounded-full mx-auto mb-2"></div>
+
+              <!-- Tela do Celular -->
+              <div class="bg-white rounded-[26px] overflow-hidden shadow-inner border border-slate-200 text-slate-900 select-none">
+                <!-- Cabeçalho do App -->
+                <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-navy-950 text-gold-400 font-serif font-black flex items-center justify-center text-[10px] border border-gold-500/40">
+                      JA
+                    </div>
+                    <div>
+                      <div class="text-[11px] font-bold text-navy-950 leading-none">Jorge Alvim Advocacia</div>
+                      <div class="text-[9px] text-slate-400 mt-0.5">Patrocinado · 🌐</div>
+                    </div>
+                  </div>
+                  <span class="text-slate-400 text-xs">•••</span>
+                </div>
+
+                <!-- Imagem / Vídeo no Mockup -->
+                <div id="mockup-media-container" class="w-full bg-slate-100">
+                  <div class="w-full h-44 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 text-xs gap-1 border-y border-slate-200">
+                    <span class="text-2xl">🖼️</span>
+                    <span>Prévia da Imagem / Vídeo</span>
+                  </div>
+                </div>
+
+                <!-- Faixa do Anúncio (Link + Botão CTA) -->
+                <div class="bg-slate-50 p-2.5 border-b border-slate-100 flex items-center justify-between gap-2">
+                  <div class="overflow-hidden">
+                    <div id="mockup-link-text" class="text-[9px] text-slate-500 font-semibold uppercase truncate">JORGEALVIMADVOCACIA.COM.BR</div>
+                    <div id="mockup-headline-text" class="text-[11px] font-bold text-navy-950 truncate">Título do Anúncio (Headline)</div>
+                  </div>
+                  <button type="button" id="mockup-cta-btn" class="px-2.5 py-1 rounded-md bg-slate-200 text-slate-800 text-[10px] font-bold shrink-0">
+                    Saiba mais
+                  </button>
+                </div>
+
+                <!-- Corpo da Mensagem / Copy -->
+                <div class="p-3 text-[11px] leading-relaxed text-slate-800 border-b border-slate-100">
+                  <span class="font-bold text-navy-950">Jorge Alvim Advocacia</span>
+                  <p id="mockup-body-text" class="text-slate-700 mt-0.5 line-clamp-3">
+                    Texto descritivo do material que aparecerá no feed dos usuários do Facebook e Instagram.
+                  </p>
+                </div>
+
+                <!-- Ações do Feed (Likes/Comentários) -->
+                <div class="px-3 py-2 flex items-center justify-between text-slate-500 text-xs">
+                  <div class="flex items-center gap-3">
+                    <span>❤️ Curtir</span>
+                    <span>💬 Comentar</span>
+                    <span>↗️ Enviar</span>
+                  </div>
+                  <span>🔖</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ficha Técnica de Segmentação & Orçamento Diário (Live Mockup) -->
+            <div class="w-full bg-slate-50 rounded-2xl p-3.5 border border-slate-200 text-xs space-y-2 shadow-2xs">
+              <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>📊</span>
+                  <span>Ficha Técnica do Anúncio</span>
+                </span>
+                <span id="mockup-budget-pill" class="font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full text-[11px]">
+                  R$ 20,00/dia
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span class="text-slate-400 block text-[10px]">Objetivo:</span>
+                  <span id="mockup-goal-summary" class="font-bold text-slate-700">Leads & WhatsApp</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px]">Alcance Diário:</span>
+                  <span id="mockup-reach-summary" class="font-bold text-emerald-700 font-mono">1.200 - 3.800</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px]">Praça / Raio:</span>
+                  <span id="mockup-geo-summary" class="font-bold text-slate-700">Juiz de Fora (+40km)</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[10px]">Público / Idade:</span>
+                  <span id="mockup-age-summary" class="font-bold text-slate-700">25 a 65 anos (Todos)</span>
+                </div>
+              </div>
+              <div class="pt-1.5 border-t border-slate-200">
+                <span class="text-[10px] text-slate-400 block mb-1">Nicho Selecionado:</span>
+                <div id="mockup-interests-summary" class="flex flex-wrap gap-1 text-[10px]">
+                  <span class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-semibold">⚖️ Consumidor & Bancário</span>
+                </div>
+              </div>
+              <div class="pt-1 text-[10px] text-slate-400 flex items-center gap-1">
+                <span>🛡️</span>
+                <span>Modo seguro: Criado como <strong>PAUSED</strong> na Meta sem cobrança imediata.</span>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-400 text-center max-w-xs">
+              Simulação idêntica à renderização oficial no aplicativo do Instagram e Facebook mobile.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Tabela / Histórico de Materiais & Criativos -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 class="font-serif font-bold text-lg text-navy-950">Histórico de Materiais & Rascunhos no Meta Ads</h3>
+              <p class="text-xs text-slate-500 font-medium">Acompanhe todos os criativos enviados para o Gerenciador de Anúncios</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-bold text-slate-600 border-b border-slate-200 uppercase tracking-wider">
+                  <th class="p-3.5 w-16">Mídia</th>
+                  <th class="p-3.5">Título & Mensagem</th>
+                  <th class="p-3.5">Destino</th>
+                  <th class="p-3.5">Status</th>
+                  <th class="p-3.5">Data / Hora</th>
+                  <th class="p-3.5 text-right w-24">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="meta-posts-table-body">
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-xs text-slate-400">Carregando histórico de materiais...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
     </main>
   </div>
 
+  <!-- Modal: Configurações da Meta API -->
+  <div id="modal-meta-config" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-5 border border-slate-200 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 text-lg">⚙️</span>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-navy-950">Configurações da Meta Marketing API</h3>
+            <p class="text-xs text-slate-500 font-medium">Insira as credenciais do Meta Business Suite / System User</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeMetaConfigModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleMetaConfigSave(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">System User Token (Token Permanente)</label>
+          <input type="password" id="meta-cfg-token" placeholder="EAA..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500">
+          <span class="text-[10px] text-slate-400 mt-0.5 block">Gerado em Configurações do Negócio ➔ Usuários do Sistema ➔ Gerar Token (never expire).</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ID da Conta de Anúncios</label>
+            <input type="text" id="meta-cfg-ad-account" placeholder="act_123456789012345" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ID da Página do Facebook</label>
+            <input type="text" id="meta-cfg-page-id" placeholder="102938475612345" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ID da Conta do Instagram</label>
+            <input type="text" id="meta-cfg-insta-id" placeholder="17841400000000000" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ID do AdSet Padrão (Opcional)</label>
+            <input type="text" id="meta-cfg-default-adset" placeholder="6000000000000" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeMetaConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow transition-all">Salvar Configurações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Detalhes / Visualização do Criativo -->
+  <div id="modal-meta-preview" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-slate-200 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modal-preview-title" class="font-serif font-bold text-base text-navy-950 truncate">Detalhes do Material</h3>
+        <button type="button" onclick="closeMetaPreviewModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold">✕</button>
+      </div>
+      <div id="modal-preview-body"></div>
+      <div class="pt-2 text-right">
+        <button type="button" onclick="closeMetaPreviewModal()" class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Solicitar Novo Campo ao Programador (Fase 4) -->
+  <div id="modal-request-field" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-5 border border-slate-200 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-lg">💡</span>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-navy-950">Solicitar Campo ao Programador</h3>
+            <p class="text-xs text-slate-500 font-medium">Equipe de Desenvolvimento · Jorge Alvim Advocacia</p>
+          </div>
+        </div>
+        <button onclick="closeFieldRequestModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-all cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-3.5 bg-amber-50/50 rounded-2xl border border-amber-200/60 text-xs text-amber-900 leading-relaxed">
+        <strong>🔒 Governança de Dados & Segurança:</strong> Para manter a integridade do banco de dados e evitar instabilidade no escritório, novos campos são analisados e implementados pela equipe técnica com validação e índices adequados.
+      </div>
+
+      <form id="form-field-request" onsubmit="submitFieldRequest(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Módulo / Tela Alvo *</label>
+          <select id="field-req-module" required class="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white font-medium focus:border-amber-500 outline-none">
+            <option value="Clientes & Contratos">👥 Clientes & Contratos</option>
+            <option value="Processos & Prazos">⚖️ Processos & Prazos (CNJ)</option>
+            <option value="Atendimentos & Leads">📥 Atendimentos & Leads</option>
+            <option value="Financeiro & Caixa">💰 Financeiro & Caixa</option>
+            <option value="RH & Pessoal">👔 RH & Pessoal (CLT)</option>
+            <option value="Agenda & Audiências">📅 Agenda & Audiências</option>
+            <option value="Outro">🏛️ Outro Módulo</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Campo Desejado *</label>
+          <input type="text" id="field-req-name" required placeholder="Ex: Número do Benefício INSS (NB), Matrícula do Imóvel" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:border-amber-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Dado Sugerido</label>
+            <select id="field-req-type" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white font-medium focus:border-amber-500 outline-none">
+              <option value="TEXTO">Texto Simples</option>
+              <option value="TEXTO_LONGO">Texto Longo / Observação</option>
+              <option value="NUMERO">Número Inteiro</option>
+              <option value="MOEDA">Valor Monetário (R$)</option>
+              <option value="DATA">Data (DD/MM/AAAA)</option>
+              <option value="DOCUMENTO">CPF / CNPJ</option>
+              <option value="ARQUIVO">Arquivo / Anexo PDF</option>
+              <option value="SELECAO">Opções de Seleção (Dropdown)</option>
+            </select>
+          </div>
+
+          <div class="flex items-center pt-5">
+            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+              <input type="checkbox" id="field-req-required" class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500">
+              <span>Campo Obrigatório?</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Opções de Seleção (opcional)</label>
+          <input type="text" id="field-req-options" placeholder="Se for Dropdown: Opção 1, Opção 2, Opção 3" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:border-amber-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Justificativa Jurídica / Finalidade</label>
+          <textarea id="field-req-justification" rows="2" placeholder="Por que este campo é necessário para a operação do escritório?" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:border-amber-500 outline-none resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+          <button type="button" onclick="openMyFieldRequestsModal()" class="text-xs font-bold text-slate-600 hover:text-navy-950 underline cursor-pointer">
+            📋 Ver Meus Pedidos
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeFieldRequestModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" id="btn-submit-field-req" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-all cursor-pointer">
+              🚀 Enviar Pedido ao Programador
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Meus Pedidos de Campos ao Programador (Fase 4) -->
+  <div id="modal-list-field-requests" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-7 shadow-2xl space-y-5 border border-slate-200 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 text-lg">📋</span>
+          <div>
+            <h3 class="font-serif font-bold text-lg text-navy-950">Acompanhamento de Solicitações de Campos</h3>
+            <p class="text-xs text-slate-500 font-medium">Status e histórico das demandas enviadas à equipe de desenvolvimento</p>
+          </div>
+        </div>
+        <button onclick="closeMyFieldRequestsModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-all cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+              <th class="p-3">Campo Solicitado</th>
+              <th class="p-3">Módulo</th>
+              <th class="p-3">Tipo</th>
+              <th class="p-3">Status</th>
+              <th class="p-3 text-right">Data</th>
+            </tr>
+          </thead>
+          <tbody id="list-field-requests-body" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="5" class="p-4 text-center text-slate-400 text-xs">Carregando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeMyFieldRequestsModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all cursor-pointer">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Cadastrar / Editar Escritório e Integrantes -->
-  <div id="office-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="office-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       
       <!-- Cabeçalho do Modal -->
@@ -5153,7 +6530,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal: Detalhes dos Autos Judiciais (Estilo Jusbrasil) -->
-  <div id="judicial-process-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="judicial-process-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-7 shadow-2xl space-y-5 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       
       <!-- Cabeçalho do Modal do Processo -->
@@ -5284,7 +6661,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal: Detalhes do Pré-Cliente / Visita -->
-  <div id="pre-client-detail-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="pre-client-detail-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-3">
@@ -5363,7 +6740,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal: Detalhes Completos do Log de Auditoria -->
-  <div id="audit-details-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="audit-details-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-3">
@@ -5439,7 +6816,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <!-- ================= MODAIS DE CLIENTES & CONTRATOS ================= -->
 
   <!-- Modal: Incluir / Editar Cliente Completo & Contrato -->
-  <div id="client-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="client-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl space-y-5 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       
       <!-- Topo Modal -->
@@ -5453,11 +6830,35 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <p class="text-xs text-slate-500">Preencha os dados cadastrais, endereço, representante e contrato financeiro</p>
           </div>
         </div>
-        <button onclick="closeClientModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+        <div class="flex items-center space-x-1.5">
+          <button type="button" onclick="toggleModalFullscreen(this)" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-base font-bold leading-none" title="Expandir para tela cheia">⛶</button>
+          <button type="button" onclick="closeClientModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar modal">&times;</button>
+        </div>
       </div>
 
-      <!-- Formulário Completo -->
-      <form id="client-form" onsubmit="handleSaveClient(event)" class="space-y-6">
+      <!-- Barra de Progresso / Wizard 3 Etapas -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4 text-xs font-semibold select-none">
+        <button type="button" id="cli-step-tab-1" onclick="setClientStep(1)" class="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-amber-500 text-navy-950 font-bold border border-amber-400 shadow-xs cursor-pointer transition-all">
+          <span class="w-5 h-5 rounded-full bg-navy-950 text-amber-400 flex items-center justify-center text-[11px] font-mono">1</span>
+          <span class="hidden sm:inline">Identificação & Contato</span>
+          <span class="sm:hidden">1. Dados</span>
+        </button>
+        <div class="w-3 sm:w-6 h-0.5 bg-slate-200 mx-1"></div>
+        <button type="button" id="cli-step-tab-2" onclick="setClientStep(2)" class="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 cursor-pointer transition-all">
+          <span class="w-5 h-5 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-[11px] font-mono">2</span>
+          <span class="hidden sm:inline">Endereço (Auto-CEP)</span>
+          <span class="sm:hidden">2. Endereço</span>
+        </button>
+        <div class="w-3 sm:w-6 h-0.5 bg-slate-200 mx-1"></div>
+        <button type="button" id="cli-step-tab-3" onclick="setClientStep(3)" class="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 cursor-pointer transition-all">
+          <span class="w-5 h-5 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-[11px] font-mono">3</span>
+          <span class="hidden sm:inline">Contrato & Ficheiro</span>
+          <span class="sm:hidden">3. Contrato</span>
+        </button>
+      </div>
+
+      <!-- Formulário Completo em 3 Etapas -->
+      <form id="client-form" onsubmit="handleSaveClient(event)" class="space-y-4">
         <input type="hidden" id="cli-edit-id" />
         
         <div id="cli-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
@@ -5467,7 +6868,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <span id="cli-error-text">Erro ao salvar cliente.</span>
         </div>
 
-        <!-- 1. SELEÇÃO DE TIPO DE CLIENTE (PF vs PJ) -->
+        <!-- ETAPA 1: IDENTIFICAÇÃO E CONTATO -->
+        <div id="cli-step-container-1" class="space-y-4">
+          <!-- 1. SELEÇÃO DE TIPO DE CLIENTE (PF vs PJ) -->
         <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo de Pessoa / Cliente:</span>
           <div class="flex space-x-3 w-full sm:w-auto">
@@ -5506,7 +6909,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <div class="sm:col-span-2">
               <label class="block text-xs font-bold text-slate-700 mb-1" id="label-fullname">Nome Completo *</label>
-              <input type="text" id="cli-fullname" required placeholder="Ex: Dr. Carlos Eduardo de Souza" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              <input type="text" id="cli-fullname" placeholder="Ex: Dr. Carlos Eduardo de Souza" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
             </div>
 
             <div id="field-cpf-container">
@@ -5575,7 +6978,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Telefone / WhatsApp *</label>
-              <input type="tel" id="cli-phone" required placeholder="(32) 99888-7766" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono" />
+              <input type="tel" id="cli-phone" placeholder="(32) 99888-7766" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono" />
             </div>
 
             <div>
@@ -5612,67 +7015,11 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
-        <!-- 3. ENDEREÇO COMPLETO DO CLIENTE / SEDE -->
-        <div class="space-y-3">
-          <div class="flex justify-between items-center border-b pb-1">
-            <h4 class="font-bold text-xs uppercase tracking-wider text-navy-900">2. Endereço Completo (Auto-Preenchimento por CEP)</h4>
-            <span class="text-[10px] text-slate-500 font-medium">Digite o CEP para buscar rua, bairro e cidade</span>
-          </div>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">CEP (Auto-Busca)</label>
-              <div class="flex space-x-1.5">
-                <input 
-                  type="text" 
-                  id="cli-cep" 
-                  placeholder="36010-001" 
-                  oninput="maskCEP(this); if(this.value.replace(/\D/g,'').length===8) autoLookupClientCep();" 
-                  onblur="autoLookupClientCep()"
-                  class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono font-bold" 
-                />
-                <button 
-                  type="button" 
-                  onclick="autoLookupClientCep()" 
-                  class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs" 
-                  title="Buscar CEP"
-                >
-                  🔍
-                </button>
-              </div>
-            </div>
-            <div class="sm:col-span-2">
-              <label class="block text-xs font-bold text-slate-700 mb-1">Rua / Logradouro</label>
-              <input type="text" id="cli-street" placeholder="Ex: Rua Henrique Dias" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Número</label>
-              <input type="text" id="cli-number" placeholder="Ex: 259" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-bold" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Complemento</label>
-              <input type="text" id="cli-complement" placeholder="Ex: Apto 101 / Loja 5" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Bairro</label>
-              <input type="text" id="cli-neighborhood" placeholder="Ex: Benfica" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Cidade</label>
-              <input type="text" id="cli-city" placeholder="Ex: Juiz de Fora" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Estado (UF)</label>
-              <input type="text" id="cli-state" value="MG" placeholder="Ex: MG" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white uppercase font-bold" />
-            </div>
-          </div>
-        </div>
-
         <!-- 4. DADOS DO REPRESENTANTE LEGAL (SE FOR PJ / EMPRESA) -->
         <div id="rep-legal-section" class="hidden space-y-3 p-4 bg-amber-50/60 rounded-2xl border border-amber-200">
           <h4 class="font-bold text-xs uppercase tracking-wider text-amber-900 border-b border-amber-200 pb-1 flex items-center space-x-2">
             <span>👤</span>
-            <span>3. Dados do Representante Legal da Empresa (Sócio / Diretor)</span>
+            <span>Dados do Representante Legal da Empresa (Sócio / Diretor)</span>
           </h4>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -5718,6 +7065,70 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
           </div>
         </div>
+
+        </div> <!-- Fim cli-step-container-1 -->
+
+        <!-- ETAPA 2: ENDEREÇO COMPLETO -->
+        <div id="cli-step-container-2" class="hidden space-y-4">
+          <!-- 3. ENDEREÇO COMPLETO DO CLIENTE / SEDE -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center border-b pb-1">
+              <h4 class="font-bold text-xs uppercase tracking-wider text-navy-900">2. Endereço Completo (Auto-Preenchimento por CEP)</h4>
+              <span class="text-[10px] text-slate-500 font-medium">Digite o CEP para buscar rua, bairro e cidade</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">CEP (Auto-Busca)</label>
+                <div class="flex space-x-1.5">
+                  <input 
+                    type="text" 
+                    id="cli-cep" 
+                    placeholder="36010-001" 
+                    oninput="maskCEP(this); if(this.value.replace(/\D/g,'').length===8) autoLookupClientCep();" 
+                    onblur="autoLookupClientCep()"
+                    class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-mono font-bold" 
+                  />
+                  <button 
+                    type="button" 
+                    onclick="autoLookupClientCep()" 
+                    class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs" 
+                    title="Buscar CEP"
+                  >
+                    🔍
+                  </button>
+                </div>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Rua / Logradouro</label>
+                <input type="text" id="cli-street" placeholder="Ex: Rua Henrique Dias" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Número</label>
+                <input type="text" id="cli-number" placeholder="Ex: 259" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white font-bold" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Complemento</label>
+                <input type="text" id="cli-complement" placeholder="Ex: Apto 101 / Loja 5" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Bairro</label>
+                <input type="text" id="cli-neighborhood" placeholder="Ex: Benfica" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Cidade</label>
+                <input type="text" id="cli-city" placeholder="Ex: Juiz de Fora" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Estado (UF)</label>
+                <input type="text" id="cli-state" value="MG" placeholder="Ex: MG" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white uppercase font-bold" />
+              </div>
+            </div>
+          </div>
+        </div> <!-- Fim cli-step-container-2 -->
+
+        <!-- ETAPA 3: CONTRATO, HONORÁRIOS E DOCUMENTOS -->
+        <div id="cli-step-container-3" class="hidden space-y-4">
 
         <!-- 5. BOX DE GESTÃO DE CONTRATO FINANCEIRO (DESIGN CLARO) -->
         <div class="space-y-3 p-4 sm:p-5 bg-gradient-to-br from-slate-50 to-amber-50/40 rounded-2xl text-slate-800 shadow-sm border border-slate-200">
@@ -5842,12 +7253,25 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
-        <!-- Botões Salvar / Cancelar -->
-        <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3 sticky -bottom-5 sm:-bottom-8 bg-white py-2 z-10">
-          <button type="button" onclick="closeClientModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold">Cancelar</button>
-          <button type="submit" id="cli-save-btn" class="px-6 py-2.5 bg-gold-500 hover:bg-gold-400 text-navy-950 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center space-x-2">
-            <span>💾 Salvar Cliente & Contrato</span>
+        </div> <!-- Fim cli-step-container-3 -->
+
+        <!-- Botões de Navegação & Ação do Wizard -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-between sticky -bottom-5 sm:-bottom-8 bg-white py-3 z-10">
+          <button type="button" onclick="closeClientModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition-colors">
+            Cancelar
           </button>
+          <div class="flex items-center space-x-2">
+            <button type="button" id="cli-prev-btn" onclick="prevClientStep()" class="hidden px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer">
+              ← Voltar
+            </button>
+            <button type="button" id="cli-next-btn" onclick="nextClientStep()" class="px-5 py-2.5 bg-navy-950 hover:bg-navy-900 text-amber-400 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer">
+              <span>Avançar</span>
+              <span>→</span>
+            </button>
+            <button type="submit" id="cli-save-btn" class="hidden px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-navy-950 rounded-xl text-xs sm:text-sm font-extrabold shadow-md flex items-center space-x-2 cursor-pointer transition-all">
+              <span>💾 Salvar Cliente & Contrato</span>
+            </button>
+          </div>
         </div>
 
       </form>
@@ -5856,7 +7280,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal: Incluir Novo Usuário e Senha -->
-  <div id="new-user-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="new-user-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-4 border border-slate-200">
       
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -5919,7 +7343,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal: Alterar Usuário e Senha -->
-  <div id="edit-user-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="edit-user-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-4 border border-slate-200">
       
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -5976,7 +7400,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal: Detalhes Lead -->
-  <div id="message-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="message-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 id="modal-title" class="font-serif font-bold text-base sm:text-lg text-navy-950">Detalhes do Atendimento</h3>
@@ -5990,17 +7414,26 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: CADASTRAR / EDITAR PROCESSO JUDICIAL ================= -->
-  <div id="lawsuit-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="lawsuit-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[92vh] overflow-y-auto">
-      <button onclick="closeLawsuitModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
-      <div class="flex items-center space-x-3 pb-4 border-b border-slate-100 mb-5">
-        <div class="w-10 h-10 rounded-xl bg-gold-50 border border-gold-300 text-gold-700 flex items-center justify-center text-xl font-bold shadow-xs">
-          ⚖️
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gold-50 border border-gold-300 text-gold-700 flex items-center justify-center text-xl font-bold shadow-xs">
+            ⚖️
+          </div>
+          <div>
+            <h3 id="lawsuit-modal-title" class="font-serif font-bold text-lg text-navy-950">Cadastrar Processo Judicial</h3>
+            <p class="text-xs text-slate-500">Vincule o processo ao cliente, informe o número CNJ, tribunal e instância.</p>
+          </div>
         </div>
-        <div>
-          <h3 id="lawsuit-modal-title" class="font-serif font-bold text-lg text-navy-950">Cadastrar Processo Judicial</h3>
-          <p class="text-xs text-slate-500">Vincule o processo ao cliente, informe o número CNJ, tribunal e instância.</p>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="openFieldRequestModal('Processos & Prazos')" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer" title="Pedir novo campo customizado ao programador para Processos">
+            <span>💡</span>
+            <span class="hidden sm:inline">Pedir Novo Campo</span>
+          </button>
+          <button type="button" onclick="toggleModalFullscreen(this)" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-base font-bold leading-none" title="Expandir para tela cheia">⛶</button>
+          <button type="button" onclick="closeLawsuitModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar modal">&times;</button>
         </div>
       </div>
 
@@ -6035,11 +7468,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <button 
                 type="button" 
                 onclick="autoLookupLawsuitCnj()" 
-                class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-navy-950 font-bold text-xs shadow-xs transition-colors flex items-center space-x-1.5 whitespace-nowrap cursor-pointer"
-                title="Decodificar e Preencher Dados do Processo"
+                class="px-3.5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-navy-950 font-bold transition-colors cursor-pointer text-xs"
+                title="Consultar dados do processo pelo CNJ"
               >
-                <span>🔍</span>
-                <span>Decodificar CNJ</span>
+                Buscar
               </button>
             </div>
           </div>
@@ -6097,6 +7529,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
+        <!-- Parte Contrária com Detector de Conflito de Interesses (OAB) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Parte Contrária / Réu</label>
+          <input type="text" id="lawsuit-opposing-party" placeholder="Ex: Banco Santander S.A., INSS, Nome da Empresa ou Pessoa" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white" />
+          <div id="lawsuit-conflict-warning" class="hidden mt-2"></div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <!-- Vara / Comarca -->
           <div>
@@ -6119,9 +7558,19 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
-        <!-- Observações / Estratégia -->
+        <!-- Observações / Estratégia com Digitação por Voz (Fase 4) -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Observações Internas / Estratégia</label>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Observações Internas / Estratégia</label>
+            <button 
+              type="button" 
+              id="btn-voice-lawsuit-notes"
+              onclick="toggleVoiceDictation('lawsuit-notes', 'btn-voice-lawsuit-notes')" 
+              class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold border border-slate-300 transition-all cursor-pointer flex items-center gap-1" 
+              title="Ditar texto por voz pelo microfone">
+              <span>🎙️</span> <span>Ditar por Voz</span>
+            </button>
+          </div>
           <textarea id="lawsuit-notes" rows="2" placeholder="Resumo dos pedidos, teses jurídicas ou anotações..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white resize-none"></textarea>
         </div>
 
@@ -6136,7 +7585,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: GERADOR INTELIGENTE DE PEÇAS & DOCUMENTOS JURÍDICOS ================= -->
-  <div id="legal-doc-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="legal-doc-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[94vh] overflow-y-auto space-y-5 my-auto">
       <button onclick="closeLegalDocModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -6250,7 +7699,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: NOVO / EDITAR ANDAMENTO & PRAZO ================= -->
-  <div id="movement-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="movement-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[92vh] overflow-y-auto">
       <button onclick="closeMovementModal()" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -6321,7 +7770,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: VISUALIZADOR & IMPRESSÃO A4 DE DOCUMENTOS TIMBRADOS ================= -->
-  <div id="doc-preview-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+  <div id="doc-preview-modal" class="hidden fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-4 sm:p-8 shadow-2xl border border-slate-200 relative my-auto max-h-[96vh] flex flex-col">
       
       <!-- Barra Superior do Modal (Não Imprime) -->
@@ -6380,7 +7829,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <!-- ================= MODAIS DO MÓDULO FINANCEIRO ================= -->
 
   <!-- 1. Modal: Novo / Editar Lançamento Financeiro -->
-  <div id="transaction-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="transaction-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-2.5">
@@ -6392,7 +7841,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <p class="text-[11px] text-slate-500">Receita ou despesa do caixa do escritório</p>
           </div>
         </div>
-        <button type="button" onclick="closeTransactionModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+        <div class="flex items-center space-x-1.5">
+          <button type="button" onclick="toggleModalFullscreen(this)" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-base font-bold leading-none" title="Expandir para tela cheia">⛶</button>
+          <button type="button" onclick="closeTransactionModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar modal">&times;</button>
+        </div>
       </div>
 
       <form id="transaction-form" onsubmit="handleSaveTransaction(event)" class="space-y-3.5">
@@ -6558,7 +8010,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 2. Modal: Baixa Manual de Parcela & Recibo -->
-  <div id="manual-pay-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="manual-pay-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-2.5">
@@ -6655,7 +8107,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 3. Modal: Cobrança Asaas (QR Code PIX, Copia e Cola & Boleto) -->
-  <div id="asaas-charge-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="asaas-charge-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 my-auto text-center">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3 text-left">
         <div class="flex items-center space-x-2.5">
@@ -6745,7 +8197,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 4. Modal: Registrar Alvará Judicial / RPV -->
-  <div id="alvara-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="alvara-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-2.5">
@@ -6757,7 +8209,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <p class="text-[11px] text-slate-500">Cálculo de retenção de honorários e prestação de contas</p>
           </div>
         </div>
-        <button type="button" onclick="closeAlvaraModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+        <div class="flex items-center space-x-1.5">
+          <button type="button" onclick="toggleModalFullscreen(this)" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-base font-bold leading-none" title="Expandir para tela cheia">⛶</button>
+          <button type="button" onclick="closeAlvaraModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none" title="Fechar modal">&times;</button>
+        </div>
       </div>
 
       <form id="alvara-form" onsubmit="handleSaveAlvara(event)" class="space-y-3.5">
@@ -6880,7 +8335,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: EMISSÃO DE NOTA FISCAL (NFS-E ASAAS) & RECIBO TIMBRADO OAB ================= -->
-  <div id="nfse-issue-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="nfse-issue-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-slate-200 my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-3">
@@ -6996,7 +8451,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: VISUALIZADOR & IMPRESSÃO TIMBRADA DE NOTA FISCAL / RECIBO ================= -->
-  <div id="nfse-preview-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="nfse-preview-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-8 shadow-2xl space-y-4 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3 no-print">
         <div class="flex items-center space-x-3">
@@ -7024,7 +8479,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL DO BLOG: CRIAR / EDITAR ARTIGO JURÍDICO ================= -->
-  <div id="blog-post-editor-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="blog-post-editor-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl space-y-5 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       
       <!-- Topo Modal -->
@@ -7182,7 +8637,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
 
   <!-- ================= MODAL: CADASTRAR / EDITAR COMPROMISSO NA AGENDA ================= -->
-  <div id="modal-calendar-event" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-calendar-event" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto max-h-[92vh] overflow-y-auto">
       <button onclick="closeCalendarEventModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7324,7 +8779,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: VISUALIZADOR DE COMPROMISSO DA AGENDA ================= -->
-  <div id="modal-calendar-view" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-calendar-view" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
       <button onclick="closeCalendarViewModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7395,7 +8850,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: SINCRONIZAÇÃO GOOGLE CALENDAR & iCAL (.ICS) ================= -->
-  <div id="modal-calendar-sync" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-calendar-sync" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5 max-h-[92vh] overflow-y-auto">
       <button onclick="closeCalendarSyncModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7458,7 +8913,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: CALCULADORA DE PRAZOS PROCESSUAIS JUDICIAIS ================= -->
-  <div id="modal-deadline-calculator" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-deadline-calculator" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5">
       <button onclick="closeDeadlineCalculator()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7641,7 +9096,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: VISUALIZADOR DE INTIMAÇÃO / DJEN ================= -->
-  <div id="modal-publication-view" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-publication-view" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
       <button onclick="closePublicationViewModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7710,7 +9165,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
        ============================================================================= -->
 
   <!-- 1. MODAL: ASSINATURA ELETRÔNICA DO CARTÃO DE PONTO (PORTARIA 671) -->
-  <div id="hr-modal-time-sign" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="hr-modal-time-sign" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
       <button onclick="closeHrModal('hr-modal-time-sign')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7761,7 +9216,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 2. MODAL: REGISTRAR / AJUSTAR PONTO ELETRÔNICO DIÁRIO -->
-  <div id="hr-modal-time-punch" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="hr-modal-time-punch" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
       <button onclick="closeHrModal('hr-modal-time-punch')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -7825,7 +9280,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 3. MODAL: VISUALIZADOR & IMPRESSÃO DE HOLERITE / CONTRACHEQUE TIMBRADO -->
-  <div id="hr-modal-payslip" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="hr-modal-payslip" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3 no-print">
         <div class="flex items-center space-x-3">
@@ -7949,7 +9404,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 4. MODAL: PROGRAMAR & CALCULAR FÉRIAS (ART. 7º, XVII CF/88) -->
-  <div id="hr-modal-vacation-form" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="hr-modal-vacation-form" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
       <button onclick="closeHrModal('hr-modal-vacation-form')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -8013,7 +9468,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 5. MODAL: CADASTRAR / EDITAR COLABORADOR COMPLETO -->
-  <div id="hr-modal-employee" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="hr-modal-employee" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5 max-h-[92vh] overflow-y-auto">
       <button onclick="closeHrModal('hr-modal-employee')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -8124,7 +9579,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- 6. MODAL: LANÇAR ASO / EXAME OCUPACIONAL (PCMSO) -->
-  <div id="hr-modal-exam-form" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="hr-modal-exam-form" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto space-y-4">
       <button onclick="closeHrModal('hr-modal-exam-form')" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -8206,7 +9661,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: RASCUNHO DE ATIVIDADE & DESPACHOS ================= -->
-  <div id="modal-activity-draft" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-activity-draft" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-amber-200 relative my-auto space-y-5 animate-fadeIn">
       <button onclick="closeActivityDraftModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -8359,7 +9814,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- ================= MODAL: SIMULADOR & TERMO DE RESCISÃO TRABALHISTA CLT ================= -->
-  <div id="modal-labor-termination" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="modal-labor-termination" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-teal-300 relative my-auto space-y-5 animate-fadeIn">
       <button onclick="closeLaborTerminationModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
       
@@ -8568,7 +10023,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <!-- ================= MODAIS DE FOGUETES (DESPACHOS & COMUNICAÇÃO) ================= -->
   
   <!-- Modal 1: Lançar Novo Foguete -->
-  <div id="rocket-new-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="rocket-new-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       
       <div class="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -8679,7 +10134,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   </div>
 
   <!-- Modal 2: Visualizar Foguete & Thread de Respostas em Cadeia -->
-  <div id="rocket-view-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div id="rocket-view-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       
       <!-- Cabeçalho do Foguete -->
@@ -8776,24 +10231,33 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     edições nesses módulos silenciosamente ineficazes — foi a causa-raiz do bug da
     aba Foguetes e do crash de TOKEN_KEY. O inline é a fonte única da verdade.
   -->
-  <script src="/js/core/api.js"></script>
-  <script src="/js/modules/rockets.js"></script>
-  <script src="/js/painel/painel-1-app.js"></script>
+  <script src="/js/core/api.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/core/user-support.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/modules/rockets.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/modules/maintenance.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/modules/legaltech.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/modules/cockpit.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/modules/legal-docs.js?v=20260906-fullscreen-all"></script>
+  <script src="/js/modules/meta-ads.js?v=20260906-meta-broad-v1"></script>
+  <script src="/js/painel/painel-1-app.js?v=20260906-meta-broad-v1"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD
        (funções globais chamadas pelo switchTab)
        ============================================================ -->
-  <script src="/js/painel/painel-2.js"></script>
+  <script src="/js/painel/painel-2.js?v=20260906-fullscreen-all"></script>
 
   <!-- ================= GERENCIADOR DE JANELAS (estilo Windows) ================= -->
-  <script src="/js/painel/painel-3.js"></script>
+  <script src="/js/painel/painel-3.js?v=20260906-meta-broad-v1"></script>
+
+  <!-- ================= RECURSOS WINDOWS (Menu de Contexto & Bloqueio LGPD) ================= -->
+  <script src="/js/core/windows-features.js?v=20260906-win-features"></script>
 
   <!-- ================= DRILL-DOWN: clique nos números → caixa de dados ================= -->
   <style>
     .kpi-drill{cursor:pointer !important;text-decoration:underline dotted rgba(180,120,20,.55);text-underline-offset:3px;transition:color .15s}
     .kpi-drill:hover{color:#b45309 !important}
-    #drill-ov{position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:12000;display:flex;align-items:center;justify-content:center;padding:16px}
+    #drill-ov{position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:999999 !important;display:flex;align-items:center;justify-content:center;padding:16px}
     #drill-box{background:#fff;border-radius:14px;max-width:940px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(2,6,23,.45)}
     #drill-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid #e2e8f0}
     #drill-tools{display:flex;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
@@ -8807,6 +10271,6 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     .drill-btn{padding:8px 14px;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer;border:1px solid #cbd5e1;background:#fff;color:#334155}
     .drill-btn.p{background:linear-gradient(to right,#f59e0b,#d4a017);color:#0f172a;border:0;font-weight:800}
   </style>
-  <script src="/js/painel/painel-4-wm.js"></script>
+  <script src="/js/painel/painel-4-wm.js?v=20260906-fullscreen-all"></script>
 </body>
 </html>

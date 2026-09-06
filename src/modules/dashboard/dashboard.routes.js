@@ -102,3 +102,84 @@ dashboardRouter.get('/api/dashboard/overview', requireAuth, (req, res) => {
     return res.status(500).json({ error: 'Erro ao carregar a visão geral.' });
   }
 });
+
+/** GET /api/dashboard/meu-dia-hoje — Cockpit Matinal do Advogado (Prazos, Audiências, DJEN) */
+dashboardRouter.get('/api/dashboard/meu-dia-hoje', requireAuth, (req, res) => {
+  try {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const tomorrow = new Date(now.getTime() + 86400000);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+    const in7Days = new Date(now.getTime() + 7 * 86400000);
+    const in7DaysStr = in7Days.toISOString().slice(0, 10);
+
+    // 1. Prazos Fatais de Hoje
+    const prazosHoje = safe(() => db.prepare(`
+      SELECT id, title, start_datetime as date, 'agenda' as source, lawsuit_number, client_name, priority
+      FROM calendar_events
+      WHERE status NOT IN ('concluido', 'cancelado') AND (event_type = 'prazo_fatal' OR priority = 'fatal')
+        AND start_datetime LIKE ?
+    `).all(`${todayStr}%`), []);
+
+    const prazosPubHoje = safe(() => db.prepare(`
+      SELECT id, tipo_comunicacao as title, deadline_date as date, 'djen' as source, numeroprocessocommascara as lawsuit_number, nome_orgao as client_name, 'fatal' as priority
+      FROM court_publications
+      WHERE status NOT IN ('arquivado') AND deadline_date = ?
+    `).all(todayStr), []);
+
+    const fatalToday = [...prazosHoje, ...prazosPubHoje];
+
+    // Prazos de Amanhã
+    const prazosAmanha = safe(() => db.prepare(`
+      SELECT id, title, start_datetime as date, lawsuit_number, client_name
+      FROM calendar_events
+      WHERE status NOT IN ('concluido', 'cancelado') AND (event_type = 'prazo_fatal' OR priority = 'fatal')
+        AND start_datetime LIKE ?
+    `).all(`${tomorrowStr}%`), []);
+
+    // Prazos da Semana (próximos 7 dias)
+    const prazosSemana = safe(() => db.prepare(`
+      SELECT id, title, start_datetime as date, lawsuit_number, client_name
+      FROM calendar_events
+      WHERE status NOT IN ('concluido', 'cancelado') AND (event_type = 'prazo_fatal' OR priority = 'fatal')
+        AND start_datetime > ? AND start_datetime <= ?
+      ORDER BY start_datetime ASC
+    `).all(`${tomorrowStr}T23:59:59`, `${in7DaysStr}T23:59:59`), []);
+
+    // 2. Audiências de Hoje (com link de sala virtual, cliente e horário)
+    const audienciasHoje = safe(() => db.prepare(`
+      SELECT id, title, description, event_type, start_datetime, end_datetime, location, meeting_url, lawsuit_number, client_name, status
+      FROM calendar_events
+      WHERE status NOT IN ('cancelado') AND event_type IN ('audiencia', 'consulta', 'reuniao')
+        AND start_datetime LIKE ?
+      ORDER BY start_datetime ASC
+    `).all(`${todayStr}%`), []);
+
+    // 3. Intimações Recentes do DJEN (para triagem matinal)
+    const intimacoesDjen = safe(() => db.prepare(`
+      SELECT id, comunicacao_id, numero_processo, numeroprocessocommascara, sigla_tribunal, nome_orgao, tipo_comunicacao, data_disponibilizacao, texto_resumo, status
+      FROM court_publications
+      WHERE status IN ('nao_lido', 'novo', 'pendente')
+      ORDER BY data_disponibilizacao DESC, created_at DESC
+      LIMIT 6
+    `).all(), []);
+
+    return res.json({
+      success: true,
+      data_hoje: todayStr,
+      hora_atual: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      prazos: {
+        hoje: fatalToday,
+        amanha: prazosAmanha,
+        semana: prazosSemana,
+        total_hoje: fatalToday.length,
+        total_semana: fatalToday.length + prazosAmanha.length + prazosSemana.length
+      },
+      audiencias: audienciasHoje,
+      intimacoes: intimacoesDjen
+    });
+  } catch (err) {
+    console.error('[COCKPIT] Erro ao obter dados de Meu Dia Hoje:', err);
+    return res.status(500).json({ error: 'Erro ao carregar dados matinais do advogado.' });
+  }
+});

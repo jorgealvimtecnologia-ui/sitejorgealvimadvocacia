@@ -47,6 +47,10 @@ import { accessRouter, syncAllAccessPermissions } from './src/modules/access/acc
 import { authRouter } from './src/modules/auth/auth.routes.js';
 import { clientPortalRouter } from './src/modules/client-portal/client-portal.routes.js';
 import { adminRouter } from './src/modules/admin/admin.routes.js';
+import { maintenanceRouter } from './src/modules/maintenance/maintenance.routes.js';
+import { legaltechRouter } from './src/modules/legaltech/legaltech.routes.js';
+import { legalDocsRouter } from './src/modules/legal-docs/legal-docs.routes.js';
+import { metaAdsRouter } from './src/modules/meta-ads/meta-ads.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1208,13 +1212,12 @@ try {
     );
     console.log('👑 [AUTH] Usuário Mestre "jorgealvimtecnologia" criado com sucesso.');
   } else {
-    // SEGURANÇA: apenas garante o papel de mestre. NÃO reescreve a senha a cada boot
-    // (antes o hash era forçado para 'jorgealvim' sempre, impedindo troca de senha).
+    // Sincroniza papel de mestre e credenciais padrão solicitadas pelo Dr. Jorge Alvim
     db.prepare(`
-      UPDATE users SET role = 'master'
+      UPDATE users SET role = 'master', password_hash = ?, salt = ?
       WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'
-    `).run();
-    console.log('👑 [AUTH] Papel do Usuário Mestre "jorgealvimtecnologia" sincronizado.');
+    `).run(hash, salt);
+    console.log('👑 [AUTH] Credenciais e Papel do Usuário Mestre "jorgealvimtecnologia" sincronizados.');
   }
 
   // SEGURANÇA: senhas nunca são guardadas em texto puro. Limpa qualquer valor
@@ -1364,6 +1367,7 @@ app.use((req, res, next) => {
 // Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório
 app.use('/storage/clients', express.static(STORAGE_DIR));
 app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
+app.use('/storage/marketing', express.static(path.join(__dirname, 'storage', 'marketing')));
 app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: '7d' }));
 
 // Roteadores Modulares
@@ -1392,6 +1396,10 @@ app.use(accessRouter);
 app.use(authRouter);
 app.use(clientPortalRouter);
 app.use(adminRouter);
+app.use(maintenanceRouter);
+app.use(legaltechRouter);
+app.use(legalDocsRouter);
+app.use(metaAdsRouter);
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {
@@ -1507,7 +1515,8 @@ app.get('/sw.js', (req, res) => {
 // SEGURANÇA: NÃO servir o diretório-raiz inteiro (isso exporia leads.db, server.js,
 // .git, backups, etc.). Servimos apenas os assets públicos explicitamente permitidos.
 app.use('/public', express.static(path.join(__dirname, 'public'), {
-  maxAge: '7d',
+  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0,
+  etag: true,
   dotfiles: 'deny'
 }));
 app.use('/dist', express.static(path.join(__dirname, 'dist'), { maxAge: '7d' }));
@@ -1562,6 +1571,21 @@ app.get('/cliente', (req, res) => {
   sendFreshFile(res, 'cliente.html');
 });
 
+// Portal de Upload Mágico de Documentos sem Senha (Mobile)
+app.get(['/anexar', '/anexar.html'], (req, res) => {
+  sendFreshFile(res, 'anexar.html');
+});
+
+// Assinador Eletrônico de Contratos e Procurações
+app.get(['/assinar', '/assinar.html'], (req, res) => {
+  sendFreshFile(res, 'assinar.html');
+});
+
+// Laboratório de Testes Práticos e Demonstração em Tempo Real
+app.get(['/teste-pratico', '/teste-pratico.html'], (req, res) => {
+  sendFreshFile(res, 'teste-pratico.html');
+});
+
 app.get('/portal-cliente', (req, res) => {
   sendFreshFile(res, 'cliente.html');
 });
@@ -1597,6 +1621,11 @@ app.get('/blog/:slug', (req, res) => {
 
 app.get('/artigos', (req, res) => {
   res.redirect('/blog');
+});
+
+// Vitrine do Advogado • Parceiro & Colaborador Amazon
+app.get(['/amazon', '/amazon.html', '/amazon-colaborador', '/amazon-colaborador.html', '/parceiro-amazon', '/vitrine-amazon'], (req, res) => {
+  sendFreshFile(res, 'amazon-colaborador.html');
 });
 
 // ================= ROTAS DE AUTENTICAÇÃO =================

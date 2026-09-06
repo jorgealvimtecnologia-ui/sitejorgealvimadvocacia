@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Envio Seguro de Documentos • Jorge Alvim Advocacia</title>
+  <meta name="description" content="Envie seus documentos de identificação e comprovantes com segurança e sem complicação direto pelo seu celular.">
+  <meta name="theme-color" content="#0A192F">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23B8860B'><path d='M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14'/></svg>">
+  <link rel="stylesheet" href="/public/css/app.tailwind.css" />
+  <style>
+    body {
+      background-color: #FDFBF7;
+      color: #0F172A;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased">
+  
+  <!-- Header Mobile Timbrado -->
+  <header class="bg-navy-950 text-white border-b-2 border-gold-500 py-4 px-4 shadow-md text-center">
+    <div class="max-w-md mx-auto flex items-center justify-center space-x-2.5">
+      <div class="w-9 h-9 rounded-xl bg-gold-500 text-navy-950 flex items-center justify-center text-lg font-bold shadow-xs">
+        ⚖️
+      </div>
+      <div class="text-left">
+        <h1 class="font-serif font-bold text-sm sm:text-base tracking-wide text-white">JORGE ALVIM ADVOCACIA</h1>
+        <p class="text-[10px] text-gold-400 font-semibold uppercase tracking-wider">Envio Seguro de Documentos • OAB/MG 222.943</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-lg w-full mx-auto px-4 py-6 space-y-5">
+    
+    <!-- Card de Boas-vindas -->
+    <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-3 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-amber-50 text-gold-600 flex items-center justify-center text-2xl mx-auto border border-gold-200">
+        📎
+      </div>
+      <div>
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Atendimento Digital</span>
+        <h2 id="client-name-display" class="font-serif text-lg sm:text-xl font-bold text-navy-950 mt-0.5">
+          Carregando seus dados...
+        </h2>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
+        Tire fotos nítidas dos seus documentos com a câmera do celular ou anexe arquivos em PDF para anexarmos ao seu processo.
+      </p>
+      <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200">
+        <span>🔒</span>
+        <span>Acesso Seguro sem Senha (72h)</span>
+      </div>
+    </div>
+
+    <!-- Guia Rápido do que Enviar -->
+    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2.5 text-xs">
+      <span class="font-bold text-slate-700 uppercase tracking-wider text-[10px] block">
+        📋 Documentos Recomendados para o seu Caso:
+      </span>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-600 font-medium">
+        <div class="flex items-center space-x-2 bg-white p-2 rounded-xl border border-slate-200/80">
+          <span>🪪</span>
+          <span>RG ou CNH (Frente e Verso)</span>
+        </div>
+        <div class="flex items-center space-x-2 bg-white p-2 rounded-xl border border-slate-200/80">
+          <span>🏠</span>
+          <span>Comprovante de Residência</span>
+        </div>
+        <div class="flex items-center space-x-2 bg-white p-2 rounded-xl border border-slate-200/80">
+          <span>💼</span>
+          <span>Carteira de Trabalho / Extrato</span>
+        </div>
+        <div class="flex items-center space-x-2 bg-white p-2 rounded-xl border border-slate-200/80">
+          <span>📑</span>
+          <span>Provas / Documentos do Caso</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulário de Upload -->
+    <form id="magic-upload-form" class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+      
+      <div 
+        id="drop-zone"
+        onclick="document.getElementById('file-input').click()"
+        class="border-2 border-dashed border-gold-400 bg-amber-50/40 hover:bg-amber-50/80 rounded-2xl p-6 text-center cursor-pointer transition-colors space-y-2"
+      >
+        <div class="text-3xl">📸</div>
+        <div class="text-xs font-bold text-navy-950">
+          Tirar Foto com a Câmera ou Escolher Arquivos
+        </div>
+        <p class="text-[11px] text-slate-500">
+          Aceita fotos (JPG, PNG) ou documentos PDF de até 30MB
+        </p>
+      </div>
+
+      <input 
+        type="file" 
+        id="file-input" 
+        multiple 
+        accept="image/*,.pdf,.doc,.docx" 
+        capture="environment"
+        class="hidden" 
+        onchange="handleFilesSelected(this.files)"
+      />
+
+      <!-- Lista de Arquivos Selecionados -->
+      <div id="selected-files-list" class="space-y-2 hidden">
+        <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+          Arquivos Prontos para Enviar:
+        </span>
+        <div id="files-container" class="space-y-1.5 max-h-48 overflow-y-auto">
+          <!-- Renderizado via JS -->
+        </div>
+      </div>
+
+      <!-- Barra de Progresso -->
+      <div id="upload-progress-container" class="space-y-1.5 hidden">
+        <div class="flex justify-between text-xs font-bold text-slate-600">
+          <span>Enviando arquivos com segurança...</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+          <div id="progress-bar" class="bg-gradient-to-r from-gold-500 to-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Botão de Envio -->
+      <button 
+        type="submit" 
+        id="submit-btn"
+        disabled
+        class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-bold text-sm shadow-md transition-all border border-gold-400/60 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+      >
+        <span>📤</span>
+        <span>Enviar Documentos ao Dr. Jorge Alvim</span>
+      </button>
+
+    </form>
+
+    <!-- Estado de Sucesso (Oculto inicialmente) -->
+    <div id="success-screen" class="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-200 shadow-sm space-y-4 text-center hidden">
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl mx-auto border border-emerald-300 animate-bounce">
+        ✓
+      </div>
+      <h3 class="font-serif text-xl font-bold text-navy-950">
+        Documentos Recebidos com Sucesso!
+      </h3>
+      <p class="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
+        Os seus arquivos já foram criptografados e anexados à sua pasta no escritório. O Dr. Jorge Alvim já foi notificado e dará andamento ao seu caso.
+      </p>
+      <div class="pt-2">
+        <a 
+          href="https://wa.me/5532998153429?text=Ol%C3%A1%20Dr.%20Jorge%20Alvim!%20Acabei%20de%20enviar%20meus%20documentos%20pelo%20link." 
+          class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-colors"
+        >
+          <span>💬</span>
+          <span>Avisar no WhatsApp</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Selo de Conformidade LGPD & OAB -->
+    <div class="text-center text-[10px] text-slate-400 space-y-1">
+      <div>🛡️ Conexão Segura SSL • Protegido pela Lei Geral de Proteção de Dados (LGPD)</div>
+      <div>Sigilo Profissional Assegurado pelo Estatuto da OAB (Lei 8.906/94)</div>
+    </div>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500">
+    Jorge Alvim Advocacia & Tecnologia • Todos os direitos reservados.
+  </footer>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    let selectedFiles = [];
+
+    async function initMagicPage() {
+      if (!token) {
+        document.getElementById('client-name-display').textContent = 'Link Inválido';
+        alert('Nenhum código de upload informado. Solicite um novo link ao escritório.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/client-portal/magic-info/${token}`);
+        const data = await res.json();
+        if (!res.ok) {
+          document.getElementById('client-name-display').textContent = 'Link Expirado ou Inválido';
+          alert(data.error || 'Link expirado.');
+          return;
+        }
+
+        document.getElementById('client-name-display').textContent = `Olá, ${data.client_name}!`;
+      } catch (err) {
+        console.error('Erro:', err);
+      }
+    }
+
+    function handleFilesSelected(files) {
+      if (!files || files.length === 0) return;
+      selectedFiles = Array.from(files);
+
+      const list = document.getElementById('selected-files-list');
+      const container = document.getElementById('files-container');
+      const submitBtn = document.getElementById('submit-btn');
+
+      container.innerHTML = selectedFiles.map((f, i) => `
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+          <div class="flex items-center space-x-2 truncate">
+            <span>📄</span>
+            <span class="truncate font-medium text-slate-800">${f.name}</span>
+            <span class="text-[10px] text-slate-400">(${Math.round(f.size / 1024)} KB)</span>
+          </div>
+          <button type="button" onclick="removeFile(${i})" class="text-rose-500 font-bold px-1.5 py-0.5 hover:bg-rose-50 rounded">✕</button>
+        </div>
+      `).join('');
+
+      list.classList.remove('hidden');
+      submitBtn.disabled = selectedFiles.length === 0;
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      handleFilesSelected(selectedFiles);
+    }
+
+    document.getElementById('magic-upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (selectedFiles.length === 0 || !token) return;
+
+      const submitBtn = document.getElementById('submit-btn');
+      const progressContainer = document.getElementById('upload-progress-container');
+      const progressBar = document.getElementById('progress-bar');
+      const progressPercent = document.getElementById('progress-percent');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+      progressContainer.classList.remove('hidden');
+
+      const formData = new FormData();
+      for (const f of selectedFiles) {
+        formData.append('documents', f);
+      }
+
+      try {
+        progressBar.style.width = '60%';
+        progressPercent.textContent = '60%';
+
+        const res = await fetch(`/api/client-portal/magic-upload/${token}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro no envio.');
+
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+
+        setTimeout(() => {
+          document.getElementById('magic-upload-form').classList.add('hidden');
+          document.getElementById('success-screen').classList.remove('hidden');
+        }, 400);
+
+      } catch (err) {
+        alert('Erro ao enviar documentos: ' + err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>📤</span><span>Tentar Novamente</span>';
+        progressContainer.classList.add('hidden');
+      }
+    });
+
+    initMagicPage();
+  </script>
+</body>
+</html>

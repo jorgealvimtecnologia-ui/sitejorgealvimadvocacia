@@ -63,6 +63,20 @@ db.exec(`
   );
 `);
 
+// Tokens de Link Mágico para Upload de Documentos sem senha (Fase 3)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS magic_upload_tokens (
+    token TEXT PRIMARY KEY,
+    client_id TEXT NOT NULL,
+    created_by TEXT,
+    expires_at TEXT NOT NULL,
+    used_count INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_mut_client ON magic_upload_tokens(client_id);
+`);
+
 // Histórico de Andamentos Processuais (tabela própria deste módulo)
 db.exec(`
   CREATE TABLE IF NOT EXISTS lawsuit_history (

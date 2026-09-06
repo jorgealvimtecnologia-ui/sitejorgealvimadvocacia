@@ -183,6 +183,11 @@
           <a href="/" class="text-xs sm:text-sm font-semibold text-slate-700 hover:text-gold-700 px-3 py-2 rounded-xl transition-colors">
             Início
           </a>
+          <a href="/amazon" class="text-xs font-bold text-slate-800 hover:text-amber-700 px-3 py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-300 transition-all inline-flex items-center space-x-1.5 shadow-2xs">
+            <span class="text-amber-600">📦</span>
+            <span>Vitrine Amazon</span>
+            <span class="text-[9px] font-black uppercase bg-[#FF9900] text-slate-950 px-1.5 py-0.5 rounded tracking-tighter">Parceiro</span>
+          </a>
           <a href="/cliente" class="text-xs font-bold text-emerald-950 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors hidden sm:inline-flex items-center space-x-1">
             <span>👤</span>
             <span>Área do Cliente</span>
@@ -260,6 +265,163 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 mb-12">
         <div id="featured-article-container">
           <!-- Renderizado via JS -->
+        </div>
+      </section>
+
+      <!-- ================= BANNER & CAIXAS DE PRODUTOS PARCEIRO AMAZON ================= -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <!-- Banner de Chamada Página Inteira -->
+        <div class="bg-gradient-to-r from-navy-950 via-slate-900 to-navy-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-slate-800 relative overflow-hidden mb-8">
+          <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div class="space-y-2 max-w-2xl">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md bg-[#FF9900] text-slate-950 font-black text-[10px] tracking-tight">amazon</span>
+                <span class="text-xs font-bold text-amber-300 uppercase tracking-widest">Parceiro & Colaborador Oficial</span>
+              </div>
+              <h3 class="font-serif text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                Vitrine de Tecnologia, Leituras & Equipamentos do Advogado
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                Curadoria exclusiva do <strong>Dr. Jorge Alvim</strong>: Dispositivos Kindle, eBooks de Direito, Celulares para Audiências e Notebooks Dell configurados para o PJe.
+              </p>
+            </div>
+            <a 
+              href="/amazon" 
+              class="px-6 py-3.5 rounded-2xl bg-[#FF9900] hover:bg-[#E88B00] text-slate-950 font-extrabold text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 self-start lg:self-center shrink-0 group cursor-pointer active:scale-95"
+            >
+              <span>Explorar Vitrine Completa</span>
+              <span class="group-hover:translate-x-1 transition-transform">↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Caixas de Produtos no Blog (Os 4 Pilares) -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⭐</span>
+              <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950">
+                Produtos Recomendados pelo Escritório
+              </h3>
+            </div>
+            <a href="/amazon" class="text-xs font-bold text-gold-700 hover:text-gold-800 flex items-center gap-1 transition-colors">
+              <span>Ver todos os 16 produtos</span>
+              <span>→</span>
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            <!-- Caixa 1: Kindle Paperwhite -->
+            <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+              <div class="space-y-2.5">
+                <div class="relative w-full h-36 rounded-2xl overflow-hidden bg-slate-100">
+                  <img src="https://images.unsplash.com/photo-1592496431122-2349e0fbc666?auto=format&fit=crop&w=400&q=80" alt="Kindle Paperwhite" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 text-white text-[9px] font-bold">
+                    📖 Leitura Amazon
+                  </span>
+                </div>
+                <h4 class="font-serif font-bold text-sm text-navy-950 line-clamp-1 group-hover:text-amber-600 transition-colors">
+                  Kindle Paperwhite 16GB
+                </h4>
+                <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                  Luz quente ajustável e tela de 6.8" para ler petições e acórdãos sem cansaço visual.
+                </p>
+                <div class="p-2 rounded-xl bg-amber-50 text-[10px] text-amber-900 font-medium">
+                  💡 Indicação do Dr. Jorge Alvim para leitura noturna e viagens.
+                </div>
+              </div>
+              <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-extrabold text-slate-900">A partir de R$ 799</span>
+                <a href="https://www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=jorgealvim-20" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-[#FF9900] hover:bg-[#E88B00] text-slate-950 font-bold text-[11px] transition-all shadow-2xs">
+                  Ver na Amazon ↗
+                </a>
+              </div>
+            </div>
+
+            <!-- Caixa 2: Livros de Direito Digitais (Vade Mecum) -->
+            <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+              <div class="space-y-2.5">
+                <div class="relative w-full h-36 rounded-2xl overflow-hidden bg-slate-100">
+                  <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=400&q=80" alt="Vade Mecum Digital" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 text-white text-[9px] font-bold">
+                    ⚖️ eBook Kindle
+                  </span>
+                </div>
+                <h4 class="font-serif font-bold text-sm text-navy-950 line-clamp-1 group-hover:text-amber-600 transition-colors">
+                  Vade Mecum Saraiva Digital
+                </h4>
+                <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                  Legislação brasileira consolidada com busca rápida por artigos em audiências.
+                </p>
+                <div class="p-2 rounded-xl bg-amber-50 text-[10px] text-amber-900 font-medium">
+                  💡 Acesso imediato no celular e no Kindle em qualquer fórum.
+                </div>
+              </div>
+              <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-extrabold text-slate-900">Edição Atualizada</span>
+                <a href="https://www.amazon.com.br/s?k=Vade+Mecum+Saraiva+digital+ebook+Kindle&tag=jorgealvim-20" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-[#FF9900] hover:bg-[#E88B00] text-slate-950 font-bold text-[11px] transition-all shadow-2xs">
+                  Ver na Amazon ↗
+                </a>
+              </div>
+            </div>
+
+            <!-- Caixa 3: Smartphone Samsung S24 Ultra -->
+            <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+              <div class="space-y-2.5">
+                <div class="relative w-full h-36 rounded-2xl overflow-hidden bg-slate-100">
+                  <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=400&q=80" alt="Samsung Galaxy S24 Ultra" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 text-white text-[9px] font-bold">
+                    📱 Smartphone
+                  </span>
+                </div>
+                <h4 class="font-serif font-bold text-sm text-navy-950 line-clamp-1 group-hover:text-amber-600 transition-colors">
+                  Samsung Galaxy S24 Ultra
+                </h4>
+                <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                  Caneta S-Pen para assinar procurações e scanner de alta resolução para documentos.
+                </p>
+                <div class="p-2 rounded-xl bg-amber-50 text-[10px] text-amber-900 font-medium">
+                  💡 Atendimento em alto nível e estabilidade para audiências.
+                </div>
+              </div>
+              <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-extrabold text-slate-900">10x sem juros</span>
+                <a href="https://www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G+S-Pen&tag=jorgealvim-20" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-[#FF9900] hover:bg-[#E88B00] text-slate-950 font-bold text-[11px] transition-all shadow-2xs">
+                  Ver na Amazon ↗
+                </a>
+              </div>
+            </div>
+
+            <!-- Caixa 4: Notebook Dell Inspiron 15 -->
+            <div class="bg-white rounded-3xl p-4 border border-slate-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+              <div class="space-y-2.5">
+                <div class="relative w-full h-36 rounded-2xl overflow-hidden bg-slate-100">
+                  <img src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80" alt="Notebook Dell Inspiron" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 text-white text-[9px] font-bold">
+                    💻 Notebook Dell
+                  </span>
+                </div>
+                <h4 class="font-serif font-bold text-sm text-navy-950 line-clamp-1 group-hover:text-amber-600 transition-colors">
+                  Dell Inspiron 15 (16GB RAM)
+                </h4>
+                <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                  Desempenho ágil no PJe, teclado numérico para prazos e SSD ultrarrápido de 512GB.
+                </p>
+                <div class="p-2 rounded-xl bg-amber-50 text-[10px] text-amber-900 font-medium">
+                  💡 A máquina ideal para o peticionamento diário do advogado.
+                </div>
+              </div>
+              <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-extrabold text-slate-900">A partir de R$ 2.999</span>
+                <a href="https://www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+512GB&tag=jorgealvim-20" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-[#FF9900] hover:bg-[#E88B00] text-slate-950 font-bold text-[11px] transition-all shadow-2xs">
+                  Ver na Amazon ↗
+                </a>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -407,6 +569,29 @@
               <span>Copiar</span>
             </button>
           </div>
+        </div>
+
+        <!-- BOX DE RECOMENDAÇÃO AMAZON NO ARTIGO (LEITURA & FERRAMENTAS JURÍDICAS) -->
+        <div class="bg-gradient-to-r from-amber-50 via-slate-50 to-orange-50/40 rounded-3xl p-5 sm:p-6 border border-amber-300/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+              📦
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-200 text-amber-950">Curadoria Jurídica</span>
+                <span class="text-xs font-semibold text-slate-500">Parceiro Amazon</span>
+              </div>
+              <h4 class="font-serif text-base font-bold text-navy-950 mt-0.5">Leituras e Equipamentos Recomendados</h4>
+              <p class="text-xs text-slate-600 leading-relaxed max-w-xl">
+                Aprofunde seus estudos com Kindles para leitura jurídica, Vade Mecum Digital, smartphones e notebooks Dell recomendados pelo Dr. Jorge Alvim.
+              </p>
+            </div>
+          </div>
+          <a href="/amazon" class="shrink-0 inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-navy-950 font-extrabold text-xs shadow-sm hover:shadow-md transition-all transform hover:-translate-y-0.5">
+            <span>Ver Vitrine Amazon</span>
+            <span>↗</span>
+          </a>
         </div>
 
         <!-- BANNER DE CONVERSÃO / CTA WHATSAPP NO FIM DO ARTIGO -->

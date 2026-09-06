@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratório de Testes Práticos — Jorge Alvim Advocacia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+  <!-- CABEÇALHO SUPERIOR -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl">
+          ⚖️
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            Laboratório de Testes Práticos em Tempo Real
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Ambiente Local 100% Ativo</span>
+          </h1>
+          <p class="text-xs text-slate-400">Jorge Alvim Advocacia & Tecnologia • Dr. Jorge Eduardo da Silva Alvim (OAB/MG 222.943)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="/painel" target="_blank" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/10">
+          <span>🚀</span>
+          <span>Abrir Painel Oficial</span>
+        </a>
+        <a href="/resumo_funcionalidades_jorge_alvim.pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 flex items-center gap-1.5 transition-all">
+          <span>📥</span>
+          <span>Baixar PDF</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- BANNER DE ORIENTAÇÃO -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+    <div class="bg-gradient-to-r from-amber-500/10 via-slate-800 to-slate-850 border border-amber-500/30 rounded-2xl p-5 sm:p-6">
+      <div class="flex items-start gap-4">
+        <div class="text-3xl hidden sm:block">🧪</div>
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-white">Como testar na prática em menos de 5 minutos:</h2>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
+            Aqui você não precisa rodar linhas de comando. Cada card abaixo testa um recurso real da sua plataforma clicando em um único botão. O sistema gera dados de teste, chama as rotas reais do seu servidor e abre as telas para você ver funcionando com seus próprios olhos.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID DE TESTES PRÁTICOS -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <!-- TESTE 1: KIT INICIAL EM 1 CLIQUE -->
+    <div class="bg-slate-800/80 border border-slate-700 hover:border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">📄</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Fase 3 • Comercial</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1.5">1. Testar Kit Inicial Timbrado A4</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Gera em tempo real a <strong>Procuração Ad Judicia</strong>, <strong>Contrato de Honorários</strong> e <strong>Declaração de Hipossuficiência</strong> com a outorga do Dr. Jorge Alvim (OAB/MG 222.943) para um cliente de teste.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-700/60">
+        <button onclick="testKitInicial()" id="btn-test-kit" class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          <span>🖨️</span>
+          <span>Gerar e Abrir Folha A4 Timbrada</span>
+        </button>
+        <p id="status-kit" class="text-[11px] text-slate-400 text-center min-h-[16px]"></p>
+      </div>
+    </div>
+
+    <!-- TESTE 2: LINK MÁGICO DE DOCUMENTOS -->
+    <div class="bg-slate-800/80 border border-slate-700 hover:border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">📎</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">Fase 3 • WhatsApp Mobile</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1.5">2. Testar Envio de Documentos sem Senha</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Simula o que o cliente recebe no WhatsApp. Gera um <strong>Link Mágico (72h)</strong> e abre a tela móvel onde o cliente tira foto do RG ou comprovante pelo celular.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-700/60">
+        <button onclick="testMagicLink()" id="btn-test-magic" class="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          <span>📱</span>
+          <span>Gerar Link e Abrir Tela do Cliente</span>
+        </button>
+        <p id="status-magic" class="text-[11px] text-slate-400 text-center min-h-[16px]"></p>
+      </div>
+    </div>
+
+    <!-- TESTE 3: PRESTAÇÃO DE CONTAS DE ALVARÁ -->
+    <div class="bg-slate-800/80 border border-slate-700 hover:border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">💰</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Fase 3 • Financeiro</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1.5">3. Testar Prestação de Contas de Alvará</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Lança um alvará de <strong>R$ 20.000,00</strong>, deduz 30% de honorários (R$ 6.000,00) e emite a <strong>Prestação de Contas A4 com valor por extenso</strong> ("quatorze mil reais") e quitação mútua.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-700/60">
+        <button onclick="testAlvaraReceipt()" id="btn-test-alvara" class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          <span>📜</span>
+          <span>Emitir Prestação de Contas Timbrada</span>
+        </button>
+        <p id="status-alvara" class="text-[11px] text-slate-400 text-center min-h-[16px]"></p>
+      </div>
+    </div>
+
+    <!-- TESTE 4: ESTEIRA DO PROCESSO NO PORTAL DO CLIENTE -->
+    <div class="bg-slate-800/80 border border-slate-700 hover:border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">📦</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Fase 3 • Experiência</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1.5">4. Testar Esteira Visual do Cliente</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Abre o <strong>Portal do Cliente</strong> e exibe a esteira visual de 5 etapas (Distribuído ➔ Juiz ➔ Audiência ➔ Sentença ➔ Pagamento) com linguagem simples que acalma o cliente.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-700/60">
+        <a href="/cliente" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+          <span>👁️</span>
+          <span>Abrir Portal do Cliente (/cliente)</span>
+        </a>
+        <p class="text-[11px] text-slate-400 text-center">Login com CPF do cliente cadastrado</p>
+      </div>
+    </div>
+
+    <!-- TESTE 5: CALCULADORA DE PRAZOS FORENSES -->
+    <div class="bg-slate-800/80 border border-slate-700 hover:border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">📅</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">Fase 2 • Prazos</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1.5">5. Testar Calculadora Forense CPC</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Calcula 15 dias de prazo (Apelação / Contestação) com exclusão automática de finais de semana, feriados de MG e recesso forense (art. 220 CPC).
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-700/60">
+        <button onclick="testDeadlineCalculator()" id="btn-test-deadline" class="w-full py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          <span>⚡</span>
+          <span>Calcular Prazo de 15 Dias Hoje</span>
+        </button>
+        <p id="status-deadline" class="text-[11px] text-slate-400 text-center min-h-[16px]"></p>
+      </div>
+    </div>
+
+    <!-- TESTE 6: COCKPIT MATINAL & PALETA CTRL+K -->
+    <div class="bg-slate-800/80 border border-slate-700 hover:border-amber-500/40 rounded-2xl p-5 flex flex-col justify-between transition-all">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-2xl">⚡</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Fase 2 • Produtividade</span>
+        </div>
+        <h3 class="text-sm font-bold text-white mb-1.5">6. Testar Painel Matinal & Ctrl+K</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Acessa o <strong>Painel do Advogado</strong> com o login Mestre pré-carregado. Pressione <code>Ctrl + K</code> em qualquer lugar para buscar clientes ou processos em 2 segundos.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2 border-t border-slate-700/60">
+        <a href="/painel" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+          <span>🚀</span>
+          <span>Entrar no Painel (Mestre)</span>
+        </a>
+        <p class="text-[11px] text-slate-400 text-center">Usuário: <code>jorgealvimtecnologia</code> • Senha: <code>jorgealvim</code></p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE RESULTADO / DETALHES -->
+  <div id="demo-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative">
+      <button onclick="closeDemoModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+      <h3 id="demo-modal-title" class="text-base font-bold text-white flex items-center gap-2"></h3>
+      <div id="demo-modal-content" class="mt-4 text-xs text-slate-300 leading-relaxed space-y-3"></div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button onclick="closeDemoModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cachedToken = null;
+    let cachedClientId = null;
+
+    async function getMasterAuth() {
+      if (cachedToken) return cachedToken;
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'jorgealvimtecnologia', password: 'jorgealvim' })
+        });
+        const data = await res.json();
+        if (data.token) {
+          cachedToken = data.token;
+          localStorage.setItem('jaw_token', data.token);
+          return cachedToken;
+        }
+      } catch (e) {
+        console.error('Erro de autenticação:', e);
+      }
+      return null;
+    }
+
+    async function getOrCreateTestClient() {
+      if (cachedClientId) return cachedClientId;
+      const token = await getMasterAuth();
+      try {
+        const res = await fetch('/api/clients', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.clients && data.clients.length > 0) {
+          cachedClientId = data.clients[0].id;
+          return cachedClientId;
+        }
+      } catch (e) {}
+
+      // Cria cliente caso não haja
+      try {
+        const createRes = await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            full_name: 'Dona Maria Helena de Carvalho',
+            phone: '32988881234',
+            cpf: '12345678909',
+            street: 'Rua São Mateus, 500',
+            city: 'Juiz de Fora',
+            state: 'MG'
+          })
+        });
+        const createData = await createRes.json();
+        cachedClientId = createData.clientId;
+        return cachedClientId;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // 1. TESTE DO KIT INICIAL
+    async function testKitInicial() {
+      const btn = document.getElementById('btn-test-kit');
+      const status = document.getElementById('status-kit');
+      btn.disabled = true;
+      status.textContent = 'Gerando Procuração, Contrato e Hipossuficiência...';
+
+      const token = await getMasterAuth();
+      const clientId = await getOrCreateTestClient();
+
+      if (!clientId) {
+        status.textContent = 'Erro ao identificar cliente para teste.';
+        btn.disabled = false;
+        return;
+      }
+
+      // Abre diretamente a folha A4 timbrada de impressão da procuração
+      const renderUrl = `/api/legal-docs/render/${clientId}/procuracao`;
+      status.textContent = 'Documento A4 timbrado compilado com sucesso!';
+      btn.disabled = false;
+
+      window.open(renderUrl, '_blank');
+    }
+
+    // 2. TESTE DO LINK MÁGICO
+    async function testMagicLink() {
+      const btn = document.getElementById('btn-test-magic');
+      const status = document.getElementById('status-magic');
+      btn.disabled = true;
+      status.textContent = 'Gerando link temporário de 72h...';
+
+      const token = await getMasterAuth();
+      const clientId = await getOrCreateTestClient();
+
+      try {
+        const res = await fetch('/api/client-portal/magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ clientId })
+        });
+        const data = await res.json();
+        if (data.upload_url) {
+          status.textContent = 'Link gerado com sucesso! Abrindo tela do celular...';
+          window.open(data.upload_url, '_blank');
+        } else {
+          status.textContent = 'Erro ao gerar link.';
+        }
+      } catch (e) {
+        status.textContent = 'Erro: ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 3. TESTE DE ALVARÁ E PRESTAÇÃO DE CONTAS
+    async function testAlvaraReceipt() {
+      const btn = document.getElementById('btn-test-alvara');
+      const status = document.getElementById('status-alvara');
+      btn.disabled = true;
+      status.textContent = 'Registrando alvará de teste e emitindo quitação...';
+
+      const token = await getMasterAuth();
+      const clientId = await getOrCreateTestClient();
+
+      try {
+        // Registra um alvará de teste
+        const createRes = await fetch('/api/financial/alvaras', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            client_id: clientId,
+            process_number: '5008899-12.2026.8.13.0145',
+            vara_tribunal: '3ª Vara Cível de Juiz de Fora',
+            gross_amount: 20000.00,
+            fee_percentage: 30.00,
+            release_date: '2026-09-06',
+            notes: 'Alvará expedido pelo TJMG com quitação mútua'
+          })
+        });
+        const alvData = await createRes.json();
+        const alvId = alvData.id || 'ALV-2026-0001';
+
+        status.textContent = `Alvará #${alvId} emitido! Abrindo folha timbrada A4...`;
+        window.open(`/api/financial/alvaras/${alvId}/receipt`, '_blank');
+      } catch (e) {
+        status.textContent = 'Erro: ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 5. TESTE DE CALCULADORA DE PRAZOS
+    async function testDeadlineCalculator() {
+      const btn = document.getElementById('btn-test-deadline');
+      const status = document.getElementById('status-deadline');
+      btn.disabled = true;
+      status.textContent = 'Consultando calendário forense do TJMG...';
+
+      const token = await getMasterAuth();
+      const hoje = new Date().toISOString().split('T')[0];
+
+      try {
+        const res = await fetch('/api/legaltech/calculate-deadline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            start_date: hoje,
+            days: 15,
+            regime: 'cpc'
+          })
+        });
+        const data = await res.json();
+        
+        status.textContent = `Data Fatal: ${data.data_fatal} (${data.prazo_dias} dias úteis)`;
+
+        // Exibe modal com a memória de cálculo
+        const modal = document.getElementById('demo-modal');
+        document.getElementById('demo-modal-title').textContent = '📅 Memória de Cálculo Forense (Art. 219/224 CPC)';
+        
+        let memHtml = `
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+            <p><strong>Disponibilização (D0):</strong> ${data.data_disponibilizacao}</p>
+            <p><strong>Publicação Oficial (D1):</strong> ${data.data_publicacao}</p>
+            <p><strong>Início da Contagem (D2):</strong> ${data.data_inicio_contagem}</p>
+            <p class="text-amber-400 font-bold text-sm">🚨 Prazo Fatal (Vencimento): ${data.data_fatal} até às 23:59</p>
+          </div>
+          <p class="text-slate-400 text-xs mt-2">Os finais de semana e feriados forenses de MG foram automaticamente expurgados da contagem.</p>
+        `;
+        document.getElementById('demo-modal-content').innerHTML = memHtml;
+        modal.classList.remove('hidden');
+
+      } catch (e) {
+        status.textContent = 'Erro ao calcular prazo: ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function closeDemoModal() {
+      document.getElementById('demo-modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
     var MODULES={
       dashboard:{label:'Visão Geral',emoji:'📊'},
       leads:{label:'Atendimentos & Leads',emoji:'📥'},
-      'pre-clients':{label:'Pré-Clientes & Tráfego',emoji:'🎯'},
+      'pre-clients':{label:'Tráfego & Acessos (IPs)',emoji:'🌐'},
       clients:{label:'Clientes & Contratos',emoji:'👥'},
       rockets:{label:'Foguetes',emoji:'🚀'},
       lawsuits:{label:'Processos & Prazos (CNJ)',emoji:'⚖️'},
@@ -25,24 +25,27 @@
       editor:{label:'Editor de Texto',emoji:'📝'},
       calc:{label:'Calculadora',emoji:'🧮'},
       kanban:{label:'Fluxo de Trabalho (Kanban 5W2H)',emoji:'🗂️'},
-      explorer:{label:'Explorar Arquivos',emoji:'🗃️'}
+      explorer:{label:'Explorar Arquivos',emoji:'🗃️'},
+      maintenance:{label:'Manutenção & Saúde',emoji:'🛠️'},
+      'meta-ads':{label:'Meta Ads & Marketing',emoji:'📢'}
     };
-    var TOOLS={editor:1,calc:1,kanban:1,explorer:1};
+    var TOOLS={editor:1,calc:1,kanban:1,explorer:1,maintenance:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
-      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','pre-clients','clients','rockets']},
+      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','clients','rockets']},
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','audit','lgpd','notifications']},
-      {label:'Ferramentas',emoji:'🧰',items:['explorer','kanban','editor','calc']}
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','meta-ads','audit','lgpd','notifications']},
+      {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
       publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
       blog:'loadAdminBlogPosts',audit:'initAuditTab','pre-clients':'initPreClientsTab',judicial:'initJudicialTab',
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
-      notifications:'loadNotificationsList','admin-requests':'loadAdminRequests'};
+      notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
+      'meta-ads':'loadMetaAdsTab'};
 
     var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
 
@@ -225,10 +228,20 @@
       e.style.display=anyVisible?'none':'block';
     }
 
+    var zMaxTop = 600;
     function focusWin(id){
       var w=windows[id]; if(!w) return;
-      w.el.style.zIndex=(++zTop);
-      Object.keys(windows).forEach(function(k){ windows[k].el.classList.toggle('active',k===id); });
+      if(w.max){
+        w.el.style.setProperty('z-index', (++zMaxTop), 'important');
+      } else {
+        w.el.style.zIndex=(++zTop);
+      }
+      Object.keys(windows).forEach(function(k){
+        windows[k].el.classList.toggle('active',k===id);
+        if(windows[k].max && k !== id){
+          windows[k].el.style.setProperty('z-index', '595', 'important');
+        }
+      });
       renderTaskbar();
     }
     function minimizeWin(id){
@@ -239,9 +252,53 @@
     }
     function toggleMax(id){
       var w=windows[id]; if(!w) return;
-      if(w.max){ w.el.style.left=w.prev.l+'px'; w.el.style.top=w.prev.t+'px'; w.el.style.width=w.prev.w+'px'; w.el.style.height=w.prev.h+'px'; w.max=false; }
-      else{ w.prev={l:w.el.offsetLeft,t:w.el.offsetTop,w:w.el.offsetWidth,h:w.el.offsetHeight};
-        w.el.style.left='0px'; w.el.style.top='0px'; w.el.style.width=desktop.clientWidth+'px'; w.el.style.height=desktop.clientHeight+'px'; w.max=true; }
+      var btnMax = w.el.querySelector('.jaw-max');
+      if(w.snapped){
+        unSnap(w, id);
+      }
+      if(w.max){
+        w.el.classList.remove('jaw-maximized');
+        w.el.style.position = '';
+        w.el.style.left=w.prev.l+'px';
+        w.el.style.top=w.prev.t+'px';
+        w.el.style.width=w.prev.w+'px';
+        w.el.style.height=w.prev.h+'px';
+        w.el.style.maxWidth = '';
+        w.el.style.maxHeight = '';
+        w.el.style.borderRadius = '';
+        w.el.style.border = '';
+        w.el.style.boxShadow = '';
+        w.el.style.margin = '';
+        if(w.body){
+          w.body.style.height = '';
+          w.body.style.maxHeight = '';
+        }
+        w.el.style.zIndex=(++zTop);
+        w.max=false;
+        if(btnMax){ btnMax.textContent = '▢'; btnMax.title = 'Maximizar janela'; }
+      } else {
+        w.prev={l:w.el.offsetLeft,t:w.el.offsetTop,w:w.el.offsetWidth,h:w.el.offsetHeight};
+        w.el.classList.add('jaw-maximized');
+        w.el.style.setProperty('position', 'fixed', 'important');
+        w.el.style.setProperty('left', '0px', 'important');
+        w.el.style.setProperty('top', '0px', 'important');
+        w.el.style.setProperty('width', '100vw', 'important');
+        w.el.style.setProperty('height', 'calc(100vh - 42px)', 'important');
+        w.el.style.setProperty('max-width', '100vw', 'important');
+        w.el.style.setProperty('max-height', 'calc(100vh - 42px)', 'important');
+        w.el.style.setProperty('border-radius', '0px', 'important');
+        w.el.style.setProperty('border', 'none', 'important');
+        w.el.style.setProperty('box-shadow', 'none', 'important');
+        w.el.style.setProperty('margin', '0px', 'important');
+        w.el.style.setProperty('z-index', (++zMaxTop), 'important');
+        var hasToolbar = !!w.el.querySelector('.jaw-toolbar');
+        if(w.body){
+          w.body.style.setProperty('height', 'calc(100vh - 42px - 38px - ' + (hasToolbar ? '44px' : '0px') + ')', 'important');
+          w.body.style.setProperty('max-height', 'none', 'important');
+        }
+        w.max=true;
+        if(btnMax){ btnMax.textContent = '❐'; btnMax.title = 'Restaurar tamanho'; }
+      }
       focusWin(id);
     }
     function closeWin(id){
@@ -252,26 +309,304 @@
       updateEmpty(); renderTaskbar();
     }
 
-    function makeDrag(handle,w){
-      handle.addEventListener('mousedown',function(ev){
-        if(ev.target.closest('.jaw-ctrls')) return;
-        if(w.max) return; ev.preventDefault();
-        var sx=ev.clientX, sy=ev.clientY, ol=w.el.offsetLeft, ot=w.el.offsetTop;
-        function mv(e){ var nl=ol+(e.clientX-sx), nt=ot+(e.clientY-sy);
-          nl=Math.max(0,Math.min(nl,desktop.clientWidth-60)); nt=Math.max(0,Math.min(nt,desktop.clientHeight-36));
-          w.el.style.left=nl+'px'; w.el.style.top=nt+'px'; }
-        function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); }
-        document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    // =========================================================================
+    // ORGANIZAÇÃO DE JANELAS EM CASCATA DEGRADÊ (ESTILO WINDOWS)
+    // =========================================================================
+    function cascadeWindows(){
+      var visibleWins = order.filter(function(id){ return windows[id] && !windows[id].minimized; });
+      if(!visibleWins.length){
+        wmToast('Nenhuma janela aberta para organizar em cascata.');
+        return;
+      }
+      var dw = desktop.clientWidth || 1000;
+      var dh = desktop.clientHeight || 600;
+      var ww = Math.min(840, Math.max(480, dw - 180));
+      var wh = Math.min(520, Math.max(360, dh - 130));
+
+      visibleWins.forEach(function(id, idx){
+        var w = windows[id];
+        if(w.max) toggleMax(id);
+        var offset = (idx % 10) * 36;
+        w.el.style.width = ww + 'px';
+        w.el.style.height = wh + 'px';
+        w.el.style.left = (24 + offset) + 'px';
+        w.el.style.top = (16 + offset) + 'px';
+        w.prev = { l: 24 + offset, t: 16 + offset, w: ww, h: wh };
+        focusWin(id);
       });
+      wmToast('🗂️ Janelas organizadas em cascata degradê (estilo Windows).');
     }
-    function makeResize(handle,w){
-      handle.addEventListener('mousedown',function(ev){
-        ev.preventDefault(); ev.stopPropagation();
-        var sx=ev.clientX, sy=ev.clientY, ow=w.el.offsetWidth, oh=w.el.offsetHeight;
-        function mv(e){ w.el.style.width=Math.max(320,ow+(e.clientX-sx))+'px'; w.el.style.height=Math.max(200,oh+(e.clientY-sy))+'px'; }
-        function up(){ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); }
-        document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+
+    function tileWindows(){
+      var visibleWins = order.filter(function(id){ return windows[id] && !windows[id].minimized; });
+      if(!visibleWins.length){
+        wmToast('Nenhuma janela aberta para organizar lado a lado.');
+        return;
+      }
+      var dw = desktop.clientWidth || 1000;
+      var dh = desktop.clientHeight || 600;
+      var n = visibleWins.length;
+
+      if(n === 1){
+        var w = windows[visibleWins[0]];
+        if(!w.max) toggleMax(visibleWins[0]);
+      } else if(n === 2){
+        var halfW = Math.floor(dw / 2) - 8;
+        visibleWins.forEach(function(id, i){
+          var w = windows[id];
+          if(w.max) toggleMax(id);
+          w.el.style.width = halfW + 'px';
+          w.el.style.height = (dh - 20) + 'px';
+          w.el.style.left = (i * (halfW + 8) + 4) + 'px';
+          w.el.style.top = '10px';
+          w.prev = { l: parseInt(w.el.style.left), t: 10, w: halfW, h: dh - 20 };
+          focusWin(id);
+        });
+      } else {
+        var cols = Math.ceil(Math.sqrt(n));
+        var rows = Math.ceil(n / cols);
+        var cellW = Math.floor(dw / cols) - 8;
+        var cellH = Math.floor(dh / rows) - 8;
+        visibleWins.forEach(function(id, i){
+          var w = windows[id];
+          if(w.max) toggleMax(id);
+          var c = i % cols;
+          var r = Math.floor(i / cols);
+          w.el.style.width = cellW + 'px';
+          w.el.style.height = cellH + 'px';
+          w.el.style.left = (c * (cellW + 8) + 4) + 'px';
+          w.el.style.top = (r * (cellH + 8) + 4) + 'px';
+          w.prev = { l: parseInt(w.el.style.left), t: parseInt(w.el.style.top), w: cellW, h: cellH };
+          focusWin(id);
+        });
+      }
+      wmToast('🪟 Janelas organizadas lado a lado.');
+    }
+
+    function minimizeAllWindows(){
+      order.forEach(function(id){
+        if(windows[id] && !windows[id].minimized) minimizeWin(id);
       });
+      wmToast('Área de trabalho limpa.');
+    }
+
+    function openCascadeExample(){
+      var demoModules = ['clients', 'lawsuits', 'finance'];
+      demoModules.forEach(function(id){
+        openModule(id);
+      });
+      setTimeout(function(){
+        cascadeWindows();
+        focusWin('finance');
+        wmToast('✨ Exemplo Ativo: 3 janelas sobrepostas em cascata degradê (estilo Windows)!');
+      }, 120);
+    }
+
+    // =========================================================================
+    // AERO SNAP (ENCAIXE AUTOMÁTICO DE JANELAS EM MEIA-TELA OU TELA CHEIA)
+    // =========================================================================
+    function getSnapGhost(){
+      var g = document.getElementById('jaw-snap-ghost');
+      if(!g){
+        g = document.createElement('div');
+        g.id = 'jaw-snap-ghost';
+        document.body.appendChild(g);
+      }
+      return g;
+    }
+
+    function showSnapGhost(type){
+      var g = getSnapGhost();
+      if(!type){
+        g.classList.remove('active');
+        return;
+      }
+      g.className = 'jaw-snap-ghost active snap-' + type;
+      if(type === 'top'){
+        g.style.left = '0px';
+        g.style.top = '0px';
+        g.style.width = '100vw';
+        g.style.height = 'calc(100vh - 42px)';
+      } else if(type === 'left'){
+        g.style.left = '0px';
+        g.style.top = '0px';
+        g.style.width = '50vw';
+        g.style.height = 'calc(100vh - 42px)';
+      } else if(type === 'right'){
+        g.style.left = '50vw';
+        g.style.top = '0px';
+        g.style.width = '50vw';
+        g.style.height = 'calc(100vh - 42px)';
+      }
+    }
+
+    function hideSnapGhost(){
+      var g = document.getElementById('jaw-snap-ghost');
+      if(g) g.classList.remove('active');
+    }
+
+    function applySnap(w, id, side){
+      if(w.max){
+        w.el.classList.remove('jaw-maximized');
+        w.max = false;
+      }
+      if(!w.prev){
+        w.prev = { l: w.el.offsetLeft, t: w.el.offsetTop, w: w.el.offsetWidth, h: w.el.offsetHeight };
+      }
+      w.snapped = side;
+      w.el.classList.remove('jaw-snapped-left', 'jaw-snapped-right');
+      w.el.classList.add('jaw-snapped', 'jaw-snapped-' + side);
+      w.el.style.setProperty('position', 'fixed', 'important');
+      w.el.style.setProperty('top', '0px', 'important');
+      w.el.style.setProperty('height', 'calc(100vh - 42px)', 'important');
+      w.el.style.setProperty('max-height', 'calc(100vh - 42px)', 'important');
+      w.el.style.setProperty('width', '50vw', 'important');
+      w.el.style.setProperty('max-width', '50vw', 'important');
+      w.el.style.setProperty('left', (side === 'left' ? '0px' : '50vw'), 'important');
+      w.el.style.setProperty('border-radius', '0px', 'important');
+      w.el.style.setProperty('z-index', (++zMaxTop), 'important');
+      w.el.style.setProperty('box-shadow', '0 12px 36px rgba(2,6,23,0.35)', 'important');
+
+      var hasToolbar = !!w.el.querySelector('.jaw-toolbar');
+      if(w.body){
+        w.body.style.setProperty('height', 'calc(100vh - 42px - 38px - ' + (hasToolbar ? '44px' : '0px') + ')', 'important');
+        w.body.style.setProperty('max-height', 'none', 'important');
+      }
+      focusWin(id);
+      wmToast(side === 'left' ? '⬅️ Janela encaixada à esquerda (Aero Snap 50%)' : '➡️ Janela encaixada à direita (Aero Snap 50%)');
+    }
+
+    function unSnap(w, id){
+      if(!w.snapped) return;
+      w.el.classList.remove('jaw-snapped', 'jaw-snapped-left', 'jaw-snapped-right');
+      w.el.style.position = '';
+      w.el.style.borderRadius = '';
+      w.el.style.boxShadow = '';
+      w.el.style.left = (w.prev ? w.prev.l : 40) + 'px';
+      w.el.style.top = (w.prev ? w.prev.t : 40) + 'px';
+      w.el.style.width = (w.prev ? w.prev.w : 800) + 'px';
+      w.el.style.height = (w.prev ? w.prev.h : 500) + 'px';
+      w.el.style.maxWidth = '';
+      w.el.style.maxHeight = '';
+      if(w.body){
+        w.body.style.height = '';
+        w.body.style.maxHeight = '';
+      }
+      w.snapped = false;
+    }
+
+    // =========================================================================
+    // ARRASTAR E POSICIONAR EM QUALQUER LUGAR DA TELA (MOUSE & TOUCH + AERO SNAP)
+    // =========================================================================
+    function makeDrag(handle,w,id){
+      handle.addEventListener('dblclick', function(ev){
+        if(ev.target.closest('.jaw-ctrls') || ev.target.closest('button')) return;
+        if(id) toggleMax(id);
+      });
+
+      function startDrag(e){
+        if(e.target.closest('.jaw-ctrls') || e.target.closest('button')) return;
+        if(w.max){
+          toggleMax(id);
+          w.el.style.left = Math.max(0, Math.min(e.clientX - 200, desktop.clientWidth - w.el.offsetWidth)) + 'px';
+          w.el.style.top = '10px';
+        } else if(w.snapped){
+          unSnap(w, id);
+          w.el.style.left = Math.max(0, Math.min(e.clientX - 200, desktop.clientWidth - w.el.offsetWidth)) + 'px';
+          w.el.style.top = '10px';
+        }
+        e.preventDefault();
+        focusWin(id);
+        w.el.classList.add('jaw-dragging');
+
+        var isTouch = e.type === 'touchstart';
+        var sx = isTouch ? e.touches[0].clientX : e.clientX;
+        var sy = isTouch ? e.touches[0].clientY : e.clientY;
+        var ol = w.el.offsetLeft, ot = w.el.offsetTop;
+        var snapCandidate = null;
+
+        function mv(ev){
+          var cx = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+          var cy = ev.type.startsWith('touch') ? ev.touches[0].clientY : ev.clientY;
+          var nl = ol + (cx - sx);
+          var nt = ot + (cy - sy);
+
+          var maxLeft = Math.max(desktop.clientWidth - 80, 200);
+          var maxTop = Math.max(desktop.clientHeight - 40, 200);
+          nl = Math.max(-w.el.offsetWidth + 80, Math.min(nl, maxLeft));
+          nt = Math.max(0, Math.min(nt, maxTop));
+
+          w.el.style.left = nl + 'px';
+          w.el.style.top = nt + 'px';
+
+          // Detecção de bordas Aero Snap estilo Windows
+          var screenW = window.innerWidth;
+          if(cy <= 18){
+            snapCandidate = 'top';
+          } else if(cx <= 18){
+            snapCandidate = 'left';
+          } else if(cx >= screenW - 18){
+            snapCandidate = 'right';
+          } else {
+            snapCandidate = null;
+          }
+          showSnapGhost(snapCandidate);
+        }
+
+        function up(){
+          hideSnapGhost();
+          w.el.classList.remove('jaw-dragging');
+          if(snapCandidate === 'top'){
+            if(!w.max) toggleMax(id);
+          } else if(snapCandidate === 'left' || snapCandidate === 'right'){
+            applySnap(w, id, snapCandidate);
+          } else {
+            w.prev = { l: w.el.offsetLeft, t: w.el.offsetTop, w: w.el.offsetWidth, h: w.el.offsetHeight };
+          }
+          snapCandidate = null;
+          document.removeEventListener('mousemove', mv);
+          document.removeEventListener('mouseup', up);
+          document.removeEventListener('touchmove', mv);
+          document.removeEventListener('touchend', up);
+        }
+
+        document.addEventListener('mousemove', mv);
+        document.addEventListener('mouseup', up);
+        document.addEventListener('touchmove', mv, { passive: false });
+        document.addEventListener('touchend', up);
+      }
+
+      handle.addEventListener('mousedown', startDrag);
+      handle.addEventListener('touchstart', startDrag, { passive: false });
+    }
+
+    function makeResize(handle,w){
+      function startResize(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        var isTouch = ev.type === 'touchstart';
+        var sx = isTouch ? ev.touches[0].clientX : ev.clientX;
+        var sy = isTouch ? ev.touches[0].clientY : ev.clientY;
+        var ow = w.el.offsetWidth, oh = w.el.offsetHeight;
+        function mv(e){
+          var cx = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+          var cy = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+          w.el.style.width = Math.max(320, ow + (cx - sx)) + 'px';
+          w.el.style.height = Math.max(200, oh + (cy - sy)) + 'px';
+        }
+        function up(){
+          w.prev = { l: w.el.offsetLeft, t: w.el.offsetTop, w: w.el.offsetWidth, h: w.el.offsetHeight };
+          document.removeEventListener('mousemove', mv);
+          document.removeEventListener('mouseup', up);
+          document.removeEventListener('touchmove', mv);
+          document.removeEventListener('touchend', up);
+        }
+        document.addEventListener('mousemove', mv);
+        document.addEventListener('mouseup', up);
+        document.addEventListener('touchmove', mv, { passive: false });
+        document.addEventListener('touchend', up);
+      }
+      handle.addEventListener('mousedown', startResize);
+      handle.addEventListener('touchstart', startResize, { passive: false });
     }
 
     function createWindow(id,meta){
@@ -290,7 +625,7 @@
       desktop.appendChild(el);
       var w={el:el,body:el.querySelector('.jaw-winbody'),minimized:false,max:false};
       el.addEventListener('mousedown',function(){ focusWin(id); },true);
-      makeDrag(el.querySelector('.jaw-titlebar'),w);
+      makeDrag(el.querySelector('.jaw-titlebar'),w,id);
       makeResize(el.querySelector('.jaw-resize'),w);
       el.querySelector('.jaw-min').addEventListener('click',function(e){e.stopPropagation();minimizeWin(id);});
       el.querySelector('.jaw-max').addEventListener('click',function(e){e.stopPropagation();toggleMax(id);});
@@ -535,11 +870,43 @@
         });
         taskbar.appendChild(b);
       });
+
+      // Controles Rápidos de Janelas estilo Windows no rodapé
+      var actionsWrap = document.createElement('div');
+      actionsWrap.style.cssText = 'margin-left:auto;display:flex;align-items:center;gap:5px;flex-shrink:0';
+
+      var btnExemplo = document.createElement('button');
+      btnExemplo.type = 'button';
+      btnExemplo.className = 'jaw-taskbtn';
+      btnExemplo.style.cssText = 'background:linear-gradient(to right, #b45309, #d97706);border-color:#f59e0b;color:#ffffff;font-weight:800;box-shadow:0 2px 10px rgba(217,119,6,0.4);cursor:pointer';
+      btnExemplo.innerHTML = '<span>✨</span><span>Exemplo Cascata</span>';
+      btnExemplo.title = 'Abrir 3 janelas sobrepostas em cascata degradê (estilo Windows)';
+      btnExemplo.addEventListener('click', openCascadeExample);
+      actionsWrap.appendChild(btnExemplo);
+
+      var btnCascata = document.createElement('button');
+      btnCascata.type = 'button';
+      btnCascata.className = 'jaw-taskbtn';
+      btnCascata.innerHTML = '<span>🗂️</span><span>Cascata</span>';
+      btnCascata.title = 'Reorganizar todas as janelas abertas em cascata diagonal com efeito degradê';
+      btnCascata.addEventListener('click', cascadeWindows);
+      actionsWrap.appendChild(btnCascata);
+
+      var btnLock = document.createElement('button');
+      btnLock.type = 'button';
+      btnLock.className = 'jaw-taskbtn';
+      btnLock.style.cssText = 'background:#0f172a;border-color:#334155;color:#facc15;font-weight:700;cursor:pointer';
+      btnLock.innerHTML = '<span>🔒</span><span class="hidden sm:inline">Bloquear</span>';
+      btnLock.title = 'Bloquear Tela do Sistema (Atalho: Ctrl + L)';
+      btnLock.addEventListener('click', function(){ if(window.lockSystem) window.lockSystem(); });
+      actionsWrap.appendChild(btnLock);
+
+      taskbar.appendChild(actionsWrap);
     }
 
     function closeAllMenus(){ document.querySelectorAll('#jaw-menubar .jaw-group.open').forEach(function(g){g.classList.remove('open');}); }
     function buildMenu(){
-      var bar=document.createElement('div'); bar.id='jaw-menubar';
+      var bar=document.createElement('div'); bar.id='jaw-menubar'; bar.style.zIndex='300';
       bar.innerHTML='<span class="jaw-start">JORGE ALVIM · MÓDULOS</span>';
       GROUPS.forEach(function(g){
         var wrap=document.createElement('div'); wrap.className='jaw-group';
@@ -551,6 +918,37 @@
         btn.addEventListener('click',function(e){ e.stopPropagation(); var wasOpen=wrap.classList.contains('open'); closeAllMenus(); if(!wasOpen) wrap.classList.add('open'); });
         wrap.appendChild(btn); wrap.appendChild(dd); bar.appendChild(wrap);
       });
+
+      // Menu dedicado: Janelas & Efeito Cascata (Estilo Windows)
+      var winGroup = document.createElement('div'); winGroup.className = 'jaw-group';
+      var winBtn = document.createElement('button');
+      winBtn.style.cssText = 'background:#1e293b;border:1px solid #d4a017;color:#facc15;font-weight:800;border-radius:8px';
+      winBtn.innerHTML = '<span>🪟</span><span>Janelas</span><span style="opacity:.7">▾</span>';
+      var winDd = document.createElement('div'); winDd.className = 'jaw-dropdown';
+
+      var winActions = [
+        { label: '✨ Exemplo Cascata Degradê', emoji: '✨', fn: openCascadeExample },
+        { label: '🗂️ Organizar em Cascata', emoji: '🗂️', fn: cascadeWindows },
+        { label: '🪟 Organizar Lado a Lado', emoji: '🪟', fn: tileWindows },
+        { label: '— Minimizar Todas', emoji: '—', fn: minimizeAllWindows },
+        { label: '🔒 Bloquear Tela Agora (Ctrl+L)', emoji: '🔒', fn: function(){ if(window.lockSystem) window.lockSystem(); } }
+      ];
+      winActions.forEach(function(act){
+        var b = document.createElement('button');
+        b.innerHTML = '<span>' + act.emoji + '</span><span>' + act.label + '</span>';
+        b.addEventListener('click', function(){ closeAllMenus(); act.fn(); });
+        winDd.appendChild(b);
+      });
+      winBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var wasOpen = winGroup.classList.contains('open');
+        closeAllMenus();
+        if(!wasOpen) winGroup.classList.add('open');
+      });
+      winGroup.appendChild(winBtn);
+      winGroup.appendChild(winDd);
+      bar.appendChild(winGroup);
+
       return bar;
     }
 
@@ -560,8 +958,8 @@
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
-      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', explorer:'tab_settings' };
-    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
+      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
+    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1,'meta-ads':1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
       document.querySelectorAll('#jaw-menubar .jaw-group').forEach(function(g){
@@ -594,7 +992,7 @@
       var menubar=buildMenu(); main.parentNode.insertBefore(menubar,main);
       desktop=document.createElement('div'); desktop.id='jaw-desktop'; main.parentNode.insertBefore(desktop,main);
       storage=main; main.style.display='none';
-      taskbar=document.createElement('div'); taskbar.id='jaw-taskbar'; document.body.appendChild(taskbar);
+      taskbar=document.createElement('div'); taskbar.id='jaw-taskbar'; taskbar.style.zIndex='650'; document.body.appendChild(taskbar);
       document.addEventListener('click',closeAllMenus);
       document.addEventListener('keydown',function(e){
         var active=null,az=-1;
@@ -610,6 +1008,13 @@
       window.switchTab=function(id){ return openModule(id); };
       window.openModule=openModule;
       window.wmAction=wmAction;
+      window.openCascadeExample=openCascadeExample;
+      window.cascadeWindows=cascadeWindows;
+      window.tileWindows=tileWindows;
+      window.minimizeAllWindows=minimizeAllWindows;
+      window.toggleMax=toggleMax;
+      window.minimizeWin=minimizeWin;
+      window.snapWindow=function(id, side){ if(windows[id]) applySnap(windows[id], id, side); };
       updateEmpty();
       if(typeof getToken==='function' && getToken()){ openModule('dashboard'); fetchPerms(); }
       if(typeof window.showPanelScreen==='function'){

@@ -349,3 +349,109 @@ lawsuitsRouter.delete('/api/lawsuits/movements/:movementId', requireAuth, (req, 
     return res.status(500).json({ error: 'Erro ao excluir andamento.' });
   }
 });
+
+// Migration defensiva para adicionar whatsapp_notified_at se ainda não existir
+try {
+  db.prepare(`ALTER TABLE lawsuit_movements ADD COLUMN whatsapp_notified_at TEXT`).run();
+} catch (_) {}
+
+/**
+ * 8. GET /api/lawsuits/movements/:movementId/preview-whatsapp
+ * Obtém pré-visualização da mensagem para autorização do advogado
+ */
+lawsuitsRouter.get('/api/lawsuits/movements/:movementId/preview-whatsapp', requireAuth, (req, res) => {
+  try {
+    const { movementId } = req.params;
+    const mov = db.prepare(`SELECT * FROM lawsuit_movements WHERE id = ?`).get(movementId);
+    if (!mov) {
+      return res.status(404).json({ error: 'Andamento não encontrado.' });
+    }
+
+    const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(mov.lawsuit_id);
+    if (!law) {
+      return res.status(404).json({ error: 'Processo não encontrado.' });
+    }
+
+    const client = law.client_id ? db.prepare(`SELECT * FROM clients WHERE id = ?`).get(law.client_id) : null;
+    const clientName = client ? client.full_name : 'Cliente';
+    const clientPhone = client ? (client.phone || '') : '';
+
+    const dateFormatted = mov.movement_date ? mov.movement_date.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
+
+    let defaultMsg = `Olá, ${clientName}! 👋\n\n`;
+    defaultMsg += `O escritório *Jorge Alvim Advocacia* tem uma nova atualização sobre o seu processo:\n\n`;
+    defaultMsg += `⚖️ *Processo:* ${law.cnj_number || 'Ação em andamento'}\n`;
+    defaultMsg += `📌 *Andamento:* ${mov.title}\n`;
+    defaultMsg += `📅 *Data:* ${dateFormatted}\n`;
+    if (mov.description) {
+      defaultMsg += `📝 *Resumo:* ${mov.description}\n`;
+    }
+    defaultMsg += `\n📲 Você pode acompanhar todos os detalhes e documentos na sua Área do Cliente:\n`;
+    defaultMsg += `https://jorgealvimadvocacia.com.br/cliente\n\n`;
+    defaultMsg += `_Atendimento Dr. Jorge Alvim • OAB/MG 222.943_`;
+
+    return res.json({
+      success: true,
+      movementId: mov.id,
+      lawsuitId: law.id,
+      cnj_number: law.cnj_number,
+      clientName,
+      clientPhone,
+      whatsapp_notified_at: mov.whatsapp_notified_at,
+      suggestedMessage: defaultMsg
+    });
+  } catch (error) {
+    console.error('[ERRO] Falha ao gerar preview de WhatsApp:', error);
+    return res.status(500).json({ error: 'Erro ao gerar preview de WhatsApp.' });
+  }
+});
+
+/**
+ * 9. POST /api/lawsuits/movements/:movementId/authorize-whatsapp
+ * Registra a autorização expressa do advogado e devolve o link pronto do WhatsApp
+ */
+lawsuitsRouter.post('/api/lawsuits/movements/:movementId/authorize-whatsapp', requireAuth, (req, res) => {
+  try {
+    const { movementId } = req.params;
+    const { message, phone } = req.body;
+
+    const mov = db.prepare(`SELECT * FROM lawsuit_movements WHERE id = ?`).get(movementId);
+    if (!mov) {
+      return res.status(404).json({ error: 'Andamento não encontrado.' });
+    }
+
+    const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(mov.lawsuit_id);
+    const client = law && law.client_id ? db.prepare(`SELECT * FROM clients WHERE id = ?`).get(law.client_id) : null;
+
+    const destPhone = (phone || (client ? client.phone : '') || '').replace(/\D/g, '');
+    if (!destPhone) {
+      return res.status(400).json({ error: 'Telefone do cliente é obrigatório para disparo.' });
+    }
+
+    const finalMsg = message ? message.trim() : `Atualização no processo ${law ? law.cnj_number : ''}: ${mov.title}`;
+    const now = new Date().toISOString();
+
+    db.prepare(`UPDATE lawsuit_movements SET whatsapp_notified_at = ? WHERE id = ?`).run(now, movementId);
+
+    logAudit(req, {
+      event_type: 'AUTORIZACAO',
+      event_name: 'AUTORIZAR_NOTIFICACAO_WHATSAPP',
+      module: 'PROCESSOS',
+      resource_id: movementId,
+      description: `Advogado autorizou expressamente notificação no WhatsApp para cliente ${client ? client.full_name : destPhone} (Andamento: '${mov.title}').`
+    });
+
+    const countryPhone = destPhone.startsWith('55') ? destPhone : `55${destPhone}`;
+    const whatsappLink = `https://wa.me/${countryPhone}?text=${encodeURIComponent(finalMsg)}`;
+
+    return res.json({
+      success: true,
+      message: 'Notificação autorizada com sucesso!',
+      whatsapp_link: whatsappLink,
+      whatsapp_notified_at: now
+    });
+  } catch (error) {
+    console.error('[ERRO] Falha ao autorizar notificação no WhatsApp:', error);
+    return res.status(500).json({ error: 'Erro ao autorizar notificação.' });
+  }
+});

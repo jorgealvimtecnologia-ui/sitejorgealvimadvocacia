@@ -78,7 +78,7 @@
     }
 
 /* [3] Gerenciador de janelas (#jaw-*) e toast */
-    #jaw-menubar{position:sticky;top:0;z-index:400;display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+    #jaw-menubar{position:sticky;top:0;z-index:300 !important;display:flex;flex-wrap:wrap;gap:6px;align-items:center;
       background:#0f172a;padding:6px 12px;border-bottom:2px solid #d4a017}
     #jaw-menubar .jaw-start{color:#facc15;font-weight:800;font-size:12px;margin-right:6px;letter-spacing:.03em}
     .jaw-group{position:relative}
@@ -87,7 +87,7 @@
     .jaw-group>button:hover{background:#1e293b;border-color:#334155}
     .jaw-group.open>button{background:#1e293b;border-color:#d4a017;color:#fff}
     .jaw-dropdown{position:absolute;top:calc(100% + 4px);left:0;min-width:230px;background:#fff;border:1px solid #cbd5e1;
-      border-radius:10px;box-shadow:0 12px 32px rgba(2,6,23,.28);padding:6px;z-index:500;display:none}
+      border-radius:10px;box-shadow:0 12px 32px rgba(2,6,23,.28);padding:6px;z-index:320;display:none}
     .jaw-group.open .jaw-dropdown{display:block}
     .jaw-dropdown button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:transparent;border:0;
       font-size:12.5px;font-weight:600;color:#1e293b;padding:8px 10px;border-radius:8px;cursor:pointer}
@@ -96,12 +96,17 @@
       background-image:radial-gradient(#dbe2ea 1px,transparent 1px);background-size:22px 22px;overflow:hidden}
     #jaw-desktop .jaw-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#94a3b8;
       font-size:13px;font-weight:600;pointer-events:none}
-    .jaw-window{position:absolute;display:flex;flex-direction:column;background:#fff;border:1px solid #94a3b8;border-radius:12px;
-      box-shadow:0 14px 40px rgba(2,6,23,.30);overflow:hidden;min-width:320px;min-height:200px}
-    .jaw-window.active{border-color:#d4a017;box-shadow:0 18px 50px rgba(2,6,23,.40)}
-    .jaw-titlebar{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:move;user-select:none;
-      padding:7px 10px;background:#334155;color:#fff}
-    .jaw-window.active .jaw-titlebar{background:linear-gradient(to right,#f59e0b,#d4a017)}
+    .jaw-window{position:absolute;display:flex;flex-direction:column;background:#fff;border:1px solid #cbd5e1;border-radius:12px;
+      box-shadow:0 12px 32px rgba(2,6,23,.22);overflow:hidden;min-width:320px;min-height:200px;
+      transition:box-shadow .2s cubic-bezier(.16,1,.3,1),border-color .2s,opacity .2s}
+    .jaw-window:not(.active){opacity:.94;border-color:#cbd5e1;box-shadow:0 8px 24px rgba(2,6,23,.18)}
+    .jaw-window:not(.active):hover{opacity:.98;border-color:#94a3b8}
+    .jaw-window.active{opacity:1;border-color:#d4a017;box-shadow:0 24px 60px -10px rgba(2,6,23,.45),0 0 0 1.5px rgba(212,160,23,.5)}
+    .jaw-window.jaw-dragging{opacity:.95 !important;box-shadow:0 32px 75px -12px rgba(2,6,23,.6),0 0 0 2px #f59e0b !important;cursor:grabbing !important;user-select:none !important;transition:none !important}
+    .jaw-titlebar{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;user-select:none;
+      padding:8px 12px;background:linear-gradient(135deg,#334155,#1e293b);color:#fff;border-bottom:1px solid rgba(255,255,255,.1);transition:background .2s ease}
+    .jaw-window.jaw-dragging .jaw-titlebar{cursor:grabbing !important}
+    .jaw-window.active .jaw-titlebar{background:linear-gradient(135deg,#d97706,#b45309,#d4a017);box-shadow:inset 0 -1px 0 rgba(255,255,255,.25)}
     .jaw-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
     .jaw-ctrls{display:flex;align-items:center;gap:4px;flex-shrink:0}
     .jaw-ctrls button{width:24px;height:22px;border:0;border-radius:6px;background:rgba(255,255,255,.18);color:#fff;
@@ -115,7 +120,7 @@
     .jaw-winbody::-webkit-scrollbar-thumb:hover{background:#94a3b8}
     .jaw-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;
       background:linear-gradient(135deg,transparent 50%,#94a3b8 50%,#94a3b8 60%,transparent 60%,transparent 70%,#94a3b8 70%,#94a3b8 80%,transparent 80%)}
-    #jaw-taskbar{position:fixed;left:0;right:0;bottom:0;z-index:450;display:flex;align-items:center;gap:6px;
+    #jaw-taskbar{position:fixed;left:0;right:0;bottom:0;z-index:650;display:flex;align-items:center;gap:6px;
       background:#0f172a;border-top:2px solid #d4a017;padding:5px 10px;min-height:40px;overflow-x:auto}
     #jaw-taskbar .jaw-tb-label{color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-right:4px;flex-shrink:0}
     .jaw-taskbtn{display:inline-flex;align-items:center;gap:6px;background:#1e293b;border:1px solid #334155;color:#e2e8f0;
@@ -132,5 +137,215 @@
     .jaw-tb-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:52px;background:transparent;border:1px solid transparent;border-radius:8px;padding:4px 4px;cursor:pointer;color:#334155;font-size:10.5px;font-weight:600;white-space:nowrap}
     .jaw-tb-btn:hover{background:#fff;border-color:#cbd5e1}
     .jaw-tb-btn .e{font-size:17px;line-height:1}
-    #jaw-toast{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,.35);z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+    #jaw-toast{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,.35);z-index:999999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
     #jaw-toast.show{opacity:1}
+
+/* ==========================================================================
+   CORREÇÃO DE Z-INDEX & SOBREPOSIÇÃO DE TELAS / MODAIS DE CADASTRO
+   Garante que NENHUMA barra de menu (topo ou rodapé) fique por cima dos formulários
+   ========================================================================== */
+.fixed.inset-0,
+div[id$="-modal"],
+div[id$="Modal"],
+div[id^="modal-"],
+#client-modal,
+#lawsuit-modal,
+#transaction-modal,
+#alvara-modal,
+#office-modal,
+#new-user-modal,
+#edit-user-modal,
+#legal-doc-modal,
+#kit-inicial-modal,
+#pre-client-detail-modal,
+#audit-details-modal,
+#message-modal,
+#movement-modal,
+#doc-preview-modal,
+#manual-pay-modal,
+#asaas-charge-modal,
+#nfse-issue-modal,
+#nfse-preview-modal,
+#blog-post-editor-modal,
+#modal-calendar-event,
+#modal-calendar-view,
+#modal-calendar-sync,
+#modal-deadline-calculator,
+#modal-publication-view,
+#hr-modal-time-sign,
+#hr-modal-time-punch,
+#hr-modal-payslip,
+#hr-modal-vacation-form,
+#hr-modal-employee,
+#hr-modal-exam-form,
+#modal-activity-draft,
+#modal-labor-termination,
+#rocket-new-modal,
+#rocket-view-modal {
+  z-index: 999999 !important;
+}
+
+/* Janela maximizada do gerenciador estilo Windows: 100% da tela do computador */
+.jaw-window.jaw-maximized {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - 42px) !important;
+  max-width: 100vw !important;
+  max-height: calc(100vh - 42px) !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  z-index: 600 !important;
+  margin: 0 !important;
+}
+.jaw-window.jaw-maximized .jaw-winbody {
+  height: calc(100vh - 42px - 38px - 44px) !important;
+  max-height: none !important;
+  flex: 1 1 auto !important;
+}
+
+/* Modais de cadastro expandidos em Tela Cheia (100% da tela do computador) */
+.modal-box-fullscreen {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  min-height: 100vh !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  padding: 24px 32px !important;
+}
+
+/* [4] Apoio ao Usuário, Resiliência e Impressão A4 Jurídica */
+@keyframes jawPulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(225, 29, 72, 0.15); }
+}
+.jaw-error-pulse {
+  animation: jawPulseRing 1.5s infinite;
+  border-color: #e11d48 !important;
+}
+.jaw-draft-banner {
+  transition: all 0.25s ease-out;
+}
+@media print {
+  #jaw-taskbar, #jaw-menubar, #top-bar, #sidebar, #tabs-horizontal-bar,
+  #jaw-support-toasts, #jaw-connection-badge, .jaw-ctrls, .btn-no-print {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   [5] FASE 4: MODO DARK / BRANCO & ERGONOMIA VISUAL JURÍDICA
+   ========================================================================== */
+body {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Modo Escuro (Dark Mode LegalTech) */
+html.dark,
+body.dark-mode {
+  background-color: #090f1d !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode #top-bar,
+body.dark-mode header,
+body.dark-mode .bg-white {
+  background-color: #111c33 !important;
+  border-color: #1e2e4a !important;
+}
+
+body.dark-mode .bg-slate-50,
+body.dark-mode .bg-slate-100 {
+  background-color: #182745 !important;
+  border-color: #263859 !important;
+}
+
+body.dark-mode .text-navy-950,
+body.dark-mode .text-slate-900,
+body.dark-mode .text-slate-800,
+body.dark-mode .text-slate-700 {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .text-slate-600,
+body.dark-mode .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode input:not([type="checkbox"]):not([type="radio"]),
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #0c1424 !important;
+  color: #f8fafc !important;
+  border-color: #2a3c5e !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #64748b !important;
+}
+
+body.dark-mode .border-slate-100,
+body.dark-mode .border-slate-200,
+body.dark-mode .border-slate-300 {
+  border-color: #1e2e4a !important;
+}
+
+body.dark-mode .divide-slate-100 > * + *,
+body.dark-mode .divide-slate-200 > * + * {
+  border-color: #1e2e4a !important;
+}
+
+body.dark-mode table thead tr,
+body.dark-mode table th {
+  background-color: #0e172a !important;
+  color: #94a3b8 !important;
+}
+
+body.dark-mode table tbody tr:hover {
+  background-color: #182745 !important;
+}
+
+body.dark-mode .jaw-window,
+body.dark-mode .jaw-winbody {
+  background-color: #111c33 !important;
+  border-color: #2a3c5e !important;
+  color: #e2e8f0 !important;
+}
+
+body.dark-mode .jaw-toolbar {
+  background-color: #0e172a !important;
+  border-color: #1e2e4a !important;
+}
+
+/* Ajustes de Acessibilidade: Escala de Fonte Ergonômica */
+body.font-size-sm { font-size: 13px !important; }
+body.font-size-md { font-size: 14px !important; }
+body.font-size-lg { font-size: 16px !important; }
+body.font-size-xl { font-size: 17.5px !important; }
+
+body.font-size-lg h2 { font-size: 1.8rem !important; }
+body.font-size-lg h3 { font-size: 1.35rem !important; }
+body.font-size-lg p, body.font-size-lg td, body.font-size-lg input { font-size: 15px !important; }
+
+body.font-size-xl h2 { font-size: 2.1rem !important; }
+body.font-size-xl h3 { font-size: 1.55rem !important; }
+body.font-size-xl p, body.font-size-xl td, body.font-size-xl input { font-size: 16.5px !important; }
+
+/* Microfone / Digitação por Voz (Efeito Ativo) */
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.2); }
+}
+.jaw-mic-recording {
+  animation: micPulse 1.2s infinite !important;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+}
+

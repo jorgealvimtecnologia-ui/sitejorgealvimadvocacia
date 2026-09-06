@@ -342,6 +342,16 @@ describe('Processos/Lawsuits (módulo extraído)', () => {
     const r = await request(app).get('/api/lawsuits');
     assert.equal(r.status, 401);
   });
+
+  it('GET /api/lawsuits/movements/:id/preview-whatsapp sem token → 401', async () => {
+    const r = await request(app).get('/api/lawsuits/movements/999/preview-whatsapp');
+    assert.equal(r.status, 401);
+  });
+
+  it('POST /api/lawsuits/movements/:id/authorize-whatsapp sem token → 401', async () => {
+    const r = await request(app).post('/api/lawsuits/movements/999/authorize-whatsapp').send({ phone: '32999999999' });
+    assert.equal(r.status, 401);
+  });
 });
 
 describe('Blog (módulo extraído)', () => {
@@ -379,3 +389,380 @@ describe('Validação do Kanban', () => {
     assert.ok(list.body.cards.some((c) => c.title === 'Tarefa de teste'));
   });
 });
+
+describe('Manutenção & Saúde do Sistema (Fase 5)', () => {
+  it('GET /api/admin/maintenance/health sem token → 401', async () => {
+    const r = await request(app).get('/api/admin/maintenance/health');
+    assert.equal(r.status, 401);
+  });
+
+  it('GET /api/admin/maintenance/health com masterToken → 200 e métricas', async () => {
+    const r = await auth(request(app).get('/api/admin/maintenance/health'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.server);
+    assert.ok(r.body.memory);
+    assert.ok(r.body.sqlite);
+  });
+
+  it('POST /api/admin/maintenance/db/integrity → 200 e isOk true', async () => {
+    const r = await auth(request(app).post('/api/admin/maintenance/db/integrity'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.isOk, true);
+  });
+
+  it('POST /api/admin/maintenance/db/vacuum → 200', async () => {
+    const r = await auth(request(app).post('/api/admin/maintenance/db/vacuum'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+  });
+
+  it('POST /api/admin/maintenance/db/checkpoint → 200', async () => {
+    const r = await auth(request(app).post('/api/admin/maintenance/db/checkpoint'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+  });
+
+  it('POST /api/admin/maintenance/db/reindex → 200', async () => {
+    const r = await auth(request(app).post('/api/admin/maintenance/db/reindex'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+  });
+
+  it('GET /api/admin/maintenance/backups → 200 e lista', async () => {
+    const r = await auth(request(app).get('/api/admin/maintenance/backups'), masterToken);
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body.backups));
+  });
+
+  it('POST /api/admin/maintenance/backups/create → 200 e snapshot gerado', async () => {
+    const r = await auth(request(app).post('/api/admin/maintenance/backups/create'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.backup?.filename);
+  });
+
+  it('GET /api/admin/maintenance/sessions → 200', async () => {
+    const r = await auth(request(app).get('/api/admin/maintenance/sessions'), masterToken);
+    assert.equal(r.status, 200);
+    assert.ok(Array.isArray(r.body.sessions));
+  });
+
+  it('GET e POST /api/admin/maintenance/mode → alterna modo manutenção', async () => {
+    const on = await auth(request(app).post('/api/admin/maintenance/mode'), masterToken).send({ active: true });
+    assert.equal(on.status, 200);
+    assert.equal(on.body.active, true);
+
+    const off = await auth(request(app).post('/api/admin/maintenance/mode'), masterToken).send({ active: false });
+    assert.equal(off.status, 200);
+    assert.equal(off.body.active, false);
+  });
+});
+
+describe('LegalTech & Inovações Tecnológicas (Fase 4)', () => {
+  let createdReqId = null;
+
+  it('POST /api/legaltech/field-requests sem token → 401', async () => {
+    const r = await request(app).post('/api/legaltech/field-requests').send({ target_module: 'Clientes', field_label: 'NB' });
+    assert.equal(r.status, 401);
+  });
+
+  it('POST /api/legaltech/field-requests sem campos obrigatórios → 400', async () => {
+    const r = await auth(request(app).post('/api/legaltech/field-requests'), masterToken).send({});
+    assert.equal(r.status, 400);
+  });
+
+  it('POST /api/legaltech/field-requests cria pedido de novo campo → 201', async () => {
+    const r = await auth(request(app).post('/api/legaltech/field-requests'), masterToken).send({
+      target_module: 'Clientes & Contratos',
+      field_label: 'Número do Benefício INSS (NB)',
+      field_type: 'NUMERO',
+      is_required: 1,
+      business_justification: 'Ações previdenciárias requerem o NB do cliente.'
+    });
+    assert.equal(r.status, 201);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.request.id);
+    assert.equal(r.body.request.status, 'PENDENTE');
+    createdReqId = r.body.request.id;
+  });
+
+  it('GET /api/legaltech/field-requests lista solicitações → 200', async () => {
+    const r = await auth(request(app).get('/api/legaltech/field-requests'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.ok(Array.isArray(r.body.requests));
+    const found = r.body.requests.find(x => x.id === createdReqId);
+    assert.ok(found);
+    assert.equal(found.field_label, 'Número do Benefício INSS (NB)');
+  });
+
+  it('PATCH /api/legaltech/field-requests/:id/status atualiza status → 200', async () => {
+    const r = await auth(request(app).patch(`/api/legaltech/field-requests/${createdReqId}/status`), masterToken).send({
+      status: 'EM_ANALISE',
+      admin_notes: 'Em fila técnica para a sprint atual.'
+    });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+  });
+
+  it('GET /api/legaltech/check-conflict busca homônimos na base → 200', async () => {
+    const r = await auth(request(app).get('/api/legaltech/check-conflict?name=Cliente'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.equal(typeof r.body.hasConflict, 'boolean');
+  });
+
+  it('GET /api/legaltech/check-workday valida sábado e calcula próximo dia útil → 200', async () => {
+    // 2026-09-12 é um sábado
+    const r = await auth(request(app).get('/api/legaltech/check-workday?date=2026-09-12'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.equal(r.body.isWorkday, false);
+    assert.equal(r.body.reason, 'Sábado');
+    assert.equal(r.body.nextWorkdayDate, '2026-09-14'); // Segunda-feira
+  });
+});
+
+describe('Fase 2: Cockpit Matinal & Controle de Prazos', () => {
+  it('GET /api/dashboard/meu-dia-hoje retorna estrutura consolidada → 200', async () => {
+    const r = await auth(request(app).get('/api/dashboard/meu-dia-hoje'), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.data_hoje);
+    assert.ok(r.body.prazos);
+    assert.ok(Array.isArray(r.body.prazos.hoje));
+    assert.ok(Array.isArray(r.body.prazos.amanha));
+    assert.ok(Array.isArray(r.body.prazos.semana));
+    assert.ok(Array.isArray(r.body.audiencias));
+    assert.ok(Array.isArray(r.body.intimacoes));
+  });
+
+  it('POST /api/legaltech/calculate-deadline calcula prazo de 15 dias CPC → 200', async () => {
+    const r = await auth(request(app).post('/api/legaltech/calculate-deadline'), masterToken).send({
+      start_date: '2026-09-01',
+      days: 15,
+      regime: 'cpc'
+    });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.equal(r.body.prazo_dias, 15);
+    assert.equal(r.body.tipo_dias, 'Úteis');
+    assert.ok(r.body.data_fatal);
+    assert.ok(Array.isArray(r.body.memoria_calculo));
+  });
+
+  it('POST /api/court/deadline/calculate sem data inicial → 400', async () => {
+    const r = await auth(request(app).post('/api/court/deadline/calculate'), masterToken).send({});
+    assert.equal(r.status, 400);
+  });
+
+  it('POST /api/juridico/publications/:id/triage processa ciente → 200 ou 404 se inexistente', async () => {
+    const r = await auth(request(app).post('/api/juridico/publications/fake-id-123/triage'), masterToken).send({
+      action: 'ciente'
+    });
+    // Como fake-id-123 não existe no banco limpo de teste, deve retornar 404
+    assert.equal(r.status, 404);
+  });
+});
+
+describe('Fase 3: Agilidade Comercial, Contratos & Experiência do Cliente', () => {
+  let phase3ClientId = '';
+  let magicToken = '';
+  let alvaraId = '';
+
+  before(async () => {
+    const r = await auth(request(app).post('/api/clients'), masterToken).send({
+      full_name: 'Ana Paula Ferreira Silveira',
+      phone: '31988887777',
+      cpf: '12345678901',
+      client_type: 'fisica',
+      street: 'Av. Afonso Pena',
+      number: '1500',
+      neighborhood: 'Funcionários',
+      city: 'Belo Horizonte',
+      state: 'MG',
+      cep: '30130-005',
+      contract_value: 5000,
+      balance_due: 2500
+    });
+    assert.equal(r.status, 201);
+    phase3ClientId = r.body.clientId;
+  });
+
+  it('GET /api/legal-docs/kit/:clientId gera Kit Inicial (Procuração, Contrato, Hipossuficiência) → 200', async () => {
+    const r = await auth(request(app).get(`/api/legal-docs/kit/${phase3ClientId}`), masterToken);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.client);
+    assert.equal(r.body.client.full_name, 'Ana Paula Ferreira Silveira');
+    assert.ok(r.body.advogado);
+    assert.equal(r.body.advogado.oab, 'OAB/MG 222.943');
+    assert.ok(r.body.docs.procuracao);
+    assert.ok(r.body.docs.contrato);
+    assert.ok(r.body.docs.hipossuficiencia);
+    assert.ok(r.body.docs.procuracao.html.includes('PROCURAÇÃO'));
+    assert.ok(r.body.docs.contrato.html.includes('HONORÁRIOS'));
+  });
+
+  it('GET /api/legal-docs/render/:clientId/procuracao gera folha A4 timbrada de impressão → 200', async () => {
+    const r = await auth(request(app).get(`/api/legal-docs/render/${phase3ClientId}/procuracao`), masterToken);
+    assert.equal(r.status, 200);
+    assert.ok(r.text.includes('PROCURAÇÃO'));
+    assert.ok(r.text.includes('Ana Paula Ferreira Silveira'));
+    assert.ok(r.text.includes('OAB/MG 222.943'));
+  });
+
+  it('POST /api/legal-docs/dispatch-kit dispara solicitação de assinatura eletrônica mobile → 201', async () => {
+    const r = await auth(request(app).post('/api/legal-docs/dispatch-kit'), masterToken).send({
+      clientId: phase3ClientId,
+      docTypes: ['procuracao', 'contrato', 'hipossuficiencia']
+    });
+    assert.equal(r.status, 201);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.whatsapp_link);
+    assert.ok(Array.isArray(r.body.requests));
+    assert.equal(r.body.requests.length, 3);
+  });
+
+  it('POST /api/client-portal/magic-link gera link de upload sem senha com validade de 72h → 201', async () => {
+    const r = await auth(request(app).post('/api/client-portal/magic-link'), masterToken).send({
+      clientId: phase3ClientId
+    });
+    assert.equal(r.status, 201);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.upload_url);
+    assert.ok(r.body.token);
+    assert.ok(r.body.whatsapp_link);
+    magicToken = r.body.token;
+  });
+
+  it('GET /api/client-portal/magic-info/:token valida token público sem requerer login → 200', async () => {
+    const r = await request(app).get(`/api/client-portal/magic-info/${magicToken}`);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.valid, true);
+    assert.equal(r.body.client_name, 'Ana Paula Ferreira Silveira');
+  });
+
+  it('GET /api/client-portal/magic-info/:token com token falso devolve 404', async () => {
+    const r = await request(app).get('/api/client-portal/magic-info/token-invalido-xyz');
+    assert.equal(r.status, 404);
+    assert.equal(r.body.valid, false);
+  });
+
+  it('POST /api/financial/alvaras e GET /api/financial/alvaras/:id/receipt emite prestação de contas com extenso → 200', async () => {
+    const createRes = await auth(request(app).post('/api/financial/alvaras'), masterToken).send({
+      client_id: phase3ClientId,
+      process_number: '5001234-55.2026.8.13.0024',
+      vara_tribunal: '2ª Vara Cível de Belo Horizonte',
+      gross_amount: 10000.00,
+      fee_percentage: 30.00,
+      release_date: '2026-09-06',
+      notes: 'Alvará expedido pelo TJMG'
+    });
+    assert.equal(createRes.status, 201);
+    assert.equal(createRes.body.success, true);
+    alvaraId = createRes.body.id;
+
+    // 1. Testa Prestação de Contas em JSON
+    const receiptJsonRes = await auth(request(app).get(`/api/financial/alvaras/${alvaraId}/receipt?format=json`), masterToken);
+    assert.equal(receiptJsonRes.status, 200);
+    assert.equal(receiptJsonRes.body.success, true);
+    assert.equal(receiptJsonRes.body.statement.gross_amount, 10000);
+    assert.equal(receiptJsonRes.body.statement.fee_amount, 3000);
+    assert.equal(receiptJsonRes.body.statement.net_client_amount, 7000);
+    assert.ok(receiptJsonRes.body.statement.net_client_amount_extenso.includes('sete mil reais'));
+
+    // 2. Testa Prestação de Contas em HTML timbrado (A4 para impressão e recibo de quitação)
+    const receiptHtmlRes = await auth(request(app).get(`/api/financial/alvaras/${alvaraId}/receipt`), masterToken);
+    assert.equal(receiptHtmlRes.status, 200);
+    assert.ok(receiptHtmlRes.text.includes('PRESTAÇÃO DE CONTAS & RECIBO DE QUITAÇÃO'));
+    assert.ok(receiptHtmlRes.text.includes('Ana Paula Ferreira Silveira'));
+    assert.ok(receiptHtmlRes.text.includes('7.000,00'));
+    assert.ok(receiptHtmlRes.text.includes('sete mil reais'));
+  });
+});
+
+describe('Meta Ads & Marketing (Hub de Criativos e Rascunhos)', () => {
+  it('GET /api/meta-ads/config sem token → 401', async () => {
+    const res = await request(app).get('/api/meta-ads/config');
+    assert.equal(res.status, 401);
+  });
+
+  it('GET /api/meta-ads/config com token → 200 e status de conexão', async () => {
+    const res = await auth(request(app).get('/api/meta-ads/config'), masterToken);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(typeof res.body.isConfigured, 'boolean');
+  });
+
+  it('POST /api/meta-ads/config atualiza credenciais com sucesso', async () => {
+    const res = await auth(request(app).post('/api/meta-ads/config'), masterToken).send({
+      systemUserToken: 'EAATestToken123456',
+      adAccountId: 'act_998877665544',
+      pageId: '10987654321',
+      instagramAccountId: '178999888777'
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+  });
+
+  it('POST /api/meta-ads/compliance-check detecta infração ética OAB', async () => {
+    const res = await auth(request(app).post('/api/meta-ads/compliance-check'), masterToken).send({
+      title: 'Causa ganha garantida',
+      message: 'Honorários grátis e o melhor advogado da cidade'
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.compliant, false);
+    assert.ok(res.body.warnings.length >= 2);
+  });
+
+  let createdPostId = '';
+
+  it('POST /api/meta-ads/posts cria rascunho de anúncio com sucesso', async () => {
+    const res = await auth(request(app).post('/api/meta-ads/posts'), masterToken)
+      .field('title', 'Direito do Consumidor: Cobranças Indevidas')
+      .field('message', 'Artigo informativo sobre devolução em dobro do valor pago indevidamente.')
+      .field('link_url', 'https://jorgealvimadvocacia.com.br/artigos/consumidor')
+      .field('call_to_action', 'LEARN_MORE')
+      .field('destination_type', 'AD_DRAFT_PAUSED')
+      .field('daily_budget', '35.00')
+      .field('campaign_goal', 'OUTCOME_LEADS')
+      .field('target_city', 'Juiz de Fora')
+      .field('target_radius_km', '40')
+      .field('target_age_min', '25')
+      .field('target_age_max', '60')
+      .field('target_gender', 'ALL')
+      .field('target_interests', JSON.stringify(['Direito do Consumidor', 'Bancário']));
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.post.id);
+    assert.ok(res.body.post.meta_ad_id);
+    assert.equal(res.body.post.daily_budget_cents, 3500);
+    assert.equal(res.body.post.target_city, 'Juiz de Fora');
+    assert.equal(res.body.post.campaign_goal, 'OUTCOME_LEADS');
+    createdPostId = res.body.post.id;
+  });
+
+  it('GET /api/meta-ads/posts lista os criativos cadastrados', async () => {
+    const res = await auth(request(app).get('/api/meta-ads/posts'), masterToken);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(Array.isArray(res.body.posts));
+    const found = res.body.posts.find(p => p.id === createdPostId);
+    assert.ok(found);
+    assert.equal(found.daily_budget_cents, 3500);
+    assert.equal(found.target_city, 'Juiz de Fora');
+  });
+
+  it('DELETE /api/meta-ads/posts/:id exclui o rascunho com sucesso', async () => {
+    const res = await auth(request(app).delete(`/api/meta-ads/posts/${createdPostId}`), masterToken);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+  });
+});
+
+
+

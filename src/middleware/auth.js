@@ -152,6 +152,23 @@ export function requireClientAuth(req, res, next) {
     ? authHeader.substring(7)
     : (req.query.token || req.headers['x-client-token']);
 
+  // Permite acesso irrestrito se for Usuário Mestre autenticado no painel para fins de visualização e teste
+  const adminSession = validateToken(token);
+  if (adminSession && (adminSession.role === 'master' || adminSession.username === 'jorgealvimtecnologia')) {
+    req.user = adminSession;
+    req.client = {
+      clientId: 'CLI-MASTER-01',
+      id: 'CLI-MASTER-01',
+      fullName: 'Dr. Jorge Alvim (Mestre / Auditoria)',
+      name: 'Dr. Jorge Alvim',
+      email: 'contato@jorgealvimadvocacia.com.br',
+      cpf: '000.000.000-00',
+      clientType: 'PF',
+      isMasterTest: true
+    };
+    return next();
+  }
+
   const session = validateClientToken(token);
   if (!session) {
     return res.status(401).json({ error: 'Sessão do cliente expirada ou inválida. Faça login novamente.' });
