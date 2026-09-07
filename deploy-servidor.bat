@@ -20,12 +20,12 @@ echo Servidor...: %SRV%  (%REMOTE%)
 echo.
 
 echo [1/3] Fazendo backup COMPLETO no servidor (para rollback)...
-ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/predeploy-$(date +%%Y%%m%%d-%%H%%M%%S); mkdir -p $D && cp -r %REMOTE%/server.js %REMOTE%/painel.html %REMOTE%/index.html %REMOTE%/blog.html %REMOTE%/cliente.html %REMOTE%/colaborador.html %REMOTE%/src %REMOTE%/public $D/ 2>/dev/null; echo $D > %REMOTE%/backups/LAST && echo    Backup criado em: $D"
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/predeploy-$(date +%%Y%%m%%d-%%H%%M%%S); mkdir -p $D && cp -r %REMOTE%/server.js %REMOTE%/*.html %REMOTE%/src %REMOTE%/public $D/ 2>/dev/null; echo $D > %REMOTE%/backups/LAST && echo    Backup criado em: $D"
 if errorlevel 1 goto :erro
 echo.
 
-echo [2/3] Enviando server.js, paginas publicas, src/ (modulos), public/ (assets) e scripts/...
-scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js painel.html index.html blog.html cliente.html colaborador.html src public scripts %SRV%:%REMOTE%/
+echo [2/3] Enviando server.js, paginas publicas (*.html), src/, public/ e scripts/...
+scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js *.html src public scripts %SRV%:%REMOTE%/
 if errorlevel 1 goto :erro
 echo.
 

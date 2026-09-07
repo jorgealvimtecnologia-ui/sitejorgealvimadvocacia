@@ -54,7 +54,7 @@ if [ -z "$D" ] || [ ! -d "$D" ]; then
   exit 2
 fi
 echo "[deploy-remote] Restaurando de: $D"
-cp -r "$D"/server.js "$D"/painel.html "$D"/index.html "$D"/blog.html "$D"/cliente.html "$D"/colaborador.html "$D"/src "$D"/public "$REMOTE/" 2>/dev/null || true
+cp -r "$D"/server.js "$D"/*.html "$D"/src "$D"/public "$REMOTE/" 2>/dev/null || true
 fix_perms
 systemctl restart "$SERVICE"
 sleep 3
