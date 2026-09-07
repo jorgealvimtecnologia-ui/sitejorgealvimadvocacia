@@ -81,6 +81,23 @@ gantt
    * Workflow do GitHub Actions para rodar a suíte Playwright todas as noites.
    * Segundo fator de autenticação (2FA) via aplicativo para acesso ao Painel do Advogado.
 
+4. **Fase IV: Arquitetura de Software, Segurança OWASP & Engenharia de Confiabilidade (SRE)**
+   * **Pilar 1 (P0 - Segurança & Sigilo OAB):**
+     * Desativar a sobrescrita forçada da senha mestre no boot (`src/config/db.js` e `server.js`).
+     * Expurgo definitivo da coluna `plain_password` e eliminação de senhas em texto puro no banco e interface.
+     * Remoção de bypasses de autenticação hardcoded em `auth.routes.js`, `client-portal.routes.js` e `hr.routes.js`.
+   * **Pilar 2 (P1 - Confiabilidade SRE & Concorrência):**
+     * Migração do driver de banco `node:sqlite` (`DatabaseSync` síncrono que bloqueia o event loop) para pool assíncrono / `better-sqlite3` com modo WAL e `synchronous = NORMAL`.
+     * Implementação de Deep Healthcheck (`/health/live` e `/health/ready`) com teste de latência e gravação em disco.
+     * Graceful Shutdown para tratamento de `SIGTERM`/`SIGINT`.
+   * **Pilar 3 (P2 - Modularização Clean Code):**
+     * Decomposição do `painel-1-app.js` (12.600 linhas) em submódulos ES6 dinâmicos (`import()`).
+     * Carregamento sob demanda (*lazy loading*) de modais do `painel.html` (reduzindo o DOM inicial de 640KB para < 90KB).
+     * Enxugamento do `server.js` (2.900 linhas) delegando tudo para `src/modules/*`.
+   * **Pilar 4 (P3 - DevSecOps):**
+     * Integração do SonarQube / SonarCloud para Quality Gate de segurança e complexidade ciclomática.
+     * Logs estruturados em formato JSON com Pino para observabilidade.
+
 ---
 
 ## 🔒 3. Garantias Éticas e de Segurança
