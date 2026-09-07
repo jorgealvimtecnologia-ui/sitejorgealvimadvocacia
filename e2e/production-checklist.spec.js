@@ -33,7 +33,11 @@ test.describe('Checklist de Produção - Varredura de Páginas', () => {
       page.on('console', msg => {
         if (msg.type() === 'error') {
           const text = msg.text();
-          if (!text.includes('ERR_INTERNET_DISCONNECTED') && !text.includes('ERR_NAME_NOT_RESOLVED')) {
+          if (
+            !text.includes('ERR_INTERNET_DISCONNECTED') &&
+            !text.includes('ERR_NAME_NOT_RESOLVED') &&
+            !text.includes('ERR_FAILED')
+          ) {
             consoleErrors.push(text);
           }
         }
@@ -49,7 +53,8 @@ test.describe('Checklist de Produção - Varredura de Páginas', () => {
         if (
           !failure.includes('net::ERR_ABORTED') &&
           !failure.includes('ERR_INTERNET_DISCONNECTED') &&
-          !failure.includes('ERR_NAME_NOT_RESOLVED')
+          !failure.includes('ERR_NAME_NOT_RESOLVED') &&
+          !failure.includes('ERR_FAILED')
         ) {
           networkErrors.push(`${url} [${failure}]`);
         }

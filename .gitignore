@@ -10,10 +10,11 @@ dist-ssr
 # Configuração local do Claude Code / assistente
 .claude/
 
-# Artefatos de teste (Playwright / cobertura)
+# Artefatos de teste (Playwright / cobertura / lighthouse)
 playwright-report/
 test-results/
 coverage/
+lighthouse-reports/
 
 # Banco de dados SQLite (dados sensíveis de clientes — NUNCA versionar)
 *.db
