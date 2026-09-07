@@ -233,15 +233,13 @@ blogRouter.put('/api/admin/blog/posts/:id', requireAuth, (req, res) => {
       id
     );
 
-    logAudit(req, {
-      event_type: 'ALTERACAO',
-      event_name: 'EDITAR_ARTIGO_BLOG',
-      module: 'BLOG',
-      resource_id: id,
-      description: `Atualização do artigo jurídico #${id}: '${title.trim()}' (Categoria: ${category.trim()}) - Status: ${is_published ? 'Publicado' : 'Rascunho'}.`
+    const currentPost = db.prepare(`SELECT slug FROM blog_posts WHERE id = ?`).get(id);
+    res.json({ 
+      success: true, 
+      message: 'Artigo atualizado com sucesso!', 
+      id, 
+      slug: currentPost ? currentPost.slug : null 
     });
-
-    res.json({ success: true, message: 'Artigo atualizado com sucesso!' });
   } catch (err) {
     console.error('Erro ao atualizar artigo:', err);
     res.status(500).json({ error: 'Erro ao atualizar artigo.' });

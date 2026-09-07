@@ -740,6 +740,45 @@
   }
 
   // --------------------------------------------------------------------------
+  // INTEGRAÇÃO BLOG -> META MARKETING (Instagram & Facebook)
+  // --------------------------------------------------------------------------
+  function loadArticleIntoMetaMarketing(post) {
+    if (!post) return;
+    if (typeof window.switchTab === 'function') {
+      window.switchTab('meta-ads');
+    }
+
+    const titleInput = document.getElementById('meta-ad-title');
+    const msgInput = document.getElementById('meta-ad-message');
+    const linkInput = document.getElementById('meta-ad-link');
+    const destSelect = document.getElementById('meta-ad-destination');
+    const ctaSelect = document.getElementById('meta-ad-cta');
+
+    const origin = window.location.origin || 'https://jorgealvimadvocacia.com.br';
+    const articleUrl = `${origin}/blog/${post.slug}`;
+
+    if (titleInput) titleInput.value = post.title || '';
+    if (linkInput) linkInput.value = articleUrl;
+    if (destSelect) destSelect.value = 'INSTAGRAM_FEED';
+    if (ctaSelect) ctaSelect.value = 'LEARN_MORE';
+
+    const cleanSummary = (post.summary || post.title || '').trim();
+    const copy = `📢 NOVO ARTIGO JURÍDICO:\n\n${cleanSummary}\n\n👉 Acesse o artigo completo em nosso blog oficial:\n${articleUrl}\n\n⚖️ Jorge Alvim Advocacia & Consultoria Jurídica\n📍 Benfica — Juiz de Fora - MG\n#direito #advocacia #juizdefora #jorgealvim #noticiasjuridicas`;
+
+    if (msgInput) msgInput.value = copy;
+
+    const previewContainer = document.getElementById('mockup-media-container');
+    const thumbName = document.getElementById('meta-media-filename-display');
+    if (post.cover_image && previewContainer) {
+      previewContainer.innerHTML = `<img src="${post.cover_image}" alt="${escapeHtml(post.title)}" class="w-full h-52 object-cover border-y border-slate-200">`;
+      if (thumbName) thumbName.innerText = `Capa do artigo importada: ${post.title.slice(0, 30)}...`;
+    }
+
+    updateMockupAndCompliance();
+    toast('Artigo carregado no Hub de Marketing! Escolha o destino (Instagram ou Facebook) e revise a prévia.', 'success');
+  }
+
+  // --------------------------------------------------------------------------
   // Expor Globalmente no Escopo do Window
   // --------------------------------------------------------------------------
   window.loadMetaAdsTab = loadMetaAdsTab;
@@ -755,5 +794,6 @@
   window.onMetaBudgetInputChange = onMetaBudgetInputChange;
   window.toggleMetaInterestChip = toggleMetaInterestChip;
   window.syncMetaAudienceMockup = syncMetaAudienceMockup;
+  window.loadArticleIntoMetaMarketing = loadArticleIntoMetaMarketing;
 
 })();

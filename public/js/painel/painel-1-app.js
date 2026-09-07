@@ -6752,6 +6752,14 @@
                   ↗
                 </a>
                 <button 
+                  onclick="shareAdminBlogPostToMeta(${p.id})" 
+                  class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition-colors flex items-center space-x-1 border border-blue-200"
+                  title="Divulgar este artigo no Instagram e Facebook"
+                >
+                  <span>📢</span>
+                  <span>Postar no Insta/Face</span>
+                </button>
+                <button 
                   onclick="openEditBlogPostModal(${p.id})" 
                   class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-colors"
                 >
@@ -6769,6 +6777,17 @@
         `;
       }).join('');
     }
+
+    function shareAdminBlogPostToMeta(id) {
+      const post = adminBlogPosts.find(p => p.id === id);
+      if (!post) return;
+      if (typeof window.loadArticleIntoMetaMarketing === 'function') {
+        window.loadArticleIntoMetaMarketing(post);
+      } else if (typeof window.switchTab === 'function') {
+        window.switchTab('meta-ads');
+      }
+    }
+    window.shareAdminBlogPostToMeta = shareAdminBlogPostToMeta;
 
     function filterAdminBlogPosts() {
       const search = document.getElementById('admin-blog-search').value.toLowerCase().trim();
@@ -6824,6 +6843,19 @@
       document.getElementById('blog-post-editor-modal').classList.add('hidden');
     }
 
+    function saveAndShareBlogPostToMeta() {
+      window._shouldShareToMetaAfterSave = true;
+      const form = document.getElementById('form-admin-blog-post') || document.querySelector('#blog-post-editor-modal form');
+      if (form) {
+        if (typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+        } else {
+          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+      }
+    }
+    window.saveAndShareBlogPostToMeta = saveAndShareBlogPostToMeta;
+
     async function handleSaveBlogPost(e) {
       e.preventDefault();
       const token = getToken();
@@ -6836,9 +6868,11 @@
       const content = document.getElementById('blog-edit-content').value.trim();
       const is_published = document.getElementById('blog-edit-published').checked ? 1 : 0;
       const btn = document.getElementById('blog-submit-btn');
+      const shareBtn = document.getElementById('blog-save-and-meta-btn');
 
-      btn.disabled = true;
-      btn.innerHTML = '<span>Salvando...</span>';
+      if (btn) btn.disabled = true;
+      if (shareBtn) shareBtn.disabled = true;
+      if (btn) btn.innerHTML = '<span>Salvando...</span>';
 
       try {
         const url = id ? `/api/admin/blog/posts/${id}` : '/api/admin/blog/posts';
@@ -6852,17 +6886,37 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
-          alert('✅ Artigo salvo com sucesso!');
           closeBlogEditorModal();
           await loadAdminBlogPosts();
+
+          if (window._shouldShareToMetaAfterSave) {
+            window._shouldShareToMetaAfterSave = false;
+            const targetPost = {
+              id: id || data.id,
+              title,
+              summary: summary || title,
+              cover_image,
+              slug: data.slug || (adminBlogPosts.find(p => p.id == id)?.slug) || ''
+            };
+            if (typeof window.loadArticleIntoMetaMarketing === 'function') {
+              window.loadArticleIntoMetaMarketing(targetPost);
+            } else if (typeof window.switchTab === 'function') {
+              window.switchTab('meta-ads');
+            }
+          } else {
+            alert('✅ Artigo salvo com sucesso!');
+          }
         } else {
           alert(data.error || 'Erro ao salvar artigo.');
         }
       } catch (err) {
         alert('Erro ao comunicar com o servidor.');
       } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span>💾 Salvar & Publicar Artigo</span>';
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>💾 Salvar & Publicar Artigo</span>';
+        }
+        if (shareBtn) shareBtn.disabled = false;
       }
     }
 
