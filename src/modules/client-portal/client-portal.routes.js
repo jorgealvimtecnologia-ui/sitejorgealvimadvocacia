@@ -382,6 +382,24 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
       return res.status(401).json({ error: 'Cadastro não encontrado com este CPF, CNPJ, Telefone ou E-mail.' });
     }
 
+    // Verificação de Soft Delete / Conta Desativada
+    if (client.deleted_at || client.status === 'inativo_lgpd') {
+      logAudit(req, {
+        event_type: 'AUTENTICACAO',
+        event_name: 'TENTATIVA_LOGIN_CONTA_DESATIVADA',
+        module: 'PORTAL_CLIENTE',
+        resource_id: client.id,
+        user_name: client.full_name,
+        user_cpf: client.cpf || client.cnpj,
+        user_role: 'client',
+        description: `Tentativa de login no portal em conta desativada/excluída via LGPD (${client.full_name}).`
+      });
+      return res.status(403).json({
+        error: 'Esta conta foi desativada a pedido do titular ou pelo escritório em conformidade com a LGPD. Para reativação ou esclarecimentos, entre em contato com nosso atendimento.',
+        code: 'ACCOUNT_DEACTIVATED_LGPD'
+      });
+    }
+
     // Se o cliente ainda não tem senha cadastrada, define a senha digitada se cumprir
     // a política (4–12 caracteres); caso contrário aplica a senha padrão de 1º acesso.
     if (!client.password_hash || !client.salt) {
@@ -524,6 +542,24 @@ clientPortalRouter.post('/api/client-portal/auth/google', loginRateLimit, async 
         description: `Cliente ${client.full_name} (${client.email}) cadastrou-se via Google Sign-In.`
       });
     } else {
+      // Verificação de Soft Delete / Conta Desativada
+      if (client.deleted_at || client.status === 'inativo_lgpd') {
+        logAudit(req, {
+          event_type: 'AUTENTICACAO',
+          event_name: 'TENTATIVA_LOGIN_GOOGLE_CONTA_DESATIVADA',
+          module: 'PORTAL_CLIENTE',
+          resource_id: client.id,
+          user_name: client.full_name,
+          user_cpf: client.cpf || client.cnpj,
+          user_role: 'client',
+          description: `Tentativa de login via Google em conta desativada/excluída via LGPD (${client.full_name} - ${googleUser.email}).`
+        });
+        return res.status(403).json({
+          error: 'Esta conta foi desativada a pedido do titular ou pelo escritório em conformidade com a LGPD. Para reativação ou esclarecimentos, entre em contato com nosso atendimento.',
+          code: 'ACCOUNT_DEACTIVATED_LGPD'
+        });
+      }
+
       // Cliente já existente: atualiza vínculo com Google se ainda não tiver
       try {
         db.prepare(`UPDATE clients SET google_id = ?, avatar_url = COALESCE(avatar_url, ?), updated_at = ? WHERE id = ?`).run(
@@ -962,28 +998,70 @@ clientPortalRouter.delete('/api/client-portal/account', requireClientAuth, (req,
       return res.status(401).json({ error: 'Senha incorreta. Não foi possível autorizar a exclusão.' });
     }
 
+    // 1. Barreira Processual Ética (Estatuto da OAB e Art. 16, I da LGPD)
+    // Se o cliente possuir processos judiciais ativos sob patrocínio, os dados não podem ser
+    // eliminados, pois há obrigação legal e regulatória de retenção probatória e andamento da lide.
+    const activeLawsuits = db.prepare(`
+      SELECT id, cnj_number, action_type, status 
+      FROM lawsuits 
+      WHERE client_id = ? 
+        AND LOWER(TRIM(status)) NOT IN ('arquivado', 'encerrado', 'baixado', 'finalizado')
+    `).all(clientId);
+
+    if (activeLawsuits.length > 0) {
+      const cnjList = activeLawsuits.map(l => l.cnj_number || l.id).join(', ');
+      logAudit(req, {
+        event_type: 'SEGURANCA',
+        event_name: 'BLOQUEIO_EXCLUSAO_PROCESSO_ATIVO',
+        module: 'PORTAL_CLIENTE',
+        resource_id: clientId,
+        user_name: client.full_name,
+        user_cpf: client.cpf || client.cnpj,
+        user_role: 'client',
+        description: `Tentativa de exclusão de conta bloqueada: titular possui ${activeLawsuits.length} processo(s) ativo(s) (${cnjList}). Retenção legal obrigatória (Art. 16, I da LGPD e Estatuto da OAB).`
+      });
+
+      return res.status(409).json({
+        error: `Não é possível excluir sua conta enquanto houver processos judiciais ativos sob nosso patrocínio (${cnjList}). Por dever legal e regulatório da advocacia (Estatuto da OAB) e conformidade com o Art. 16, I da LGPD, os dados devem ser mantidos durante o andamento processual. Entre em contato com o escritório para orientações sobre revogação ou encerramento de mandato.`,
+        code: 'ACTIVE_LAWSUITS_BARRIER',
+        active_lawsuits: activeLawsuits
+      });
+    }
+
+    // 2. Execução de Soft Delete em conformidade com Art. 18 c/c Art. 16, I da LGPD
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE clients 
+      SET status = 'inativo_lgpd',
+          contract_status = 'Inativo',
+          deleted_at = ?,
+          deletion_reason = 'SOLICITACAO_TITULAR_LGPD',
+          updated_at = ?
+      WHERE id = ?
+    `).run(now, now, clientId);
+
     logAudit(req, {
       event_type: 'EXCLUSAO',
-      event_name: 'EXCLUSAO_CONTA_LGPD',
+      event_name: 'EXCLUSAO_CONTA_LGPD_SOFT_DELETE',
       module: 'PORTAL_CLIENTE',
       resource_id: clientId,
       user_name: client.full_name,
       user_cpf: client.cpf || client.cnpj,
       user_role: 'client',
-      description: `EXCLUSÃO DEFINITIVA DE CONTA E DADOS solicitada pelo titular ${client.full_name} (${client.cpf || client.cnpj}) conforme art. 18 da LGPD.`
+      description: `Conta desativada via Soft Delete a pedido do titular ${client.full_name} (${client.cpf || client.cnpj}) conforme Art. 18 da LGPD, com preservação do acervo documental para cumprimento de deveres legais (Art. 16, I da LGPD).`
     });
 
-    // Excluir cliente e dados vinculados em cascata
-    db.prepare(`DELETE FROM clients WHERE id = ?`).run(clientId);
-
-    // Invalidar sessões ativas
+    // 3. Invalidar sessões ativas imediatamente
     for (const [token, session] of clientSessions.entries()) {
       if (session.clientId === clientId) {
         destroySession(token);
       }
     }
 
-    res.json({ success: true, message: 'Sua conta e dados foram excluídos com sucesso do sistema.' });
+    return res.json({
+      success: true,
+      message: 'Sua conta foi desativada com sucesso em conformidade com a LGPD.'
+    });
 
   } catch (err) {
     console.error('Erro ao excluir conta do cliente:', err);

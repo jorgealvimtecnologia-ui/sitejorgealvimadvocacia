@@ -182,13 +182,18 @@ db.exec(`
     marital_status TEXT DEFAULT 'solteiro(a)',
     profession TEXT,
     
+    -- Soft Delete & LGPD
+    status TEXT DEFAULT 'ativo',
+    deleted_at TEXT,
+    deletion_reason TEXT,
+    
     files TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
 `);
 
-// Migração segura para colunas de qualificação civil em clients existentes
+// Migração segura para colunas de qualificação civil e Soft Delete em clients existentes
 try {
   const cliCols = db.prepare(`PRAGMA table_info(clients)`).all().map(c => c.name);
   if (!cliCols.includes('nationality')) {
@@ -205,6 +210,15 @@ try {
   }
   if (!cliCols.includes('avatar_url')) {
     db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT DEFAULT NULL`);
+  }
+  if (!cliCols.includes('status')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN status TEXT DEFAULT 'ativo'`);
+  }
+  if (!cliCols.includes('deleted_at')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN deleted_at TEXT DEFAULT NULL`);
+  }
+  if (!cliCols.includes('deletion_reason')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN deletion_reason TEXT DEFAULT NULL`);
   }
 } catch (e) {
   console.warn('Verificação de migração de clients:', e);
@@ -2714,6 +2728,8 @@ try { runMigrations(db, path.join(__dirname, 'src', 'db', 'migrations')); } catc
     `CREATE INDEX IF NOT EXISTS idx_client_cnpj ON clients(cnpj)`,
     `CREATE INDEX IF NOT EXISTS idx_client_email ON clients(email)`,
     `CREATE INDEX IF NOT EXISTS idx_client_status ON clients(contract_status)`,
+    `CREATE INDEX IF NOT EXISTS idx_client_deleted_at ON clients(deleted_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_client_soft_status ON clients(status)`,
     // Financeiro
     `CREATE INDEX IF NOT EXISTS idx_inst_client ON contract_installments(client_id)`,
     `CREATE INDEX IF NOT EXISTS idx_inst_status ON contract_installments(status)`,

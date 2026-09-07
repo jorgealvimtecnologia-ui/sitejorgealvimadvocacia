@@ -19,14 +19,17 @@ export const clientsRouter = express.Router();
  */
 clientsRouter.get('/api/clients', requireAuth, (req, res) => {
   try {
-    const rows = db.prepare(`
-      SELECT * FROM clients 
-      ORDER BY created_at DESC
-    `).all();
+    const includeDeleted = req.query.include_deleted === 'true' || req.query.all === 'true';
+    const query = includeDeleted
+      ? `SELECT * FROM clients ORDER BY created_at DESC`
+      : `SELECT * FROM clients WHERE deleted_at IS NULL ORDER BY created_at DESC`;
+
+    const rows = db.prepare(query).all();
 
     const clients = rows.map(c => ({
       ...c,
-      files: c.files ? JSON.parse(c.files) : []
+      files: c.files ? JSON.parse(c.files) : [],
+      is_deleted: !!c.deleted_at
     }));
 
     return res.json({ success: true, clients });
@@ -569,7 +572,7 @@ clientsRouter.post('/api/clients/:id/upload-document', requireAuth, uploadClient
 });
 
 /**
- * 4. DELETE /api/clients/:id - Excluir cliente, contrato e arquivos físicos
+ * 4. DELETE /api/clients/:id - Desativar cliente (Soft Delete com retenção OAB/LGPD)
  */
 clientsRouter.delete('/api/clients/:id', requireAuth, (req, res) => {
   try {
@@ -580,24 +583,52 @@ clientsRouter.delete('/api/clients/:id', requireAuth, (req, res) => {
       return res.status(404).json({ error: 'Cliente não encontrado.' });
     }
 
-    db.prepare(`DELETE FROM clients WHERE id = ?`).run(id);
+    // Trava de processos ativos: se o cliente possuir processos judiciais ativos, bloqueia a menos que o admin confirme com force=true
+    const activeLawsuits = db.prepare(`
+      SELECT id, cnj_number, action_type, status 
+      FROM lawsuits 
+      WHERE client_id = ? 
+        AND LOWER(TRIM(status)) NOT IN ('arquivado', 'encerrado', 'baixado', 'finalizado')
+    `).all(id);
 
-    // Remove arquivos do disco
-    const clientFolder = path.join(STORAGE_DIR, id);
-    if (fs.existsSync(clientFolder)) {
-      fs.rmSync(clientFolder, { recursive: true, force: true });
+    const force = req.query.force === 'true' || req.body?.force === true;
+
+    if (activeLawsuits.length > 0 && !force) {
+      const cnjList = activeLawsuits.map(l => l.cnj_number || l.id).join(', ');
+      return res.status(409).json({
+        error: `Não é possível desativar o cliente #${id} pois existem ${activeLawsuits.length} processo(s) judicial(is) ativo(s) vinculado(s) (${cnjList}). Conclua ou arquive os processos primeiro ou confirme a exclusão com a opção forçada.`,
+        code: 'ACTIVE_LAWSUITS_BARRIER',
+        active_lawsuits: activeLawsuits
+      });
     }
+
+    const now = new Date().toISOString();
+    const reason = req.body?.reason || (force ? 'EXCLUSAO_ADMINISTRATIVA_FORCADA' : 'EXCLUSAO_ADMINISTRATIVA');
+
+    // Executa Soft Delete para preservar integridade referencial e retenção probatória OAB/LGPD (Art. 16, I)
+    db.prepare(`
+      UPDATE clients 
+      SET status = 'inativo_lgpd',
+          contract_status = 'Inativo',
+          deleted_at = ?,
+          deletion_reason = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).run(now, reason, now, id);
 
     logAudit(req, {
       event_type: 'EXCLUSAO',
-      event_name: 'EXCLUIR_CLIENTE',
+      event_name: 'EXCLUIR_CLIENTE_SOFT_DELETE',
       module: 'CLIENTES',
       resource_id: id,
       user_cpf: client.cpf || client.cnpj,
-      description: `Exclusão definitiva do cliente #${id} (${client.full_name}) e remoção de todos os seus arquivos, processos e contratos vinculados.`
+      description: `Soft Delete do cliente #${id} (${client.full_name}). Registro marcado como 'inativo_lgpd' e acervo preservado para fins legais/OAB (Art. 16, I da LGPD). Motivo: ${reason}.`
     });
 
-    return res.json({ success: true, message: 'Cliente, contrato e ficheiros excluídos com sucesso!' });
+    return res.json({
+      success: true,
+      message: 'Cliente desativado com sucesso (Soft Delete com retenção legal preservada).'
+    });
   } catch (error) {
     console.error('[ERRO] Falha ao excluir cliente:', error);
     return res.status(500).json({ error: 'Erro ao excluir cliente.' });

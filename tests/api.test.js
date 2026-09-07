@@ -905,5 +905,163 @@ describe('Google Identity Services (Auth & Cadastro)', () => {
   });
 });
 
+describe('Soft Delete & Barreira Ética OAB (LGPD Art. 16, I)', () => {
+  const testCpf = '111.222.333-44';
+  const testPhone = '32988887777';
+  const testPass = 'Senha123';
+  let testClientId = '';
+  let clientPortalToken = '';
+
+  before(async () => {
+    // 1. Cadastra cliente para teste
+    const reg = await request(app).post('/api/client-portal/register').send({
+      full_name: 'Cliente Protegido OAB',
+      cpf: testCpf,
+      phone: testPhone,
+      password: testPass,
+      email: `oab.lgpd.${Date.now()}@teste.com`
+    });
+    assert.equal(reg.status, 201);
+    assert.ok(reg.body.client?.id);
+    testClientId = reg.body.client.id;
+
+    // 2. Faz login no portal para obter token de sessão
+    const login = await request(app).post('/api/client-portal/login').send({
+      login: testCpf,
+      password: testPass
+    });
+    assert.equal(login.status, 200);
+    assert.ok(login.body.token);
+    clientPortalToken = login.body.token;
+
+    // 3. Insere um processo judicial ATIVO vinculado a esse cliente
+    db.prepare(`
+      INSERT INTO lawsuits (
+        id, client_id, cnj_number, tribunal, instance, action_type, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      `LAW-TEST-${Date.now()}`,
+      testClientId,
+      '5001234-88.2026.8.13.0145',
+      'TJMG',
+      '1ª Instância',
+      'Ação de Cobrança c/c Indenizatória',
+      'Em Andamento',
+      new Date().toISOString(),
+      new Date().toISOString()
+    );
+  });
+
+  it('bloqueia exclusão de conta no Portal com 409 quando há processo ativo (Art. 16, I LGPD)', async () => {
+    const res = await request(app)
+      .delete('/api/client-portal/account')
+      .set('Authorization', `Bearer ${clientPortalToken}`)
+      .send({ password: testPass });
+
+    assert.equal(res.status, 409);
+    assert.equal(res.body.code, 'ACTIVE_LAWSUITS_BARRIER');
+    assert.ok(res.body.error.includes('Estatuto da OAB') || res.body.error.includes('Art. 16, I'));
+    assert.ok(Array.isArray(res.body.active_lawsuits));
+    assert.equal(res.body.active_lawsuits.length, 1);
+
+    // Garante que o cliente permanece ativo no banco de dados
+    const row = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(testClientId);
+    assert.ok(row);
+    assert.equal(row.deleted_at, null);
+    assert.equal(row.status, 'ativo');
+  });
+
+  it('bloqueia desativação no painel admin com 409 sem flag force=true quando há processo ativo', async () => {
+    const res = await auth(request(app).delete(`/api/clients/${testClientId}`), masterToken);
+    assert.equal(res.status, 409);
+    assert.equal(res.body.code, 'ACTIVE_LAWSUITS_BARRIER');
+    assert.ok(Array.isArray(res.body.active_lawsuits));
+  });
+
+  it('permite soft delete no Portal após arquivamento do processo (200 OK)', async () => {
+    // Arquiva o processo judicial
+    db.prepare(`UPDATE lawsuits SET status = 'Arquivado' WHERE client_id = ?`).run(testClientId);
+
+    const res = await request(app)
+      .delete('/api/client-portal/account')
+      .set('Authorization', `Bearer ${clientPortalToken}`)
+      .send({ password: testPass });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+
+    // O registro NÃO pode ter sido deletado fisicamente (Hard Delete proibido)
+    const row = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(testClientId);
+    assert.ok(row, 'Cliente deve existir no banco de dados após soft delete');
+    assert.equal(row.status, 'inativo_lgpd');
+    assert.equal(row.contract_status, 'Inativo');
+    assert.ok(row.deleted_at, 'deleted_at deve estar preenchido com timestamp ISO');
+    assert.equal(row.deletion_reason, 'SOLICITACAO_TITULAR_LGPD');
+  });
+
+  it('bloqueia login no Portal com 403 para conta com soft delete', async () => {
+    const res = await request(app).post('/api/client-portal/login').send({
+      login: testCpf,
+      password: testPass
+    });
+
+    assert.equal(res.status, 403);
+    assert.equal(res.body.code, 'ACCOUNT_DEACTIVATED_LGPD');
+    assert.ok(res.body.error.includes('desativada'));
+  });
+
+  it('listagem admin /api/clients oculta soft deleted por padrão e exibe com ?include_deleted=true', async () => {
+    // Listagem padrão: não deve conter o cliente
+    const def = await auth(request(app).get('/api/clients'), masterToken);
+    assert.equal(def.status, 200);
+    assert.equal(def.body.clients.some((c) => c.id === testClientId), false);
+
+    // Listagem com include_deleted=true: deve conter com flag is_deleted
+    const all = await auth(request(app).get('/api/clients?include_deleted=true'), masterToken);
+    assert.equal(all.status, 200);
+    const found = all.body.clients.find((c) => c.id === testClientId);
+    assert.ok(found);
+    assert.equal(found.is_deleted, true);
+    assert.equal(found.status, 'inativo_lgpd');
+  });
+
+  it('permite soft delete no painel admin com flag force=true mesmo com processo', async () => {
+    // Cria um segundo cliente com processo ativo
+    const reg = await request(app).post('/api/client-portal/register').send({
+      full_name: 'Cliente Forcado Admin',
+      cpf: '999.888.777-66',
+      phone: '32977776666',
+      password: testPass,
+      email: `admin.force.${Date.now()}@teste.com`
+    });
+    const cId = reg.body.client.id;
+
+    db.prepare(`
+      INSERT INTO lawsuits (
+        id, client_id, cnj_number, tribunal, instance, action_type, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      `LAW-FORCE-${Date.now()}`,
+      cId,
+      '5009999-11.2026.8.13.0145',
+      'TJMG',
+      '1ª Instância',
+      'Reclamação Trabalhista',
+      'Em Andamento',
+      new Date().toISOString(),
+      new Date().toISOString()
+    );
+
+    const res = await auth(request(app).delete(`/api/clients/${cId}?force=true`), masterToken);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+
+    const row = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(cId);
+    assert.ok(row);
+    assert.equal(row.status, 'inativo_lgpd');
+    assert.ok(row.deleted_at);
+  });
+});
+
 
 
