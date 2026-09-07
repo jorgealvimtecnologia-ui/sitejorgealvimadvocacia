@@ -320,7 +320,10 @@
       generateLegalDocLive();
     }
 
-    function closeLegalDocModal() {
+    function closeLegalDocModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('legal-doc-modal', 'no documento jurídico')) return;
+      }
       document.getElementById('legal-doc-modal')?.classList.add('hidden');
     }
 
@@ -431,8 +434,31 @@
     // =========================================================================
     const _dirtyFormElements = new Set();
 
+    const TAB_MODAL_MAP = {
+      leads: ['lead-modal', 'modal-lead-details'],
+      clients: ['client-modal', 'modal-import-clients'],
+      lawsuits: ['lawsuit-modal', 'movement-modal', 'judicial-process-modal'],
+      calendar: ['modal-calendar-event', 'calendar-event-modal', 'modal-calendar-sync', 'calendar-sync-modal', 'modal-calendar-view', 'calendar-view-modal', 'modal-activity-draft', 'modal-deadline-calculator'],
+      publications: ['modal-publication-view'],
+      finance: ['transaction-modal', 'alvara-modal', 'asaas-charge-modal', 'manual-pay-modal'],
+      nfse: ['nfse-issue-modal', 'nfse-modal', 'nfse-preview-modal'],
+      docs: ['legal-doc-modal', 'doc-preview-modal'],
+      blog: ['blog-post-editor-modal'],
+      'site-boxes': ['card-site-box', 'tab-content-site-boxes'],
+      'meta-ads': ['modal-meta-config', 'modal-meta-preview'],
+      users: ['user-modal', 'edit-user-modal', 'new-user-modal'],
+      hr: ['hr-modal-time-sign', 'hr-modal-time-punch', 'hr-modal-payslip', 'hr-modal-vacation-form', 'hr-modal-employee', 'hr-modal-exam-form', 'modal-labor-termination', 'hr-modal', 'labor-termination-modal'],
+      offices: ['office-modal'],
+      drive: ['drive-upload-modal'],
+      audit: ['audit-details-modal', 'audit-modal'],
+      'pre-clients': ['pre-client-detail-modal', 'pre-client-modal'],
+      'admin-requests': ['modal-request-field', 'modal-list-field-requests', 'admin-request-modal'],
+      rockets: ['rocket-new-modal', 'rocket-modal']
+    };
+
     function _isDirtyTrackingCandidate(el) {
       if (!el || !el.tagName) return false;
+      if (el.isContentEditable) return true;
       const tag = el.tagName.toLowerCase();
       if (tag === 'textarea') return true;
       if (tag === 'select') return true;
@@ -447,41 +473,73 @@
     }
 
     document.addEventListener('input', function (e) {
-      if (!e.isTrusted) return;
       if (_isDirtyTrackingCandidate(e.target)) {
         _dirtyFormElements.add(e.target);
       }
     }, true);
 
     document.addEventListener('change', function (e) {
-      if (!e.isTrusted) return;
       if (_isDirtyTrackingCandidate(e.target)) {
         _dirtyFormElements.add(e.target);
       }
     }, true);
 
+    // Quando qualquer form é submetido ou resetado, limpa seus elementos do rastreador
+    document.addEventListener('submit', function (e) {
+      if (e.target && e.target.elements) {
+        Array.from(e.target.elements).forEach(el => _dirtyFormElements.delete(el));
+      }
+    }, true);
+
+    document.addEventListener('reset', function (e) {
+      if (e.target && e.target.elements) {
+        Array.from(e.target.elements).forEach(el => _dirtyFormElements.delete(el));
+      }
+    }, true);
+
     window.hasUnsavedChangesIn = function (containerOrTabId) {
-      if (!containerOrTabId) {
-        for (const el of _dirtyFormElements) {
-          if (document.body.contains(el)) return true;
+      // Limpar referências de elementos desconectados da árvore DOM
+      for (const el of Array.from(_dirtyFormElements)) {
+        if (!document.body.contains(el)) {
+          _dirtyFormElements.delete(el);
         }
-        return false;
       }
 
-      let container = null;
+      if (!containerOrTabId) {
+        return _dirtyFormElements.size > 0;
+      }
+
+      const targetContainers = [];
       if (typeof containerOrTabId === 'string') {
-        container = document.getElementById(containerOrTabId) || 
-                    document.getElementById('tab-content-' + containerOrTabId) ||
-                    document.getElementById(containerOrTabId.startsWith('tab-content-') ? containerOrTabId : 'tab-content-' + containerOrTabId);
+        const cleanId = containerOrTabId.replace(/^tab-content-/, '');
+        
+        // Elemento direto por ID
+        const direct = document.getElementById(containerOrTabId);
+        if (direct) targetContainers.push(direct);
+
+        // Container padrão da aba
+        const tabContent = document.getElementById('tab-content-' + cleanId);
+        if (tabContent && !targetContainers.includes(tabContent)) targetContainers.push(tabContent);
+
+        // Janela do Gerenciador de Janelas (painel-3.js)
+        const winEl = document.getElementById('jaw-win-' + cleanId);
+        if (winEl && !targetContainers.includes(winEl)) targetContainers.push(winEl);
+
+        // Modais vinculados ao módulo
+        const modals = TAB_MODAL_MAP[cleanId] || [];
+        modals.forEach(mId => {
+          const m = document.getElementById(mId);
+          if (m && !targetContainers.includes(m)) targetContainers.push(m);
+        });
       } else if (containerOrTabId && containerOrTabId.nodeType) {
-        container = containerOrTabId;
+        targetContainers.push(containerOrTabId);
       }
 
-      if (!container) return false;
+      if (targetContainers.length === 0) return false;
 
       for (const el of _dirtyFormElements) {
-        if (document.body.contains(el) && container.contains(el)) {
-          return true;
+        for (const c of targetContainers) {
+          if (c.contains(el)) return true;
         }
       }
       return false;
@@ -493,24 +551,49 @@
         return;
       }
 
-      let container = null;
+      const targetContainers = [];
       if (typeof containerOrTabId === 'string') {
-        container = document.getElementById(containerOrTabId) || 
-                    document.getElementById('tab-content-' + containerOrTabId);
+        const cleanId = containerOrTabId.replace(/^tab-content-/, '');
+        const direct = document.getElementById(containerOrTabId);
+        if (direct) targetContainers.push(direct);
+        const tabContent = document.getElementById('tab-content-' + cleanId);
+        if (tabContent) targetContainers.push(tabContent);
+        const winEl = document.getElementById('jaw-win-' + cleanId);
+        if (winEl) targetContainers.push(winEl);
+        const modals = TAB_MODAL_MAP[cleanId] || [];
+        modals.forEach(mId => {
+          const m = document.getElementById(mId);
+          if (m) targetContainers.push(m);
+        });
       } else if (containerOrTabId && containerOrTabId.nodeType) {
-        container = containerOrTabId;
-      }
-
-      if (!container) {
-        _dirtyFormElements.clear();
-        return;
+        targetContainers.push(containerOrTabId);
       }
 
       for (const el of Array.from(_dirtyFormElements)) {
-        if (!document.body.contains(el) || container.contains(el)) {
+        if (!document.body.contains(el)) {
           _dirtyFormElements.delete(el);
+          continue;
+        }
+        for (const c of targetContainers) {
+          if (c.contains(el)) {
+            _dirtyFormElements.delete(el);
+            break;
+          }
         }
       }
+    };
+
+    window.confirmDiscardModalChanges = function (modalId, label) {
+      if (typeof window.hasUnsavedChangesIn === 'function' && window.hasUnsavedChangesIn(modalId)) {
+        const text = label || 'neste formulário';
+        if (!confirm(`⚠️ Você possui alterações não salvas ${text}.\n\nDeseja fechar e descartar as alterações?`)) {
+          return false;
+        }
+        if (typeof window.clearUnsavedChanges === 'function') {
+          window.clearUnsavedChanges(modalId);
+        }
+      }
+      return true;
     };
 
     window.addEventListener('beforeunload', function (e) {
@@ -1975,7 +2058,10 @@
       document.getElementById('client-modal').classList.remove('hidden');
     }
 
-    function closeClientModal() {
+    function closeClientModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('client-modal', 'no cadastro do cliente')) return;
+      }
       document.getElementById('client-modal').classList.add('hidden');
     }
 
@@ -2072,7 +2158,8 @@
         saveBtn.innerHTML = '<span>💾 Salvar Cliente & Contrato</span>';
 
         if (res.ok && data.success) {
-          closeClientModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('client-modal');
+          closeClientModal(true);
           loadClients();
           alert(isEditing ? '✅ Dados do cliente e contrato atualizados com sucesso!' : '✅ Cliente e contrato cadastrados com sucesso!');
         } else {
@@ -2721,7 +2808,10 @@
       document.getElementById('lawsuit-modal').classList.remove('hidden');
     }
 
-    function closeLawsuitModal() {
+    function closeLawsuitModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('lawsuit-modal', 'no cadastro do processo')) return;
+      }
       document.getElementById('lawsuit-modal').classList.add('hidden');
     }
 
@@ -2755,7 +2845,8 @@
 
         const data = await res.json();
         if (res.ok && data.success) {
-          closeLawsuitModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('lawsuit-modal');
+          closeLawsuitModal(true);
           await loadLawsuits();
           alert(isEditing ? '✅ Processo atualizado com sucesso!' : '✅ Processo cadastrado com sucesso!');
         } else {
@@ -2803,7 +2894,10 @@
       setTimeout(() => { document.getElementById('movement-title')?.focus(); }, 100);
     }
 
-    function closeMovementModal() {
+    function closeMovementModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('movement-modal', 'no andamento processual')) return;
+      }
       document.getElementById('movement-modal').classList.add('hidden');
     }
 
@@ -2835,7 +2929,8 @@
 
         const data = await res.json();
         if (res.ok && data.success) {
-          closeMovementModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('movement-modal');
+          closeMovementModal(true);
           await loadLawsuits();
           const newMovementId = data.movementId || editId;
           if (!isEditing && newMovementId) {
@@ -3578,7 +3673,10 @@
       setTimeout(() => { document.getElementById('nu-name')?.focus(); }, 100);
     }
 
-    function closeNewUserModal() {
+    function closeNewUserModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('new-user-modal', 'no cadastro de usuário')) return;
+      }
       document.getElementById('new-user-modal').classList.add('hidden');
     }
 
@@ -3602,7 +3700,8 @@
 
         const data = await res.json();
         if (res.ok && data.success) {
-          closeNewUserModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('new-user-modal');
+          closeNewUserModal(true);
           loadUsers();
           alert('✅ Usuário incluído com sucesso!');
         } else {
@@ -3627,7 +3726,10 @@
       setTimeout(() => { document.getElementById('eu-password')?.focus(); }, 100);
     }
 
-    function closeEditUserModal() {
+    function closeEditUserModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('edit-user-modal', 'na edição do usuário')) return;
+      }
       document.getElementById('edit-user-modal').classList.add('hidden');
     }
 
@@ -3650,7 +3752,8 @@
 
         const data = await res.json();
         if (res.ok && data.success) {
-          closeEditUserModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('edit-user-modal');
+          closeEditUserModal(true);
           loadUsers();
           alert('✅ Usuário / Senha alterados com sucesso!');
         } else {
@@ -3934,7 +4037,10 @@
       modal.classList.remove('hidden');
     }
 
-    function closeDriveUploadModal() {
+    function closeDriveUploadModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('drive-upload-modal', 'deste upload no Drive')) return;
+      }
       const modal = document.getElementById('drive-upload-modal');
       if (modal) modal.classList.add('hidden');
     }
@@ -3963,7 +4069,10 @@
           const data = await res.json();
           saveBtn.disabled = false;
           if (res.ok && data.success) {
-            closeDriveUploadModal();
+            if (typeof window.clearUnsavedChanges === 'function') {
+              window.clearUnsavedChanges('drive-upload-modal');
+            }
+            closeDriveUploadModal(true);
             loadDriveFiles();
             alert('✅ Dados do documento atualizados com sucesso!');
           } else {
@@ -4008,7 +4117,10 @@
         saveBtn.innerHTML = '<span>💾 Enviar Documento para o Drive</span>';
 
         if (res.ok && data.success) {
-          closeDriveUploadModal();
+          if (typeof window.clearUnsavedChanges === 'function') {
+            window.clearUnsavedChanges('drive-upload-modal');
+          }
+          closeDriveUploadModal(true);
           loadDriveFiles();
           alert('✅ Documento(s) adicionado(s) ao Drive com sucesso!');
         } else {
@@ -4350,7 +4462,10 @@
       document.getElementById('office-modal').classList.remove('hidden');
     }
 
-    function closeOfficeModal() {
+    function closeOfficeModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('office-modal', 'no cadastro de escritório')) return;
+      }
       document.getElementById('office-modal').classList.add('hidden');
     }
 
@@ -4605,7 +4720,8 @@
         saveBtn.innerHTML = '💾 Salvar Escritório';
 
         if (res.ok && data.success) {
-          closeOfficeModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('office-modal');
+          closeOfficeModal(true);
           loadOffices();
           alert(isEditing ? '✅ Dados do escritório e integrantes atualizados com sucesso!' : '✅ Escritório cadastrado com sucesso!');
         } else {
@@ -5484,7 +5600,10 @@
       document.getElementById('transaction-modal').classList.remove('hidden');
     }
 
-    function closeTransactionModal() {
+    function closeTransactionModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('transaction-modal', 'no lançamento financeiro')) return;
+      }
       document.getElementById('transaction-modal').classList.add('hidden');
     }
 
@@ -5527,7 +5646,8 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          closeTransactionModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('transaction-modal');
+          closeTransactionModal(true);
           loadFinancialTransactions();
           loadFinancialDashboard();
           alert(data.message || '✅ Lançamento financeiro registrado com sucesso!');
@@ -5883,7 +6003,10 @@
       document.getElementById('manual-pay-modal').classList.remove('hidden');
     }
 
-    function closeManualPayModal() {
+    function closeManualPayModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('manual-pay-modal', 'desta baixa de pagamento')) return;
+      }
       document.getElementById('manual-pay-modal').classList.add('hidden');
     }
 
@@ -5903,7 +6026,10 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          closeManualPayModal();
+          if (typeof window.clearUnsavedChanges === 'function') {
+            window.clearUnsavedChanges('manual-pay-modal');
+          }
+          closeManualPayModal(true);
           loadClientInstallments(currentSelectedFinClientId);
           loadClients();
           loadFinancialDashboard();
@@ -6046,7 +6172,10 @@
       document.getElementById('alvara-modal').classList.remove('hidden');
     }
 
-    function closeAlvaraModal() {
+    function closeAlvaraModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('alvara-modal', 'no alvará judicial')) return;
+      }
       document.getElementById('alvara-modal').classList.add('hidden');
     }
 
@@ -6079,7 +6208,8 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          closeAlvaraModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('alvara-modal');
+          closeAlvaraModal(true);
           loadAlvaras();
           loadFinancialDashboard();
           alert('✅ Alvará registrado e honorários de êxito lançados no fluxo de caixa!');
@@ -6467,7 +6597,10 @@
       document.getElementById('nfse-issue-modal').classList.remove('hidden');
     }
 
-    function closeNfseModal() {
+    function closeNfseModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('nfse-issue-modal', 'na emissão da nota fiscal ou recibo')) return;
+      }
       document.getElementById('nfse-issue-modal').classList.add('hidden');
     }
 
@@ -6519,8 +6652,8 @@
             `).join('');
 
           if (selectedInstallmentId) {
-            const match = insts.find(i => String(i.id) === String(selectedInstallmentId));
-            if (match) amountInput.value = match.amount;
+            instSelect.value = String(selectedInstallmentId);
+            if (defaultAmount) amountInput.value = defaultAmount;
           }
         }
       } catch (e) {
@@ -6598,7 +6731,8 @@
         }
 
         if (res.ok && data.success) {
-          closeNfseModal();
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('nfse-issue-modal');
+          closeNfseModal(true);
           await loadNfseList();
           const docId = data.invoice ? data.invoice.id : (data.receipt ? data.receipt.id : null);
           if (docId) {
@@ -9405,7 +9539,10 @@
       if (modal) modal.classList.remove('hidden');
     }
 
-    function closeCalendarEventModal() {
+    function closeCalendarEventModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('modal-calendar-event', 'no compromisso da agenda')) return;
+      }
       const modal = document.getElementById('modal-calendar-event');
       if (modal) modal.classList.add('hidden');
     }
@@ -9455,8 +9592,9 @@
 
         const data = await res.json();
         if (res.ok && data.success) {
+          if (typeof window.clearUnsavedChanges === 'function') window.clearUnsavedChanges('modal-calendar-event');
           alert(`✅ ${data.message}`);
-          closeCalendarEventModal();
+          closeCalendarEventModal(true);
           await loadCalendarEvents();
           await loadCalendarSummary();
         } else {
@@ -10207,7 +10345,10 @@
       return dateStr;
     }
 
-    function closeHrModal(modalId) {
+    function closeHrModal(modalId, force) {
+      if (!force && modalId && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges(modalId, 'no módulo de RH')) return;
+      }
       const el = document.getElementById(modalId);
       if (el) el.classList.add('hidden');
     }
@@ -11687,7 +11828,10 @@
       if (dDead) dDead.value = today;
     }
 
-    function closeActivityDraftModal() {
+    function closeActivityDraftModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('modal-activity-draft', 'deste rascunho de atividade')) return;
+      }
       const modal = document.getElementById('modal-activity-draft');
       if (modal) modal.classList.add('hidden');
     }
@@ -11788,7 +11932,10 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          closeActivityDraftModal();
+          if (typeof window.clearUnsavedChanges === 'function') {
+            window.clearUnsavedChanges('modal-activity-draft');
+          }
+          closeActivityDraftModal(true);
           loadActivityDrafts();
           if (payload.create_calendar_event && typeof loadCalendarEvents === 'function') loadCalendarEvents();
         } else {
@@ -11877,7 +12024,10 @@
       if (cli) cli.value = 'Jorge Alvim Advocacia';
     }
 
-    function closeLaborTerminationModal() {
+    function closeLaborTerminationModal(force) {
+      if (!force && typeof window.confirmDiscardModalChanges === 'function') {
+        if (!window.confirmDiscardModalChanges('modal-labor-termination', 'no cálculo de rescisão')) return;
+      }
       const modal = document.getElementById('modal-labor-termination');
       if (modal) modal.classList.add('hidden');
     }

@@ -304,6 +304,22 @@
     }
     function closeWin(id){
       var w=windows[id]; if(!w) return;
+
+      // Proteção contra perda de dados ao fechar janela/aba no Gerenciador de Janelas
+      if (typeof window.hasUnsavedChangesIn === 'function') {
+        if (window.hasUnsavedChangesIn(id) || window.hasUnsavedChangesIn('jaw-win-' + id) || (w.el && window.hasUnsavedChangesIn(w.el))) {
+          var label = (MODULES[id] && MODULES[id].label) || 'nesta janela';
+          if (!confirm('⚠️ Atenção: Você possui alterações não salvas em "' + label + '".\n\nSe fechar esta janela agora, os dados que você digitou serão descartados.\n\nDeseja fechar sem salvar?')) {
+            return;
+          }
+          if (typeof window.clearUnsavedChanges === 'function') {
+            window.clearUnsavedChanges(id);
+            window.clearUnsavedChanges('jaw-win-' + id);
+            if (w.el) window.clearUnsavedChanges(w.el);
+          }
+        }
+      }
+
       var content=document.getElementById('tab-content-'+id);
       if(content){ content.classList.add('hidden'); storage.appendChild(content); }
       w.el.remove(); delete windows[id]; order=order.filter(function(x){return x!==id;});
