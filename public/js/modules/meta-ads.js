@@ -532,6 +532,9 @@
       const data = await res.json();
 
       if (res.ok && data.success) {
+        if (typeof window.clearUnsavedChanges === 'function') {
+          window.clearUnsavedChanges('tab-content-meta-ads');
+        }
         toast(data.message || 'Material enviado com sucesso!', 'success');
         resetMetaForm();
         await fetchMetaPosts();
@@ -551,6 +554,9 @@
   function resetMetaForm() {
     const form = document.getElementById('form-meta-ad-create');
     if (form) form.reset();
+    if (typeof window.clearUnsavedChanges === 'function') {
+      window.clearUnsavedChanges('tab-content-meta-ads');
+    }
     handleMediaPreview({ target: { files: [] } });
     updateMockupAndCompliance();
     setMetaDailyBudget(20);
@@ -687,6 +693,14 @@
   }
 
   function closeMetaConfigModal() {
+    if (typeof window.hasUnsavedChangesIn === 'function' && window.hasUnsavedChangesIn('modal-meta-config')) {
+      if (!confirm('⚠️ Você possui alterações não salvas nas configurações da API Meta.\n\nDeseja fechar sem salvar?')) {
+        return;
+      }
+      if (typeof window.clearUnsavedChanges === 'function') {
+        window.clearUnsavedChanges('modal-meta-config');
+      }
+    }
     const modal = document.getElementById('modal-meta-config');
     if (modal) modal.classList.add('hidden');
   }
@@ -722,6 +736,9 @@
       const data = await res.json();
 
       if (res.ok && data.success) {
+        if (typeof window.clearUnsavedChanges === 'function') {
+          window.clearUnsavedChanges('modal-meta-config');
+        }
         toast('Configurações da Meta salvas com sucesso!', 'success');
         closeMetaConfigModal();
         await fetchMetaConfig();

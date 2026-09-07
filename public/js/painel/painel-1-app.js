@@ -426,8 +426,118 @@
       });
     }
 
+    // =========================================================================
+    // SISTEMA DE PROTEÇÃO CONTRA PERDA DE DADOS NÃO SALVOS (UNSAVED CHANGES)
+    // =========================================================================
+    const _dirtyFormElements = new Set();
+
+    function _isDirtyTrackingCandidate(el) {
+      if (!el || !el.tagName) return false;
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'textarea') return true;
+      if (tag === 'select') return true;
+      if (tag === 'input') {
+        const type = (el.type || 'text').toLowerCase();
+        if (['button', 'submit', 'reset', 'hidden'].includes(type)) return false;
+        // Ignora campos de pesquisa rápida e filtros para não bloquear navegação
+        if (el.id && (el.id.includes('search') || el.id.includes('filter') || el.id.includes('busca') || el.id.includes('quick'))) return false;
+        return true;
+      }
+      return false;
+    }
+
+    document.addEventListener('input', function (e) {
+      if (!e.isTrusted) return;
+      if (_isDirtyTrackingCandidate(e.target)) {
+        _dirtyFormElements.add(e.target);
+      }
+    }, true);
+
+    document.addEventListener('change', function (e) {
+      if (!e.isTrusted) return;
+      if (_isDirtyTrackingCandidate(e.target)) {
+        _dirtyFormElements.add(e.target);
+      }
+    }, true);
+
+    window.hasUnsavedChangesIn = function (containerOrTabId) {
+      if (!containerOrTabId) {
+        for (const el of _dirtyFormElements) {
+          if (document.body.contains(el)) return true;
+        }
+        return false;
+      }
+
+      let container = null;
+      if (typeof containerOrTabId === 'string') {
+        container = document.getElementById(containerOrTabId) || 
+                    document.getElementById('tab-content-' + containerOrTabId) ||
+                    document.getElementById(containerOrTabId.startsWith('tab-content-') ? containerOrTabId : 'tab-content-' + containerOrTabId);
+      } else if (containerOrTabId && containerOrTabId.nodeType) {
+        container = containerOrTabId;
+      }
+
+      if (!container) return false;
+
+      for (const el of _dirtyFormElements) {
+        if (document.body.contains(el) && container.contains(el)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    window.clearUnsavedChanges = function (containerOrTabId) {
+      if (!containerOrTabId) {
+        _dirtyFormElements.clear();
+        return;
+      }
+
+      let container = null;
+      if (typeof containerOrTabId === 'string') {
+        container = document.getElementById(containerOrTabId) || 
+                    document.getElementById('tab-content-' + containerOrTabId);
+      } else if (containerOrTabId && containerOrTabId.nodeType) {
+        container = containerOrTabId;
+      }
+
+      if (!container) {
+        _dirtyFormElements.clear();
+        return;
+      }
+
+      for (const el of Array.from(_dirtyFormElements)) {
+        if (!document.body.contains(el) || container.contains(el)) {
+          _dirtyFormElements.delete(el);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', function (e) {
+      if (typeof window.hasUnsavedChangesIn === 'function' && window.hasUnsavedChangesIn()) {
+        e.preventDefault();
+        e.returnValue = 'Você possui alterações não salvas. Deseja realmente sair sem salvar?';
+        return e.returnValue;
+      }
+    });
+
     // Alternar entre Abas
     function switchTab(tab) {
+      const currentTab = window._currentActiveTab || (window.location.hash ? window.location.hash.replace('#', '') : 'leads');
+      if (currentTab !== tab && typeof window.hasUnsavedChangesIn === 'function' && window.hasUnsavedChangesIn(currentTab)) {
+        const proceed = confirm('⚠️ Atenção: Você possui alterações não salvas nesta tela.\n\nSe trocar de aba agora, os dados que você digitou serão descartados.\n\nDeseja realmente sair sem salvar?');
+        if (!proceed) {
+          if (window.location.hash && window.location.hash !== '#' + currentTab) {
+            history.replaceState(null, '', '#' + currentTab);
+          }
+          return;
+        }
+        if (typeof window.clearUnsavedChanges === 'function') {
+          window.clearUnsavedChanges(currentTab);
+        }
+      }
+      window._currentActiveTab = tab;
+
       const tabLeads = document.getElementById('tab-content-leads');
       const tabClients = document.getElementById('tab-content-clients');
       const tabLawsuits = document.getElementById('tab-content-lawsuits');
@@ -512,6 +622,8 @@
         if (c) c.classList.add('hidden');
         if (b) b.className = inactiveClass;
       });
+      const btnSiteBoxesTop = document.getElementById('tab-btn-site-boxes-top');
+      if (btnSiteBoxesTop) btnSiteBoxesTop.className = inactiveClass;
 
       if (tab === 'leads') {
         tabLeads.classList.remove('hidden');
@@ -622,8 +734,10 @@
       } else if (tab === 'site-boxes') {
         const c = document.getElementById('tab-content-site-boxes');
         const b = document.getElementById('tab-btn-site-boxes');
+        const bTop = document.getElementById('tab-btn-site-boxes-top');
         if (c) c.classList.remove('hidden');
         if (b) b.className = activeClass;
+        if (bTop) bTop.className = activeClass;
         if (typeof window.loadSiteBoxesTab === 'function') {
           window.loadSiteBoxesTab();
         }
@@ -6861,6 +6975,11 @@
     }
 
     function closeBlogEditorModal() {
+      if (typeof window.hasUnsavedChangesIn === 'function' && window.hasUnsavedChangesIn('blog-post-editor-modal')) {
+        const discard = confirm('⚠️ Você possui alterações não salvas neste artigo.\n\nDeseja realmente fechar e descartar as alterações?');
+        if (!discard) return;
+        window.clearUnsavedChanges('blog-post-editor-modal');
+      }
       document.getElementById('blog-post-editor-modal').classList.add('hidden');
     }
 
@@ -6907,6 +7026,9 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
+          if (typeof window.clearUnsavedChanges === 'function') {
+            window.clearUnsavedChanges('blog-post-editor-modal');
+          }
           closeBlogEditorModal();
           await loadAdminBlogPosts();
 
@@ -7306,6 +7428,9 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
+          if (typeof window.clearUnsavedChanges === 'function') {
+            window.clearUnsavedChanges(`card-site-box-${id}`);
+          }
           if (typeof window.showToast === 'function') {
             window.showToast(`Box #${id} atualizado com sucesso no site oficial!`, 'success');
           } else {
