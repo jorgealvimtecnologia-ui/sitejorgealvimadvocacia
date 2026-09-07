@@ -7143,6 +7143,7 @@
       }
 
       const formData = new FormData();
+      formData.append('media', file);
       formData.append('image', file);
 
       try {
@@ -7207,6 +7208,7 @@
       }
 
       const formData = new FormData();
+      formData.append('media', file);
       formData.append('image', file);
 
       try {

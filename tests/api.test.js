@@ -1117,6 +1117,32 @@ describe('Conteúdo do Site & Hub do Blog (Áreas de Atuação e Uploads)', () =
     assert.equal(res.status, 400);
     assert.ok(res.body.error);
   });
+
+  it('POST /api/admin/blog/upload aceita campo "image" e retorna url pública', async () => {
+    const buffer = Buffer.from('fake image content for test');
+    const res = await auth(
+      request(app)
+        .post('/api/admin/blog/upload')
+        .attach('image', buffer, 'test-capa.jpg'),
+      masterToken
+    );
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.url.startsWith('/img/blog/'));
+  });
+
+  it('POST /api/admin/blog/upload aceita campo "media" e retorna url pública', async () => {
+    const buffer = Buffer.from('fake image content for test');
+    const res = await auth(
+      request(app)
+        .post('/api/admin/blog/upload')
+        .attach('media', buffer, 'test-infografico.png'),
+      masterToken
+    );
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.url.startsWith('/img/blog/'));
+  });
 });
 
 

@@ -291,25 +291,36 @@ const uploadBlogMedia = multer({
 });
 
 // 8. Upload de Mídia para Artigos do Blog (Admin)
-blogRouter.post('/api/admin/blog/upload', requireAuth, uploadBlogMedia.single('media'), (req, res) => {
+blogRouter.post('/api/admin/blog/upload', requireAuth, (req, res, next) => {
+  uploadBlogMedia.any()(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: `Erro no upload: ${err.message}` });
+      }
+      return res.status(400).json({ error: err.message || 'Erro no upload do arquivo.' });
+    }
+    next();
+  });
+}, (req, res) => {
   try {
-    if (!req.file) {
+    const file = (req.files && req.files.length > 0) ? req.files[0] : req.file;
+    if (!file) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado. Selecione uma foto ou mídia.' });
     }
-    const fileUrl = `/img/blog/${req.file.filename}`;
+    const fileUrl = `/img/blog/${file.filename}`;
     logAudit(req, {
       event_type: 'UPLOAD',
       event_name: 'UPLOAD_MIDIA_BLOG',
       module: 'BLOG',
-      resource_id: req.file.filename,
-      description: `Upload de imagem para o blog: ${req.file.originalname}`
+      resource_id: file.filename,
+      description: `Upload de imagem para o blog: ${file.originalname}`
     });
     return res.json({
       success: true,
       url: fileUrl,
-      filename: req.file.filename,
-      originalName: req.file.originalname,
-      size: req.file.size
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size
     });
   } catch (err) {
     console.error('Erro no upload de mídia do blog:', err);
