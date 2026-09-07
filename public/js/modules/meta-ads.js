@@ -23,7 +23,11 @@
   }
 
   function getAuthToken() {
-    return localStorage.getItem('ja_token') || localStorage.getItem('token') || '';
+    if (typeof getToken === 'function') {
+      const t = getToken();
+      if (t) return t;
+    }
+    return localStorage.getItem('ja_admin_token') || localStorage.getItem('ja_token') || localStorage.getItem('token') || '';
   }
 
   let complianceTimer = null;
