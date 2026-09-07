@@ -8,13 +8,15 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-KEY="${KEY:-$HOME/.ssh/id_ed25519_161_97_71_14}"
+KEY="${KEY:-$HOME/.ssh/id_ed25519}"
 SRV="${SRV:-root@161.97.71.14}"
 REMOTE="${REMOTE:-/var/www/advocacia}"
 
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 if [ -f "$KEY" ]; then
   SSH_OPTS+=(-i "$KEY")
+elif [ -f "$HOME/.ssh/id_ed25519_161_97_71_14" ]; then
+  SSH_OPTS+=(-i "$HOME/.ssh/id_ed25519_161_97_71_14")
 fi
 
 echo "============================================================"

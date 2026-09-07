@@ -30,6 +30,8 @@ CREDENCIAIS-DEMO.md
 # Backups e Uploads Locais / Servidor
 backups/*
 !backups/.gitkeep
+backups-offsite/
+backups-offsite/*
 storage/clients/*
 !storage/clients/.gitkeep
 storage/office_drive/*
