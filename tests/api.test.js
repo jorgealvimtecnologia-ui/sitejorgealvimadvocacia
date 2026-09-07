@@ -836,6 +836,27 @@ describe('Google Identity Services (Auth & Cadastro)', () => {
     assert.equal(res.body.user.username, 'jorgealvimtecnologia');
   });
 
+  it('POST /api/auth/google com conta não autorizada (sem permissão RBAC) → 403', async () => {
+    const mockToken = 'mock-google-token:sub-unauth:desconhecido.alvim@gmail.com:Outro Usuario';
+    const res = await request(app).post('/api/auth/google').send({ credential: mockToken });
+    assert.equal(res.status, 403);
+    assert.ok(res.body.error);
+    assert.ok(res.body.error.includes('RBAC'));
+  });
+
+  it('POST /api/auth/google com conta de cliente tentando entrar no painel → 403', async () => {
+    // Registra cliente com google email
+    const clientEmail = `cliente.teste.rbac.${Date.now()}@gmail.com`;
+    const mockTokenClient = `mock-google-token:sub-client-rbac:${clientEmail}:Cliente Teste RBAC`;
+    await request(app).post('/api/client-portal/auth/google').send({ credential: mockTokenClient });
+
+    // Tenta acessar o painel de admin com a conta do cliente
+    const res = await request(app).post('/api/auth/google').send({ credential: mockTokenClient });
+    assert.equal(res.status, 403);
+    assert.ok(res.body.error);
+    assert.ok(res.body.error.includes('CLIENTE'));
+  });
+
   it('POST /api/client-portal/auth/google sem credencial → 400', async () => {
     const res = await request(app).post('/api/client-portal/auth/google').send({});
     assert.equal(res.status, 400);

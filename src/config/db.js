@@ -49,7 +49,9 @@ db.exec(`
 
 try { db.exec(`ALTER TABLE users ADD COLUMN plain_password TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN google_email TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE access_permissions ADD COLUMN google_email TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE clients ADD COLUMN google_id TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT;`); } catch (e) {}
 

@@ -162,7 +162,7 @@ authRouter.get('/api/auth/google-config', (req, res) => {
   });
 });
 
-// Autenticação com Google para operadores/advogados do painel
+// Autenticação com Google para operadores/advogados do painel (RBAC Estrito)
 authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
   try {
     const { credential } = req.body;
@@ -171,27 +171,90 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
     }
 
     const googleUser = await verifyGoogleToken(credential);
-    if (!googleUser) {
+    if (!googleUser || !googleUser.email) {
       return res.status(401).json({ error: 'Não foi possível validar o login com a conta Google informada.' });
     }
 
-    let user = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
-    if (!user) {
-      user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(TRIM(name)) LIKE ?`).get(googleUser.email, `%${googleUser.email}%`);
+    const email = googleUser.email.toLowerCase().trim();
+
+    // 1. Verificar se a conta Google pertence a um CLIENTE (clients ou access_permissions com role_template = 'cliente')
+    const clientDoc = db.prepare(`SELECT id, full_name, email FROM clients WHERE LOWER(TRIM(email)) = ? OR google_id = ?`).get(email, googleUser.sub);
+    const clientPerm = db.prepare(`SELECT * FROM access_permissions WHERE role_template = 'cliente' AND (LOWER(TRIM(user_email)) = ? OR user_id = ?)`).get(email, clientDoc ? clientDoc.id : '');
+
+    // 2. Localizar operador estritamente no ecossistema administrativo
+    let user = null;
+
+    // A) Por google_id já vinculado previamente a um usuário operador
+    if (googleUser.sub) {
+      user = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
     }
 
-    if (!user && (googleUser.email.includes('jorgealvim') || googleUser.email.includes('alvim'))) {
+    // B) Por e-mail exato ou username em users
+    if (!user) {
+      user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(TRIM(google_email)) = ?`).get(email, email);
+    }
+
+    // C) Por e-mail registrado na matriz de permissões RBAC de operadores (excluindo clientes)
+    if (!user) {
+      const operatorPerm = db.prepare(`
+        SELECT user_id, role_template, is_active FROM access_permissions 
+        WHERE LOWER(TRIM(user_email)) = ? AND role_template != 'cliente'
+      `).get(email);
+      if (operatorPerm) {
+        user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
+      }
+    }
+
+    // D) Mestre oficial (Dr. Jorge Alvim) - emails explicitamente autorizados na env ou padrão institucional
+    const adminEmailsEnv = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
+      .split(',')
+      .map(s => s.toLowerCase().trim())
+      .filter(Boolean);
+
+    if (!user && adminEmailsEnv.includes(email)) {
       user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+
+    // 3. Validação RBAC estrita de perfil e acesso
+    if ((clientDoc || clientPerm) && (!user || user.role === 'cliente')) {
+      return res.status(403).json({
+        error: `Acesso Negado (RBAC): A conta Google '${email}' está registrada como CLIENTE do escritório e não tem permissão para acessar o Painel Administrativo. Acesse o seu ambiente exclusivo pelo Portal do Cliente: https://jorgealvimadvocacia.com.br/cliente`
+      });
     }
 
     if (!user) {
       return res.status(403).json({
-        error: `A conta Google '${googleUser.email}' não possui perfil de operador cadastrado no painel. Caso seja cliente, acesse o Portal do Cliente.`
+        error: `Acesso Negado (RBAC): A conta Google '${email}' não possui perfil de operador autorizado na Matriz de Controle de Acesso. Solicite a vinculação do seu e-mail ao Administrador Mestre.`
       });
     }
 
+    if (user.role === 'cliente') {
+      return res.status(403).json({
+        error: `Acesso Negado (RBAC): O usuário '${user.username}' possui perfil de Cliente e não pode acessar o Painel de Gestão. Acesse pelo Portal do Cliente.`
+      });
+    }
+
+    // Checar se o operador está com status ativo na Matriz RBAC
+    const accessRecord = db.prepare(`SELECT role_template, is_active FROM access_permissions WHERE user_id = ?`).get(user.id);
+    if (accessRecord) {
+      if (accessRecord.role_template === 'cliente') {
+        return res.status(403).json({
+          error: `Acesso Negado (RBAC): Sua função na Matriz de Permissões está atribuída como Cliente. Utilize o Portal do Cliente.`
+        });
+      }
+      if (accessRecord.is_active === 0) {
+        return res.status(403).json({
+          error: `Acesso Negado (RBAC): Seu perfil de operador encontra-se desativado na Matriz de Controle de Acesso. Contate a administração.`
+        });
+      }
+    }
+
+    // 4. Salvar vínculo seguro da conta Google no registro do operador
     try {
-      db.prepare(`UPDATE users SET google_id = ?, avatar_url = ? WHERE id = ?`).run(googleUser.sub, googleUser.picture || null, user.id);
+      db.prepare(`UPDATE users SET google_id = ?, google_email = ?, avatar_url = ? WHERE id = ?`)
+        .run(googleUser.sub, email, googleUser.picture || null, user.id);
+      db.prepare(`UPDATE access_permissions SET user_email = ? WHERE user_id = ? AND (user_email IS NULL OR user_email = '')`)
+        .run(email, user.id);
     } catch (e) {}
 
     const token = createSession(user);
@@ -203,7 +266,7 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
       resource_id: user.id,
       user_name: user.name,
       user_role: user.role,
-      description: `Operador ${user.name} autenticou-se via Google (${googleUser.email}) no painel.`
+      description: `Operador ${user.name} (${user.role}) autenticou-se via Google (${email}) com autorização RBAC validada.`
     });
 
     return res.json({

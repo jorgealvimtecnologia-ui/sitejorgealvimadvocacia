@@ -215,6 +215,9 @@ try {
   if (!usrCols.includes('google_id')) {
     db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT NULL`);
   }
+  if (!usrCols.includes('google_email')) {
+    db.exec(`ALTER TABLE users ADD COLUMN google_email TEXT DEFAULT NULL`);
+  }
   if (!usrCols.includes('avatar_url')) {
     db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL`);
   }
