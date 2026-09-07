@@ -462,7 +462,7 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
 // 2.1 Autenticação e Cadastro Automático com Google (Google Sign-In / One Tap)
 clientPortalRouter.post('/api/client-portal/auth/google', loginRateLimit, async (req, res) => {
   try {
-    const { credential } = req.body;
+    const credential = req.body.credential || req.body.token || req.body.access_token;
     if (!credential) {
       return res.status(400).json({ error: 'Token de credencial do Google não fornecido.' });
     }

@@ -772,6 +772,7 @@
     }
 
     let adminGoogleClientId = null;
+    let adminGoogleTokenClient = null;
 
     async function initAdminGoogleAuth() {
       try {
@@ -780,24 +781,29 @@
           const data = await res.json();
           if (data.clientId) {
             adminGoogleClientId = data.clientId;
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-              window.google.accounts.id.initialize({
-                client_id: adminGoogleClientId,
-                callback: handleAdminGoogleCredentialResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true
-              });
-              const container = document.getElementById('admin-google-btn-container');
-              if (container) {
-                window.google.accounts.id.renderButton(container, {
-                  theme: 'outline',
-                  size: 'large',
-                  text: 'signin_with',
-                  shape: 'rectangular',
-                  width: Math.min(container.offsetWidth || 340, 360),
-                  logo_alignment: 'left'
+            if (window.google && window.google.accounts) {
+              if (window.google.accounts.id) {
+                window.google.accounts.id.initialize({
+                  client_id: adminGoogleClientId,
+                  callback: handleAdminGoogleCredentialResponse,
+                  auto_select: false,
+                  cancel_on_tap_outside: true
+                });
+                try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
+              }
+
+              if (window.google.accounts.oauth2) {
+                adminGoogleTokenClient = window.google.accounts.oauth2.initTokenClient({
+                  client_id: adminGoogleClientId,
+                  scope: 'email profile openid',
+                  callback: async (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                      await handleAdminGoogleAccessToken(tokenResponse.access_token);
+                    }
+                  }
                 });
               }
+              // NÃO chamamos renderButton para manter o botão corporativo limpo sem estampar foto ou email
             }
           }
         }
@@ -809,7 +815,15 @@
     async function handleAdminGoogleCredentialResponse(response) {
       const credential = response ? response.credential : null;
       if (!credential) return;
+      await submitAdminGooglePayload({ credential });
+    }
 
+    async function handleAdminGoogleAccessToken(accessToken) {
+      if (!accessToken) return;
+      await submitAdminGooglePayload({ access_token: accessToken });
+    }
+
+    async function submitAdminGooglePayload(payload) {
       const errorMsg = document.getElementById('login-error-msg');
       const errorText = document.getElementById('login-error-text');
       if (errorMsg) errorMsg.classList.add('hidden');
@@ -818,7 +832,7 @@
         const res = await fetch('/api/auth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential })
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
 
@@ -826,7 +840,11 @@
           const form = document.getElementById('login-form');
           if (form) form.reset();
           const pwd = document.getElementById('login-password');
-          if (pwd) { pwd.value = ''; pwd.type = 'password'; }
+          if (pwd) { 
+            pwd.value = ''; 
+            pwd.type = 'password'; 
+            pwd.setAttribute('readonly', 'readonly');
+          }
           const usr = document.getElementById('login-username');
           if (usr) usr.value = '';
           localStorage.setItem(TOKEN_KEY, data.token);
@@ -851,12 +869,17 @@
     }
 
     function handleAdminGoogleAuth() {
-      if (window.google && window.google.accounts && window.google.accounts.id && adminGoogleClientId) {
+      const errorMsg = document.getElementById('login-error-msg');
+      const errorText = document.getElementById('login-error-text');
+      if (errorMsg) errorMsg.classList.add('hidden');
+
+      if (adminGoogleTokenClient) {
+        // Abre o popup oficial seguro do Google sem exibir e-mail prévio na tela
+        adminGoogleTokenClient.requestAccessToken({ prompt: 'select_account' });
+      } else if (window.google && window.google.accounts && window.google.accounts.id && adminGoogleClientId) {
         window.google.accounts.id.prompt();
       } else {
-        const errorMsg = document.getElementById('login-error-msg');
-        const errorText = document.getElementById('login-error-text');
-        if (errorText) errorText.textContent = 'Aguardando inicialização segura do serviço Google. Recarregue a página se persistir.';
+        if (errorText) errorText.textContent = 'Aguardando inicialização do serviço Google. Recarregue a página se persistir.';
         if (errorMsg) errorMsg.classList.remove('hidden');
       }
     }
@@ -875,26 +898,49 @@
       const usr = document.getElementById('login-username');
       if (usr) usr.value = '';
       const pwd = document.getElementById('login-password');
-      if (pwd) { pwd.value = ''; pwd.type = 'password'; }
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
+      if (pwd) { 
+        pwd.value = ''; 
+        pwd.type = 'password'; 
+        pwd.setAttribute('readonly', 'readonly');
       }
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try { 
+          window.google.accounts.id.disableAutoSelect(); 
+          window.google.accounts.id.cancel();
+        } catch (e) {}
+      }
+      setTimeout(() => {
+        if (pwd) pwd.value = '';
+      }, 100);
       showLoginScreen();
     }
 
-    // Proteção contra retenção de senha ao voltar no histórico do navegador (bfcache)
-    window.addEventListener('pageshow', function() {
-      const pwd = document.getElementById('login-password');
-      if (pwd) {
-        pwd.value = '';
-        pwd.type = 'password';
-      }
+    // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache) e autofill
+    function _wipeAdminAuthFields() {
       if (!getToken()) {
+        const pwd = document.getElementById('login-password');
+        if (pwd) {
+          pwd.value = '';
+          pwd.type = 'password';
+          pwd.setAttribute('readonly', 'readonly');
+        }
         const usr = document.getElementById('login-username');
         if (usr) usr.value = '';
         const form = document.getElementById('login-form');
         if (form) form.reset();
       }
+    }
+
+    window.addEventListener('pageshow', () => {
+      _wipeAdminAuthFields();
+      setTimeout(_wipeAdminAuthFields, 120);
+      setTimeout(_wipeAdminAuthFields, 350);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      _wipeAdminAuthFields();
+      setTimeout(_wipeAdminAuthFields, 120);
+      setTimeout(_wipeAdminAuthFields, 350);
     });
 
     function refreshData() {

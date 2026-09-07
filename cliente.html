@@ -232,7 +232,9 @@
                   id="login-password" 
                   required 
                   autocomplete="new-password"
-                  placeholder="••••••••" 
+                  readonly
+                  onfocus="this.removeAttribute('readonly')"
+                  placeholder="Digite sua senha" 
                   class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
                 />
                 <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer" title="Ver/Ocultar senha temporariamente">
@@ -1252,6 +1254,7 @@
 
     // ================= GOOGLE IDENTITY SERVICES (GIS) =================
     let googleClientId = null;
+    let googleTokenClient = null;
 
     async function initGoogleAuth() {
       try {
@@ -1260,37 +1263,31 @@
           const data = await res.json();
           if (data.clientId) {
             googleClientId = data.clientId;
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-              window.google.accounts.id.initialize({
-                client_id: googleClientId,
-                callback: handleGoogleCredentialResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true
-              });
-
-              const loginContainer = document.getElementById('google-login-btn-container');
-              if (loginContainer) {
-                window.google.accounts.id.renderButton(loginContainer, {
-                  theme: 'outline',
-                  size: 'large',
-                  text: 'signin_with',
-                  shape: 'rectangular',
-                  width: Math.min(loginContainer.offsetWidth || 340, 360),
-                  logo_alignment: 'left'
+            if (window.google && window.google.accounts) {
+              // 1. Inicializa GIS para credenciais com auto_select desativado (não expõe contas na tela)
+              if (window.google.accounts.id) {
+                window.google.accounts.id.initialize({
+                  client_id: googleClientId,
+                  callback: handleGoogleCredentialResponse,
+                  auto_select: false,
+                  cancel_on_tap_outside: true
                 });
+                try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
               }
 
-              const regContainer = document.getElementById('google-register-btn-container');
-              if (regContainer) {
-                window.google.accounts.id.renderButton(regContainer, {
-                  theme: 'outline',
-                  size: 'large',
-                  text: 'signup_with',
-                  shape: 'rectangular',
-                  width: Math.min(regContainer.offsetWidth || 340, 360),
-                  logo_alignment: 'left'
+              // 2. Inicializa Token Client para abrir popup sob demanda no clique do botão customizado
+              if (window.google.accounts.oauth2) {
+                googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+                  client_id: googleClientId,
+                  scope: 'email profile openid',
+                  callback: async (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                      await handleGoogleAccessTokenResponse(tokenResponse.access_token);
+                    }
+                  }
                 });
               }
+              // IMPORTANTE: NÃO chamamos renderButton para evitar que o Google estampe o e-mail ou avatar pessoal na tela!
             }
           }
         }
@@ -1300,9 +1297,17 @@
     }
 
     async function handleGoogleCredentialResponse(response) {
-      const credential = response.credential;
+      const credential = response ? response.credential : null;
       if (!credential) return;
+      await submitGoogleAuthPayload({ credential });
+    }
 
+    async function handleGoogleAccessTokenResponse(accessToken) {
+      if (!accessToken) return;
+      await submitGoogleAuthPayload({ access_token: accessToken });
+    }
+
+    async function submitGoogleAuthPayload(payload) {
       const errorMsg = document.getElementById('login-error-msg');
       if (errorMsg) errorMsg.classList.add('hidden');
 
@@ -1310,7 +1315,7 @@
         const res = await fetch('/api/client-portal/auth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential })
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
 
@@ -1338,11 +1343,16 @@
     }
 
     function triggerGoogleAuth(flow = 'login') {
-      if (window.google && window.google.accounts && window.google.accounts.id && googleClientId) {
+      const errorMsg = document.getElementById(flow === 'register' ? 'register-error-msg' : 'login-error-msg');
+      if (errorMsg) errorMsg.classList.add('hidden');
+
+      if (googleTokenClient) {
+        // Abre o popup oficial seguro do Google para o usuário escolher a conta sob demanda
+        googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+      } else if (window.google && window.google.accounts && window.google.accounts.id && googleClientId) {
         window.google.accounts.id.prompt();
       } else {
-        const errorMsg = document.getElementById(flow === 'register' ? 'register-error-msg' : 'login-error-msg');
-        const msg = 'Aguardando inicialização segura do serviço Google. Recarregue a página se persistir.';
+        const msg = 'Aguardando inicialização do serviço Google. Recarregue a página se persistir.';
         if (errorMsg) {
           errorMsg.textContent = msg;
           errorMsg.classList.remove('hidden');
@@ -1512,12 +1522,22 @@
       const regForm = document.getElementById('client-register-form');
       if (regForm) regForm.reset();
       const pwdInputs = document.querySelectorAll('input[type="password"]');
-      pwdInputs.forEach(i => { i.value = ''; i.type = 'password'; });
+      pwdInputs.forEach(i => { 
+        i.value = ''; 
+        i.type = 'password'; 
+        i.setAttribute('readonly', 'readonly');
+      });
       const loginId = document.getElementById('login-identifier');
       if (loginId) loginId.value = '';
       if (window.google && window.google.accounts && window.google.accounts.id) {
-        try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
+        try { 
+          window.google.accounts.id.disableAutoSelect(); 
+          window.google.accounts.id.cancel();
+        } catch (e) {}
       }
+      setTimeout(() => {
+        pwdInputs.forEach(i => { i.value = ''; });
+      }, 100);
       showAuthView();
     }
 
@@ -2352,18 +2372,32 @@
       }
     }
 
-    // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache)
-    window.addEventListener('pageshow', function() {
-      const pwdInputs = document.querySelectorAll('input[type="password"]');
-      pwdInputs.forEach(i => { i.value = ''; i.type = 'password'; });
-      const loginPwd = document.getElementById('login-password');
-      if (loginPwd) { loginPwd.value = ''; loginPwd.type = 'password'; }
+    // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache) e autofill
+    function _wipeClientAuthFields() {
       if (!localStorage.getItem(CLIENT_TOKEN_KEY)) {
+        const pwdInputs = document.querySelectorAll('input[type="password"]');
+        pwdInputs.forEach(i => { 
+          i.value = ''; 
+          i.type = 'password'; 
+          i.setAttribute('readonly', 'readonly');
+        });
         const loginId = document.getElementById('login-identifier');
         if (loginId) loginId.value = '';
         const form = document.getElementById('client-login-form');
         if (form) form.reset();
       }
+    }
+
+    window.addEventListener('pageshow', () => {
+      _wipeClientAuthFields();
+      setTimeout(_wipeClientAuthFields, 120);
+      setTimeout(_wipeClientAuthFields, 350);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      _wipeClientAuthFields();
+      setTimeout(_wipeClientAuthFields, 120);
+      setTimeout(_wipeClientAuthFields, 350);
     });
   </script>
   <script defer src="/js/enhance-ui.js"></script>

@@ -165,7 +165,7 @@ authRouter.get('/api/auth/google-config', (req, res) => {
 // Autenticação com Google para operadores/advogados do painel (RBAC Estrito)
 authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
   try {
-    const { credential } = req.body;
+    const credential = req.body.credential || req.body.token || req.body.access_token;
     if (!credential) {
       return res.status(400).json({ error: 'Token de credencial do Google não fornecido.' });
     }

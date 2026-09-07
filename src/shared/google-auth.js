@@ -17,12 +17,38 @@ export async function verifyGoogleToken(idToken) {
     };
   }
 
-  // 2. Validação Oficial através da API de Tokeninfo do Google
+  // 2. Validação Oficial através da API de Tokeninfo / Userinfo do Google
   try {
-    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, {
+    const isAccessToken = idToken.startsWith('ya29.') || idToken.length > 50 && !idToken.includes('.');
+    const url = isAccessToken
+      ? `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(idToken)}`
+      : `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+
+    const res = await fetch(url, {
       signal: AbortSignal.timeout(6000)
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Se for access token e tokeninfo falhar, tenta userinfo endpoint oficial
+      if (isAccessToken) {
+        const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${idToken}` },
+          signal: AbortSignal.timeout(6000)
+        });
+        if (userinfoRes.ok) {
+          const uData = await userinfoRes.json();
+          if (uData && uData.email && uData.sub) {
+            return {
+              sub: uData.sub,
+              email: String(uData.email).toLowerCase().trim(),
+              name: uData.name || uData.given_name || 'Usuário Google',
+              picture: uData.picture || '',
+              email_verified: Boolean(uData.email_verified)
+            };
+          }
+        }
+      }
+      return null;
+    }
     const data = await res.json();
     if (!data.email || !data.sub) return null;
     return {
@@ -30,7 +56,7 @@ export async function verifyGoogleToken(idToken) {
       email: String(data.email).toLowerCase().trim(),
       name: data.name || data.given_name || 'Usuário Google',
       picture: data.picture || '',
-      email_verified: data.email_verified === 'true' || data.email_verified === true
+      email_verified: data.email_verified === 'true' || data.email_verified === true || data.verified_email === true
     };
   } catch (err) {
     console.warn('[GOOGLE AUTH] Falha na comunicação com o endpoint Google:', err.message);

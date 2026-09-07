@@ -886,6 +886,23 @@ describe('Google Identity Services (Auth & Cadastro)', () => {
     assert.ok(res2.body.token);
     assert.equal(res2.body.client.email, existingEmail);
   });
+
+  it('POST /api/auth/google com access_token de admin → 200', async () => {
+    const mockToken = 'mock-google-token:sub-master:jorgealvimtecnologia@gmail.com:Dr. Jorge Alvim';
+    const res = await request(app).post('/api/auth/google').send({ access_token: mockToken });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.token);
+  });
+
+  it('POST /api/client-portal/auth/google com access_token → 200', async () => {
+    const uniqueEmail = `cliente.token.${Date.now()}@gmail.com`;
+    const mockToken = `mock-google-token:sub-tok-${Date.now()}:${uniqueEmail}:Cliente Token`;
+    const res = await request(app).post('/api/client-portal/auth/google').send({ access_token: mockToken });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.token);
+  });
 });
 
 
