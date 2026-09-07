@@ -613,6 +613,9 @@ describe('Fase 3: Agilidade Comercial, Contratos & Experiência do Cliente', () 
     assert.ok(r.text.includes('OAB/MG 222.943'));
   });
 
+  let testSignToken = null;
+  let testSignReqId = null;
+
   it('POST /api/legal-docs/dispatch-kit dispara solicitação de assinatura eletrônica mobile → 201', async () => {
     const r = await auth(request(app).post('/api/legal-docs/dispatch-kit'), masterToken).send({
       clientId: phase3ClientId,
@@ -623,6 +626,45 @@ describe('Fase 3: Agilidade Comercial, Contratos & Experiência do Cliente', () 
     assert.ok(r.body.whatsapp_link);
     assert.ok(Array.isArray(r.body.requests));
     assert.equal(r.body.requests.length, 3);
+    testSignToken = r.body.requests[0].token;
+    testSignReqId = r.body.requests[0].id;
+  });
+
+  it('POST /api/legal-docs/dispatch-kit com seleção individual (Fase 2) → 201 com apenas 2 docs', async () => {
+    const r = await auth(request(app).post('/api/legal-docs/dispatch-kit'), masterToken).send({
+      clientId: phase3ClientId,
+      docTypes: ['procuracao', 'contrato']
+    });
+    assert.equal(r.status, 201);
+    assert.equal(r.body.success, true);
+    assert.equal(r.body.requests.length, 2);
+  });
+
+  it('POST /api/esign/public/:token/sign assina e arquiva via chancelada em tempo real (Fase 1) → 200', async () => {
+    const r = await request(app).post(`/api/esign/public/${testSignToken}/sign`).send({
+      signer_name_confirm: 'Ana Paula Ferreira Silveira',
+      signature_type: 'digitada',
+      signature_data: 'Ana Paula Ferreira Silveira',
+      agree: true,
+      geo: '-21.7642,-43.3503'
+    });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.success, true);
+    assert.ok(r.body.evidence_hash);
+    assert.ok(r.body.chancelled_url);
+
+    // Confere que a via chancelada foi gravada em client_documents
+    const docRow = db.prepare(`SELECT * FROM client_documents WHERE client_id = ? AND original_name LIKE '%Chancelado%'`).get(phase3ClientId);
+    assert.ok(docRow, 'Documento chancelado deve existir na tabela client_documents');
+    assert.ok(docRow.file_name.includes('.html'));
+  });
+
+  it('GET /api/esign/requests/:id/chancelado renderiza folha timbrada chancelada com hash SHA-256 → 200', async () => {
+    const r = await request(app).get(`/api/esign/requests/${testSignReqId}/chancelado`);
+    assert.equal(r.status, 200);
+    assert.ok(r.text.includes('CHANCELA DE ASSINATURA ELETRÔNICA'));
+    assert.ok(r.text.includes('OAB/MG 222.943'));
+    assert.ok(r.text.includes('Ana Paula Ferreira Silveira'));
   });
 
   it('POST /api/client-portal/magic-link gera link de upload sem senha com validade de 72h → 201', async () => {

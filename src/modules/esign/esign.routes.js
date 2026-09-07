@@ -1,5 +1,7 @@
 import express from 'express';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
@@ -95,6 +97,111 @@ function publicBaseUrl(req) {
 
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function generateChancelledHtml(r, signatureData, signatureType, signedAt, ip, geo, evidenceHash, verifyUrl) {
+  const dtFormatada = new Date(signedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const dtIso = signedAt;
+
+  let signatureBlock = '';
+  if (signatureType === 'desenhada' && signatureData && String(signatureData).startsWith('data:image/')) {
+    signatureBlock = `<img src="${signatureData}" alt="Assinatura Eletrônica" style="max-height: 70px; max-width: 260px; object-fit: contain; margin: 0 auto;" />`;
+  } else {
+    signatureBlock = `<p style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 22px; font-weight: bold; color: #0B192C; margin: 0;">${escapeHtml(r.signed_name || r.signer_name)}</p>`;
+  }
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[CHANCELADO] ${escapeHtml(r.doc_title)} - Jorge Alvim Advocacia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @page { size: A4; margin: 15mm 15mm 20mm 15mm; }
+    body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #1E293B; background: #FFF; margin: 0; padding: 20px; }
+    .page-container { max-width: 760px; margin: 0 auto; background: #fff; }
+    .header-timbre { border-bottom: 2px solid #B8860B; padding-bottom: 12px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
+    .header-logo { font-family: 'Playfair Display', Georgia, serif; font-size: 18pt; font-weight: bold; color: #0B192C; letter-spacing: 0.5px; }
+    .header-sub { font-size: 8.5pt; font-weight: bold; color: #855E1C; text-transform: uppercase; letter-spacing: 1px; }
+    .header-oab { font-size: 8.5pt; color: #64748B; margin-top: 2px; }
+    .doc-title { text-align: center; font-family: 'Playfair Display', Georgia, serif; font-size: 14pt; font-weight: bold; color: #0B192C; margin: 25px 0 20px 0; text-transform: uppercase; }
+    .doc-content { text-align: justify; margin-bottom: 30px; font-size: 10.5pt; }
+    .doc-content p { margin-bottom: 12px; }
+    /* Selo de Chancela Digital */
+    .seal-box { margin-top: 35px; border: 2px solid #059669; background: #F0FDF4; border-radius: 8px; padding: 16px 18px; page-break-inside: avoid; }
+    .seal-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed #A7F3D0; padding-bottom: 8px; margin-bottom: 12px; }
+    .seal-title { color: #065F46; font-weight: 800; font-size: 10pt; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+    .seal-legal { color: #047857; font-size: 7.5pt; font-style: italic; }
+    .seal-body { display: flex; justify-content: space-between; gap: 15px; }
+    .seal-info { font-size: 8pt; color: #334155; line-height: 1.5; flex: 1; }
+    .seal-info strong { color: #0F172A; }
+    .seal-hash { font-family: monospace; font-size: 7.5pt; background: #E2E8F0; padding: 2px 5px; border-radius: 4px; word-break: break-all; display: inline-block; margin-top: 2px; }
+    .seal-signature { text-align: center; border-left: 1px dashed #A7F3D0; padding-left: 15px; min-width: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .seal-signer-name { font-weight: bold; font-size: 8.5pt; color: #0B192C; margin-top: 4px; border-top: 1px solid #CBD5E1; padding-top: 2px; width: 100%; text-align: center; }
+    .seal-footer { margin-top: 10px; padding-top: 6px; border-top: 1px solid #E2E8F0; font-size: 7pt; color: #64748B; text-align: center; }
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="max-width: 760px; margin: 0 auto 15px auto; display: flex; justify-content: flex-end; gap: 10px;">
+    <button onclick="window.print()" style="background: #0B192C; color: #FFF; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">🖨️ Imprimir / Salvar PDF</button>
+  </div>
+  <div class="page-container">
+    <div class="header-timbre">
+      <div>
+        <div class="header-logo">JORGE ALVIM ADVOCACIA</div>
+        <div class="header-sub">Advocacia de Alta Performance & Legaltech</div>
+        <div class="header-oab">Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943 • Juiz de Fora - MG</div>
+      </div>
+      <div style="text-align: right; font-size: 8pt; color: #64748B;">
+        <span>Protocolo: <strong>${escapeHtml(r.id)}</strong></span><br>
+        <span>Data: ${escapeHtml(dtFormatada)}</span>
+      </div>
+    </div>
+
+    <div class="doc-title">${escapeHtml(r.doc_title)}</div>
+
+    <div class="doc-content">
+      ${r.content_html}
+    </div>
+
+    <!-- Termo de Chancela Digital e Autenticidade -->
+    <div class="seal-box">
+      <div class="seal-header">
+        <div class="seal-title">
+          <span>🛡️ CHANCELA DE ASSINATURA ELETRÔNICA COM VALIDADE JURÍDICA</span>
+        </div>
+        <div class="seal-legal">
+          Lei Federal nº 14.063/2020 • Art. 10, § 2º da MP 2.200-2/2001
+        </div>
+      </div>
+      <div class="seal-body">
+        <div class="seal-info">
+          <div><strong>Signatário:</strong> ${escapeHtml(r.signed_name || r.signer_name)} ${r.signer_cpf ? `(CPF/CNPJ: ${escapeHtml(r.signer_cpf)})` : ''}</div>
+          <div><strong>Data/Hora do Ato:</strong> ${escapeHtml(dtFormatada)} (UTC: ${escapeHtml(dtIso)})</div>
+          <div><strong>Endereço IP:</strong> ${escapeHtml(ip)}</div>
+          <div><strong>Geolocalização informada:</strong> ${escapeHtml(geo || 'Não informada / GPS desativado')}</div>
+          <div><strong>Hash do Documento Original:</strong> <span class="seal-hash">${escapeHtml(r.document_hash)}</span></div>
+          <div><strong>Hash Probatório da Assinatura (SHA-256):</strong> <span class="seal-hash">${escapeHtml(evidenceHash)}</span></div>
+        </div>
+        <div class="seal-signature">
+          ${signatureBlock}
+          <div class="seal-signer-name">${escapeHtml(r.signed_name || r.signer_name)}</div>
+          <div style="font-size: 7pt; color: #64748B;">Assinado eletronicamente</div>
+        </div>
+      </div>
+      <div class="seal-footer">
+        A autenticidade deste documento pode ser conferida a qualquer momento em: <strong>${escapeHtml(verifyUrl)}</strong>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
 }
 
 // ----------------------------------------------------------------------------
@@ -289,29 +396,104 @@ esignRouter.post('/api/esign/public/:token/sign', (req, res) => {
           if (cli) linkedClientId = cli.id;
         }
       }
-      if (linkedClientId && r.doc_type === 'contrato_honorarios') {
+      if (linkedClientId && (r.doc_type === 'contrato_honorarios' || r.doc_type === 'contrato')) {
         db.prepare(`UPDATE clients SET contract_status = 'Ativo', updated_at = ? WHERE id = ?`).run(signedAt, linkedClientId);
       }
     } catch (e) { /* vínculo é best-effort */ }
 
+    // FASE 1: ARQUIVAMENTO AUTOMÁTICO EM TEMPO REAL NO COFRE DO CLIENTE
+    const verifyUrl = `${publicBaseUrl(req)}/validar-assinatura/${evidenceHash}`;
+    let chancelledUrl = null;
+    let fileName = null;
+
+    try {
+      r.signed_name = signer_name_confirm.trim();
+      const chancelledHtml = generateChancelledHtml(r, signature_data, signature_type, signedAt, ip, geo, evidenceHash, verifyUrl);
+
+      if (linkedClientId) {
+        const clientStorageDir = path.join(process.cwd(), 'storage', 'clients', String(linkedClientId));
+        fs.mkdirSync(clientStorageDir, { recursive: true });
+
+        const safeDocType = (r.doc_type || 'documento').replace(/[^a-zA-Z0-9_-]/g, '_');
+        fileName = `${safeDocType}_chancelado_${r.id}.html`;
+        const filePath = path.join(clientStorageDir, fileName);
+        fs.writeFileSync(filePath, chancelledHtml, 'utf8');
+
+        const fileSize = Buffer.byteLength(chancelledHtml, 'utf8');
+        chancelledUrl = `/storage/clients/${linkedClientId}/${fileName}`;
+
+        db.prepare(`
+          INSERT INTO client_documents (client_id, file_name, original_name, file_size, mime_type, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(
+          linkedClientId,
+          fileName,
+          `[ASSINADO] ${r.doc_title} (Chancelado)`,
+          fileSize,
+          'text/html;charset=utf-8',
+          signedAt
+        );
+
+        db.prepare(`UPDATE signature_requests SET notes = ? WHERE id = ?`).run(
+          JSON.stringify({ archived_file: fileName, chancelled_url: chancelledUrl }),
+          r.id
+        );
+      }
+    } catch (errArchive) {
+      console.error('[ASSINATURA] Falha no arquivamento automático:', errArchive);
+    }
+
     createNotification({
-      category: 'assinatura', level: 'info',
+      category: 'assinatura', level: 'success',
       title: `✍️ Documento assinado: ${r.doc_title}`,
-      message: `${signer_name_confirm.trim()} assinou "${r.doc_title}" (${r.id}).`,
+      message: `${signer_name_confirm.trim()} assinou "${r.doc_title}" (${r.id}). Via chancelada arquivada no cofre do cliente.`,
       link: '#tab:esign', resource_type: 'signature_request', resource_id: r.id,
       dedupe_key: `assinatura:concluida:${r.id}`
     });
+
+    // MOTOR WHATSAPP ADVOGADO (Alerta Executivo em Tempo Real)
+    const dtFormatada = new Date(signedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    console.log(`\n[📲 MOTOR WHATSAPP ADVOGADO] ${dtFormatada}`);
+    console.log(` Destinatário: 5532998153429`);
+    console.log(` Mensagem:\n🚨 *DOCUMENTO ASSINADO PELO CLIENTE!*
+
+👤 *Cliente:* ${signer_name_confirm.trim()}
+📄 *Documento:* ${r.doc_title}
+🆔 *Protocolo:* ${r.id}
+🔒 *Hash SHA-256:* ${evidenceHash}
+📅 *Data/Hora:* ${dtFormatada}
+📍 *IP:* ${ip}
+✅ *Status:* Arquivado com chancela digital no cofre do cliente e pronto para juntada judicial.\n`);
 
     return res.json({
       success: true,
       message: 'Documento assinado com sucesso!',
       evidence_hash: evidenceHash,
       signed_at: signedAt,
-      verify_url: `${publicBaseUrl(req)}/validar-assinatura/${evidenceHash}`
+      verify_url: verifyUrl,
+      chancelled_url: chancelledUrl
     });
   } catch (err) {
     console.error('[ASSINATURA] Falha ao registrar assinatura:', err);
     return res.status(500).json({ error: 'Erro ao registrar assinatura.' });
+  }
+});
+
+/** GET /api/esign/requests/:id/chancelado — renderiza a via chancelada completa para visualização/impressão A4. */
+esignRouter.get('/api/esign/requests/:id/chancelado', (req, res) => {
+  try {
+    const r = db.prepare(`SELECT * FROM signature_requests WHERE id = ?`).get(req.params.id);
+    if (!r) return res.status(404).send('Documento não encontrado.');
+    if (r.status !== 'assinado') return res.status(400).send('Documento ainda não foi assinado.');
+
+    const verifyUrl = `${publicBaseUrl(req)}/validar-assinatura/${r.evidence_hash}`;
+    const html = generateChancelledHtml(r, r.signature_data, r.signature_type, r.signed_at, r.signer_ip, r.signer_geo, r.evidence_hash, verifyUrl);
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (err) {
+    console.error('[ASSINATURA] Erro ao renderizar via chancelada:', err);
+    return res.status(500).send('Erro ao renderizar via chancelada.');
   }
 });
 

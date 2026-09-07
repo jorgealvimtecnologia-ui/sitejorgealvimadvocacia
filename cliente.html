@@ -202,13 +202,14 @@
         <div class="p-6 sm:p-8">
           
           <!-- FORMULÁRIO 1: LOGIN -->
-          <form id="client-login-form" onsubmit="handleClientLogin(event)" class="space-y-4">
+          <form id="client-login-form" onsubmit="handleClientLogin(event)" class="space-y-4" autocomplete="off">
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1.5">CPF, CNPJ ou E-mail cadastrado *</label>
               <input 
                 type="text" 
                 id="login-identifier" 
                 required 
+                autocomplete="off"
                 placeholder="Digite seu CPF, CNPJ ou E-mail" 
                 class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm font-medium text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
               />
@@ -230,10 +231,11 @@
                   type="password" 
                   id="login-password" 
                   required 
+                  autocomplete="new-password"
                   placeholder="••••••••" 
                   class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
                 />
-                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar senha">
+                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer" title="Ver/Ocultar senha temporariamente">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </button>
               </div>
@@ -1339,14 +1341,13 @@
       if (window.google && window.google.accounts && window.google.accounts.id && googleClientId) {
         window.google.accounts.id.prompt();
       } else {
-        const emailInput = prompt(
-          `[Acesso com Google]\n\nO Google Client ID ainda não foi configurado no servidor (.env).\n\nPara testar a experiência de entrar/cadastrar via Google agora, digite seu e-mail do Google:`,
-          'seu.email@gmail.com'
-        );
-        if (emailInput && emailInput.includes('@')) {
-          const nomePrompt = prompt('Qual seu nome completo?', 'Cliente Google');
-          const mockToken = `mock-google-token:sub-${Date.now()}:${emailInput.trim()}:${nomePrompt || 'Cliente Google'}`;
-          handleGoogleCredentialResponse({ credential: mockToken });
+        const errorMsg = document.getElementById(flow === 'register' ? 'register-error-msg' : 'login-error-msg');
+        const msg = 'Aguardando inicialização segura do serviço Google. Recarregue a página se persistir.';
+        if (errorMsg) {
+          errorMsg.textContent = msg;
+          errorMsg.classList.remove('hidden');
+        } else {
+          alert(msg);
         }
       }
     }
@@ -1354,10 +1355,18 @@
     // ================= LOGIN DO CLIENTE =================
     async function handleClientLogin(e) {
       e.preventDefault();
-      const login = document.getElementById('login-identifier').value.trim();
-      const password = document.getElementById('login-password').value;
+      const loginInput = document.getElementById('login-identifier');
+      const passwordInput = document.getElementById('login-password');
+      const login = loginInput ? loginInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value : '';
       const errorMsg = document.getElementById('login-error-msg');
       const submitBtn = document.getElementById('login-submit-btn');
+
+      // Limpa imediatamente a senha do campo por segurança e privacidade
+      if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.type = 'password';
+      }
 
       errorMsg.classList.add('hidden');
       submitBtn.disabled = true;
@@ -1372,6 +1381,9 @@
         const data = await res.json();
 
         if (res.ok && data.success && data.token) {
+          if (loginInput) loginInput.value = '';
+          const form = document.getElementById('client-login-form');
+          if (form) form.reset();
           localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
           await loadClientPortal();
         } else {
@@ -1495,6 +1507,17 @@
     function logoutClient() {
       localStorage.removeItem(CLIENT_TOKEN_KEY);
       currentClientData = null;
+      const form = document.getElementById('client-login-form');
+      if (form) form.reset();
+      const regForm = document.getElementById('client-register-form');
+      if (regForm) regForm.reset();
+      const pwdInputs = document.querySelectorAll('input[type="password"]');
+      pwdInputs.forEach(i => { i.value = ''; i.type = 'password'; });
+      const loginId = document.getElementById('login-identifier');
+      if (loginId) loginId.value = '';
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
+      }
       showAuthView();
     }
 
@@ -2092,11 +2115,18 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          alert('✅ Senha redefinida com sucesso! Você já pode fazer login.');
+          alert('✅ Senha redefinida com sucesso! Você já pode fazer login com sua nova senha.');
+          document.getElementById('forgot-new-pwd').value = '';
+          document.getElementById('forgot-code').value = '';
           closeForgotPasswordModal();
           switchAuthTab('login');
           document.getElementById('login-identifier').value = login;
-          document.getElementById('login-password').value = new_password;
+          const loginPwd = document.getElementById('login-password');
+          if (loginPwd) {
+            loginPwd.value = '';
+            loginPwd.type = 'password';
+            loginPwd.focus();
+          }
         } else {
           alert(data.error || 'Código inválido ou expirado.');
         }
@@ -2287,12 +2317,54 @@
       initGoogleAuth();
     });
 
-    // ── Toggle de visibilidade de senha ──────────────────────────────────
+    // ── Toggle de visibilidade de senha seguro (reversão automática em 3.5s ou ao sair do campo) ──────────────────────────────────
+    const _clientPwdTimers = {};
     function togglePasswordVisibility(inputId) {
       const input = document.getElementById(inputId);
       if (!input) return;
-      input.type = input.type === 'password' ? 'text' : 'password';
+
+      if (_clientPwdTimers[inputId]) {
+        clearTimeout(_clientPwdTimers[inputId]);
+        delete _clientPwdTimers[inputId];
+      }
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        // Auto-reverter para protegido (password) após 3.5 segundos por privacidade e segurança
+        _clientPwdTimers[inputId] = setTimeout(() => {
+          if (input) input.type = 'password';
+          delete _clientPwdTimers[inputId];
+        }, 3500);
+      } else {
+        input.type = 'password';
+      }
+
+      // Reverter imediatamente ao perder o foco (blur)
+      if (!input._hasAutoSecureBlur) {
+        input._hasAutoSecureBlur = true;
+        input.addEventListener('blur', () => {
+          input.type = 'password';
+          if (_clientPwdTimers[inputId]) {
+            clearTimeout(_clientPwdTimers[inputId]);
+            delete _clientPwdTimers[inputId];
+          }
+        });
+      }
     }
+
+    // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache)
+    window.addEventListener('pageshow', function() {
+      const pwdInputs = document.querySelectorAll('input[type="password"]');
+      pwdInputs.forEach(i => { i.value = ''; i.type = 'password'; });
+      const loginPwd = document.getElementById('login-password');
+      if (loginPwd) { loginPwd.value = ''; loginPwd.type = 'password'; }
+      if (!localStorage.getItem(CLIENT_TOKEN_KEY)) {
+        const loginId = document.getElementById('login-identifier');
+        if (loginId) loginId.value = '';
+        const form = document.getElementById('client-login-form');
+        if (form) form.reset();
+      }
+    });
   </script>
   <script defer src="/js/enhance-ui.js"></script>
 </body>

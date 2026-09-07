@@ -43,6 +43,24 @@
 
       currentKitData = data;
       document.getElementById('kit-client-name').textContent = `${data.client.full_name} (${data.client.cpf || data.client.cnpj || 'Sem CPF/CNPJ'})`;
+
+      // Inicializa caixas de seleção da Fase 2
+      const chkProc = document.getElementById('kit-chk-procuracao');
+      const chkCont = document.getElementById('kit-chk-contrato');
+      const chkHipo = document.getElementById('kit-chk-hipossuficiencia');
+      const lblHipo = document.getElementById('lbl-chk-hipo');
+      if (chkProc) chkProc.checked = true;
+      if (chkCont) chkCont.checked = true;
+      if (chkHipo) {
+        if (data.client.cnpj) {
+          chkHipo.checked = false;
+          if (lblHipo) lblHipo.textContent = '3. Hipossuficiência (PJ - Dispensada)';
+        } else {
+          chkHipo.checked = true;
+          if (lblHipo) lblHipo.textContent = '3. Hipossuficiência';
+        }
+      }
+
       switchKitDocTab('procuracao');
     } catch (err) {
       if (window.showToast) window.showToast('Erro ao carregar Kit Inicial: ' + err.message, 'error');
@@ -107,6 +125,27 @@
           >
             3. Justiça Gratuita (Hipossuficiência)
           </button>
+        </div>
+
+        <!-- Seleção Individual de Documentos para Disparo (Fase 2) -->
+        <div class="px-5 py-2.5 bg-amber-50/60 border-b border-amber-200/70 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <span class="text-navy-950 font-bold flex items-center gap-1.5">
+            <span>☑️</span> Documentos a enviar para assinatura:
+          </span>
+          <div class="flex items-center gap-4">
+            <label class="inline-flex items-center space-x-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="kit-chk-procuracao" class="rounded text-gold-600 focus:ring-gold-500 w-4 h-4 cursor-pointer" checked />
+              <span class="font-bold text-navy-950">1. Procuração</span>
+            </label>
+            <label class="inline-flex items-center space-x-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="kit-chk-contrato" class="rounded text-gold-600 focus:ring-gold-500 w-4 h-4 cursor-pointer" checked />
+              <span class="font-bold text-navy-950">2. Contrato</span>
+            </label>
+            <label class="inline-flex items-center space-x-1.5 cursor-pointer select-none">
+              <input type="checkbox" id="kit-chk-hipossuficiencia" class="rounded text-gold-600 focus:ring-gold-500 w-4 h-4 cursor-pointer" checked />
+              <span class="font-bold text-navy-950" id="lbl-chk-hipo">3. Hipossuficiência</span>
+            </label>
+          </div>
         </div>
 
         <!-- Área de Pré-visualização com Folha Timbrada -->
@@ -184,6 +223,17 @@
   window.dispatchKitToWhatsApp = async function () {
     if (!currentClientId) return;
     const btn = document.getElementById('btn-dispatch-kit-whatsapp');
+
+    const selectedTypes = [];
+    if (document.getElementById('kit-chk-procuracao')?.checked) selectedTypes.push('procuracao');
+    if (document.getElementById('kit-chk-contrato')?.checked) selectedTypes.push('contrato');
+    if (document.getElementById('kit-chk-hipossuficiencia')?.checked) selectedTypes.push('hipossuficiencia');
+
+    if (selectedTypes.length === 0) {
+      if (window.showToast) window.showToast('Selecione ao menos um documento para enviar ao cliente.', 'warning');
+      return;
+    }
+
     if (btn) btn.disabled = true;
 
     try {
@@ -192,14 +242,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientId: currentClientId,
-          docTypes: ['procuracao', 'contrato', 'hipossuficiencia']
+          docTypes: selectedTypes
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao gerar solicitações.');
 
       if (window.showToast) {
-        window.showToast('Solicitação de assinatura gerada! Abrindo WhatsApp...', 'success');
+        window.showToast(`Solicitação de assinatura gerada (${selectedTypes.length} docs)! Abrindo WhatsApp...`, 'success');
       }
 
       // Abre o WhatsApp

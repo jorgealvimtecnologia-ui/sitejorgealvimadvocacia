@@ -7,10 +7,38 @@
     let allClients = [];
     let allLawsuits = [];
 
+    const _pwdVisibilityTimers = {};
     function togglePasswordVisibility(inputId) {
       const input = document.getElementById(inputId);
       if (!input) return;
-      input.type = input.type === 'password' ? 'text' : 'password';
+
+      if (_pwdVisibilityTimers[inputId]) {
+        clearTimeout(_pwdVisibilityTimers[inputId]);
+        delete _pwdVisibilityTimers[inputId];
+      }
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        // Auto-reverter para protegido (password) após 3.5 segundos por privacidade e segurança
+        _pwdVisibilityTimers[inputId] = setTimeout(() => {
+          if (input) input.type = 'password';
+          delete _pwdVisibilityTimers[inputId];
+        }, 3500);
+      } else {
+        input.type = 'password';
+      }
+
+      // Reverter imediatamente ao perder o foco (blur)
+      if (!input._hasAutoSecureBlur) {
+        input._hasAutoSecureBlur = true;
+        input.addEventListener('blur', () => {
+          input.type = 'password';
+          if (_pwdVisibilityTimers[inputId]) {
+            clearTimeout(_pwdVisibilityTimers[inputId]);
+            delete _pwdVisibilityTimers[inputId];
+          }
+        });
+      }
     }
 
     function getToken() {
@@ -629,6 +657,13 @@
     function showLoginScreen() {
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('panel-view').classList.add('hidden');
+      const form = document.getElementById('login-form');
+      if (form) form.reset();
+      const pwd = document.getElementById('login-password');
+      if (pwd) { pwd.value = ''; pwd.type = 'password'; }
+      const usr = document.getElementById('login-username');
+      if (usr) usr.value = '';
+      initAdminGoogleAuth();
     }
 
     function handleHashRouting() {
@@ -671,18 +706,34 @@
     function showPanelScreen(user) {
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
+      const form = document.getElementById('login-form');
+      if (form) form.reset();
+      const pwd = document.getElementById('login-password');
+      if (pwd) { pwd.value = ''; pwd.type = 'password'; }
+      const usr = document.getElementById('login-username');
+      if (usr) usr.value = '';
       const name = user ? user.name || user.username : 'Administrador';
-      document.getElementById('current-user-display').textContent = name;
-      document.getElementById('current-user-display-mobile').textContent = name;
+      const usrDisplay = document.getElementById('current-user-display');
+      if (usrDisplay) usrDisplay.textContent = name;
+      const usrDisplayMob = document.getElementById('current-user-display-mobile');
+      if (usrDisplayMob) usrDisplayMob.textContent = name;
       handleHashRouting();
     }
 
     async function handleLogin(e) {
       e.preventDefault();
-      const username = document.getElementById('login-username').value;
-      const password = document.getElementById('login-password').value;
+      const usernameInput = document.getElementById('login-username');
+      const passwordInput = document.getElementById('login-password');
+      const username = usernameInput ? usernameInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value : '';
       const errorMsg = document.getElementById('login-error-msg');
       const errorText = document.getElementById('login-error-text');
+
+      // Limpeza imediata da senha da interface por segurança e privacidade
+      if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.type = 'password';
+      }
 
       errorMsg.classList.add('hidden');
 
@@ -696,6 +747,9 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
+          if (usernameInput) usernameInput.value = '';
+          const form = document.getElementById('login-form');
+          if (form) form.reset();
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
@@ -717,28 +771,64 @@
       }
     }
 
-    async function handleAdminGoogleAuth() {
+    let adminGoogleClientId = null;
+
+    async function initAdminGoogleAuth() {
+      try {
+        const res = await fetch('/api/auth/google-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.clientId) {
+            adminGoogleClientId = data.clientId;
+            if (window.google && window.google.accounts && window.google.accounts.id) {
+              window.google.accounts.id.initialize({
+                client_id: adminGoogleClientId,
+                callback: handleAdminGoogleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true
+              });
+              const container = document.getElementById('admin-google-btn-container');
+              if (container) {
+                window.google.accounts.id.renderButton(container, {
+                  theme: 'outline',
+                  size: 'large',
+                  text: 'signin_with',
+                  shape: 'rectangular',
+                  width: Math.min(container.offsetWidth || 340, 360),
+                  logo_alignment: 'left'
+                });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[GOOGLE AUTH ADMIN] Configuração indisponível:', err);
+      }
+    }
+
+    async function handleAdminGoogleCredentialResponse(response) {
+      const credential = response ? response.credential : null;
+      if (!credential) return;
+
       const errorMsg = document.getElementById('login-error-msg');
       const errorText = document.getElementById('login-error-text');
       if (errorMsg) errorMsg.classList.add('hidden');
-
-      const emailInput = prompt(
-        '[Painel Administrativo - Acesso Google]\n\nInforme o e-mail Google da sua conta de operador/advogado cadastrada:',
-        'jorgealvimtecnologia@gmail.com'
-      );
-      if (!emailInput || !emailInput.includes('@')) return;
-
-      const mockToken = `mock-google-token:sub-admin-${Date.now()}:${emailInput.trim()}:Dr. Jorge Alvim`;
 
       try {
         const res = await fetch('/api/auth/google', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential: mockToken })
+          body: JSON.stringify({ credential })
         });
         const data = await res.json();
 
         if (res.ok && data.success) {
+          const form = document.getElementById('login-form');
+          if (form) form.reset();
+          const pwd = document.getElementById('login-password');
+          if (pwd) { pwd.value = ''; pwd.type = 'password'; }
+          const usr = document.getElementById('login-username');
+          if (usr) usr.value = '';
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
@@ -751,12 +841,23 @@
           loadPublicationsStats();
           loadHrDashboard();
         } else {
-          errorText.textContent = data.error || 'Conta Google não autorizada para este painel.';
-          errorMsg.classList.remove('hidden');
+          if (errorText) errorText.textContent = data.error || 'Conta Google não autorizada para este painel.';
+          if (errorMsg) errorMsg.classList.remove('hidden');
         }
       } catch (err) {
-        errorText.textContent = 'Erro ao conectar ao servidor para autenticação Google.';
-        errorMsg.classList.remove('hidden');
+        if (errorText) errorText.textContent = 'Erro ao conectar ao servidor para autenticação Google.';
+        if (errorMsg) errorMsg.classList.remove('hidden');
+      }
+    }
+
+    function handleAdminGoogleAuth() {
+      if (window.google && window.google.accounts && window.google.accounts.id && adminGoogleClientId) {
+        window.google.accounts.id.prompt();
+      } else {
+        const errorMsg = document.getElementById('login-error-msg');
+        const errorText = document.getElementById('login-error-text');
+        if (errorText) errorText.textContent = 'Aguardando inicialização segura do serviço Google. Recarregue a página se persistir.';
+        if (errorMsg) errorMsg.classList.remove('hidden');
       }
     }
 
@@ -769,8 +870,32 @@
       } catch (e) {}
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      const form = document.getElementById('login-form');
+      if (form) form.reset();
+      const usr = document.getElementById('login-username');
+      if (usr) usr.value = '';
+      const pwd = document.getElementById('login-password');
+      if (pwd) { pwd.value = ''; pwd.type = 'password'; }
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
+      }
       showLoginScreen();
     }
+
+    // Proteção contra retenção de senha ao voltar no histórico do navegador (bfcache)
+    window.addEventListener('pageshow', function() {
+      const pwd = document.getElementById('login-password');
+      if (pwd) {
+        pwd.value = '';
+        pwd.type = 'password';
+      }
+      if (!getToken()) {
+        const usr = document.getElementById('login-username');
+        if (usr) usr.value = '';
+        const form = document.getElementById('login-form');
+        if (form) form.reset();
+      }
+    });
 
     function refreshData() {
       loadLeads();
