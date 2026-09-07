@@ -2375,16 +2375,17 @@
     // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache) e autofill
     function _wipeClientAuthFields() {
       if (!localStorage.getItem(CLIENT_TOKEN_KEY)) {
+        const loginId = document.getElementById('login-identifier');
         const pwdInputs = document.querySelectorAll('input[type="password"]');
+        let isInteracting = (document.activeElement === loginId) || (loginId && loginId.value.trim().length > 0);
+        pwdInputs.forEach(i => { if (document.activeElement === i || (i.value && i.value.length > 0)) isInteracting = true; });
+        if (isInteracting) return;
         pwdInputs.forEach(i => { 
           i.value = ''; 
           i.type = 'password'; 
           i.setAttribute('readonly', 'readonly');
         });
-        const loginId = document.getElementById('login-identifier');
         if (loginId) loginId.value = '';
-        const form = document.getElementById('client-login-form');
-        if (form) form.reset();
       }
     }
 

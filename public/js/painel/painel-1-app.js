@@ -918,16 +918,16 @@
     // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache) e autofill
     function _wipeAdminAuthFields() {
       if (!getToken()) {
+        const usr = document.getElementById('login-username');
         const pwd = document.getElementById('login-password');
+        if (document.activeElement === usr || document.activeElement === pwd) return;
+        if (usr && usr.value.trim().length > 0) return;
         if (pwd) {
           pwd.value = '';
           pwd.type = 'password';
           pwd.setAttribute('readonly', 'readonly');
         }
-        const usr = document.getElementById('login-username');
         if (usr) usr.value = '';
-        const form = document.getElementById('login-form');
-        if (form) form.reset();
       }
     }
 

@@ -15,6 +15,7 @@ test('login do painel com o usuário mestre entra no sistema', async ({ page }) 
 
   // A tela de login vem pré-preenchida com o usuário mestre; garantimos os valores.
   await page.fill('#login-username', 'jorgealvimtecnologia');
+  await page.click('#login-password');
   await page.fill('#login-password', 'jorgealvim');
   await page.click('#login-form button[type="submit"]');
 
@@ -26,6 +27,7 @@ test('login do painel com o usuário mestre entra no sistema', async ({ page }) 
 test('login com senha errada mostra erro e não entra', async ({ page }) => {
   await page.goto('/painel');
   await page.fill('#login-username', 'jorgealvimtecnologia');
+  await page.click('#login-password');
   await page.fill('#login-password', 'senha-invalida-xyz');
   await page.click('#login-form button[type="submit"]');
 
