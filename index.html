@@ -754,7 +754,7 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
+        <div id="home-practice-areas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           
           <!-- 1. Direito dos Transportes e do Trânsito -->
           <div class="rounded-2xl bg-white border-2 border-gold-400/80 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1.5 relative">
@@ -2700,6 +2700,81 @@
       }
     }
 
+    async function loadHomePracticeAreas() {
+      const grid = document.getElementById('home-practice-areas-grid');
+      if (!grid) return;
+
+      try {
+        const res = await fetch('/api/site/practice-areas');
+        if (!res.ok) return;
+        const areas = await res.json();
+        if (Array.isArray(areas) && areas.length === 6) {
+          grid.innerHTML = areas.map(area => {
+            const badgeHtml = area.badge ? `
+              <div class="absolute top-3 right-3 z-10">
+                <span class="px-2.5 py-1 rounded-md ${area.box_order === 1 ? 'bg-gradient-to-r from-amber-500 to-gold-600 text-white' : 'bg-navy-950/90 text-gold-400 border border-gold-400/40'} text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-sm">
+                  ${area.badge}
+                </span>
+              </div>
+            ` : '';
+
+            const isPrimary = area.box_order === 1;
+            const cardBorder = isPrimary ? 'border-2 border-gold-400/80' : 'border border-slate-200 hover:border-gold-400';
+
+            const itemsList = Array.isArray(area.items) ? area.items.map(item => `
+              <li class="flex items-start space-x-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0"></span>
+                <span>${item}</span>
+              </li>
+            `).join('') : '';
+
+            return `
+              <div class="rounded-2xl bg-white ${cardBorder} shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1.5 relative">
+                ${badgeHtml}
+                <div>
+                  <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-100">
+                    <img loading="lazy" decoding="async"
+                      src="${area.image_url}" 
+                      alt="${area.title}" 
+                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/95 backdrop-blur-sm border border-gold-400 flex items-center justify-center text-gold-700 shadow-md">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div class="p-5 sm:p-6">
+                    <h3 class="font-serif text-lg sm:text-xl font-bold text-navy-950 mb-2 sm:mb-3 group-hover:text-gold-700 transition-colors">
+                      ${area.title}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 sm:mb-5">
+                      ${area.description}
+                    </p>
+                    <ul class="space-y-2 text-xs text-slate-700">
+                      ${itemsList}
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="p-5 sm:p-6 pt-0">
+                  <a href="${area.action_link || '#contato'}" class="inline-flex items-center space-x-2 text-xs sm:text-sm font-bold text-gold-700 hover:text-gold-800 pt-3 sm:pt-4 border-t border-slate-100 w-full">
+                    <span>${area.action_label || 'Consultar'}</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.warn('Fallback para os 6 boxes estáticos da home:', e);
+      }
+    }
+
     // ================= REGISTRO DE SERVICE WORKER PWA =================
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -2712,6 +2787,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       checkLgpdBanner();
       loadHomeBlogPosts();
+      loadHomePracticeAreas();
     });
   </script>
 

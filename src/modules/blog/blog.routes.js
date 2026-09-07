@@ -3,11 +3,15 @@
  * moderação (admin). Extraído do server.js para reduzir o monólito.
  */
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { getClientIp } from '../../shared/net.js';
 import { generateNextClientId } from '../../shared/ids.js';
+
 
 export const blogRouter = express.Router();
 
@@ -264,6 +268,55 @@ blogRouter.delete('/api/admin/blog/posts/:id', requireAuth, (req, res) => {
     res.status(500).json({ error: 'Erro ao excluir artigo.' });
   }
 });
+
+// Configuração de Armazenamento para Upload de Mídias do Blog (Imagens e Infográficos)
+const blogUploadStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const blogImgDir = path.join(process.cwd(), 'public', 'img', 'blog');
+    if (!fs.existsSync(blogImgDir)) {
+      fs.mkdirSync(blogImgDir, { recursive: true });
+    }
+    cb(null, blogImgDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const baseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_') || 'blog-media';
+    const timestamp = Date.now();
+    cb(null, `${timestamp}_${baseName}${ext}`);
+  }
+});
+const uploadBlogMedia = multer({
+  storage: blogUploadStorage,
+  limits: { fileSize: 25 * 1024 * 1024 } // 25MB
+});
+
+// 8. Upload de Mídia para Artigos do Blog (Admin)
+blogRouter.post('/api/admin/blog/upload', requireAuth, uploadBlogMedia.single('media'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado. Selecione uma foto ou mídia.' });
+    }
+    const fileUrl = `/img/blog/${req.file.filename}`;
+    logAudit(req, {
+      event_type: 'UPLOAD',
+      event_name: 'UPLOAD_MIDIA_BLOG',
+      module: 'BLOG',
+      resource_id: req.file.filename,
+      description: `Upload de imagem para o blog: ${req.file.originalname}`
+    });
+    return res.json({
+      success: true,
+      url: fileUrl,
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      size: req.file.size
+    });
+  } catch (err) {
+    console.error('Erro no upload de mídia do blog:', err);
+    res.status(500).json({ error: 'Erro ao fazer upload da mídia: ' + err.message });
+  }
+});
+
 
 // ================= ROTAS DE INTERAÇÕES E MODERAÇÃO DO BLOG =================
 

@@ -1063,5 +1063,62 @@ describe('Soft Delete & Barreira Ética OAB (LGPD Art. 16, I)', () => {
   });
 });
 
+describe('Conteúdo do Site & Hub do Blog (Áreas de Atuação e Uploads)', () => {
+  it('GET /api/site/practice-areas retorna os 6 boxes oficiais para a Home', async () => {
+    const res = await request(app).get('/api/site/practice-areas');
+    assert.equal(res.status, 200);
+    assert.ok(Array.isArray(res.body));
+    assert.equal(res.body.length, 6);
+    assert.equal(res.body[0].box_order, 1);
+    assert.ok(res.body[0].title.includes('Transportes'));
+    assert.ok(Array.isArray(res.body[0].items));
+  });
+
+  it('GET /api/admin/site/practice-areas requer autenticação e lista boxes', async () => {
+    const unauth = await request(app).get('/api/admin/site/practice-areas');
+    assert.equal(unauth.status, 401);
+
+    const authRes = await auth(request(app).get('/api/admin/site/practice-areas'), masterToken);
+    assert.equal(authRes.status, 200);
+    assert.ok(Array.isArray(authRes.body));
+    assert.equal(authRes.body.length, 6);
+  });
+
+  it('PUT /api/admin/site/practice-areas/:id atualiza dados de um box com sucesso', async () => {
+    const listRes = await auth(request(app).get('/api/admin/site/practice-areas'), masterToken);
+    const firstBox = listRes.body[0];
+
+    const updateRes = await auth(
+      request(app)
+        .put(`/api/admin/site/practice-areas/${firstBox.id}`)
+        .send({
+          title: 'Direito dos Transportes, Trânsito & CNH',
+          description: 'Defesa especializada atualizada para motoristas e transportadores.',
+          items: ['Defesa em processos de CNH', 'Recursos CETRAN e JARI', 'Indenizações de trânsito'],
+          image_url: firstBox.image_url,
+          badge: 'Especialidade Ouro',
+          action_label: 'Consultar Especialista',
+          action_link: '#contato'
+        }),
+      masterToken
+    );
+
+    assert.equal(updateRes.status, 200);
+    assert.equal(updateRes.body.success, true);
+
+    const checkRes = await request(app).get('/api/site/practice-areas');
+    const updated = checkRes.body.find(b => b.id === firstBox.id);
+    assert.equal(updated.title, 'Direito dos Transportes, Trânsito & CNH');
+    assert.equal(updated.badge, 'Especialidade Ouro');
+  });
+
+  it('POST /api/admin/blog/upload rejeita requisição sem arquivo', async () => {
+    const res = await auth(request(app).post('/api/admin/blog/upload'), masterToken);
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error);
+  });
+});
+
+
 
 

@@ -51,7 +51,9 @@ import { maintenanceRouter } from './src/modules/maintenance/maintenance.routes.
 import { legaltechRouter } from './src/modules/legaltech/legaltech.routes.js';
 import { legalDocsRouter } from './src/modules/legal-docs/legal-docs.routes.js';
 import { metaAdsRouter } from './src/modules/meta-ads/meta-ads.routes.js';
+import { siteContentRouter } from './src/modules/site/site-content.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1556,6 +1558,8 @@ app.use(maintenanceRouter);
 app.use(legaltechRouter);
 app.use(legalDocsRouter);
 app.use(metaAdsRouter);
+app.use(siteContentRouter);
+
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
 app.get('/sitemap.xml', (req, res) => {

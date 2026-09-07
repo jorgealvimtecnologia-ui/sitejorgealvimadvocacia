@@ -779,10 +779,40 @@
   }
 
   // --------------------------------------------------------------------------
+  // Ações Rápidas de Destino e Publicação
+  // --------------------------------------------------------------------------
+  function quickSetDestinationAndFocus(dest) {
+    const destSelect = document.getElementById('meta-ad-destination');
+    if (destSelect) {
+      destSelect.value = dest;
+    }
+    const mediaInput = document.getElementById('meta-ad-media');
+    if (mediaInput) {
+      mediaInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    const destNames = {
+      'INSTAGRAM_FEED': 'Instagram Feed',
+      'FACEBOOK_PAGE_POST': 'Página do Facebook',
+      'AD_DRAFT_PAUSED': 'Meta Ads (Anúncio Pago)'
+    };
+    toast(`Destino selecionado: ${destNames[dest] || dest}. Selecione ou revise a mídia e a mensagem!`, 'info');
+  }
+
+  function submitMetaWithDestination(dest) {
+    const destSelect = document.getElementById('meta-ad-destination');
+    if (destSelect) {
+      destSelect.value = dest;
+    }
+    handleMetaAdSubmit();
+  }
+
+  // --------------------------------------------------------------------------
   // Expor Globalmente no Escopo do Window
   // --------------------------------------------------------------------------
   window.loadMetaAdsTab = loadMetaAdsTab;
   window.handleMetaAdSubmit = handleMetaAdSubmit;
+  window.submitMetaWithDestination = submitMetaWithDestination;
+  window.quickSetDestinationAndFocus = quickSetDestinationAndFocus;
   window.resetMetaForm = resetMetaForm;
   window.deleteMetaPost = deleteMetaPost;
   window.previewMetaPost = previewMetaPost;
