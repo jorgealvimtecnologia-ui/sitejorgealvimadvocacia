@@ -19,6 +19,7 @@
       drive:{label:'Drive do Escritório',emoji:'📁'},
       users:{label:'Usuários & Senhas',emoji:'🔐'},
       blog:{label:'Blog & Moderação',emoji:'💬'},
+      'site-boxes':{label:'Boxes da Home (Site)',emoji:'🏛️'},
       audit:{label:'Auditoria & Logs',emoji:'🛡️'},
       lgpd:{label:'LGPD & Privacidade',emoji:'🔒'},
       notifications:{label:'Alertas & Prazos',emoji:'🔔'},
@@ -36,12 +37,12 @@
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','meta-ads','audit','lgpd','notifications']},
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
       publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
-      blog:'loadAdminBlogPosts',audit:'initAuditTab','pre-clients':'initPreClientsTab',judicial:'initJudicialTab',
+      blog:'loadAdminBlogPosts','site-boxes':'loadSiteBoxesTab',audit:'initAuditTab','pre-clients':'initPreClientsTab',judicial:'initJudicialTab',
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
@@ -958,8 +959,8 @@
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
-      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
-    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1,'meta-ads':1};
+      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
+    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1,'meta-ads':1,'site-boxes':1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
       document.querySelectorAll('#jaw-menubar .jaw-group').forEach(function(g){
