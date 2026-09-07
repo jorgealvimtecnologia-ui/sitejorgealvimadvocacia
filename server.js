@@ -1095,6 +1095,127 @@ try {
     }
     console.log('📰 [BLOG] 4 artigos informativos jurídicos iniciais semeados com sucesso para SEO!');
   }
+
+  // Garantir artigo sobre RDE e FATD (Direito Militar) de forma idempotente
+  const fatdPost = db.prepare(`SELECT id FROM blog_posts WHERE slug = 'rde-e-o-fatd-apuracao-transgressoes-justificacao-recurso'`).get();
+  if (!fatdPost) {
+    const now = new Date().toISOString();
+    const fatdContent = `<p class="lead text-lg font-medium text-slate-700 leading-relaxed">
+  A manutenção da <strong>hierarquia</strong> e da <strong>disciplina</strong> é a pedra angular das Forças Armadas brasileiras. No âmbito do Exército Brasileiro, essas diretrizes são juridicamente regulamentadas pelo <strong>Decreto nº 4.346/2002</strong>, conhecido como o <strong>Regulamento Disciplinar do Exército (RDE / R-4)</strong>.
+</p>
+
+<p>
+  Para comandantes, assessores jurídicos e militares em geral, entender como funciona a apuração de uma falta e como preencher corretamente o principal instrumento desse processo — o <strong>FATD (Formulário de Apuração de Transgressão Disciplinar)</strong> — é fundamental para garantir a legalidade do ato. Mas o conhecimento não deve parar na aplicação da sanção: é indispensável dominar as <strong>causas de justificação (Art. 18)</strong> e as vias de recurso administrativo para quando o direito de defesa precisar ser restabelecido com rigor técnico.
+</p>
+
+<figure class="my-6">
+  <img src="/img/blog/rde-fatd-militar.jpg" alt="Infográfico ilustrativo sobre Transgressão Disciplinar, FATD e Direitos do Militar" class="w-full rounded-xl shadow-md border border-slate-200">
+  <figcaption class="text-xs text-slate-500 text-center mt-2">Orientações essenciais para o correto preenchimento do FATD e preservação das garantias defensivas.</figcaption>
+</figure>
+
+<h2>1. O que é a Transgressão Disciplinar?</h2>
+<p>
+  De acordo com o RDE, a transgressão disciplinar é qualquer violação dos deveres e das obrigações militares que não chegue a constituir crime militar ou comum. Elas são classificadas conforme a gravidade em:
+</p>
+<ul>
+  <li><strong>Leves</strong></li>
+  <li><strong>Médias</strong></li>
+  <li><strong>Graves</strong></li>
+</ul>
+<p>
+  As punições disciplinares são aplicadas em uma escala crescente de severidade: <em>Advertência, Impedimento disciplinar, Repreensão, Detenção, Prisão disciplinar</em> e, em casos extremos, <em>Licenciamento ou Exclusão a bem da disciplina</em>.
+</p>
+
+<h2>2. O Processo de Apuração e o Papel do FATD</h2>
+<div class="bg-blue-50 border-l-4 border-blue-600 p-4 my-4 rounded-r-lg">
+  <p class="font-semibold text-blue-950 m-0">O FATD não é a punição em si!</p>
+  <p class="text-sm text-blue-900 mt-1 m-0">Ele é o documento formal que instaura o rito administrativo investigatório, assegurando o contraditório e a ampla defesa constitucional (Art. 5º, LV da CF/88).</p>
+</div>
+<p>
+  Sua finalidade, prevista no Anexo IV do RDE, é padronizar e registrar a apuração do fato. Quando uma suposta falta é reportada por meio de uma <strong>Parte de Transgressão</strong>, a autoridade competente emite o FATD para que o militar possa se manifestar e defender por escrito antes de qualquer tomada de decisão.
+</p>
+<p>
+  <strong>Prazo Regulamentar:</strong> O acusado possui o prazo de <strong>3 (três) dias úteis</strong> para apresentar suas justificativas, arrolar testemunhas, requerer perícias ou pedir para ser ouvido presencialmente.
+</p>
+
+<h2>3. O Coração da Defesa: As Causas de Justificação (Art. 18)</h2>
+<p>
+  O momento em que o militar preenche o campo de <em>"Razões de Defesa"</em> no FATD é crucial. É aqui que devem ser invocadas com precisão as causas de justificação. Se a conduta se enquadrar em qualquer um dos incisos do <strong>Artigo 18 do RDE</strong>, <strong>não haverá punição disciplinar</strong>:
+</p>
+<ul>
+  <li><strong>I - Prática de ação meritória ou no interesse do serviço, da ordem ou da segurança pública:</strong> Quando o ato, embora formalmente previsto como falta, foi praticado para atingir um bem maior ou cumprir uma missão urgente de segurança.</li>
+  <li><strong>II - Em legítima defesa, própria ou de outrem:</strong> Quando o militar usa moderadamente dos meios necessários para repelir injusta agressão, atual ou iminente.</li>
+  <li><strong>III - Em motivo de força maior ou caso fortuito, plenamente comprovado:</strong> Eventos imprevisíveis ou inevitáveis (como desastres naturais, acidentes graves ou panes mecânicas intransponíveis que impeçam o cumprimento de horário).</li>
+  <li><strong>IV - Por imperiosa necessidade de culpar subordinado para evitar mal maior ou preservar a disciplina:</strong> Situações extremas de comando em que a intervenção imediata se faz estritamente necessária.</li>
+  <li><strong>V - Em decorrência de cumprimento de ordem superior:</strong> Se o militar agiu estritamente cumprindo ordens diretas de seu superior hierárquico (desde que a ordem não fosse manifestamente criminosa).</li>
+</ul>
+
+<div class="bg-amber-50 border-l-4 border-amber-500 p-4 my-4 rounded-r-lg">
+  <p class="font-semibold text-amber-950 m-0">⚠️ Atenção Probatória:</p>
+  <p class="text-sm text-amber-900 mt-1 m-0">Não basta apenas alegar uma dessas causas. O militar deve, no próprio FATD, indicar as provas (testemunhas, documentos, fotos, laudos médicos ou perícias) que comprovem a existência da justificativa.</p>
+</div>
+
+<h2>4. O Direito ao Recurso Disciplinar: Inconformidade com a Punição</h2>
+<p>
+  Se, mesmo após a apresentação da defesa no FATD, a autoridade julgar a conduta como transgressão e aplicar uma sanção disciplinar, o processo não se encerra de forma definitiva. O RDE garante ao militar o direito de recorrer da decisão através de instrumentos específicos previstos a partir do Artigo 51:
+</p>
+
+<h3>A. Pedido de Reconsideração de Ato</h3>
+<p>
+  Antes de subir para instâncias superiores, o militar deve se dirigir à <strong>própria autoridade que aplicou a punição</strong>. O objetivo é fazer com que o próprio Comandante reavalie sua decisão diante de novos argumentos, provas técnicas ou reconsideração fática.
+</p>
+<p>
+  <strong>Prazo:</strong> Deve ser interposto no prazo de <strong>5 (cinco) dias úteis</strong>, contados a partir do dia imediato ao que o militar tomar ciência oficial da publicação da punição em Boletim Interno (BI).
+</p>
+
+<h3>B. Recurso Disciplinar propriamente dito</h3>
+<p>
+  Caso o Pedido de Reconsideração de Ato seja total ou parcialmente negado, o militar pode então interpor o <strong>Recurso Disciplinar</strong>. Este recurso é encaminhado diretamente à autoridade imediatamente superior àquela que aplicou a punição (ex.: Comandante de Brigada, Comandante Militar de Área).
+</p>
+<p>
+  <strong>Prazo:</strong> Também deve ser apresentado no prazo de <strong>5 (cinco) dias úteis</strong>, contados a partir da ciência oficial da denegação da reconsideração.
+</p>
+
+<div class="bg-slate-50 border-l-4 border-slate-600 p-4 my-4 rounded-r-lg">
+  <p class="font-semibold text-slate-800 m-0">⚖️ Efeito Suspensivo vs. Efeito Devolutivo:</p>
+  <p class="text-sm text-slate-600 mt-1 m-0">Como regra geral no âmbito militar, os recursos disciplinares possuem apenas efeito devolutivo — isto é, o cumprimento da punição não é automaticamente suspenso enquanto o recurso é julgado, a menos que a autoridade conceda o efeito suspensivo de forma excepcional.</p>
+</div>
+
+<h2>5. Conclusão: O Impacto Direto na Carreira Militar</h2>
+<p>
+  Subestimar o FATD ou abrir mão dos prazos de recurso é um erro crítico. Se a apuração resultar em punição definitiva publicada em Boletim Interno, o registro afetará diretamente a <strong>classificação de comportamento militar da praça</strong> (que varia de Mau a Excepcional), prejudicando:
+</p>
+<ul>
+  <li>Promoções por merecimento ou antiguidade;</li>
+  <li>Inscrições em cursos de formação, especialização ou aperfeiçoamento;</li>
+  <li>Estabilidade e prorrogação de engajamento/reengajamento de militares temporários;</li>
+  <li>Seleções para missões institucionais e comissões especiais.</li>
+</ul>
+<p>
+  Portanto, a correta instrução do processo e o uso estratégico dos recursos legais protegem tanto a Administração Militar — mantendo seus atos estritamente imunes a nulidades judiciais — quanto o direito do militar a um julgamento justo, técnico e proporcional.
+</p>`;
+
+    db.prepare(`
+      INSERT INTO blog_posts (
+        slug, title, summary, category, content, cover_image, tags,
+        author_name, author_oab, views_count, is_published, published_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?)
+    `).run(
+      'rde-e-o-fatd-apuracao-transgressoes-justificacao-recurso',
+      'RDE e o FATD: Como Funciona a Apuração de Transgressões, as Causas de Justificação e o Direito ao Recurso',
+      'A manutenção da hierarquia e da disciplina é a pedra angular das Forças Armadas. Entenda como funciona a apuração disciplinar militar pelo RDE (Decreto 4.346/02), o preenchimento do FATD, as causas de justificação do Art. 18 e o direito ao recurso.',
+      'Direito Militar',
+      fatdContent.trim(),
+      '/img/blog/rde-fatd-militar.jpg',
+      'Direito Militar, Exército Brasileiro, RDE, FATD, Transgressão Disciplinar, Recurso Disciplinar',
+      'Dr. Jorge Eduardo da Silva Alvim',
+      'OAB/MG 222.943',
+      now,
+      now,
+      now
+    );
+    console.log('📰 [BLOG] Artigo de Direito Militar (FATD / RDE) semeado com sucesso!');
+  }
 } catch (e) {
   console.warn('Erro ao inicializar artigos do blog:', e);
 }
