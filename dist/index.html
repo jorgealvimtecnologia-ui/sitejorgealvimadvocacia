@@ -387,15 +387,15 @@
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
           <div class="w-px h-5 bg-slate-200 mx-1"></div>
-          <a href="/cliente" class="text-xs text-emerald-800 font-extrabold px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5" title="Área do Cliente: Acompanhe seus processos e contratos">
+          <button onclick="openUniversalAuthModal('client')" type="button" class="text-xs text-emerald-800 font-extrabold px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Área do Cliente: Acompanhe seus processos e contratos">
             <span>👤</span>
             <span>Área do Cliente</span>
-          </a>
-          <a href="/colaborador" class="text-xs text-indigo-800 font-extrabold px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5" title="Portal do Colaborador: Contracheques, Ponto Eletrônico e Ficha Financeira">
+          </button>
+          <button onclick="openUniversalAuthModal('employee')" type="button" class="text-xs text-indigo-800 font-extrabold px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Portal do Colaborador: Contracheques, Ponto Eletrônico e Ficha Financeira">
             <span>👥</span>
             <span>Colaborador</span>
-          </a>
-          <button onclick="openAdminLoginModal()" type="button" class="text-xs text-gold-800 hover:text-gold-900 font-bold px-3 py-1.5 rounded-lg bg-gold-50 hover:bg-gold-100 border border-gold-200 hover:border-gold-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Acesso Restrito ao Painel">
+          </button>
+          <button onclick="openUniversalAuthModal('admin')" type="button" class="text-xs text-gold-800 hover:text-gold-900 font-bold px-3 py-1.5 rounded-lg bg-gold-50 hover:bg-gold-100 border border-gold-200 hover:border-gold-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Acesso Restrito ao Painel">
             <span>🔒</span>
             <span>Painel</span>
           </button>
@@ -455,17 +455,17 @@
             <span>Blog & Notícias Jurídicas</span>
           </a>
           <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Contato & Envio de Documentos</a>
-          <a href="/cliente" class="mobile-nav-link text-left text-emerald-950 font-bold py-2.5 bg-emerald-50 px-3.5 rounded-lg border border-emerald-300 flex items-center justify-between">
+          <button onclick="openUniversalAuthModal('client')" type="button" class="mobile-nav-link text-left text-emerald-950 font-bold py-2.5 bg-emerald-50 px-3.5 rounded-lg border border-emerald-300 flex items-center justify-between cursor-pointer w-full">
             <span>👤 Área do Cliente</span>
             <span class="text-xs text-emerald-700 font-bold">Acessar →</span>
-          </a>
-          <a href="/colaborador" class="mobile-nav-link text-left text-indigo-950 font-bold py-2.5 bg-indigo-50 px-3.5 rounded-lg border border-indigo-300 flex items-center justify-between">
+          </button>
+          <button onclick="openUniversalAuthModal('employee')" type="button" class="mobile-nav-link text-left text-indigo-950 font-bold py-2.5 bg-indigo-50 px-3.5 rounded-lg border border-indigo-300 flex items-center justify-between cursor-pointer w-full">
             <span>👥 Portal do Colaborador</span>
             <span class="text-xs text-indigo-700 font-bold">Acessar →</span>
-          </a>
-          <button onclick="openAdminLoginModal()" type="button" class="mobile-nav-link text-left text-gold-800 font-bold py-2.5 bg-gold-50 px-3.5 rounded-lg border border-gold-300 flex items-center justify-between">
+          </button>
+          <button onclick="openUniversalAuthModal('admin')" type="button" class="mobile-nav-link text-left text-gold-800 font-bold py-2.5 bg-gold-50 px-3.5 rounded-lg border border-gold-300 flex items-center justify-between cursor-pointer w-full">
             <span>🔒 Painel do Administrador</span>
-            <span class="text-xs text-slate-500">Entrar →</span>
+            <span class="text-xs text-slate-500 font-bold">Entrar →</span>
           </button>
           <!-- Redes Sociais no Menu Móvel -->
           <div class="pt-3 mt-1 border-t border-slate-100 flex items-center justify-around">
@@ -1750,7 +1750,7 @@
             <li><a href="#sobre" class="hover:text-gold-700 transition-colors">Sobre o Dr. Jorge Alvim</a></li>
             <li><a href="#areas" class="hover:text-gold-700 transition-colors">Áreas de Atuação</a></li>
             <li><a href="#como-funciona" class="hover:text-gold-700 transition-colors">Passo a Passo</a></li>
-            <li><a href="javascript:void(0)" onclick="openAdminLoginModal()" class="hover:text-gold-700 font-semibold transition-colors">🔒 Painel do Administrador (Restrito)</a></li>
+            <li><a href="javascript:void(0)" onclick="openUniversalAuthModal('admin')" class="hover:text-gold-700 font-semibold transition-colors">🔒 Painel do Administrador (Restrito)</a></li>
           </ul>
         </div>
 
@@ -2220,75 +2220,293 @@
       if (formContainer) formContainer.classList.remove('hidden');
     }
 
-    // ================= FUNÇÕES DE LOGIN ADMINISTRATIVO NO HEADER =================
-    function openAdminLoginModal() {
-      const modal = document.getElementById('admin-login-modal');
-      const err = document.getElementById('header-login-error');
-      if (err) err.classList.add('hidden');
-      if (modal) modal.classList.remove('hidden');
+    // ================= CENTRAL UNIFICADA DE ACESSO (ADVOGADO, CLIENTE, COLABORADOR) =================
+    let currentAuthProfile = 'admin'; // 'admin' | 'client' | 'employee'
+    let welcomeTimer = null;
+    let pwdVisibilityTimer = null;
+
+    const AUTH_PROFILES = {
+      admin: {
+        title: 'Painel de Gestão Jurídica',
+        desc: 'Acesso exclusivo a advogados e operadores do sistema de gestão.',
+        labelId: 'Usuário / Login *',
+        placeholderId: 'Digite seu usuário do painel',
+        inputName: 'username',
+        btnText: 'Entrar no Painel do Advogado',
+        hint: '',
+        footerText: 'Ambiente auditado pelo CFOAB.',
+        footerLinkText: 'Abrir Painel em tela cheia →',
+        footerLinkHref: '/painel',
+        endpoint: '/api/auth/login'
+      },
+      client: {
+        title: 'Portal do Cliente',
+        desc: 'Acompanhe seus processos judiciais, andamentos, contratos e mensagens.',
+        labelId: 'CPF, CNPJ ou E-mail cadastrado *',
+        placeholderId: '000.000.000-00 ou seu e-mail',
+        inputName: 'login',
+        btnText: 'Entrar na Área do Cliente',
+        hint: '',
+        footerText: 'Ainda não possui cadastro ativo?',
+        footerLinkText: 'Cadastre-se no Portal do Cliente →',
+        footerLinkHref: '/cliente',
+        endpoint: '/api/client-portal/login'
+      },
+      employee: {
+        title: 'Portal do Colaborador',
+        desc: 'Autoatendimento: contracheques, registro de ponto e informes de rendimento.',
+        labelId: 'CPF ou Matrícula funcional *',
+        placeholderId: '000.000.000-00 ou matrícula',
+        inputName: 'identifier',
+        btnText: 'Acessar Portal do Colaborador',
+        hint: 'Primeiro acesso: use os 11 dígitos do seu CPF como senha inicial.',
+        footerText: 'Precisa de suporte sobre folha ou ponto?',
+        footerLinkText: 'Ir para o Portal de Autoatendimento →',
+        footerLinkHref: '/colaborador',
+        endpoint: '/api/hr/employee/login'
+      }
+    };
+
+    function setAuthProfile(profile) {
+      if (!AUTH_PROFILES[profile]) profile = 'admin';
+      currentAuthProfile = profile;
+      const conf = AUTH_PROFILES[profile];
+
+      ['admin', 'client', 'employee'].forEach(role => {
+        const btn = document.getElementById(`uauth-tab-${role}`);
+        if (!btn) return;
+        if (role === profile) {
+          btn.setAttribute('aria-selected', 'true');
+          btn.className = 'py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer bg-white text-navy-950 shadow-sm border border-slate-200/80 font-bold';
+        } else {
+          btn.setAttribute('aria-selected', 'false');
+          btn.className = 'py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer text-slate-600 hover:text-navy-950 font-semibold';
+        }
+      });
+
+      const titleEl = document.getElementById('uauth-profile-title');
+      const descEl = document.getElementById('uauth-profile-desc');
+      const labelEl = document.getElementById('uauth-label-id');
+      const inputEl = document.getElementById('uauth-identifier');
+      const btnTextEl = document.getElementById('uauth-submit-text');
+      const hintEl = document.getElementById('uauth-pwd-hint');
+      const footerHelpEl = document.getElementById('uauth-footer-help-text');
+      const footerLinkEl = document.getElementById('uauth-footer-action-link');
+      const alertBox = document.getElementById('uauth-alert-box');
+
+      if (titleEl) titleEl.textContent = conf.title;
+      if (descEl) descEl.textContent = conf.desc;
+      if (labelEl) labelEl.textContent = conf.labelId;
+      if (inputEl) {
+        inputEl.placeholder = conf.placeholderId;
+        inputEl.name = conf.inputName;
+      }
+      if (btnTextEl) btnTextEl.textContent = conf.btnText;
+      if (hintEl) {
+        if (conf.hint) {
+          hintEl.textContent = conf.hint;
+          hintEl.classList.remove('hidden');
+        } else {
+          hintEl.classList.add('hidden');
+        }
+      }
+      if (footerHelpEl) footerHelpEl.textContent = conf.footerText;
+      if (footerLinkEl) {
+        footerLinkEl.textContent = conf.footerLinkText;
+        footerLinkEl.href = conf.footerLinkHref;
+      }
+      if (alertBox) alertBox.classList.add('hidden');
+    }
+
+    function openUniversalAuthModal(role = 'admin') {
+      // Cancela o timer do modal de boas-vindas para evitar duas telas sobrepostas
+      if (welcomeTimer) {
+        clearTimeout(welcomeTimer);
+        welcomeTimer = null;
+      }
+      closeWelcomeModal();
+      sessionStorage.setItem('ja_welcome_modal_seen', 'true');
+
+      setAuthProfile(role);
+
+      const modal = document.getElementById('universal-auth-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+
       setTimeout(() => {
-        document.getElementById('hl-username')?.focus();
-      }, 100);
+        const idInput = document.getElementById('uauth-identifier');
+        if (idInput) idInput.focus();
+      }, 150);
     }
 
+    function closeUniversalAuthModal() {
+      const modal = document.getElementById('universal-auth-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+      const pwd = document.getElementById('uauth-password');
+      if (pwd) {
+        pwd.value = '';
+        pwd.type = 'password';
+      }
+      const icon = document.getElementById('uauth-pwd-icon');
+      if (icon) icon.textContent = '👁️';
+    }
+
+    // Compatibilidade com chamadas antigas no código
+    function openAdminLoginModal() {
+      openUniversalAuthModal('admin');
+    }
     function closeAdminLoginModal() {
-      const modal = document.getElementById('admin-login-modal');
-      if (modal) modal.classList.add('hidden');
+      closeUniversalAuthModal();
     }
 
-    async function handleHeaderLogin(e) {
-      e.preventDefault();
-      const usernameInput = document.getElementById('hl-username');
-      const passwordInput = document.getElementById('hl-password');
-      const username = usernameInput ? usernameInput.value.trim() : '';
-      const password = passwordInput ? passwordInput.value : '';
-      const errorDiv = document.getElementById('header-login-error');
-      const errorText = document.getElementById('header-login-error-text');
+    function toggleUniversalPassword() {
+      const pwd = document.getElementById('uauth-password');
+      const icon = document.getElementById('uauth-pwd-icon');
+      if (!pwd) return;
 
-      // Limpa imediatamente a senha do campo por privacidade
+      if (pwdVisibilityTimer) {
+        clearTimeout(pwdVisibilityTimer);
+        pwdVisibilityTimer = null;
+      }
+
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        if (icon) icon.textContent = '🙈';
+        pwdVisibilityTimer = setTimeout(() => {
+          if (pwd) pwd.type = 'password';
+          if (icon) icon.textContent = '👁️';
+        }, 4000);
+      } else {
+        pwd.type = 'password';
+        if (icon) icon.textContent = '👁️';
+      }
+    }
+
+    function handleUniversalForgotPassword() {
+      if (currentAuthProfile === 'client') {
+        window.location.href = '/cliente';
+      } else if (currentAuthProfile === 'employee') {
+        alert('Portal do Trabalhador: sua senha padrão inicial é o seu CPF (somente números). Para suporte, contate a administração do escritório.');
+      } else {
+        alert('Acesso Administrativo: caso tenha esquecido sua senha de operador, utilize a chave mestra no servidor ou acione o suporte técnico.');
+      }
+    }
+
+    async function handleUniversalLogin(e) {
+      e.preventDefault();
+      const identifierInput = document.getElementById('uauth-identifier');
+      const passwordInput = document.getElementById('uauth-password');
+      const identifier = identifierInput ? identifierInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value : '';
+      const submitBtn = document.getElementById('uauth-submit-btn');
+
+      if (!identifier || !password) {
+        showUAuthAlert('Preencha os campos obrigatórios para prosseguir.', 'error');
+        return;
+      }
+
       if (passwordInput) {
         passwordInput.value = '';
         passwordInput.type = 'password';
       }
 
-      if (errorDiv) errorDiv.classList.add('hidden');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+      }
 
       try {
-        const res = await fetch('/api/auth/login', {
+        let payload = {};
+        if (currentAuthProfile === 'admin') {
+          payload = { username: identifier, password };
+        } else if (currentAuthProfile === 'client') {
+          payload = { login: identifier, password };
+        } else if (currentAuthProfile === 'employee') {
+          payload = { identifier, password };
+        }
+
+        const conf = AUTH_PROFILES[currentAuthProfile];
+        const res = await fetch(conf.endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
 
         if (res.ok && data.success) {
-          if (usernameInput) usernameInput.value = '';
-          const form = document.getElementById('header-login-form');
-          if (form) form.reset();
-          localStorage.setItem('ja_admin_token', data.token);
-          localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
-          window.location.href = '/painel';
+          showUAuthAlert('Autenticado com sucesso! Redirecionando com segurança...', 'success');
+          
+          if (currentAuthProfile === 'admin') {
+            localStorage.setItem('ja_admin_token', data.token);
+            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+            setTimeout(() => { window.location.href = '/painel'; }, 250);
+          } else if (currentAuthProfile === 'client') {
+            localStorage.setItem('jorgealvim_client_token', data.token);
+            setTimeout(() => { window.location.href = '/cliente'; }, 250);
+          } else if (currentAuthProfile === 'employee') {
+            localStorage.setItem('ja_employee_token', data.token);
+            setTimeout(() => { window.location.href = '/colaborador'; }, 250);
+          }
         } else {
-          errorText.textContent = data.error || 'Usuário ou senha incorretos.';
-          errorDiv.classList.remove('hidden');
+          showUAuthAlert(data.error || 'Credenciais inválidas. Verifique os dados digitados.', 'error');
         }
       } catch (err) {
-        errorText.textContent = 'Erro ao conectar ao servidor.';
-        errorDiv.classList.remove('hidden');
+        showUAuthAlert('Erro ao conectar ao servidor do escritório.', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
       }
     }
 
+    function showUAuthAlert(msg, type = 'error') {
+      const alertBox = document.getElementById('uauth-alert-box');
+      const alertText = document.getElementById('uauth-alert-text');
+      if (!alertBox || !alertText) return;
+
+      alertText.textContent = msg;
+      if (type === 'success') {
+        alertBox.className = 'mb-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-emerald-50 border border-emerald-200 text-emerald-800';
+      } else {
+        alertBox.className = 'mb-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-rose-50 border border-rose-200 text-rose-700';
+      }
+      alertBox.classList.remove('hidden');
+    }
+
+    // Fechar ao pressionar ESC ou clicar fora
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const umodal = document.getElementById('universal-auth-modal');
+        if (umodal && !umodal.classList.contains('hidden')) {
+          closeUniversalAuthModal();
+        }
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const umodal = document.getElementById('universal-auth-modal');
+      if (umodal && !umodal.classList.contains('hidden') && e.target === umodal) {
+        closeUniversalAuthModal();
+      }
+    });
+
     // Proteção contra retenção de senha ao voltar no histórico do navegador (bfcache)
     window.addEventListener('pageshow', function() {
-      const pwd = document.getElementById('hl-password');
+      const pwd = document.getElementById('uauth-password');
       if (pwd) {
         pwd.value = '';
         pwd.type = 'password';
       }
-      const usr = document.getElementById('hl-username');
+      const usr = document.getElementById('uauth-identifier');
       if (usr) usr.value = '';
-      const form = document.getElementById('header-login-form');
+      const form = document.getElementById('uauth-form');
       if (form) form.reset();
     });
 
@@ -2328,7 +2546,11 @@
     function checkWelcomeModal() {
       const seen = sessionStorage.getItem('ja_welcome_modal_seen');
       if (!seen) {
-        setTimeout(() => {
+        welcomeTimer = setTimeout(() => {
+          const umodal = document.getElementById('universal-auth-modal');
+          if (umodal && !umodal.classList.contains('hidden')) {
+            return;
+          }
           openWelcomeModal();
         }, 1200);
       }
@@ -2501,67 +2723,215 @@
     </div>
   </div>
 
-  <!-- ================= MODAL DE LOGIN DO ADMINISTRADOR ================= -->
-  <div id="admin-login-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4" style="z-index: 999999 !important;">
-    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative">
-      <button onclick="closeAdminLoginModal()" aria-label="Fechar" class="absolute right-4 top-4 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+  <!-- ================= CENTRAL UNIFICADA DE ACESSO (ADVOGADO, CLIENTE, COLABORADOR) ================= -->
+  <div id="universal-auth-modal" class="hidden fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto" style="z-index: 999999 !important;" role="dialog" aria-modal="true" aria-labelledby="uauth-modal-title">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 relative my-auto transition-all animate-fade-in">
       
-      <div class="text-center space-y-3 pb-5 border-b border-slate-100">
-        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-amber-50 to-gold-100 border-2 border-gold-400 flex items-center justify-center text-gold-700 shadow-sm">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-          </svg>
+      <!-- Botão Fechar -->
+      <button onclick="closeUniversalAuthModal()" type="button" aria-label="Fechar Central de Acesso" class="absolute right-4 top-4 z-30 w-9 h-9 rounded-full bg-slate-100/90 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center text-xl font-bold transition-all cursor-pointer shadow-xs">
+        &times;
+      </button>
+
+      <!-- COLUNA LATERAL ESQUERDA: IDENTIDADE INSTITUCIONAL E BLINDAGEM (5 colunas no desktop) -->
+      <div class="md:col-span-5 bg-gradient-to-br from-[#060E1A] via-[#0A192F] to-[#0E223D] text-white p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-800">
+        <!-- Glow ambiente de fundo -->
+        <div class="absolute -top-16 -left-16 w-48 h-48 bg-gold-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -right-16 w-48 h-48 bg-gold-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10">
+          <!-- Logo & Brasão -->
+          <div class="flex items-center space-x-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 via-amber-500 to-gold-600 p-0.5 shadow-lg shadow-gold-500/20 flex items-center justify-center flex-shrink-0">
+              <div class="w-full h-full bg-[#0A192F] rounded-[14px] flex items-center justify-center text-gold-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <span class="font-serif font-bold text-lg text-white block tracking-tight">Jorge Alvim</span>
+              <span class="text-[10px] uppercase tracking-widest text-gold-400 font-bold block">Advocacia • OAB/MG 222.943</span>
+            </div>
+          </div>
+
+          <h3 id="uauth-modal-title" class="font-serif text-xl sm:text-2xl font-bold text-white mb-2 leading-snug">
+            Central Segura de Acesso
+          </h3>
+          <p class="text-xs text-slate-300 leading-relaxed mb-6">
+            Ambiente corporativo protegido para advogados, clientes e colaboradores do escritório com autenticação blindada e sigilo absoluto.
+          </p>
+
+          <!-- Selos de Segurança / Compliance -->
+          <div class="space-y-3 pt-4 border-t border-slate-800/80 text-xs">
+            <div class="flex items-center space-x-2.5 text-slate-300">
+              <div class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 text-xs font-bold">
+                ✓
+              </div>
+              <span class="font-medium">Criptografia SHA-512 &amp; SSL 256-bit</span>
+            </div>
+            <div class="flex items-center space-x-2.5 text-slate-300">
+              <div class="w-6 h-6 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 flex-shrink-0 text-xs">
+                ⚖
+              </div>
+              <span class="font-medium">Provimento CFOAB 205/2021 &amp; LGPD</span>
+            </div>
+            <div class="flex items-center space-x-2.5 text-slate-300">
+              <div class="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0 text-xs">
+                🛡
+              </div>
+              <span class="font-medium">Proteção Anti-Brute Force &amp; Rate Limit</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 class="font-serif text-xl font-bold text-navy-950">Acesso Restrito ao Painel</h3>
-          <p class="text-[11px] text-gold-700 font-bold uppercase tracking-wider mt-0.5">Identifique-se como Administrador</p>
+
+        <!-- Rodapé do lado esquerdo -->
+        <div class="relative z-10 pt-6 mt-6 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+          <span>Juiz de Fora - MG</span>
+          <a href="https://wa.me/5532998153429" target="_blank" rel="noopener noreferrer" class="text-gold-400 hover:text-gold-300 font-semibold transition-colors flex items-center space-x-1">
+            <span>Suporte Direto</span>
+            <span>→</span>
+          </a>
         </div>
       </div>
 
-      <form id="header-login-form" onsubmit="handleHeaderLogin(event)" class="mt-5 space-y-4" autocomplete="off">
-        <div id="header-login-error" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
-          <svg class="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <span id="header-login-error-text">Usuário ou senha inválidos.</span>
-        </div>
-
+      <!-- COLUNA FORMULÁRIO: SELETOR DE PERFIL E CAMPOS (7 colunas no desktop) -->
+      <div class="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-white">
         <div>
-          <label for="hl-username" class="block text-xs font-bold text-slate-700 mb-1">Usuário / Login</label>
-          <input 
-            type="text" 
-            id="hl-username" 
-            name="username" 
-            required 
-            autocomplete="off"
-            placeholder="Digite seu usuário" 
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
-          />
+          <!-- Seletor de Perfis (Abas Modernas) -->
+          <div class="mb-5">
+            <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Selecione seu perfil de acesso:</span>
+            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold" role="tablist">
+              <button 
+                id="uauth-tab-admin" 
+                type="button" 
+                onclick="setAuthProfile('admin')" 
+                role="tab" 
+                aria-selected="true"
+                class="py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer bg-white text-navy-950 shadow-sm border border-slate-200/80 font-bold"
+              >
+                <span>🔒</span>
+                <span class="truncate">Advogado</span>
+              </button>
+              <button 
+                id="uauth-tab-client" 
+                type="button" 
+                onclick="setAuthProfile('client')" 
+                role="tab" 
+                aria-selected="false"
+                class="py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer text-slate-600 hover:text-navy-950 font-semibold"
+              >
+                <span>👤</span>
+                <span class="truncate">Cliente</span>
+              </button>
+              <button 
+                id="uauth-tab-employee" 
+                type="button" 
+                onclick="setAuthProfile('employee')" 
+                role="tab" 
+                aria-selected="false"
+                class="py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer text-slate-600 hover:text-navy-950 font-semibold"
+              >
+                <span>👥</span>
+                <span class="truncate">Colaborador</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cabeçalho Dinâmico do Perfil Ativo -->
+          <div class="mb-4">
+            <h4 id="uauth-profile-title" class="font-serif text-lg font-bold text-navy-950 flex items-center gap-2">
+              Painel de Gestão Jurídica
+            </h4>
+            <p id="uauth-profile-desc" class="text-xs text-slate-500 mt-0.5">
+              Acesso exclusivo a advogados e operadores autorizados.
+            </p>
+          </div>
+
+          <!-- Alerta de Erro / Sucesso -->
+          <div id="uauth-alert-box" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2">
+            <svg id="uauth-alert-icon" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="uauth-alert-text">Mensagem</span>
+          </div>
+
+          <!-- Formulário Universal -->
+          <form id="uauth-form" onsubmit="handleUniversalLogin(event)" class="space-y-4" autocomplete="on">
+            <div>
+              <label id="uauth-label-id" for="uauth-identifier" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Usuário / Login *
+              </label>
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="uauth-identifier" 
+                  name="username" 
+                  required 
+                  autocomplete="username"
+                  placeholder="Digite seu usuário do painel" 
+                  class="w-full px-4 py-2.5 sm:py-3 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-medium text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all shadow-2xs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label for="uauth-password" class="block text-xs font-bold text-slate-700">
+                  Senha de Acesso *
+                </label>
+                <button 
+                  type="button" 
+                  id="uauth-forgot-pwd-btn" 
+                  onclick="handleUniversalForgotPassword()" 
+                  class="text-[11px] font-semibold text-gold-700 hover:text-gold-800 hover:underline cursor-pointer"
+                >
+                  Esqueceu a senha?
+                </button>
+              </div>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="uauth-password" 
+                  name="password" 
+                  required 
+                  autocomplete="current-password"
+                  placeholder="••••••••" 
+                  class="w-full pl-4 pr-11 py-2.5 sm:py-3 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-medium text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all shadow-2xs"
+                />
+                <button 
+                  type="button" 
+                  onclick="toggleUniversalPassword()" 
+                  class="absolute right-3 top-2.5 sm:top-3 text-slate-400 hover:text-slate-700 p-1 cursor-pointer select-none text-base leading-none" 
+                  title="Ver ou ocultar senha"
+                >
+                  <span id="uauth-pwd-icon">👁️</span>
+                </button>
+              </div>
+              <p id="uauth-pwd-hint" class="text-[10px] text-slate-400 mt-1 hidden"></p>
+            </div>
+
+            <button 
+              type="submit" 
+              id="uauth-submit-btn" 
+              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all border border-gold-400/60 flex items-center justify-center space-x-2 cursor-pointer mt-2"
+            >
+              <span id="uauth-submit-text">Entrar no Painel do Advogado</span>
+              <svg id="uauth-submit-icon" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </button>
+          </form>
         </div>
 
-        <div>
-          <label for="hl-password" class="block text-xs font-bold text-slate-700 mb-1">Senha</label>
-          <input 
-            type="password" 
-            id="hl-password" 
-            name="password" 
-            required 
-            autocomplete="new-password"
-            placeholder="••••••••" 
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white transition-colors"
-          />
+        <!-- Links Auxiliares Contextuais -->
+        <div id="uauth-footer-links" class="pt-4 mt-4 border-t border-slate-100 text-center text-xs text-slate-500">
+          <span id="uauth-footer-help-text">Ambiente auditado pelo CFOAB.</span>
+          <a id="uauth-footer-action-link" href="/painel" class="text-gold-700 hover:text-gold-900 font-bold ml-1 hover:underline">
+            Abrir Painel em tela cheia →
+          </a>
         </div>
+      </div>
 
-        <button 
-          type="submit" 
-          class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all border border-gold-400/60 flex items-center justify-center space-x-2"
-        >
-          <span>Entrar no Painel</span>
-          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-          </svg>
-        </button>
-      </form>
     </div>
   </div>
 

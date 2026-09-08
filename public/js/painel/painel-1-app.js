@@ -860,6 +860,7 @@
     }
 
     function showLoginScreen() {
+      document.documentElement.classList.remove('has-admin-session');
       document.getElementById('login-view').classList.remove('hidden');
       document.getElementById('panel-view').classList.add('hidden');
       const form = document.getElementById('login-form');
@@ -909,6 +910,7 @@
     window.addEventListener('hashchange', handleHashRouting);
 
     function showPanelScreen(user) {
+      document.documentElement.classList.add('has-admin-session');
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
       const form = document.getElementById('login-form');
