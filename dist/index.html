@@ -301,6 +301,8 @@
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
       clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGoogleGsiLoaded && window.__onGoogleGsiLoaded()"></script>
+  <script src="./js/google-auth-client.js" defer></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BSqhiNrk.css">
 </head>
 
@@ -387,17 +389,10 @@
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
           <div class="w-px h-5 bg-slate-200 mx-1"></div>
-          <button onclick="openUniversalAuthModal('client')" type="button" class="text-xs text-emerald-800 font-extrabold px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Área do Cliente: Acompanhe seus processos e contratos">
-            <span>👤</span>
-            <span>Área do Cliente</span>
-          </button>
-          <button onclick="openUniversalAuthModal('employee')" type="button" class="text-xs text-indigo-800 font-extrabold px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Portal do Colaborador: Contracheques, Ponto Eletrônico e Ficha Financeira">
-            <span>👥</span>
-            <span>Colaborador</span>
-          </button>
-          <button onclick="openUniversalAuthModal('admin')" type="button" class="text-xs text-gold-800 hover:text-gold-900 font-bold px-3 py-1.5 rounded-lg bg-gold-50 hover:bg-gold-100 border border-gold-200 hover:border-gold-300 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-1.5 cursor-pointer" title="Acesso Restrito ao Painel">
-            <span>🔒</span>
-            <span>Painel</span>
+          <button onclick="openUniversalAuthModal('client')" type="button" id="btn-open-universal-portal" class="text-xs text-navy-950 font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-50 via-gold-50 to-amber-100 hover:from-amber-100 hover:to-gold-200 border border-gold-300/80 hover:border-gold-400 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-2 cursor-pointer group" title="Acesse com segurança seu Portal (Cliente, Colaborador ou Advogado)">
+            <span class="text-sm">🏛️</span>
+            <span class="tracking-tight text-navy-950 font-extrabold">Acessar Portais</span>
+            <span class="text-gold-700 font-normal text-[11px] bg-white/80 px-1.5 py-0.5 rounded border border-gold-300/50">Login</span>
           </button>
         </nav>
 
@@ -455,17 +450,15 @@
             <span>Blog & Notícias Jurídicas</span>
           </a>
           <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Contato & Envio de Documentos</a>
-          <button onclick="openUniversalAuthModal('client')" type="button" class="mobile-nav-link text-left text-emerald-950 font-bold py-2.5 bg-emerald-50 px-3.5 rounded-lg border border-emerald-300 flex items-center justify-between cursor-pointer w-full">
-            <span>👤 Área do Cliente</span>
-            <span class="text-xs text-emerald-700 font-bold">Acessar →</span>
-          </button>
-          <button onclick="openUniversalAuthModal('employee')" type="button" class="mobile-nav-link text-left text-indigo-950 font-bold py-2.5 bg-indigo-50 px-3.5 rounded-lg border border-indigo-300 flex items-center justify-between cursor-pointer w-full">
-            <span>👥 Portal do Colaborador</span>
-            <span class="text-xs text-indigo-700 font-bold">Acessar →</span>
-          </button>
-          <button onclick="openUniversalAuthModal('admin')" type="button" class="mobile-nav-link text-left text-gold-800 font-bold py-2.5 bg-gold-50 px-3.5 rounded-lg border border-gold-300 flex items-center justify-between cursor-pointer w-full">
-            <span>🔒 Painel do Administrador</span>
-            <span class="text-xs text-slate-500 font-bold">Entrar →</span>
+          <button onclick="openUniversalAuthModal('client'); try{toggleMobileMenu(false)}catch(e){}" type="button" class="mobile-nav-link text-left text-navy-950 font-bold py-3 bg-gradient-to-r from-amber-50 to-gold-50 hover:from-gold-100 hover:to-amber-100 px-4 rounded-xl border border-gold-300 flex items-center justify-between cursor-pointer w-full shadow-sm">
+            <div class="flex items-center space-x-2.5">
+              <span class="text-lg">🏛️</span>
+              <div>
+                <span class="block text-sm font-extrabold text-navy-950">Acessar Portais (Login)</span>
+                <span class="block text-[11px] text-slate-600 font-medium">Cliente • Colaborador • Advogado</span>
+              </div>
+            </div>
+            <span class="text-xs text-gold-800 font-bold bg-white/90 px-2 py-1 rounded-md border border-gold-200">Entrar →</span>
           </button>
           <!-- Redes Sociais no Menu Móvel -->
           <div class="pt-3 mt-1 border-t border-slate-100 flex items-center justify-around">
@@ -2277,12 +2270,14 @@
         if (!btn) return;
         if (role === profile) {
           btn.setAttribute('aria-selected', 'true');
-          btn.className = 'py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer bg-white text-navy-950 shadow-sm border border-slate-200/80 font-bold';
+          btn.classList.add('active');
         } else {
           btn.setAttribute('aria-selected', 'false');
-          btn.className = 'py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer text-slate-600 hover:text-navy-950 font-semibold';
+          btn.classList.remove('active');
         }
       });
+
+      closeAdminResetView();
 
       const titleEl = document.getElementById('uauth-profile-title');
       const descEl = document.getElementById('uauth-profile-desc');
@@ -2292,6 +2287,7 @@
       const hintEl = document.getElementById('uauth-pwd-hint');
       const footerHelpEl = document.getElementById('uauth-footer-help-text');
       const footerLinkEl = document.getElementById('uauth-footer-action-link');
+      const googleBtnText = document.getElementById('uauth-google-btn-text');
       const alertBox = document.getElementById('uauth-alert-box');
 
       if (titleEl) titleEl.textContent = conf.title;
@@ -2302,6 +2298,11 @@
         inputEl.name = conf.inputName;
       }
       if (btnTextEl) btnTextEl.textContent = conf.btnText;
+      if (googleBtnText) {
+        if (profile === 'admin') googleBtnText.textContent = 'Entrar como Advogado via Google';
+        else if (profile === 'client') googleBtnText.textContent = 'Acessar Área do Cliente com o Google';
+        else if (profile === 'employee') googleBtnText.textContent = 'Acessar Colaborador com o Google';
+      }
       if (hintEl) {
         if (conf.hint) {
           hintEl.textContent = conf.hint;
@@ -2347,6 +2348,7 @@
         modal.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
       }
+      closeAdminResetView();
       const pwd = document.getElementById('uauth-password');
       if (pwd) {
         pwd.value = '';
@@ -2387,13 +2389,210 @@
       }
     }
 
+    // ================= RECUPERAÇÃO DE SENHA DO ADMINISTRADOR =================
     function handleUniversalForgotPassword() {
-      if (currentAuthProfile === 'client') {
+      if (currentAuthProfile === 'admin') {
+        openAdminResetView();
+      } else if (currentAuthProfile === 'client') {
         window.location.href = '/cliente';
       } else if (currentAuthProfile === 'employee') {
-        alert('Portal do Trabalhador: sua senha padrão inicial é o seu CPF (somente números). Para suporte, contate a administração do escritório.');
+        alert('Portal do Trabalhador: sua senha padrão inicial é o seu CPF (somente números). Para suporte ou redefinição, contate a administração do escritório.');
+      }
+    }
+
+    function openAdminResetView() {
+      const mainBox = document.getElementById('uauth-main-container');
+      const resetBox = document.getElementById('uauth-reset-container');
+      const resetStep1 = document.getElementById('uauth-reset-step-1');
+      const resetStep2 = document.getElementById('uauth-reset-step-2');
+      const resetAlert = document.getElementById('uauth-reset-alert-box');
+      if (mainBox) mainBox.classList.add('hidden');
+      if (resetBox) resetBox.classList.remove('hidden');
+      if (resetStep1) resetStep1.classList.remove('hidden');
+      if (resetStep2) resetStep2.classList.add('hidden');
+      if (resetAlert) resetAlert.classList.add('hidden');
+
+      const loginInput = document.getElementById('uauth-identifier');
+      const resetInput = document.getElementById('uauth-reset-username');
+      if (loginInput && resetInput && loginInput.value.trim()) {
+        resetInput.value = loginInput.value.trim();
+      }
+    }
+
+    function closeAdminResetView() {
+      const mainBox = document.getElementById('uauth-main-container');
+      const resetBox = document.getElementById('uauth-reset-container');
+      if (mainBox) mainBox.classList.remove('hidden');
+      if (resetBox) resetBox.classList.add('hidden');
+    }
+
+    function showUAuthResetAlert(msg, type = 'error') {
+      const alertBox = document.getElementById('uauth-reset-alert-box');
+      const alertText = document.getElementById('uauth-reset-alert-text');
+      if (!alertBox || !alertText) return;
+      alertText.textContent = msg;
+      if (type === 'success') {
+        alertBox.className = 'mb-3 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-emerald-50 border border-emerald-200 text-emerald-800';
       } else {
-        alert('Acesso Administrativo: caso tenha esquecido sua senha de operador, utilize a chave mestra no servidor ou acione o suporte técnico.');
+        alertBox.className = 'mb-3 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-rose-50 border border-rose-200 text-rose-700';
+      }
+      alertBox.classList.remove('hidden');
+    }
+
+    async function requestModalAdminResetCode() {
+      const userInput = document.getElementById('uauth-reset-username');
+      const sendBtn = document.getElementById('uauth-reset-send-btn');
+      const username = userInput ? userInput.value.trim() : '';
+
+      if (!username) {
+        showUAuthResetAlert('Informe seu nome de usuário ou e-mail cadastrado.', 'error');
+        return;
+      }
+
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Enviando código...';
+      }
+
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showUAuthResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          document.getElementById('uauth-reset-step-1')?.classList.add('hidden');
+          document.getElementById('uauth-reset-step-2')?.classList.remove('hidden');
+          setTimeout(() => { document.getElementById('uauth-reset-code')?.focus(); }, 150);
+        } else {
+          showUAuthResetAlert(data.error || 'Falha ao solicitar código.', 'error');
+        }
+      } catch (e) {
+        showUAuthResetAlert('Erro ao conectar ao servidor.', 'error');
+      } finally {
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        }
+      }
+    }
+
+    async function confirmModalAdminResetPassword() {
+      const userInput = document.getElementById('uauth-reset-username');
+      const codeInput = document.getElementById('uauth-reset-code');
+      const newpassInput = document.getElementById('uauth-reset-newpass');
+      const confirmBtn = document.getElementById('uauth-reset-confirm-btn');
+
+      const username = userInput ? userInput.value.trim() : '';
+      const code = codeInput ? codeInput.value.trim() : '';
+      const new_password = newpassInput ? newpassInput.value.trim() : '';
+
+      if (!code || !new_password) {
+        showUAuthResetAlert('Digite o código de 6 dígitos e a nova senha.', 'error');
+        return;
+      }
+
+      if (new_password.length < 4 || new_password.length > 12) {
+        showUAuthResetAlert('A nova senha deve ter entre 4 e 12 caracteres.', 'error');
+        return;
+      }
+
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Redefinindo senha...';
+      }
+
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, code, new_password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showUAuthAlert('Senha redefinida com sucesso! Faça login com a sua nova senha.', 'success');
+          closeAdminResetView();
+          const pwd = document.getElementById('uauth-password');
+          if (pwd) pwd.value = '';
+        } else {
+          showUAuthResetAlert(data.error || 'Código incorreto ou inválido.', 'error');
+        }
+      } catch (e) {
+        showUAuthResetAlert('Erro ao conectar ao servidor.', 'error');
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = '<span>Confirmar Nova Senha</span> <span>✓</span>';
+        }
+      }
+    }
+
+    // ================= GOOGLE IDENTITY SERVICES UNIFICADO =================
+    function initUniversalGoogleAuth() {
+      // O conector global GoogleAuthClient gerencia a inicialização automática antecipada.
+    }
+
+    function handleUniversalGoogleAuth() {
+      const errorAlert = document.getElementById('uauth-alert');
+      if (errorAlert) errorAlert.classList.add('hidden');
+
+      if (window.GoogleAuthClient) {
+        window.GoogleAuthClient.triggerAuth({
+          buttonId: 'uauth-google-btn',
+          prompt: 'select_account',
+          onSuccess: async (payload) => {
+            await submitUniversalGoogleAuth(payload);
+          },
+          onError: (err) => {
+            const isBlocked = err && (err.message === 'GOOGLE_BLOCKED_OR_UNAVAILABLE' || err.type === 'popup_failed_to_open');
+            showUAuthAlert(isBlocked
+              ? 'A janela do Google não pôde ser aberta. Se estiver usando bloqueador de anúncios (ex: AdBlock, Brave Shields) ou bloqueio de popups, permita o site ou utilize seu login e senha.'
+              : 'Autenticação com a conta Google cancelada ou não concluída.', 'error');
+          }
+        });
+      } else {
+        showUAuthAlert('Carregando serviço de autenticação Google. Tente novamente em alguns instantes.', 'error');
+      }
+    }
+
+    async function submitUniversalGoogleAuth(payload) {
+      try {
+        let endpoint = '/api/auth/google';
+        if (currentAuthProfile === 'client') {
+          endpoint = '/api/client-portal/auth/google';
+        } else if (currentAuthProfile === 'employee') {
+          endpoint = '/api/hr/portal/auth/google';
+        }
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showUAuthAlert('Autenticado via Google com sucesso! Redirecionando...', 'success');
+          if (currentAuthProfile === 'admin') {
+            localStorage.setItem('ja_admin_token', data.token);
+            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+            setTimeout(() => { window.location.href = '/painel'; }, 300);
+          } else if (currentAuthProfile === 'client') {
+            localStorage.setItem('jorgealvim_client_token', data.token);
+            setTimeout(() => { window.location.href = '/cliente'; }, 300);
+          } else if (currentAuthProfile === 'employee') {
+            localStorage.setItem('ja_employee_token', data.token);
+            setTimeout(() => { window.location.href = '/colaborador'; }, 300);
+          }
+        } else {
+          showUAuthAlert(data.error || 'Não foi possível autenticar com a conta Google.', 'error');
+        }
+      } catch (err) {
+        showUAuthAlert('Erro ao conectar ao servidor para validação do Google.', 'error');
       }
     }
 
@@ -2477,7 +2676,6 @@
       } else {
         alertBox.className = 'mb-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-rose-50 border border-rose-200 text-rose-700';
       }
-      alertBox.classList.remove('hidden');
     }
 
     // Fechar ao pressionar ESC ou clicar fora
@@ -2668,6 +2866,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       trackSiteVisit();
       checkWelcomeModal();
+      initUniversalGoogleAuth();
     });
   </script>
 
@@ -2723,17 +2922,180 @@
     </div>
   </div>
 
+  <!-- ================= CENTRAL UNIFICADA DE ACESSO (ESTILOS INDEPENDENTES E BLINDADOS) ================= -->
+  <style id="uauth-modal-styles">
+    #universal-auth-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999999 !important;
+      background: rgba(6, 14, 26, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    #universal-auth-modal:not(.hidden) {
+      display: flex !important;
+    }
+    .uauth-card {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      max-width: 880px;
+      min-height: 550px;
+      background: #ffffff;
+      border-radius: 24px;
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+      position: relative;
+      margin: auto;
+      box-sizing: border-box;
+    }
+    .uauth-col-info {
+      width: 38%;
+      min-width: 290px;
+      max-width: 340px;
+      background: linear-gradient(145deg, #060e1a 0%, #0a192f 55%, #0e223d 100%);
+      color: #ffffff;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      border-right: 1px solid rgba(30, 41, 59, 0.8);
+      box-sizing: border-box;
+    }
+    .uauth-col-form {
+      width: 62%;
+      flex: 1;
+      background: #ffffff;
+      padding: 32px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-sizing: border-box;
+    }
+    @media (max-width: 768px) {
+      .uauth-card {
+        flex-direction: column;
+        max-width: 480px;
+        min-height: auto;
+        border-radius: 20px;
+      }
+      .uauth-col-info {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        padding: 24px 20px;
+        border-right: none;
+        border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+      }
+      .uauth-col-form {
+        width: 100%;
+        padding: 24px 20px;
+      }
+    }
+    .uauth-tab-btn {
+      flex: 1;
+      padding: 9px 6px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      background: transparent;
+      color: #64748b;
+    }
+    .uauth-tab-btn.active {
+      background: #ffffff;
+      color: #0b192c;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .uauth-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      font-size: 13px;
+      color: #0f172a;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+    }
+    .uauth-input:focus {
+      border-color: #b8860b;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.15);
+    }
+    .uauth-btn-primary {
+      width: 100%;
+      padding: 11px 16px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #d97706 0%, #b8860b 50%, #92400e 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      border: 1px solid rgba(217, 119, 6, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(184, 134, 11, 0.25);
+      transition: all 0.2s ease;
+    }
+    .uauth-btn-primary:hover {
+      background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+      box-shadow: 0 6px 16px rgba(184, 134, 11, 0.35);
+      transform: translateY(-1px);
+    }
+    .uauth-btn-google {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #334155;
+      font-weight: 600;
+      font-size: 13px;
+      border: 1px solid #cbd5e1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .uauth-btn-google:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+  </style>
+
   <!-- ================= CENTRAL UNIFICADA DE ACESSO (ADVOGADO, CLIENTE, COLABORADOR) ================= -->
-  <div id="universal-auth-modal" class="hidden fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto" style="z-index: 999999 !important;" role="dialog" aria-modal="true" aria-labelledby="uauth-modal-title">
-    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 relative my-auto transition-all animate-fade-in">
+  <div id="universal-auth-modal" class="hidden fixed inset-0 z-[999999]" role="dialog" aria-modal="true" aria-labelledby="uauth-modal-title">
+    <div class="uauth-card">
       
       <!-- Botão Fechar -->
       <button onclick="closeUniversalAuthModal()" type="button" aria-label="Fechar Central de Acesso" class="absolute right-4 top-4 z-30 w-9 h-9 rounded-full bg-slate-100/90 hover:bg-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center text-xl font-bold transition-all cursor-pointer shadow-xs">
         &times;
       </button>
 
-      <!-- COLUNA LATERAL ESQUERDA: IDENTIDADE INSTITUCIONAL E BLINDAGEM (5 colunas no desktop) -->
-      <div class="md:col-span-5 bg-gradient-to-br from-[#060E1A] via-[#0A192F] to-[#0E223D] text-white p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-800">
+      <!-- COLUNA LATERAL ESQUERDA: IDENTIDADE INSTITUCIONAL E BLINDAGEM -->
+      <div class="uauth-col-info">
         <!-- Glow ambiente de fundo -->
         <div class="absolute -top-16 -left-16 w-48 h-48 bg-gold-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-16 -right-16 w-48 h-48 bg-gold-400/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -2742,10 +3104,8 @@
           <!-- Logo & Brasão -->
           <div class="flex items-center space-x-3 mb-6">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-400 via-amber-500 to-gold-600 p-0.5 shadow-lg shadow-gold-500/20 flex items-center justify-center flex-shrink-0">
-              <div class="w-full h-full bg-[#0A192F] rounded-[14px] flex items-center justify-center text-gold-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
-                </svg>
+              <div class="w-full h-full bg-[#0A192F] rounded-[14px] flex items-center justify-center text-gold-400 font-bold text-xl">
+                ⚖
               </div>
             </div>
             <div>
@@ -2767,7 +3127,7 @@
               <div class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 text-xs font-bold">
                 ✓
               </div>
-              <span class="font-medium">Criptografia SHA-512 &amp; SSL 256-bit</span>
+              <span class="font-medium">Criptografia PBKDF2 &amp; SSL 256-bit</span>
             </div>
             <div class="flex items-center space-x-2.5 text-slate-300">
               <div class="w-6 h-6 rounded-lg bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 flex-shrink-0 text-xs">
@@ -2779,7 +3139,7 @@
               <div class="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0 text-xs">
                 🛡
               </div>
-              <span class="font-medium">Proteção Anti-Brute Force &amp; Rate Limit</span>
+              <span class="font-medium">Proteção Anti-Brute Force Ativa</span>
             </div>
           </div>
         </div>
@@ -2788,29 +3148,31 @@
         <div class="relative z-10 pt-6 mt-6 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
           <span>Juiz de Fora - MG</span>
           <a href="https://wa.me/5532998153429" target="_blank" rel="noopener noreferrer" class="text-gold-400 hover:text-gold-300 font-semibold transition-colors flex items-center space-x-1">
-            <span>Suporte Direto</span>
+            <span>Suporte WhatsApp</span>
             <span>→</span>
           </a>
         </div>
       </div>
 
-      <!-- COLUNA FORMULÁRIO: SELETOR DE PERFIL E CAMPOS (7 colunas no desktop) -->
-      <div class="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-white">
-        <div>
+      <!-- COLUNA FORMULÁRIO: SELETOR DE PERFIL E CAMPOS -->
+      <div class="uauth-col-form">
+        
+        <!-- CONTAINER PRINCIPAL DE LOGIN -->
+        <div id="uauth-main-container">
           <!-- Seletor de Perfis (Abas Modernas) -->
-          <div class="mb-5">
+          <div class="mb-4">
             <span class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Selecione seu perfil de acesso:</span>
-            <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold" role="tablist">
+            <div class="flex p-1 bg-slate-100 rounded-2xl border border-slate-200" role="tablist">
               <button 
                 id="uauth-tab-admin" 
                 type="button" 
                 onclick="setAuthProfile('admin')" 
                 role="tab" 
                 aria-selected="true"
-                class="py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer bg-white text-navy-950 shadow-sm border border-slate-200/80 font-bold"
+                class="uauth-tab-btn active"
               >
                 <span>🔒</span>
-                <span class="truncate">Advogado</span>
+                <span>Advogado</span>
               </button>
               <button 
                 id="uauth-tab-client" 
@@ -2818,10 +3180,10 @@
                 onclick="setAuthProfile('client')" 
                 role="tab" 
                 aria-selected="false"
-                class="py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer text-slate-600 hover:text-navy-950 font-semibold"
+                class="uauth-tab-btn"
               >
                 <span>👤</span>
-                <span class="truncate">Cliente</span>
+                <span>Cliente</span>
               </button>
               <button 
                 id="uauth-tab-employee" 
@@ -2829,16 +3191,16 @@
                 onclick="setAuthProfile('employee')" 
                 role="tab" 
                 aria-selected="false"
-                class="py-2.5 px-2 rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer text-slate-600 hover:text-navy-950 font-semibold"
+                class="uauth-tab-btn"
               >
                 <span>👥</span>
-                <span class="truncate">Colaborador</span>
+                <span>Colaborador</span>
               </button>
             </div>
           </div>
 
           <!-- Cabeçalho Dinâmico do Perfil Ativo -->
-          <div class="mb-4">
+          <div class="mb-3">
             <h4 id="uauth-profile-title" class="font-serif text-lg font-bold text-navy-950 flex items-center gap-2">
               Painel de Gestão Jurídica
             </h4>
@@ -2848,34 +3210,29 @@
           </div>
 
           <!-- Alerta de Erro / Sucesso -->
-          <div id="uauth-alert-box" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2">
-            <svg id="uauth-alert-icon" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+          <div id="uauth-alert-box" class="hidden mb-3 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2">
             <span id="uauth-alert-text">Mensagem</span>
           </div>
 
           <!-- Formulário Universal -->
-          <form id="uauth-form" onsubmit="handleUniversalLogin(event)" class="space-y-4" autocomplete="on">
+          <form id="uauth-form" onsubmit="handleUniversalLogin(event)" class="space-y-3" autocomplete="on">
             <div>
-              <label id="uauth-label-id" for="uauth-identifier" class="block text-xs font-bold text-slate-700 mb-1.5">
+              <label id="uauth-label-id" for="uauth-identifier" class="block text-xs font-bold text-slate-700 mb-1">
                 Usuário / Login *
               </label>
-              <div class="relative">
-                <input 
-                  type="text" 
-                  id="uauth-identifier" 
-                  name="username" 
-                  required 
-                  autocomplete="username"
-                  placeholder="Digite seu usuário do painel" 
-                  class="w-full px-4 py-2.5 sm:py-3 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-medium text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all shadow-2xs"
-                />
-              </div>
+              <input 
+                type="text" 
+                id="uauth-identifier" 
+                name="username" 
+                required 
+                autocomplete="username"
+                placeholder="Digite seu usuário do painel" 
+                class="uauth-input"
+              />
             </div>
 
             <div>
-              <div class="flex justify-between items-center mb-1.5">
+              <div class="flex justify-between items-center mb-1">
                 <label for="uauth-password" class="block text-xs font-bold text-slate-700">
                   Senha de Acesso *
                 </label>
@@ -2883,12 +3240,12 @@
                   type="button" 
                   id="uauth-forgot-pwd-btn" 
                   onclick="handleUniversalForgotPassword()" 
-                  class="text-[11px] font-semibold text-gold-700 hover:text-gold-800 hover:underline cursor-pointer"
+                  class="text-[11px] font-semibold text-gold-700 hover:text-gold-900 hover:underline cursor-pointer"
                 >
                   Esqueceu a senha?
                 </button>
               </div>
-              <div class="relative">
+              <div style="position: relative; width: 100%;">
                 <input 
                   type="password" 
                   id="uauth-password" 
@@ -2896,35 +3253,147 @@
                   required 
                   autocomplete="current-password"
                   placeholder="••••••••" 
-                  class="w-full pl-4 pr-11 py-2.5 sm:py-3 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm font-medium text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all shadow-2xs"
+                  class="uauth-input"
+                  style="padding-right: 42px;"
                 />
                 <button 
                   type="button" 
                   onclick="toggleUniversalPassword()" 
-                  class="absolute right-3 top-2.5 sm:top-3 text-slate-400 hover:text-slate-700 p-1 cursor-pointer select-none text-base leading-none" 
+                  style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;" 
                   title="Ver ou ocultar senha"
                 >
                   <span id="uauth-pwd-icon">👁️</span>
                 </button>
               </div>
-              <p id="uauth-pwd-hint" class="text-[10px] text-slate-400 mt-1 hidden"></p>
+              <p id="uauth-pwd-hint" class="text-[10px] text-slate-500 mt-1 hidden"></p>
             </div>
 
             <button 
               type="submit" 
               id="uauth-submit-btn" 
-              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all border border-gold-400/60 flex items-center justify-center space-x-2 cursor-pointer mt-2"
+              class="uauth-btn-primary"
             >
               <span id="uauth-submit-text">Entrar no Painel do Advogado</span>
-              <svg id="uauth-submit-icon" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-              </svg>
+              <span>→</span>
             </button>
           </form>
+
+          <!-- Divisor Google -->
+          <div style="display: flex; align-items: center; text-align: center; margin: 12px 0;">
+            <div style="flex: 1; border-top: 1px solid #e2e8f0;"></div>
+            <span style="padding: 0 10px; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">ou continue com</span>
+            <div style="flex: 1; border-top: 1px solid #e2e8f0;"></div>
+          </div>
+
+          <!-- Botão Oficial Google -->
+          <button 
+            type="button" 
+            onclick="handleUniversalGoogleAuth()" 
+            class="uauth-btn-google"
+            id="uauth-google-btn"
+          >
+            <svg style="width: 16px; height: 16px; flex-shrink: 0;" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span id="uauth-google-btn-text">Entrar com a Conta Google</span>
+          </button>
+        </div>
+
+        <!-- CONTAINER DE RECUPERAÇÃO DE SENHA (ADMIN) -->
+        <div id="uauth-reset-container" class="hidden">
+          <div class="mb-4">
+            <h4 class="font-serif text-lg font-bold text-navy-950 flex items-center gap-2">
+              🔐 Recuperar Senha do Administrador
+            </h4>
+            <p class="text-xs text-slate-500 mt-1">
+              Informe seu usuário para receber um código temporário de verificação enviado diretamente ao WhatsApp do Dr. Jorge Alvim.
+            </p>
+          </div>
+
+          <!-- Alerta Reset -->
+          <div id="uauth-reset-alert-box" class="hidden mb-3 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2">
+            <span id="uauth-reset-alert-text">Mensagem</span>
+          </div>
+
+          <!-- Etapa 1: Solicitar Código -->
+          <div id="uauth-reset-step-1" class="space-y-3">
+            <div>
+              <label for="uauth-reset-username" class="block text-xs font-bold text-slate-700 mb-1">
+                Usuário / Login Cadastrado *
+              </label>
+              <input 
+                type="text" 
+                id="uauth-reset-username" 
+                placeholder="Ex: jorgealvimtecnologia" 
+                class="uauth-input"
+              />
+            </div>
+            <button 
+              type="button" 
+              onclick="requestModalAdminResetCode()" 
+              id="uauth-reset-send-btn" 
+              class="uauth-btn-primary"
+            >
+              <span>Enviar Código via WhatsApp</span>
+              <span>📲</span>
+            </button>
+          </div>
+
+          <!-- Etapa 2: Validar Código e Nova Senha -->
+          <div id="uauth-reset-step-2" class="hidden space-y-3">
+            <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
+              Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
+            </div>
+            <div>
+              <label for="uauth-reset-code" class="block text-xs font-bold text-slate-700 mb-1">
+                Código de Segurança (6 dígitos) *
+              </label>
+              <input 
+                type="text" 
+                id="uauth-reset-code" 
+                maxlength="6" 
+                placeholder="Ex: 123456" 
+                class="uauth-input font-mono text-center tracking-widest text-base font-bold"
+              />
+            </div>
+            <div>
+              <label for="uauth-reset-newpass" class="block text-xs font-bold text-slate-700 mb-1">
+                Nova Senha de Acesso (4 a 12 caracteres) *
+              </label>
+              <input 
+                type="password" 
+                id="uauth-reset-newpass" 
+                placeholder="Digite a nova senha" 
+                class="uauth-input"
+              />
+            </div>
+            <button 
+              type="button" 
+              onclick="confirmModalAdminResetPassword()" 
+              id="uauth-reset-confirm-btn" 
+              class="uauth-btn-primary"
+            >
+              <span>Confirmar Nova Senha</span>
+              <span>✓</span>
+            </button>
+          </div>
+
+          <div class="pt-3 mt-3 border-t border-slate-100 text-center">
+            <button 
+              type="button" 
+              onclick="closeAdminResetView()" 
+              class="text-xs text-slate-600 hover:text-navy-950 font-semibold cursor-pointer"
+            >
+              ← Voltar ao Login
+            </button>
+          </div>
         </div>
 
         <!-- Links Auxiliares Contextuais -->
-        <div id="uauth-footer-links" class="pt-4 mt-4 border-t border-slate-100 text-center text-xs text-slate-500">
+        <div id="uauth-footer-links" class="pt-3 mt-3 border-t border-slate-100 text-center text-xs text-slate-500">
           <span id="uauth-footer-help-text">Ambiente auditado pelo CFOAB.</span>
           <a id="uauth-footer-action-link" href="/painel" class="text-gold-700 hover:text-gold-900 font-bold ml-1 hover:underline">
             Abrir Painel em tela cheia →

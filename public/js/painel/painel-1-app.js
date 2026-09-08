@@ -1080,16 +1080,177 @@
       const errorText = document.getElementById('login-error-text');
       if (errorMsg) errorMsg.classList.add('hidden');
 
-      if (adminGoogleTokenClient) {
-        // Abre o popup oficial seguro do Google sem exibir e-mail prévio na tela
-        adminGoogleTokenClient.requestAccessToken({ prompt: 'select_account' });
-      } else if (window.google && window.google.accounts && window.google.accounts.id && adminGoogleClientId) {
-        window.google.accounts.id.prompt();
+      if (window.GoogleAuthClient) {
+        window.GoogleAuthClient.triggerAuth({
+          buttonId: 'btn-admin-google',
+          prompt: 'select_account',
+          onSuccess: async (payload) => {
+            await handleAdminGoogleAccessToken(payload.access_token);
+          },
+          onError: (err) => {
+            const isBlocked = err && (err.message === 'GOOGLE_BLOCKED_OR_UNAVAILABLE' || err.type === 'popup_failed_to_open');
+            const msg = isBlocked
+              ? 'A janela do Google não pôde ser aberta. Se estiver usando bloqueador de anúncios (ex: AdBlock, Brave Shields) ou bloqueio de popups, permita o site ou utilize seu Usuário e Senha.'
+              : 'Autenticação com a conta Google cancelada ou não concluída.';
+            if (errorText) errorText.textContent = msg;
+            if (errorMsg) errorMsg.classList.remove('hidden');
+          }
+        });
       } else {
-        if (errorText) errorText.textContent = 'Aguardando inicialização do serviço Google. Recarregue a página se persistir.';
+        if (errorText) errorText.textContent = 'Carregando serviço de autenticação Google. Tente novamente em instantes.';
         if (errorMsg) errorMsg.classList.remove('hidden');
       }
     }
+
+    // ================= RECUPERAÇÃO DE SENHA DO ADMINISTRADOR =================
+    function showAdminResetAlert(msg, type = 'error') {
+      const alertBox = document.getElementById('admin-reset-alert');
+      const alertText = document.getElementById('admin-reset-alert-text');
+      if (!alertBox || !alertText) return;
+      alertText.textContent = msg;
+      if (type === 'success') {
+        alertBox.className = 'my-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-emerald-50 border border-emerald-200 text-emerald-800';
+      } else {
+        alertBox.className = 'my-4 p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-rose-50 border border-rose-200 text-rose-700';
+      }
+      alertBox.classList.remove('hidden');
+    }
+
+    function openAdminForgotPasswordModal() {
+      const modal = document.getElementById('admin-password-reset-modal');
+      if (modal) modal.classList.remove('hidden');
+      const step1 = document.getElementById('admin-reset-step-1');
+      const step2 = document.getElementById('admin-reset-step-2');
+      const alertBox = document.getElementById('admin-reset-alert');
+      if (step1) step1.classList.remove('hidden');
+      if (step2) step2.classList.add('hidden');
+      if (alertBox) alertBox.classList.add('hidden');
+
+      const loginUser = document.getElementById('login-username');
+      const resetUser = document.getElementById('admin-reset-username');
+      if (loginUser && resetUser && loginUser.value.trim()) {
+        resetUser.value = loginUser.value.trim();
+      }
+      setTimeout(() => { resetUser?.focus(); }, 150);
+    }
+
+    function closeAdminForgotPasswordModal() {
+      const modal = document.getElementById('admin-password-reset-modal');
+      if (modal) modal.classList.add('hidden');
+      const step1 = document.getElementById('admin-reset-step-1');
+      const step2 = document.getElementById('admin-reset-step-2');
+      if (step1) step1.classList.remove('hidden');
+      if (step2) step2.classList.add('hidden');
+      const alertBox = document.getElementById('admin-reset-alert');
+      if (alertBox) alertBox.classList.add('hidden');
+    }
+
+    async function requestAdminResetCode() {
+      const userInput = document.getElementById('admin-reset-username');
+      const sendBtn = document.getElementById('btn-admin-send-code');
+      const username = userInput ? userInput.value.trim() : '';
+
+      if (!username) {
+        showAdminResetAlert('Por favor, informe seu usuário ou e-mail de acesso.', 'error');
+        return;
+      }
+
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = `<span>Enviando código...</span>`;
+      }
+
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showAdminResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          document.getElementById('admin-reset-step-1')?.classList.add('hidden');
+          document.getElementById('admin-reset-step-2')?.classList.remove('hidden');
+          setTimeout(() => { document.getElementById('admin-reset-code')?.focus(); }, 150);
+        } else {
+          showAdminResetAlert(data.error || 'Não foi possível solicitar o código de recuperação.', 'error');
+        }
+      } catch (err) {
+        showAdminResetAlert('Erro ao conectar ao servidor.', 'error');
+      } finally {
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = `<span>Enviar Código via WhatsApp</span> <span>📲</span>`;
+        }
+      }
+    }
+
+    async function confirmAdminResetPassword() {
+      const userInput = document.getElementById('admin-reset-username');
+      const codeInput = document.getElementById('admin-reset-code');
+      const passInput = document.getElementById('admin-reset-newpassword');
+      const confirmBtn = document.getElementById('btn-admin-confirm-reset');
+
+      const username = userInput ? userInput.value.trim() : '';
+      const code = codeInput ? codeInput.value.trim() : '';
+      const new_password = passInput ? passInput.value.trim() : '';
+
+      if (!code || !new_password) {
+        showAdminResetAlert('Informe o código de 6 dígitos e a nova senha.', 'error');
+        return;
+      }
+
+      if (new_password.length < 4 || new_password.length > 12) {
+        showAdminResetAlert('A nova senha deve ter entre 4 e 12 caracteres.', 'error');
+        return;
+      }
+
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<span>Atualizando credencial...</span>`;
+      }
+
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, code, new_password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          closeAdminForgotPasswordModal();
+          const errorMsg = document.getElementById('login-error-msg');
+          const errorText = document.getElementById('login-error-text');
+          if (errorMsg && errorText) {
+            errorText.textContent = 'Senha redefinida com sucesso! Entre com a nova senha.';
+            errorMsg.className = 'p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center space-x-2';
+            errorMsg.classList.remove('hidden');
+          }
+          const pwd = document.getElementById('login-password');
+          if (pwd) {
+            pwd.removeAttribute('readonly');
+            pwd.value = '';
+            pwd.focus();
+          }
+        } else {
+          showAdminResetAlert(data.error || 'Código incorreto ou inválido.', 'error');
+        }
+      } catch (err) {
+        showAdminResetAlert('Erro ao conectar ao servidor.', 'error');
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = `<span>Confirmar Nova Senha</span> <span>✓</span>`;
+        }
+      }
+    }
+
+    window.openAdminForgotPasswordModal = openAdminForgotPasswordModal;
+    window.closeAdminForgotPasswordModal = closeAdminForgotPasswordModal;
+    window.requestAdminResetCode = requestAdminResetCode;
+    window.confirmAdminResetPassword = confirmAdminResetPassword;
 
     async function handleLogout() {
       try {

@@ -16,7 +16,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Google Identity Services (Sign-In with Google) -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGoogleGsiLoaded && window.__onGoogleGsiLoaded()"></script>
+  <script src="/js/google-auth-client.js" defer></script>
 
   <!-- Tailwind CSS CDN -->
   <link rel="stylesheet" href="/public/css/app.tailwind.css" />
@@ -263,6 +264,7 @@
             <div id="google-login-btn-container" class="w-full flex flex-col items-center">
               <button 
                 type="button" 
+                id="btn-client-google-login"
                 onclick="triggerGoogleAuth('login')" 
                 class="w-full py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-2xs hover:shadow-xs transition-all flex items-center justify-center space-x-2.5 active:scale-[0.99] cursor-pointer"
               >
@@ -303,6 +305,7 @@
               <div id="google-register-btn-container" class="flex justify-center">
                 <button 
                   type="button" 
+                  id="btn-client-google-register"
                   onclick="triggerGoogleAuth('register')" 
                   class="w-full py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-2xs hover:shadow-xs transition-all flex items-center justify-center space-x-2.5 active:scale-[0.99] cursor-pointer"
                 >
@@ -1344,14 +1347,30 @@
     function triggerGoogleAuth(flow = 'login') {
       const errorMsg = document.getElementById(flow === 'register' ? 'register-error-msg' : 'login-error-msg');
       if (errorMsg) errorMsg.classList.add('hidden');
+      const buttonId = flow === 'register' ? 'btn-client-google-register' : 'btn-client-google-login';
 
-      if (googleTokenClient) {
-        // Abre o popup oficial seguro do Google para o usuário escolher a conta sob demanda
-        googleTokenClient.requestAccessToken({ prompt: 'select_account' });
-      } else if (window.google && window.google.accounts && window.google.accounts.id && googleClientId) {
-        window.google.accounts.id.prompt();
+      if (window.GoogleAuthClient) {
+        window.GoogleAuthClient.triggerAuth({
+          buttonId: buttonId,
+          prompt: 'select_account',
+          onSuccess: async (payload) => {
+            await submitGoogleAuthPayload(payload);
+          },
+          onError: (err) => {
+            const isBlocked = err && (err.message === 'GOOGLE_BLOCKED_OR_UNAVAILABLE' || err.type === 'popup_failed_to_open');
+            const msg = isBlocked
+              ? 'A janela do Google não pôde ser aberta. Se estiver usando bloqueador de anúncios (ex: AdBlock, Brave Shields) ou bloqueio de popups, permita o site ou use seu CPF e Senha.'
+              : 'Autenticação com o Google cancelada ou não concluída.';
+            if (errorMsg) {
+              errorMsg.textContent = msg;
+              errorMsg.classList.remove('hidden');
+            } else {
+              alert(msg);
+            }
+          }
+        });
       } else {
-        const msg = 'Aguardando inicialização do serviço Google. Recarregue a página se persistir.';
+        const msg = 'Carregando serviço de autenticação Google. Tente novamente em instantes.';
         if (errorMsg) {
           errorMsg.textContent = msg;
           errorMsg.classList.remove('hidden');

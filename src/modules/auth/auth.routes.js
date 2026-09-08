@@ -3,12 +3,15 @@
  * Usa o login-guard compartilhado (rate-limit + bloqueio progressivo).
  */
 import express from 'express';
+import crypto from 'node:crypto';
 import { db } from '../../config/db.js';
 import { requireAuth, createSession, validateToken, destroySession, sessions } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
+import { validatePassword } from '../../shared/password-policy.js';
+import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 
 export const authRouter = express.Router();
 
@@ -154,7 +157,8 @@ authRouter.post('/api/auth/logout', (req, res) => {
 
 // Configuração pública do Google Client ID
 authRouter.get('/api/auth/google-config', (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  const defaultClientId = '285571475823-69gr5k4lft10ghf14skvsg06fv1pqkt4.apps.googleusercontent.com';
+  const clientId = (process.env.GOOGLE_CLIENT_ID || defaultClientId).trim();
   res.json({
     success: true,
     clientId,
@@ -285,3 +289,137 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
     return res.status(500).json({ error: 'Erro ao processar autenticação Google.' });
   }
 });
+
+/**
+ * POST /api/auth/forgot-password - Solicitar redefinição de senha para administrador/operador
+ * Gera um código temporário de 6 dígitos enviado ao WhatsApp do Administrador.
+ */
+authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ error: 'Informe o usuário ou e-mail cadastrado.' });
+    }
+
+    const rawUsername = String(username).trim();
+    const cleanUsername = rawUsername.toLowerCase();
+    const compactUsername = cleanUsername.replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+
+    // Localizar usuário
+    let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
+
+    if (!user) {
+      if (['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim', 'jorge'].includes(compactUsername)) {
+        user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+      } else {
+        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(name)) LIKE ?`).get(cleanUsername, `%${cleanUsername}%`);
+      }
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado no sistema.' });
+    }
+
+    // Gerar token de 6 dígitos numéricos
+    const resetCode = String(crypto.randomInt(100000, 999999));
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora de validade
+
+    db.prepare(`UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?`)
+      .run(resetCode, expiresAt, user.id);
+
+    const messageText = `🔐 *RECUPERAÇÃO DE SENHA - PAINEL ADMINISTRATIVO*\n\n` +
+      `Olá Dr. Jorge Alvim / Administrador,\n\n` +
+      `Foi solicitada a redefinição de senha para o usuário: *${user.username}* (${user.name}).\n` +
+      `Seu código de segurança temporário (válido por 1 hora) é:\n\n` +
+      `👉 *${resetCode}*\n\n` +
+      `Digite este código no formulário de redefinição de senha para definir sua nova credencial.\n\n` +
+      `_Caso não tenha solicitado este código, ignore esta mensagem._`;
+
+    await sendLawyerWhatsAppNotification(messageText, { action: 'admin_password_reset', userId: user.id });
+
+    logAudit(req, {
+      event_type: 'SEGURANCA',
+      event_name: 'SOLICITACAO_REINICIO_SENHA_ADMIN',
+      module: 'USUARIOS',
+      resource_id: user.id,
+      user_name: user.name,
+      user_role: user.role,
+      description: `Código de redefinição de senha solicitado para ${user.name} (${user.username}).`
+    });
+
+    return res.json({
+      success: true,
+      message: 'Código de verificação enviado com sucesso ao WhatsApp do Administrador.'
+    });
+  } catch (err) {
+    console.error('[ERRO] Forgot Password:', err);
+    return res.status(500).json({ error: 'Falha ao processar solicitação de recuperação de senha.' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password - Concluir redefinição com código de verificação
+ */
+authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
+  try {
+    const { username, code, new_password } = req.body;
+    if (!username || !code || !new_password) {
+      return res.status(400).json({ error: 'Usuário, código de segurança e nova senha são obrigatórios.' });
+    }
+
+    const cleanCode = String(code).trim();
+    const rawUsername = String(username).trim();
+    const cleanUsername = rawUsername.toLowerCase();
+    const compactUsername = cleanUsername.replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+
+    let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
+
+    if (!user && ['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim', 'jorge'].includes(compactUsername)) {
+      user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    if (!user.reset_token || user.reset_token !== cleanCode) {
+      return res.status(400).json({ error: 'Código de segurança inválido.' });
+    }
+
+    if (user.reset_token_expires && new Date(user.reset_token_expires).getTime() < Date.now()) {
+      return res.status(400).json({ error: 'Código de segurança expirado. Solicite um novo código.' });
+    }
+
+    // Validar nova senha conforme política de 4 a 12 caracteres
+    const pol = validatePassword(new_password);
+    if (!pol.ok) {
+      return res.status(400).json({ error: pol.error });
+    }
+
+    const hp = hashPassword(String(new_password).trim());
+    db.prepare(`UPDATE users SET password_hash = ?, salt = ?, reset_token = NULL, reset_token_expires = NULL, plain_password = NULL WHERE id = ?`)
+      .run(hp.hash, hp.salt, user.id);
+
+    const reqIp = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
+    clearLoginFailures(reqIp, cleanUsername);
+
+    logAudit(req, {
+      event_type: 'SEGURANCA',
+      event_name: 'REDEFINICAO_SENHA_ADMIN_CONCLUIDA',
+      module: 'USUARIOS',
+      resource_id: user.id,
+      user_name: user.name,
+      user_role: user.role,
+      description: `Senha do operador ${user.name} (${user.username}) redefinida com sucesso via código de WhatsApp.`
+    });
+
+    return res.json({
+      success: true,
+      message: 'Senha redefinida com sucesso! Você já pode entrar no Painel com a nova senha.'
+    });
+  } catch (err) {
+    console.error('[ERRO] Reset Password:', err);
+    return res.status(500).json({ error: 'Falha ao redefinir a senha.' });
+  }
+});
+

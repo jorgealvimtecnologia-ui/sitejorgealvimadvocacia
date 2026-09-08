@@ -237,6 +237,22 @@ try {
   if (!usrCols.includes('avatar_url')) {
     db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL`);
   }
+  if (!usrCols.includes('reset_token')) {
+    db.exec(`ALTER TABLE users ADD COLUMN reset_token TEXT DEFAULT NULL`);
+  }
+  if (!usrCols.includes('reset_token_expires')) {
+    db.exec(`ALTER TABLE users ADD COLUMN reset_token_expires TEXT DEFAULT NULL`);
+  }
+} catch (e) {}
+
+try {
+  const hrCols = db.prepare(`PRAGMA table_info(hr_employees)`).all().map(c => c.name);
+  if (!hrCols.includes('email')) {
+    db.exec(`ALTER TABLE hr_employees ADD COLUMN email TEXT DEFAULT NULL`);
+  }
+  if (!hrCols.includes('google_id')) {
+    db.exec(`ALTER TABLE hr_employees ADD COLUMN google_id TEXT DEFAULT NULL`);
+  }
 } catch (e) {}
 
 // 3.1 Tabela de Gestão de Escritórios (Pessoa Jurídica)
@@ -776,6 +792,8 @@ db.exec(`
     bank_agency TEXT,
     bank_account TEXT,
     bank_pix TEXT,
+    email TEXT,
+    google_id TEXT,
     status TEXT DEFAULT 'Ativo',       -- 'Ativo', 'Férias', 'Afastado', 'Demitido'
     notes TEXT,
     created_at TEXT NOT NULL,
@@ -953,8 +971,16 @@ try {
   if (!postCols.includes('shares_count')) {
     db.exec(`ALTER TABLE blog_posts ADD COLUMN shares_count INTEGER DEFAULT 0`);
   }
+
+  const hrCols = db.prepare(`PRAGMA table_info(hr_employees)`).all().map(c => c.name);
+  if (!hrCols.includes('email')) {
+    db.exec(`ALTER TABLE hr_employees ADD COLUMN email TEXT DEFAULT NULL`);
+  }
+  if (!hrCols.includes('google_id')) {
+    db.exec(`ALTER TABLE hr_employees ADD COLUMN google_id TEXT DEFAULT NULL`);
+  }
 } catch (e) {
-  console.warn('Verificação de migração de colunas sociais/sites/nfse/blog:', e);
+  console.warn('Verificação de migração de colunas sociais/sites/nfse/blog/hr:', e);
 }
 
 // Inicialização / Seeder de Artigos do Blog Jurídico para SEO em Juiz de Fora e Região

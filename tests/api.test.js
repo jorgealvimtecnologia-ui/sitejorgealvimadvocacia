@@ -1145,6 +1145,121 @@ describe('Conteúdo do Site & Hub do Blog (Áreas de Atuação e Uploads)', () =
   });
 });
 
+describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
+  it('POST /api/auth/forgot-password sem usuário → 400', async () => {
+    const res = await request(app).post('/api/auth/forgot-password').send({});
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error);
+  });
+
+  it('POST /api/auth/forgot-password com usuário inexistente → 404', async () => {
+    const res = await request(app).post('/api/auth/forgot-password').send({ username: 'usuario_inexistente_xyz_123' });
+    assert.equal(res.status, 404);
+  });
+
+  it('POST /api/auth/forgot-password com usuário válido → 200 e gera código no banco', async () => {
+    const res = await request(app).post('/api/auth/forgot-password').send({ username: 'jorgealvimtecnologia' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+
+    const usr = db.prepare(`SELECT reset_token, reset_token_expires FROM users WHERE username = 'jorgealvimtecnologia'`).get();
+    assert.ok(usr.reset_token);
+    assert.equal(usr.reset_token.length, 6);
+  });
+
+  it('POST /api/auth/reset-password com código inválido → 400', async () => {
+    const res = await request(app).post('/api/auth/reset-password').send({
+      username: 'jorgealvimtecnologia',
+      code: '000000',
+      new_password: 'novasenha123'
+    });
+    assert.equal(res.status, 400);
+    assert.ok(res.body.error.includes('Código de segurança inválido'));
+  });
+
+  it('POST /api/auth/reset-password com senha fora da política (menos de 4 ou mais de 12) → 400', async () => {
+    const usr = db.prepare(`SELECT reset_token FROM users WHERE username = 'jorgealvimtecnologia'`).get();
+    const resShort = await request(app).post('/api/auth/reset-password').send({
+      username: 'jorgealvimtecnologia',
+      code: usr.reset_token,
+      new_password: '12'
+    });
+    assert.equal(resShort.status, 400);
+
+    const resLong = await request(app).post('/api/auth/reset-password').send({
+      username: 'jorgealvimtecnologia',
+      code: usr.reset_token,
+      new_password: 'uma_senha_muito_longa_com_mais_de_12_caracteres'
+    });
+    assert.equal(resLong.status, 400);
+  });
+
+  it('POST /api/auth/reset-password com código válido e senha 4-12 caracteres → 200 e redefine senha', async () => {
+    const usr = db.prepare(`SELECT reset_token FROM users WHERE username = 'jorgealvimtecnologia'`).get();
+    const res = await request(app).post('/api/auth/reset-password').send({
+      username: 'jorgealvimtecnologia',
+      code: usr.reset_token,
+      new_password: 'novasenha1'
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+
+    // Consegue logar com a nova senha
+    const loginRes = await request(app).post('/api/auth/login').send({
+      username: 'jorgealvimtecnologia',
+      password: 'novasenha1'
+    });
+    assert.equal(loginRes.status, 200);
+    assert.equal(loginRes.body.success, true);
+
+    // Restaura a senha mestre padrão para outros testes
+    const resetBack = await request(app).post('/api/auth/forgot-password').send({ username: 'jorgealvimtecnologia' });
+    const codeBack = db.prepare(`SELECT reset_token FROM users WHERE username = 'jorgealvimtecnologia'`).get().reset_token;
+    await request(app).post('/api/auth/reset-password').send({
+      username: 'jorgealvimtecnologia',
+      code: codeBack,
+      new_password: 'jorgealvim'
+    });
+  });
+
+  it('POST /api/hr/portal/auth/google sem credencial → 400', async () => {
+    const res = await request(app).post('/api/hr/portal/auth/google').send({});
+    assert.equal(res.status, 400);
+  });
+
+  it('POST /api/hr/portal/auth/google com email mestre → 200 e sessão de colaborador', async () => {
+    const mockToken = 'mock-google-token:sub-master-google:jorgealvimtecnologia@gmail.com:Dr. Jorge Alvim';
+    const res = await request(app).post('/api/hr/portal/auth/google').send({ credential: mockToken });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.token);
+    assert.equal(res.body.employee.id, 'EMP-MASTER-01');
+  });
+
+  it('POST /api/hr/portal/auth/google com colaborador cadastrado no RH → 200', async () => {
+    // Insere ou atualiza um colaborador de teste com email
+    const testEmail = 'patricia.teste.rh@gmail.com';
+    db.prepare(`
+      INSERT OR REPLACE INTO hr_employees (id, name, cpf, position, contract_type, status, email, admission_date, created_at, updated_at)
+      VALUES ('EMP-TEST-RH-01', 'Patricia Teste RH', '111.222.333-44', 'Secretária', 'CLT', 'Ativo', ?, '2025-01-01', datetime('now'), datetime('now'))
+    `).run(testEmail);
+
+    const mockToken = `mock-google-token:sub-patricia-123:${testEmail}:Patricia Teste RH`;
+    const res = await request(app).post('/api/hr/portal/auth/google').send({ credential: mockToken });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.token);
+    assert.equal(res.body.employee.name, 'Patricia Teste RH');
+  });
+
+  it('POST /api/hr/portal/auth/google com conta não vinculada → 403', async () => {
+    const mockToken = 'mock-google-token:sub-desconhecido:estranho@gmail.com:Usuario Desconhecido';
+    const res = await request(app).post('/api/hr/portal/auth/google').send({ credential: mockToken });
+    assert.equal(res.status, 403);
+    assert.ok(res.body.error);
+  });
+});
+
 
 
 

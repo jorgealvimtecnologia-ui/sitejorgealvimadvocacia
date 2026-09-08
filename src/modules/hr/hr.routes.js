@@ -8,8 +8,13 @@ import { logAudit } from '../../middleware/audit.js';
 import { getClientIp } from '../../shared/net.js';
 import { hashPassword, verifyPassword, isStrongHash } from '../../shared/password-crypto.js';
 import { calculateINSSProgressivo, calculateIRRF, calculateVTDeduction, calculateFGTS } from '../../shared/labor.js';
+import { verifyGoogleToken } from '../../shared/google-auth.js';
+import { loginRateLimit } from '../../shared/login-guard.js';
 
 export const hrRouter = express.Router();
+
+try { db.exec(`ALTER TABLE hr_employees ADD COLUMN email TEXT DEFAULT NULL`); } catch (e) {}
+try { db.exec(`ALTER TABLE hr_employees ADD COLUMN google_id TEXT DEFAULT NULL`); } catch (e) {}
 
 // ---------------- ROTAS DE API DA GESTÃO DE PESSOAL (RH / DP) ----------------
 
@@ -897,6 +902,118 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+/**
+ * 16.1 POST /api/hr/employee/google & POST /api/hr/portal/auth/google - Login do Colaborador via Google
+ */
+const handleEmployeeGoogleAuth = async (req, res) => {
+  try {
+    const credential = req.body.credential || req.body.token || req.body.access_token;
+    if (!credential) {
+      return res.status(400).json({ error: 'Token de credencial do Google não fornecido.' });
+    }
+
+    const googleUser = await verifyGoogleToken(credential);
+    if (!googleUser || !googleUser.email) {
+      return res.status(401).json({ error: 'Não foi possível validar o login com a conta Google informada.' });
+    }
+
+    const email = googleUser.email.toLowerCase().trim();
+
+    // 1. Localizar colaborador por google_id ou por email
+    let employee = db.prepare(`SELECT * FROM hr_employees WHERE google_id = ?`).get(googleUser.sub);
+
+    if (!employee) {
+      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(email)) = ?`).get(email);
+    }
+
+    // 2. Se for Dr. Jorge Alvim / Master
+    const masterEmails = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
+      .split(',')
+      .map(s => s.toLowerCase().trim())
+      .filter(Boolean);
+
+    if (!employee && (masterEmails.includes(email) || email === 'jorgealvimtecnologia@gmail.com' || email.includes('jorgealvim'))) {
+      employee = {
+        id: 'EMP-MASTER-01',
+        name: 'Dr. Jorge Alvim',
+        cpf: '000.000.000-00',
+        position: 'Sócio-Fundador & Diretor Geral',
+        department: 'Diretoria',
+        contract_type: 'ASSOCIADO',
+        admission_date: '2015-01-01'
+      };
+    }
+
+    // 3. Localizar por usuário vinculado em users
+    if (!employee) {
+      const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(username)) = ?`).get(email, email);
+      if (linkedUser) {
+        employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${linkedUser.name.toLowerCase()}%`, linkedUser.id);
+        if (!employee && (linkedUser.role === 'master' || linkedUser.username === 'jorgealvimtecnologia')) {
+          employee = {
+            id: 'EMP-MASTER-01',
+            name: linkedUser.name || 'Dr. Jorge Alvim',
+            cpf: '000.000.000-00',
+            position: 'Sócio-Fundador & Diretor Geral',
+            department: 'Diretoria',
+            contract_type: 'ASSOCIADO',
+            admission_date: '2015-01-01'
+          };
+        }
+      }
+    }
+
+    if (!employee) {
+      return res.status(403).json({
+        error: `Acesso Negado: A conta Google '${email}' não está associada a nenhum colaborador registrado no Departamento de Pessoal. Contate a administração do escritório.`
+      });
+    }
+
+    // Salvar vínculo com google_id / email no cadastro do empregado se for registro da tabela
+    if (employee.id && employee.id !== 'EMP-MASTER-01') {
+      try {
+        db.prepare(`UPDATE hr_employees SET google_id = ?, email = COALESCE(email, ?), updated_at = ? WHERE id = ?`)
+          .run(googleUser.sub, email, new Date().toISOString(), employee.id);
+      } catch (e) {}
+    }
+
+    const token = createEmployeeSession(employee);
+
+    logAudit(req, {
+      event_type: 'AUTENTICACAO',
+      event_name: 'LOGIN_GOOGLE_COLABORADOR',
+      module: 'RH',
+      resource_id: employee.id,
+      user_name: employee.name,
+      user_role: 'colaborador',
+      description: `Colaborador ${employee.name} (${employee.position}) autenticou-se via Google (${email}).`
+    });
+
+    return res.json({
+      success: true,
+      message: `Bem-vindo(a) ao Portal do Colaborador, ${employee.name}!`,
+      token,
+      employee: {
+        id: employee.id,
+        name: employee.name,
+        cpf: employee.cpf,
+        position: employee.position,
+        department: employee.department || 'Jurídico',
+        contract_type: employee.contract_type || 'CLT',
+        admission_date: employee.admission_date,
+        avatar_url: googleUser.picture || ''
+      }
+    });
+  } catch (err) {
+    console.error('[ERRO] Login Google Colaborador:', err);
+    return res.status(500).json({ error: 'Erro ao processar autenticação Google do colaborador: ' + err.message });
+  }
+};
+
+hrRouter.post('/api/hr/employee/google', loginRateLimit, handleEmployeeGoogleAuth);
+hrRouter.post('/api/hr/portal/auth/google', loginRateLimit, handleEmployeeGoogleAuth);
+
 
 /**
  * 17. GET /api/hr/employee/me - Dados Completos do Colaborador Logado (Autoatendimento)
