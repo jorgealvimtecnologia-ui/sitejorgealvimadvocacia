@@ -397,7 +397,7 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
     }
 
     const hp = hashPassword(String(new_password).trim());
-    db.prepare(`UPDATE users SET password_hash = ?, salt = ?, reset_token = NULL, reset_token_expires = NULL, plain_password = NULL WHERE id = ?`)
+    db.prepare(`UPDATE users SET password_hash = ?, salt = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?`)
       .run(hp.hash, hp.salt, user.id);
 
     const reqIp = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';

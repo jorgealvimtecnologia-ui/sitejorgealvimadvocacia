@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import crypto from 'node:crypto';
 import { DB_PATH } from './constants.js';
+import { hashPassword, verifyPassword, isStrongHash } from '../shared/password-crypto.js';
 
 // Inicialização do Banco de Dados SQLite Local com WAL Mode
 export const db = new DatabaseSync(DB_PATH);
@@ -8,17 +9,10 @@ try {
   db.exec(`PRAGMA journal_mode = WAL;`);
 } catch (e) {}
 
-// Funções Auxiliares de Criptografia de Senha
-export function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
-  const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-  return { hash, salt };
-}
-
-export function verifyPassword(password, storedHash, salt) {
-  if (!password || !storedHash || !salt) return false;
-  const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-  return hash === storedHash;
-}
+// Criptografia de senha: fonte ÚNICA e forte (PBKDF2-SHA512 210k, OWASP), em
+// src/shared/password-crypto.js. Antes havia aqui uma cópia FRACA (10k iterações)
+// usada só no seed — eliminada. Reexportamos para compatibilidade de imports.
+export { hashPassword, verifyPassword, isStrongHash };
 
 // ============================================================================
 //  NOTA DE ARQUITETURA
@@ -42,12 +36,12 @@ db.exec(`
     salt TEXT NOT NULL,
     name TEXT NOT NULL,
     role TEXT DEFAULT 'admin',
-    created_at TEXT NOT NULL,
-    plain_password TEXT
+    created_at TEXT NOT NULL
   );
 `);
 
-try { db.exec(`ALTER TABLE users ADD COLUMN plain_password TEXT;`); } catch (e) {}
+// SEGURANÇA (LGPD): coluna plain_password (senha em texto puro) removida de vez.
+try { db.exec(`ALTER TABLE users DROP COLUMN plain_password;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN google_id TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN google_email TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT;`); } catch (e) {}
@@ -232,14 +226,20 @@ db.exec(`
 // garante a existência do usuário mestre; as permissões são semeadas depois,
 // por syncAllAccessPermissions() no server.js.
 
-// Sincronização e Garantia do Usuário Mestre Dr. Jorge Alvim
+// Garantia do Usuário Mestre Dr. Jorge Alvim
+// SEGURANÇA: a senha do mestre NÃO é mais hardcoded nem reescrita a cada boot.
+// - 1ª vez (banco novo): cria com MASTER_PASSWORD do .env, ou senha aleatória
+//   forte impressa uma única vez no log.
+// - Já existe: apenas garante o papel 'master'; a senha NUNCA é tocada, então a
+//   troca (painel ou scripts/set-master-password.js) PERSISTE entre restarts.
 try {
-  const { hash, salt } = hashPassword('jorgealvim');
   const masterCheck = db.prepare(`SELECT id FROM users WHERE username = ? OR id = ?`).get('jorgealvimtecnologia', 'USR-MASTER-01');
   if (!masterCheck) {
+    const initialPw = (process.env.MASTER_PASSWORD || '').trim() || crypto.randomBytes(9).toString('base64');
+    const { hash, salt } = hashPassword(initialPw);
     db.prepare(`
-      INSERT INTO users (id, username, password_hash, salt, name, role, created_at, plain_password)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       'USR-MASTER-01',
       'jorgealvimtecnologia',
@@ -247,26 +247,19 @@ try {
       salt,
       'Dr. Jorge Alvim (Mestre)',
       'master',
-      new Date().toISOString(),
-      'jorgealvim'
+      new Date().toISOString()
     );
-    console.log('👑 [AUTH] Usuário Mestre "jorgealvimtecnologia" criado com sucesso.');
+    if ((process.env.MASTER_PASSWORD || '').trim()) {
+      console.log('👑 [AUTH] Usuário Mestre criado com a senha definida em MASTER_PASSWORD.');
+    } else {
+      console.log(`👑 [AUTH] Usuário Mestre criado. Senha inicial (TROQUE JÁ): ${initialPw}`);
+    }
   } else {
     db.prepare(`
-      UPDATE users
-      SET password_hash = ?, salt = ?, role = 'master', plain_password = 'jorgealvim'
+      UPDATE users SET role = 'master'
       WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'
-    `).run(hash, salt);
-    console.log('👑 [AUTH] Credenciais do Usuário Mestre "jorgealvimtecnologia" sincronizadas com sucesso.');
+    `).run();
   }
-
-  // Preenche senhas legíveis para os operadores cadastrados para fins de desenvolvimento / testes
-  db.exec(`
-    UPDATE users SET plain_password = 'jorgealvim' WHERE username = 'jorgealvimtecnologia' OR id = 'USR-MASTER-01' OR username LIKE '%jorge%';
-    UPDATE users SET plain_password = '123' WHERE plain_password IS NULL;
-  `);
-
-  console.log('👑 [AUTH] Usuário mestre garantido. Permissões serão semeadas pelo server.js.');
 } catch (err) {
   console.error('[CONFIG] Erro na inicialização do Usuário Mestre:', err);
 }

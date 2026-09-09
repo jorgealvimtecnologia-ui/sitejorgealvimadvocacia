@@ -24,7 +24,6 @@ accessRouter.get('/api/users', requireAuth, (req, res) => {
     `).all();
     // SEGURANÇA: senhas nunca são retornadas (nem para o mestre). Para trocar,
     // usa-se "Redefinir senha" (PUT /api/users/:id), que grava novo hash PBKDF2.
-    rows.forEach(r => { r.plain_password = ''; });
     return res.json({ success: true, users: rows });
   } catch (error) {
     console.error('[ERRO] Falha ao listar usuários:', error);
@@ -444,7 +443,6 @@ accessRouter.get('/api/access-control/matrix', requireAuth, (req, res) => {
       const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
       return {
         ...r,
-        plain_password: '',
         is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01' || (r.user_name || '').toLowerCase().includes('jorge alvim'),
         badge_label: tpl.badge_label,
         badge_class: tpl.badge_class,

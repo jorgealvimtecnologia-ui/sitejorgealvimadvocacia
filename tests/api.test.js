@@ -24,6 +24,9 @@ import fs from 'node:fs';
 const TMP_DB = path.join(os.tmpdir(), `jaw-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`);
 process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
+// A senha do mestre não é mais hardcoded no boot: definimos a senha inicial do
+// banco de teste por MASTER_PASSWORD (o mesmo mecanismo do .env em produção).
+process.env.MASTER_PASSWORD = 'jorgealvim';
 
 const { app, db } = await import('../server.js');
 
@@ -209,7 +212,7 @@ describe('RBAC — perfil restrito', () => {
   });
 });
 
-describe('Política de senha (4–12 caracteres)', () => {
+describe('Política de senha (8–64 caracteres)', () => {
   const novo = (senha, sufixo) => auth(request(app).post('/api/users'), masterToken).send({
     username: `pol_${sufixo}`, password: senha, name: `Pol ${sufixo}`, role: 'secretaria',
   });
@@ -219,18 +222,23 @@ describe('Política de senha (4–12 caracteres)', () => {
     assert.equal(r.status, 400);
   });
 
-  it('senha com 13 caracteres → 400', async () => {
-    const r = await novo('a'.repeat(13), 'longa');
+  it('senha com 7 caracteres (abaixo do mínimo) → 400', async () => {
+    const r = await novo('abc1234', 'sub8');
     assert.equal(r.status, 400);
   });
 
-  it('senha com 4 caracteres (limite mínimo) → 201', async () => {
-    const r = await novo('abcd', 'min4');
+  it('senha com 65 caracteres (acima do máximo) → 400', async () => {
+    const r = await novo('a'.repeat(65), 'longa');
+    assert.equal(r.status, 400);
+  });
+
+  it('senha com 8 caracteres (limite mínimo) → 201', async () => {
+    const r = await novo('abcd1234', 'min8');
     assert.equal(r.status, 201);
   });
 
-  it('senha com 12 caracteres (limite máximo) → 201', async () => {
-    const r = await novo('a'.repeat(12), 'max12');
+  it('senha com 64 caracteres (limite máximo) → 201', async () => {
+    const r = await novo('a'.repeat(64), 'max64');
     assert.equal(r.status, 201);
   });
 });
@@ -1246,7 +1254,7 @@ describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
     assert.ok(res.body.error.includes('Código de segurança inválido'));
   });
 
-  it('POST /api/auth/reset-password com senha fora da política (menos de 4 ou mais de 12) → 400', async () => {
+  it('POST /api/auth/reset-password com senha fora da política (menos de 8 ou mais de 64) → 400', async () => {
     const usr = db.prepare(`SELECT reset_token FROM users WHERE username = 'jorgealvimtecnologia'`).get();
     const resShort = await request(app).post('/api/auth/reset-password').send({
       username: 'jorgealvimtecnologia',
@@ -1258,12 +1266,12 @@ describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
     const resLong = await request(app).post('/api/auth/reset-password').send({
       username: 'jorgealvimtecnologia',
       code: usr.reset_token,
-      new_password: 'uma_senha_muito_longa_com_mais_de_12_caracteres'
+      new_password: 'a'.repeat(65)
     });
     assert.equal(resLong.status, 400);
   });
 
-  it('POST /api/auth/reset-password com código válido e senha 4-12 caracteres → 200 e redefine senha', async () => {
+  it('POST /api/auth/reset-password com código válido e senha válida (>=8) → 200 e redefine senha', async () => {
     const usr = db.prepare(`SELECT reset_token FROM users WHERE username = 'jorgealvimtecnologia'`).get();
     const res = await request(app).post('/api/auth/reset-password').send({
       username: 'jorgealvimtecnologia',

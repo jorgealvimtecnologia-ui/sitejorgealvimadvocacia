@@ -188,11 +188,9 @@
             </button>
           `;
 
-        const passTag = item.plain_password ? `
-          <div class="mt-1 flex items-center space-x-1">
-            <span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 font-mono text-[9px] font-bold">🔑 ${item.plain_password}</span>
-          </div>
-        ` : '';
+        // SEGURANÇA (LGPD): removida a exibição da senha em texto puro. O sistema
+        // não guarda nem revela senhas — a troca é feita por "Redefinir senha".
+        const passTag = '';
 
         return `
           <tr class="hover:bg-slate-50/80 transition-colors ${item.is_active === 0 ? 'opacity-50 bg-slate-50' : ''}">

@@ -62,12 +62,12 @@ function upsertUser(u) {
   const { hash, salt } = hashPassword(u.password);
   const exists = db.prepare('SELECT id FROM users WHERE id = ? OR username = ?').get(u.id, u.username);
   if (exists) {
-    db.prepare('UPDATE users SET username=?, password_hash=?, salt=?, name=?, role=?, plain_password=? WHERE id=?')
-      .run(u.username, hash, salt, u.name, u.role, u.password, exists.id);
+    db.prepare('UPDATE users SET username=?, password_hash=?, salt=?, name=?, role=? WHERE id=?')
+      .run(u.username, hash, salt, u.name, u.role, exists.id);
     u.id = exists.id;
   } else {
-    db.prepare('INSERT INTO users (id, username, password_hash, salt, name, role, created_at, plain_password) VALUES (?,?,?,?,?,?,?,?)')
-      .run(u.id, u.username, hash, salt, u.name, u.role, now(), u.password);
+    db.prepare('INSERT INTO users (id, username, password_hash, salt, name, role, created_at) VALUES (?,?,?,?,?,?,?)')
+      .run(u.id, u.username, hash, salt, u.name, u.role, now());
   }
 }
 
@@ -80,7 +80,7 @@ function grantPermissions(u) {
     db.prepare(`UPDATE access_permissions SET ${setPairs}, is_active=1, user_name=?, role_template=?, updated_at=? WHERE user_id=?`)
       .run(u.name, u.role, now(), u.id);
   } else {
-    const base = { user_id: u.id, user_type: 'admin', user_name: u.name, user_identifier: u.username, role_template: u.role, is_active: 1, created_at: now(), updated_at: now(), plain_password: u.password };
+    const base = { user_id: u.id, user_type: 'admin', user_name: u.name, user_identifier: u.username, role_template: u.role, is_active: 1, created_at: now(), updated_at: now() };
     for (const c of tabCols) base[c] = enabled.includes(c) ? 1 : 0;
     const keys = Object.keys(base).filter(k => apCols.includes(k));
     const ph = keys.map(() => '?').join(',');

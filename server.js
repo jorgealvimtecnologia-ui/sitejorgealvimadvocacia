@@ -126,16 +126,13 @@ db.exec(`
 // CONSOLIDAÇÃO DE SCHEMA: a tabela `users` é criada de forma AUTORITATIVA em
 // src/config/db.js, que roda no import (antes do corpo deste arquivo) para semear
 // o usuário mestre. Não a recriamos aqui — evita a fonte dupla de verdade ("dois
-// cérebros"). Mantemos apenas os ALTER idempotentes abaixo como rede de segurança
-// para bancos antigos que não tinham a coluna plain_password.
+// cérebros").
 
-try {
-  db.exec(`ALTER TABLE users ADD COLUMN plain_password TEXT;`);
-} catch (e) {}
-
-try {
-  db.exec(`ALTER TABLE access_permissions ADD COLUMN plain_password TEXT;`);
-} catch (e) {}
+// SEGURANÇA (LGPD): a coluna `plain_password` guardava a senha em TEXTO PURO.
+// Removemos a coluna de vez (users e access_permissions). A autenticação usa
+// apenas o hash PBKDF2 — o sistema nunca deve ser capaz de revelar uma senha.
+try { db.exec(`ALTER TABLE users DROP COLUMN plain_password;`); } catch (e) {}
+try { db.exec(`ALTER TABLE access_permissions DROP COLUMN plain_password;`); } catch (e) {}
 
 // 3. Tabela Completa de Gestão de Clientes e Contratos
 db.exec(`
@@ -1390,11 +1387,18 @@ try {
 
 // hashPassword/verifyPassword/isStrongHash movidos para src/shared/password-crypto.js
 
-// Inicialização / Garantia do Usuário Mestre Padrão
+// Inicialização / Garantia do Usuário Mestre
+// SEGURANÇA: NÃO reescrevemos a senha do mestre a cada boot (antes o hash era
+// forçado para 'jorgealvim' sempre, tornando IMPOSSÍVEL trocar a senha — ela
+// voltava ao padrão a cada restart). Agora: cria-se o mestre só na 1ª vez (senha
+// vinda de MASTER_PASSWORD no .env ou aleatória impressa uma única vez); se já
+// existe, apenas garante o papel 'master'. A troca de senha é feita pelo painel
+// (PUT /api/users/:id) ou pelo script scripts/set-master-password.js e PERSISTE.
 try {
-  const { hash, salt } = hashPassword('jorgealvim');
   const masterCheck = db.prepare(`SELECT id FROM users WHERE username = ? OR id = ?`).get('jorgealvimtecnologia', 'USR-MASTER-01');
   if (!masterCheck) {
+    const initialPw = (process.env.MASTER_PASSWORD || '').trim() || crypto.randomBytes(9).toString('base64');
+    const { hash, salt } = hashPassword(initialPw);
     db.prepare(`
       INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1407,20 +1411,22 @@ try {
       'master',
       new Date().toISOString()
     );
-    console.log('👑 [AUTH] Usuário Mestre "jorgealvimtecnologia" criado com sucesso.');
+    if ((process.env.MASTER_PASSWORD || '').trim()) {
+      console.log('👑 [AUTH] Usuário Mestre criado com a senha definida em MASTER_PASSWORD.');
+    } else {
+      console.log(`👑 [AUTH] Usuário Mestre criado. Senha inicial (TROQUE JÁ): ${initialPw}`);
+    }
   } else {
-    // Sincroniza papel de mestre e credenciais padrão solicitadas pelo Dr. Jorge Alvim
+    // Já existe: garante apenas o papel de mestre. NUNCA toca na senha.
     db.prepare(`
-      UPDATE users SET role = 'master', password_hash = ?, salt = ?
+      UPDATE users SET role = 'master'
       WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'
-    `).run(hash, salt);
-    console.log('👑 [AUTH] Credenciais e Papel do Usuário Mestre "jorgealvimtecnologia" sincronizados.');
+    `).run();
   }
 
-  // SEGURANÇA: senhas nunca são guardadas em texto puro. Limpa qualquer valor
-  // legado remanescente na coluna plain_password (users e access_permissions).
-  try { db.exec(`UPDATE users SET plain_password = NULL WHERE plain_password IS NOT NULL;`); } catch (e) {}
-  try { db.exec(`UPDATE access_permissions SET plain_password = NULL WHERE plain_password IS NOT NULL;`); } catch (e) {}
+  // SEGURANÇA (LGPD): elimina de vez a coluna de senha em texto puro, se ainda existir.
+  try { db.exec(`ALTER TABLE users DROP COLUMN plain_password;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE access_permissions DROP COLUMN plain_password;`); } catch (e) {}
 } catch (err) {
   console.error('Erro ao verificar usuário mestre:', err);
 }
@@ -1555,10 +1561,17 @@ app.use((req, res, next) => {
     const isMaster = s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master' || (s.name || '').toLowerCase().includes('jorge alvim');
     if (isMaster) return next();
     let perm = null; try { perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(s.userId); } catch (e) {}
-    if (!perm) return next(); // sem matriz: mantém comportamento permissivo (não quebra)
+    // FAIL-CLOSED: perfil restrito sem matriz de permissões NÃO passa (antes era
+    // permissivo — um usuário sem matriz acessava tudo). O mestre já retornou acima.
+    if (!perm) return res.status(403).json({ error: 'Acesso negado: perfil sem matriz de permissões definida.' });
     if (perm[rule[1]]) return next();
     return res.status(403).json({ error: 'Acesso negado: seu perfil não tem permissão para este módulo.' });
-  } catch (e) { return next(); }
+  } catch (e) {
+    // FAIL-CLOSED: qualquer falha na verificação de permissão nega o acesso (antes
+    // um erro liberava a rota). Não expõe detalhes internos.
+    console.error('[RBAC] Falha na verificação de permissão:', e.message);
+    return res.status(500).json({ error: 'Falha ao verificar permissões de acesso.' });
+  }
 });
 
 // Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório

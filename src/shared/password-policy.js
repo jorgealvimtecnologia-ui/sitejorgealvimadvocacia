@@ -8,11 +8,17 @@
  * Observação: a senha nunca é guardada em texto puro; isto valida apenas o valor
  * digitado antes de gerar o hash PBKDF2.
  */
-export const PASSWORD_MIN = 4;
-export const PASSWORD_MAX = 12;
+// SEGURANÇA: mínimo de 8 caracteres (antes 4). O teto foi elevado para 64 —
+// antes o máximo de 12 BLOQUEAVA senhas/passphrases fortes; o hash PBKDF2 lida
+// com qualquer tamanho, então não há razão para um teto baixo.
+export const PASSWORD_MIN = 8;
+export const PASSWORD_MAX = 64;
 
 /**
  * Valida uma senha contra a política. Retorna { ok, error }.
+ * Critério de TAMANHO (mín. 8, sem teto baixo). Seguimos a orientação moderna
+ * (NIST 800-63B): priorizar comprimento e NÃO impor regras de composição
+ * obrigatórias — comprimento protege mais e frustra menos o usuário.
  * @param {string} password valor bruto digitado
  */
 export function validatePassword(password) {

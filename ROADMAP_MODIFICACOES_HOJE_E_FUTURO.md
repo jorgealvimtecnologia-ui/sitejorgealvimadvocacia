@@ -1,106 +1,102 @@
 # 🗺️ Roadmap Executivo Atualizado: Plataforma Jorge Alvim Advocacia & Legaltech
-**Advogado Titular:** Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943  
-**Data da Última Atualização:** 07 de Setembro de 2026 • Juiz de Fora - MG  
-**Ambiente:** Servidor VPS Contabo em Produção (`161.97.71.14` • Versão `81bbfeb`)  
-**Repositório GitHub:** `jorgealvimtecnologia-ui/sitejorgealvimadvocacia` (100% Sincronizado)  
+**Advogado Titular:** Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943
+**Data da Última Atualização:** 09 de Setembro de 2026 • Juiz de Fora - MG
+**Ambiente:** Servidor VPS Contabo em Produção (`161.97.71.14`)
+**Repositório GitHub:** `jorgealvimtecnologia-ui/sitejorgealvimadvocacia`
 **Conformidade Ética e Legal:** Provimento 205/2021 da OAB e LGPD (Lei 13.709/2018)
 
 ---
 
-## 📌 Resumo Executivo da Versão Atual (v2.6)
+## 📌 Resumo Executivo (v2.7 — Hardening de Segurança)
 
-O ecossistema digital do escritório **Jorge Alvim Advocacia** encontra-se **100% atualizado, testado e em produção**. O deploy automatizado foi concluído com sucesso no servidor da Contabo, garantindo que todas as páginas, robôs, APIs e ferramentas estejam operando ao vivo para novos clientes e processos em andamento.
+O ecossistema segue **em produção e operacional**. Nesta atualização, o foco foi o **Pilar 1 de Segurança (P0 / Sigilo OAB / LGPD)** da Fase IV: as falhas críticas de credenciais e autenticação foram **corrigidas no código**.
 
-* **Testes Automatizados:** 108 testes com 100% de aprovação (94 no backend + 14 de E2E Playwright).
+> ⚠️ **Status de produção:** as correções de segurança abaixo estão **concluídas no código (ambiente local) e ainda NÃO foram deployadas** ao Contabo. Até o deploy, a produção mantém o comportamento antigo (senha-mestre revertida no boot e coluna `plain_password` presente). O deploy é **manual** (`deploy.yml` via `workflow_dispatch`) — nada sobe sozinho.
+
+* **Testes de backend:** 141 testes (`node --test`) — **138 passam**; as 3 falhas restantes são de **Meta Ads** e são **pré-existentes** (falham também no código limpo, sem relação com o hardening).
 * **Autenticação:** Google Identity Services (GIS) ativo com auto-cadastro em 1 clique.
-* **Segurança Operacional:** Chave SSH autorizada sem senha na VPS e rotina de auto-rollback ativa.
-* **Canais de Negócio:** Vitrine Amazon Parceiro e Configurador Amplo de Meta Ads no ar.
+* **Segurança Operacional:** Chave SSH sem senha na VPS e rotina de auto-rollback ativa.
+
+---
+
+## 🔒 0. HARDENING DE SEGURANÇA — Fase IV / Pilar 1 (Concluído no código • aguardando deploy)
+
+| # | Correção | Arquivos | Status |
+|:---:|:---|:---|:---:|
+| **S1** | **Senha-mestre não é mais reescrita no boot.** Removida a sobrescrita forçada para `jorgealvim` que impedia trocar a senha. 1ª criação usa `MASTER_PASSWORD` (`.env`) ou senha aleatória impressa 1×; depois, só o papel `master` é garantido. | `src/config/db.js`, `server.js` | ✅ Código |
+| **S2** | **Expurgo do `plain_password`.** Coluna de senha em texto puro **dropada** (`users` e `access_permissions`) e removido todo código que gravava/exibia (inclusive a etiqueta 🔑 no painel de usuários). | `db.js`, `server.js`, `seed-demo.js`, `auth.routes.js`, `access.routes.js`, `tab-users.js` | ✅ Código |
+| **S3** | **Hash forte unificado (PBKDF2-SHA512 210k, OWASP).** Eliminada a cópia fraca de 10k iterações que era usada no seed. Fonte única em `password-crypto.js`. | `src/config/db.js`, `src/shared/password-crypto.js` | ✅ Código |
+| **S4** | **Política de senha reforçada:** mínimo **8** (era 4) e teto **64** (era 12, que bloqueava senhas fortes). Length-first (NIST 800-63B). | `src/shared/password-policy.js` | ✅ Código |
+| **S5** | **RBAC fail-closed.** O gate de permissões passou a **negar** perfis restritos sem matriz e a **negar em qualquer erro** (antes liberava o acesso). Mestre continua com bypass. | `server.js` | ✅ Código |
+| **S6** | **Anti-abuso no formulário público `/api/leads`:** rate-limit por IP (8/10min) + honeypot anti-bot. Protege o único write não autenticado exposto à internet. | `src/modules/leads/leads.routes.js` | ✅ Código |
+| **S7** | **Ferramenta de rotação de senha do mestre** (`node scripts/set-master-password.js "<senha>"`) — senha vem por argumento/`.env`, nunca hardcoded. `MASTER_PASSWORD` documentado no `.env.example`. | `scripts/set-master-password.js`, `.env.example` | ✅ Código |
+| **S8** | **Testes de regressão de segurança** (política de senha, hash forte, aceitação de formatos legados). | `tests/security-hardening.test.js` | ✅ Código |
+
+**Senha do Mestre:** já definida como `Mivl@100` **no banco local** (hash forte). Em produção o mestre segue `jorgealvim` até o deploy destas mudanças + rodar o script no servidor.
 
 ---
 
 ## 🚀 1. Funcionalidades Entregues & Ativas em Produção (100% Concluídas)
 
-| # | Módulo / Área | O que foi Implementado | Benefício / Impacto Prático no Escritório | Status em Produção |
-|:---:|:---|:---|:---|:---:|
-| **01** | **Google Identity Services (OAuth 2.0)** | `cliente.html`, `painel.html`, `src/shared/google-auth.js` | Login sem senha para advogados e **Login + Auto-Cadastro com 1 clique** para clientes no Portal, preenchendo nome, e-mail e foto oficial do Google. | ✅ **NO AR (Produção)** |
-| **02** | **QA Checklist de Produção (Playwright)** | `e2e/production-checklist.spec.js`, `scripts/run-qa-checklist.js` | 11 testes automatizados em 9 páginas críticas (`/`, `/painel`, `/blog`, `/amazon`, `/cliente`, etc.), verificando HTTP 200, zero erros de console, imagens íntegras e viewport mobile (375x667). | ✅ **NO AR (Produção)** |
-| **03** | **Vitrine Colaborador Amazon** | `amazon-colaborador.html`, rotas `/amazon` e `/amazon-colaborador` | Página independente com design escuro de alta conversão, busca instantânea, 5 categorias e 16 produtos curados (Kindles, livros de direito, celulares e notebooks Dell) com comissão. | ✅ **NO AR (Produção)** |
-| **04** | **Integração Editorial Amazon no Blog** | `blog.html` | Botão no cabeçalho com selo "Parceiro", Super Banner de destaque no topo, vitrine de 4 produtos no corpo do blog e card de recomendação ao final de artigos. | ✅ **NO AR (Produção)** |
-| **05** | **Configurador Amplo de Meta Ads** | `public/js/modules/meta-ads.js`, `painel.html` | Painel de tráfego pago no Painel do Advogado com seleção de verba (R$ 10 a R$ 100/dia), alcance estimado dinâmico, raio geográfico (Juiz de Fora/MG/Brasil), nichos jurídicos e simulador mobile com status `PAUSED` (gasto zero). | ✅ **NO AR (Produção)** |
-| **06** | **Cockpit Matinal & Prazos CPC-15** | `src/modules/juridico/index.js`, `painel.html` | Painel "Meu Dia Hoje" com resumo de prazos fatais, audiências e novos leads. Calculadora do Art. 219 do CPC (dias úteis, feriados e recesso 20/dez a 20/jan). | ✅ **NO AR (Produção)** |
-| **07** | **Gerador do Kit Comercial Contratual** | `src/modules/legal-docs/index.js`, `painel.html` | Emissão automática em 1 clique da tríade processual: Procuração *Ad Judicia*, Declaração de Hipossuficiência e Contrato de Honorários já preenchidos com os dados do cliente. | ✅ **NO AR (Produção)** |
-| **08** | **Assinatura Eletrônica Mobile & Magic Links** | `assinar.html`, `anexar.html` | Coleta de assinatura touchscreen no celular do cliente com registro de IP e data. Link mágico temporário de 72h para o cliente anexar RG/CPF sem precisar fazer login. | ✅ **NO AR (Produção)** |
-| **09** | **Recibo de Alvará & Extenso Automático** | `src/modules/legal-docs/index.js` | Prestação de contas transparente com dedução matemática de honorários e conversão automática de valores em texto por extenso. | ✅ **NO AR (Produção)** |
-| **10** | **Validador de Homônimos & Campos Dinâmicos** | `src/modules/legaltech/index.js`, `src/modules/admin/index.js` | Algoritmo anti-fraude que cruza CPF, Nome, Nome da Mãe e Data de Nascimento com score de duplicidade. Motor de novos campos customizados no banco. | ✅ **NO AR (Produção)** |
-| **11** | **Auto-Cura e Manutenção Operacional SQLite** | `src/modules/admin/index.js`, `leads.db` | Rotas de manutenção e integridade: `VACUUM`, `REINDEX`, `PRAGMA wal_checkpoint(TRUNCATE)` e criação/restauração de snapshots do banco com 1 clique. | ✅ **NO AR (Produção)** |
-| **12** | **Refatoração Modular do Backend** | `src/modules/*`, `src/shared/db.js` | Quebra do antigo arquivo monolítico em módulos independentes e unificação definitiva da conexão do banco de dados (fim dos "dois cérebros"). | ✅ **NO AR (Produção)** |
-| **13** | **Deploy com Auto-Rollback & SSH Automático** | `deploy-servidor.sh`, `deploy-servidor.bat`, VPS Contabo | Deploy em 1 comando com backup automático prévio, verificação de saúde pós-deploy e chave SSH autorizada (zero digitação de senhas). | ✅ **NO AR (Produção)** |
+| # | Módulo / Área | O que foi Implementado | Status |
+|:---:|:---|:---|:---:|
+| **01** | **Google Identity Services (OAuth 2.0)** | Login sem senha (advogado) e Login + Auto-Cadastro 1 clique (cliente), com nome/e-mail/foto do Google. | ✅ NO AR |
+| **02** | **QA Checklist de Produção (Playwright)** | 11 testes em 9 páginas críticas (HTTP 200, zero erros de console, viewport mobile). | ✅ NO AR |
+| **03** | **Vitrine Colaborador Amazon** | Página de conversão com busca instantânea, 5 categorias e 16 produtos curados. | ✅ NO AR |
+| **04** | **Integração Editorial Amazon no Blog** | Selo "Parceiro", super banner, vitrine e card de recomendação nos artigos. | ✅ NO AR |
+| **05** | **Configurador Amplo de Meta Ads** | Tráfego pago no painel: verba, alcance dinâmico, raio geográfico, nichos e simulador (status PAUSED). | ✅ NO AR |
+| **06** | **Cockpit Matinal & Prazos CPC-15** | "Meu Dia Hoje" (prazos fatais, audiências, leads) + calculadora do Art. 219 CPC (dias úteis/recesso). | ✅ NO AR |
+| **07** | **Gerador do Kit Comercial Contratual** | Procuração *Ad Judicia*, Hipossuficiência e Contrato de Honorários em 1 clique. | ✅ NO AR |
+| **08** | **Assinatura Eletrônica Mobile & Magic Links** | Assinatura touchscreen (IP+data) e link de 72h para o cliente anexar RG/CPF sem login. | ✅ NO AR |
+| **09** | **Recibo de Alvará & Valor por Extenso** | Prestação de contas com dedução de honorários e conversão para texto por extenso. | ✅ NO AR |
+| **10** | **Validador de Homônimos & Campos Dinâmicos** | Score anti-fraude (CPF+Nome+Mãe+Nascimento) e motor de campos customizados. | ✅ NO AR |
+| **11** | **Auto-Cura SQLite** | `VACUUM`, `REINDEX`, `wal_checkpoint(TRUNCATE)` e snapshots do banco em 1 clique. | ✅ NO AR |
+| **12** | **Refatoração Modular do Backend** | Monólito quebrado em `src/modules/*` e conexão única do banco (fim dos "dois cérebros"). | ✅ NO AR |
+| **13** | **Deploy com Auto-Rollback & SSH** | Deploy com backup prévio, health check e chave SSH sem senha. | ✅ NO AR |
+| **14** | **FAQ Inteligente & Direito de Família** | Aba de gestão de FAQ em Conteúdo & Compliance; conteúdo de Direito de Família. | ✅ NO AR |
+| **15** | **Publicação Instagram/Facebook & LGPD Soft-Delete** | Publicação de artigos nas redes; exclusão ética de clientes (art. 16, I, OAB) com bloqueio de login. | ✅ NO AR |
 
 ---
 
-## ⏳ 2. Cronograma das Próximas Fases (Roadmap Futuro)
+## ⏳ 2. O Que Falta Fazer (Roadmap Priorizado)
 
-Com a infraestrutura de produção estabilizada e testada, as próximas etapas dividem-se em **Tarefas de Configuração Externa (Dr. Jorge)** e **Evoluções de Código (Assistente)**:
+### 🔴 P0 — Segurança restante (continuação da Fase IV / Pilar 1)
+| # | Pendência | Por que ficou para depois |
+|:---:|:---|:---|
+| **F1** | **Deployar o hardening (S1–S8) à produção** e rodar `set-master-password.js` no Contabo para trocar a senha real. | Requer ação no servidor (deploy manual) — hoje segurado a pedido. |
+| **F2** | **Proteger `/storage/*` (documentos de clientes/drive) com autenticação + dono do arquivo** (item 3 da auditoria). | O drive gera URLs abertas que o navegador abre **sem token**; exige ajuste coordenado no front para não quebrar downloads. Precisa do app rodando para validar. |
+| **F3** | **Token de sessão em cookie `HttpOnly`+`Secure`+`SameSite` e escapar 100% dos `innerHTML`** (item 7). | Refatoração de auth nos 3 portais + varredura de XSS; alto risco sem testes ao vivo. |
+| **F4** | **Revisar/remover bypasses hardcoded** remanescentes em `client-portal.routes.js` e `hr.routes.js`. | Não auditado em detalhe nesta rodada. |
 
-### 🅰️ Ações Externas do Dr. Jorge (Credenciais e Configurações)
+### 🟠 P1 — Confiabilidade / SRE (Fase IV / Pilar 2)
+* Migrar de `node:sqlite` (`DatabaseSync` síncrono, bloqueia o event loop) para `better-sqlite3` (WAL + `synchronous=NORMAL`).
+* Deep Healthcheck (`/health/live` e `/health/ready`) com teste de latência e gravação em disco.
+* Graceful Shutdown (`SIGTERM`/`SIGINT`).
 
-| Prioridade | Ação Necessária | Onde Fazer | Impacto Direto |
-|:---:|:---|:---|:---|
-| **P1** | **Ativar Google Client ID Oficial** | [Google Cloud Console](https://console.cloud.google.com/) | Trocar a emulação de teste pela janela nativa oficial da Google no botão de login. |
-| **P2** | **Configurar Cloudflare Free (CDN + SSL)** | [Cloudflare](https://dash.cloudflare.com/) + [Registro.br](https://registro.br) | Acelerar o carregamento das páginas em todo o Brasil e bloquear ataques de robôs. |
-| **P3** | **Alcançar as 3 Vendas na Amazon** | Divulgação da vitrine (`/amazon`) | Desbloquear as credenciais oficiais da API da Amazon (PA-API v5) para preços automáticos. |
-| **P4** | **Decisão sobre o Modal de Boas-Vindas** | Feedback do Dr. Jorge | Decidir entre manter o modal de 1.2s ou convertê-lo em um aviso discreto (toast) no rodapé. |
+### 🟡 P2 — Modularização / Clean Code (Fase IV / Pilar 3)
+* Decompor `painel-1-app.js` em submódulos ES6 dinâmicos (`import()`), com *lazy loading* de modais.
+* Enxugar `server.js` (~2.7k linhas) delegando tudo para `src/modules/*`.
 
----
+### 🟢 P3 — DevSecOps & Observabilidade (Fase IV / Pilar 4)
+* SonarQube/SonarCloud (Quality Gate de segurança e complexidade).
+* Logs estruturados JSON com Pino.
+* Workflow noturno do Playwright no GitHub Actions.
 
-### 🅱️ Novas Funcionalidades de Código (Próximas Fases de Desenvolvimento)
+### 💡 Evoluções de produto (ímãs de clientes)
+* **FAQ na Home** com busca local (dúvidas trabalhistas/previdenciárias/cíveis).
+* **Simuladores** de rescisão trabalhista e aposentadoria → lead qualificado via WhatsApp.
+* **2FA por app (TOTP)** para o Painel do Advogado.
+* Converter o modal de boas-vindas em *toast* discreto.
 
-```mermaid
-gantt
-    title Cronograma de Evolução Legaltech
-    dateFormat  YYYY-MM-DD
-    section Fase I - Conversão & UX
-    FAQ Inteligente com Busca Local        :active, 2026-09-08, 2d
-    Toast Flutuante de Boas-Vindas         :2026-09-09, 1d
-    section Fase II - Ferramentas de Atração
-    Simulador de Aposentadoria e Rescisão  :2026-09-10, 3d
-    Gerador de Relatório Jurídico em PDF   :2026-09-12, 2d
-    section Fase III - Automação Avançada
-    Esteira CI/CD no GitHub Actions        :2026-09-14, 2d
-    Autenticação 2FA por App (TOTP)        :2026-09-16, 2d
-```
-
-#### Detalhamento das Próximas Entregas:
-1. **Fase I: FAQ Inteligente & Otimização de Boas-Vindas (1 a 2 dias)**
-   * Seção de Perguntas e Respostas rápidas na Home para tirar dúvidas sobre causas trabalhistas, previdenciárias e cíveis em Juiz de Fora.
-   * Conversão do modal de boas-vindas em um toast elegante e não-intrusivo.
-2. **Fase II: Simuladores Jurídicos Interativos (Ímã de Novos Clientes) (3 dias)**
-   * Calculadora interativa de rescisão trabalhista e simulação de tempo de aposentadoria no site.
-   * O visitante faz a simulação e clica em *"Enviar cálculo para o Dr. Jorge Alvim no WhatsApp"*, gerando leads qualificados automaticamente.
-3. **Fase III: Automação Contínua em Nuvem & 2FA (2 dias)**
-   * Workflow do GitHub Actions para rodar a suíte Playwright todas as noites.
-   * Segundo fator de autenticação (2FA) via aplicativo para acesso ao Painel do Advogado.
-
-4. **Fase IV: Arquitetura de Software, Segurança OWASP & Engenharia de Confiabilidade (SRE)**
-   * **Pilar 1 (P0 - Segurança & Sigilo OAB):**
-     * Desativar a sobrescrita forçada da senha mestre no boot (`src/config/db.js` e `server.js`).
-     * Expurgo definitivo da coluna `plain_password` e eliminação de senhas em texto puro no banco e interface.
-     * Remoção de bypasses de autenticação hardcoded em `auth.routes.js`, `client-portal.routes.js` e `hr.routes.js`.
-   * **Pilar 2 (P1 - Confiabilidade SRE & Concorrência):**
-     * Migração do driver de banco `node:sqlite` (`DatabaseSync` síncrono que bloqueia o event loop) para pool assíncrono / `better-sqlite3` com modo WAL e `synchronous = NORMAL`.
-     * Implementação de Deep Healthcheck (`/health/live` e `/health/ready`) com teste de latência e gravação em disco.
-     * Graceful Shutdown para tratamento de `SIGTERM`/`SIGINT`.
-   * **Pilar 3 (P2 - Modularização Clean Code):**
-     * Decomposição do `painel-1-app.js` (12.600 linhas) em submódulos ES6 dinâmicos (`import()`).
-     * Carregamento sob demanda (*lazy loading*) de modais do `painel.html` (reduzindo o DOM inicial de 640KB para < 90KB).
-     * Enxugamento do `server.js` (2.900 linhas) delegando tudo para `src/modules/*`.
-   * **Pilar 4 (P3 - DevSecOps):**
-     * Integração do SonarQube / SonarCloud para Quality Gate de segurança e complexidade ciclomática.
-     * Logs estruturados em formato JSON com Pino para observabilidade.
+### 🅰️ Ações externas do Dr. Jorge (credenciais)
+| Prioridade | Ação | Onde |
+|:---:|:---|:---|
+| P1 | Ativar Google Client ID oficial | Google Cloud Console |
+| P2 | Cloudflare Free (CDN + SSL + anti-bot) | Cloudflare + Registro.br |
+| P3 | Alcançar 3 vendas na Amazon (libera PA-API v5) | Divulgação de `/amazon` |
 
 ---
 
 ## 🔒 3. Garantias Éticas e de Segurança
-
-* **Provimento 205/2021 da OAB:** O marketing jurídico e a vitrine de produtos respeitam estritamente a sobriedade da profissão, com caráter informativo, educacional e sem promessa de êxito judicial.
-* **LGPD (Lei 13.709/2018):** Dados de clientes, contratos e documentos anexados são criptografados e trafegam sob conexões seguras com tokens temporários de expiração estrita.
+* **Provimento 205/2021 da OAB:** marketing jurídico sóbrio, informativo e sem promessa de êxito.
+* **LGPD (Lei 13.709/2018):** dados e documentos sob conexão segura; **senhas apenas em hash forte (PBKDF2 210k) — nunca em texto puro** (após deploy do Pilar 1).

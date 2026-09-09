@@ -16,10 +16,42 @@ export const leadsRouter = express.Router();
 
 // ================= ROTAS DE LEADS / ATENDIMENTOS DO SITE =================
 
-leadsRouter.post('/api/leads', (req, res, next) => {
+// ANTI-ABUSO do formulário público (o único write não autenticado exposto à
+// internet): limite por IP + honeypot. Sem isto, um bot podia inundar as tabelas
+// leads/clients e encher o disco com uploads. Em memória, sem dependências.
+const __leadHits = new Map();
+function leadRateLimit(req, res, next) {
+  try {
+    const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
+    const now = Date.now();
+    const windowMs = 10 * 60 * 1000; // janela de 10 minutos
+    const maxPerWindow = 8;          // no máx. 8 envios por IP na janela
+    let rec = __leadHits.get(ip);
+    if (!rec || now > rec.reset) rec = { count: 0, reset: now + windowMs };
+    rec.count++;
+    __leadHits.set(ip, rec);
+    if (__leadHits.size > 5000) { for (const [k, v] of __leadHits) if (now > v.reset) __leadHits.delete(k); }
+    if (rec.count > maxPerWindow) {
+      res.setHeader('Retry-After', String(Math.ceil((rec.reset - now) / 1000)));
+      return res.status(429).json({ error: 'Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.' });
+    }
+  } catch (_) { /* nunca bloquear por erro do limitador */ }
+  next();
+}
+// Honeypot: campos ocultos que humanos deixam vazios e bots preenchem. Se vierem
+// preenchidos, respondemos "ok" silenciosamente e NÃO gravamos nada (não alerta o bot).
+function leadHoneypot(req, res, next) {
+  const b = req.body || {};
+  if (b.website_hp || b._gotcha || b.company_hp) {
+    return res.status(200).json({ success: true, id: 'IGNORED' });
+  }
+  next();
+}
+
+leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
   req.clientId = generateNextClientId();
   next();
-}, uploadClientDoc.array('documents', 10), (req, res) => {
+}, uploadClientDoc.array('documents', 10), leadHoneypot, (req, res) => {
   try {
     const { name, phone, area, message, email, cpf, city, social_media, website, google_business } = req.body;
     const clientId = req.clientId;
