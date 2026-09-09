@@ -21,7 +21,11 @@
   };
 
   function getToken() {
-    return localStorage.getItem('token') || '';
+    if (typeof window.getToken === 'function') {
+      var t = window.getToken();
+      if (t) return t;
+    }
+    return localStorage.getItem('ja_admin_token') || localStorage.getItem('token') || sessionStorage.getItem('ja_admin_token') || sessionStorage.getItem('token') || '';
   }
 
   function escapeHtml(str) {
