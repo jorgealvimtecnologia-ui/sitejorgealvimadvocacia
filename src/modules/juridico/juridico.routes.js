@@ -5,6 +5,7 @@
 import express from 'express';
 import { execFile } from 'node:child_process';
 import path from 'path';
+import { ROOT_DIR } from '../../config/constants.js';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
@@ -248,7 +249,7 @@ function normalizeJudicialHit(hit, tribunalCode) {
  */
 function runPythonRadarCrawler({ queryType, queryTerm, tribunal = 'all', uf = 'MG' }) {
   return new Promise((resolve) => {
-    const scriptPath = path.join(__dirname, 'scripts', 'radar_crawler.py');
+    const scriptPath = path.join(ROOT_DIR, 'scripts', 'radar_crawler.py');
     const args = [
       scriptPath,
       '--type', queryType || 'number',

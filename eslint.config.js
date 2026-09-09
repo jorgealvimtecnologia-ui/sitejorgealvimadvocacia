@@ -42,8 +42,8 @@ export default [
     },
   },
   {
-    // Código que roda no NAVEGADOR (front-end): usa globais do browser.
-    files: ['src/js/**/*.js', 'public/js/**/*.js'],
+    // Código que roda no NAVEGADOR (front-end) ou avaliado no contexto do browser (e2e): usa globais do browser.
+    files: ['src/js/**/*.js', 'public/js/**/*.js', 'e2e/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.browser,

@@ -1325,6 +1325,11 @@
         if (document.activeElement === usr || document.activeElement === pwd) return;
         if (usr && usr.value.trim().length > 0) return;
         if (pwd) {
+          if (!pwd._hasUnlockListener) {
+            pwd._hasUnlockListener = true;
+            pwd.addEventListener('focus', function() { this.removeAttribute('readonly'); });
+            pwd.addEventListener('pointerdown', function() { this.removeAttribute('readonly'); });
+          }
           pwd.value = '';
           pwd.type = 'password';
           pwd.setAttribute('readonly', 'readonly');
