@@ -103,7 +103,7 @@
       } else if (key === 'consumidor') {
         field.value = 'para o fim específico de ajuizar e acompanhar Ação Revisional de Contrato, Repetição de Indébito e Indenizatória por Danos Morais e Materiais perante o Juizado Especial Cível ou Varas Cíveis da Comarca de Juiz de Fora/MG.';
       } else if (key === 'familia') {
-        field.value = 'para o fim específico de propor e defender em ações de divórcio, partilha de bens, fixação/revisão de alimentos, guarda e inventário extrajudicial ou judicial perante as Varas de Família e Sucessões ou Cartórios Notariais competentes.';
+        field.value = 'para o fim específico de propor e defender em ações de divórcio consensual ou litigioso, partilha de bens, fixação, revisão ou execução de alimentos, guarda, convivência e união estável perante as Varas de Família ou Cartórios Notariais competentes.';
       }
     }
 

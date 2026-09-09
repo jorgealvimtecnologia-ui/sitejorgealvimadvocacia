@@ -251,8 +251,8 @@ aiRouter.post('/api/ai/qualify-lead', requireAuth, (req, res) => {
 
     if (msgLower.includes('demissão') || msgLower.includes('rescisão') || msgLower.includes('horas extras') || msgLower.includes('sem carteira')) {
       recommendations.push('💼 Ramo Trabalhista: Solicitar extrato do FGTS, CTPS digital e holerites dos últimos 12 meses.');
-    } else if (msgLower.includes('inventário') || msgLower.includes('herança') || msgLower.includes('divórcio') || msgLower.includes('pensão')) {
-      recommendations.push('👨‍👩‍👧 Direito de Família/Sucessões: Verificar certidão de óbito/casamento e relação preliminar de bens.');
+    } else if (msgLower.includes('divórcio') || msgLower.includes('pensão') || msgLower.includes('guarda') || msgLower.includes('família') || msgLower.includes('alimentos')) {
+      recommendations.push('👨‍👩‍👧 Direito de Família: Verificar certidão de casamento/nascimento dos filhos e comprovantes de despesas/rendimentos.');
     } else if (msgLower.includes('banco') || msgLower.includes('juros') || msgLower.includes('golpe') || msgLower.includes('pix')) {
       recommendations.push('💳 Direito Bancário/Consumidor: Coletar extratos com as transações impugnadas e boletim de ocorrência.');
     } else {

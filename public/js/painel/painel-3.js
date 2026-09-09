@@ -19,6 +19,7 @@
       drive:{label:'Drive do Escritório',emoji:'📁'},
       users:{label:'Usuários & Senhas',emoji:'🔐'},
       blog:{label:'Blog & Moderação',emoji:'💬'},
+      faq:{label:'Perguntas Frequentes (FAQ)',emoji:'❓'},
       'site-boxes':{label:'Boxes da Home (Site)',emoji:'🏛️'},
       audit:{label:'Auditoria & Logs',emoji:'🛡️'},
       lgpd:{label:'LGPD & Privacidade',emoji:'🔒'},
@@ -37,12 +38,12 @@
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','site-boxes','meta-ads','audit','lgpd','notifications']},
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
       publications:'initPublicationsTab',docs:'initDocsTab',finance:'initFinanceTab',nfse:'loadNfseList',
-      blog:'loadAdminBlogPosts','site-boxes':'loadSiteBoxesTab',audit:'initAuditTab','pre-clients':'initPreClientsTab',judicial:'initJudicialTab',
+      blog:'loadAdminBlogPosts',faq:'loadFaqTab','site-boxes':'loadSiteBoxesTab',audit:'initAuditTab','pre-clients':'initPreClientsTab',judicial:'initJudicialTab',
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
@@ -52,7 +53,7 @@
 
     // Mapa "Novo": módulo -> função de abertura de cadastro já existente no painel.
     var NOVO={clients:'openNewClientModal',lawsuits:'openNewLawsuitModal',calendar:'openCalendarEventModal',
-      blog:'openNewBlogPostModal',users:'openNewUserModal',finance:'openNewTransactionModal',
+      blog:'openNewBlogPostModal',faq:'openNewFaqModal',users:'openNewUserModal',finance:'openNewTransactionModal',
       nfse:'openNewNfseModal',hr:'openNewEmployeeModal',offices:'openOfficeModal',docs:'openLegalDocModal'};
     var IMPORT={clients:1};
 

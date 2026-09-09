@@ -1145,6 +1145,75 @@ describe('Conteúdo do Site & Hub do Blog (Áreas de Atuação e Uploads)', () =
   });
 });
 
+describe('Módulo FAQ & SEO Local (Conteúdo & Compliance)', () => {
+  it('GET /api/site/faqs retorna FAQs ativos e sem menção a inventário', async () => {
+    const res = await request(app).get('/api/site/faqs');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(Array.isArray(res.body.faqs));
+    assert.ok(res.body.faqs.length >= 6);
+
+    const familiaFaq = res.body.faqs.find(f => f.category === 'familia');
+    assert.ok(familiaFaq, 'Deveria existir FAQ na categoria familia');
+    assert.ok(familiaFaq.question.includes('Divórcio'), 'Pergunta de família deve abordar divórcio');
+    assert.ok(!familiaFaq.question.toLowerCase().includes('inventário'), 'Pergunta não pode conter inventário');
+    assert.ok(!familiaFaq.answer.toLowerCase().includes('inventário'), 'Resposta não pode conter inventário');
+  });
+
+  it('GET /api/admin/site/faqs requer autenticação de administrador', async () => {
+    const unauthRes = await request(app).get('/api/admin/site/faqs');
+    assert.equal(unauthRes.status, 401);
+
+    const authRes = await auth(request(app).get('/api/admin/site/faqs'), masterToken);
+    assert.equal(authRes.status, 200);
+    assert.equal(authRes.body.success, true);
+    assert.ok(Array.isArray(authRes.body.faqs));
+  });
+
+  it('POST /api/admin/site/faqs cadastra nova pergunta com auditoria', async () => {
+    const newFaq = {
+      faq_order: 99,
+      category: 'familia',
+      category_label: 'Direito de Família • Pensão & Guarda',
+      question: 'Como é calculada a pensão alimentícia para autônomos e empresários?',
+      answer: 'O juiz de família avalia os sinais exteriores de riqueza, extratos e padrão de vida para fixar a verba.',
+      highlight_note: '👨‍👩‍👧 Cálculo fundamentado em prova documental e faturamento real.',
+      is_active: 1
+    };
+
+    const res = await auth(
+      request(app).post('/api/admin/site/faqs').send(newFaq),
+      masterToken
+    );
+
+    assert.equal(res.status, 201);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.faq.id);
+    const createdId = res.body.faq.id;
+
+    // Atualizar
+    const updateRes = await auth(
+      request(app).put(`/api/admin/site/faqs/${createdId}`).send({
+        question: 'Como é calculada a pensão alimentícia para autônomos em JF?',
+        answer: 'Atualizada para teste.',
+        is_active: 0
+      }),
+      masterToken
+    );
+    assert.equal(updateRes.status, 200);
+    assert.equal(updateRes.body.faq.question, 'Como é calculada a pensão alimentícia para autônomos em JF?');
+    assert.equal(updateRes.body.faq.is_active, 0);
+
+    // Deletar
+    const delRes = await auth(
+      request(app).delete(`/api/admin/site/faqs/${createdId}`),
+      masterToken
+    );
+    assert.equal(delRes.status, 200);
+    assert.equal(delRes.body.success, true);
+  });
+});
+
 describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
   it('POST /api/auth/forgot-password sem usuário → 400', async () => {
     const res = await request(app).post('/api/auth/forgot-password').send({});

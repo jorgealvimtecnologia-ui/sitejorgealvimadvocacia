@@ -39,4 +39,4 @@ storage/office_drive/*
 !storage/office_drive/.gitkeep
 nginx/ssl/*.pem
 nginx/ssl/*.key
-
+public/img/blog/*test*

@@ -717,8 +717,8 @@
       if (tabRockets) tabRockets.classList.add('hidden');
       if (btnRockets) btnRockets.className = inactiveClass;
 
-      // Novas abas (dashboard, assinaturas, LGPD, notificações, manutenção, meta-ads, site-boxes) — módulos de gestão.
-      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests', 'maintenance', 'meta-ads', 'site-boxes'].forEach(function (t) {
+      // Novas abas (dashboard, assinaturas, LGPD, notificações, manutenção, meta-ads, site-boxes, faq) — módulos de gestão.
+      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq'].forEach(function (t) {
         const c = document.getElementById('tab-content-' + t);
         const b = document.getElementById('tab-btn-' + t);
         if (c) c.classList.add('hidden');
@@ -842,6 +842,14 @@
         if (bTop) bTop.className = activeClass;
         if (typeof window.loadSiteBoxesTab === 'function') {
           window.loadSiteBoxesTab();
+        }
+      } else if (tab === 'faq') {
+        const c = document.getElementById('tab-content-faq');
+        const b = document.getElementById('tab-btn-faq');
+        if (c) c.classList.remove('hidden');
+        if (b) b.className = activeClass;
+        if (typeof window.loadFaqTab === 'function') {
+          window.loadFaqTab();
         }
       }
 

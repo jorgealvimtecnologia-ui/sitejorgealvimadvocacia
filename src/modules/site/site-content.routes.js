@@ -63,12 +63,12 @@ if (countAreas === 0) {
     },
     {
       box_order: 3,
-      title: 'Família & Sucessões',
-      description: 'Condução sensível, rápida e estratégica de inventários, partilha de bens, divórcios consensuais e litigiosos, guarda e pensão.',
+      title: 'Direito de Família',
+      description: 'Condução sensível, rápida e estratégica de divórcios consensuais e litigiosos, fixação e execução de pensão, guarda e união estável.',
       items: [
-        'Inventários judiciais e extrajudiciais em cartório',
-        'Divórcio consensual e litigioso, partilha justa',
-        'Fixação e revisão de pensão alimentícia e guarda'
+        'Divórcio consensual em cartório e litigioso',
+        'Fixação, revisão e execução de pensão alimentícia',
+        'Guarda compartilhada, convivência e união estável'
       ],
       image_url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=70',
       badge: null,
@@ -139,6 +139,24 @@ if (countAreas === 0) {
     );
   }
   console.log('🏛️ [SITE] 6 Boxes de Áreas de Atuação semeados com sucesso!');
+} else {
+  // Migração idempotente: atualizar Box 3 legado caso contenha Sucessões ou Inventário
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE site_practice_areas
+    SET title = 'Direito de Família',
+        description = 'Condução sensível, rápida e estratégica de divórcios consensuais e litigiosos, fixação e execução de pensão, guarda e união estável.',
+        items_json = ?,
+        updated_at = ?
+    WHERE box_order = 3 AND (title LIKE '%Sucessões%' OR description LIKE '%inventário%')
+  `).run(
+    JSON.stringify([
+      'Divórcio consensual em cartório e litigioso',
+      'Fixação, revisão e execução de pensão alimentícia',
+      'Guarda compartilhada, convivência e união estável'
+    ]),
+    now
+  );
 }
 
 // 1. GET /api/site/practice-areas (Público - Usado pela Home)

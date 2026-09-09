@@ -52,6 +52,7 @@ import { legaltechRouter } from './src/modules/legaltech/legaltech.routes.js';
 import { legalDocsRouter } from './src/modules/legal-docs/legal-docs.routes.js';
 import { metaAdsRouter } from './src/modules/meta-ads/meta-ads.routes.js';
 import { siteContentRouter } from './src/modules/site/site-content.routes.js';
+import { faqRouter } from './src/modules/faq/faq.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 
 
@@ -1071,30 +1072,30 @@ try {
         `
       },
       {
-        slug: 'inventario-extrajudicial-cartorio-juiz-de-fora',
-        title: 'Inventário em Cartório em Juiz de Fora: Passo a Passo, Custas, ITCD e Documentos Necessários',
-        summary: 'Guia completo sobre como fazer inventário extrajudicial com rapidez e economia de custas quando todos os herdeiros são maiores e concordam com a partilha.',
-        category: 'Direito de Família & Sucessões',
-        cover_image: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80',
-        tags: 'Inventário, Cartório, Extrajudicial, Sucessões, ITCD, Herança, Juiz de Fora, Partilha de Bens, Família',
+        slug: 'divorcio-pensao-guarda-juiz-de-fora',
+        title: 'Divórcio, Pensão Alimentícia e Guarda de Filhos em Juiz de Fora: Guia Prático',
+        summary: 'Entenda como funciona o divórcio consensual e litigioso, fixação de pensão alimentícia e guarda compartilhada de filhos perante as Varas de Família de Juiz de Fora.',
+        category: 'Direito de Família',
+        cover_image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=80',
+        tags: 'Divórcio, Pensão Alimentícia, Guarda Compartilhada, Direito de Família, Juiz de Fora, União Estável, Partilha de Bens',
         content: `
-<h2>O que é o Inventário Extrajudicial e por que ele é mais Rápido?</h2>
-<p>Instituído pela Lei nº 11.441/2007 e aprimorado pelas normas do CNJ, o <strong>Inventário Extrajudicial</strong> é realizado diretamente em qualquer Cartório de Notas (Tabelionato de Notas) por meio de Escritura Pública, sem necessidade de tramitação judicial morosa perante as Varas de Família e Sucessões. Enquanto um inventário judicial litigioso pode durar anos, o inventário em cartório costuma ser concluído em poucos dias ou semanas.</p>
+<h2>Como Funciona o Divórcio em Cartório e Judicial em Juiz de Fora?</h2>
+<p>O processo de dissolução conjugal pode ocorrer pela via extrajudicial (em Cartório de Notas) de forma rápida quando há consenso e não há filhos menores ou incapazes, ou pela via judicial (perante as Varas de Família da Comarca de Juiz de Fora no Fórum Benjamin Colucci) quando envolve menores ou litígio.</p>
 
-<h3>Requisitos Obrigatórios para o Inventário em Cartório:</h3>
+<h3>Principais Temas no Direito de Família:</h3>
 <ul>
-  <li>Todos os herdeiros devem ser <strong>maiores de 18 anos e plenamente capazes</strong>;</li>
-  <li>Deve haver <strong>consenso e acordo unânime</strong> entre todos os herdeiros sobre a divisão e partilha dos bens;</li>
-  <li>Inexistência de testamento válido deixado pelo falecido (ou autorização judicial prévia para lavratura em cartório);</li>
-  <li>Participação obrigatória de um <strong>advogado devidamente inscrito na OAB</strong>, que pode representar todos os herdeiros conjuntamente ou individualmente.</li>
+  <li><strong>Divórcio Consensual e Litigioso:</strong> Dissolução do casamento com partilha justa de bens adquiridos durante a união;</li>
+  <li><strong>Pensão Alimentícia:</strong> Fixação, revisão e execução de alimentos com base no binômio necessidade do alimentando e possibilidade do alimentante;</li>
+  <li><strong>Guarda Compartilhada e Convivência:</strong> Definição da residência principal dos filhos e plano equilibrado de convivência familiar priorizando o melhor interesse da criança;</li>
+  <li><strong>Reconhecimento e Dissolução de União Estável:</strong> Proteção patrimonial e formalização jurídica dos direitos dos conviventes.</li>
 </ul>
 
-<h3>Etapas do Inventário Extrajudicial:</h3>
+<h3>Documentos Comuns Necessários:</h3>
 <ol>
-  <li><strong>Levantamento Patrimonial e Documental:</strong> Certidões de óbito, certidões negativas de débitos federais, estaduais e municipais, e matrículas atualizadas dos imóveis nos Cartórios de Registro de Imóveis de Juiz de Fora;</li>
-  <li><strong>Declaração do ITCD perante a SEF/MG:</strong> Elaboração da Declaração de Bens e Direitos (DDBD) junto à Secretaria de Estado de Fazenda de Minas Gerais para cálculo e recolhimento do imposto de transmissão (ITCD);</li>
-  <li><strong>Minuta da Escritura Pública de Inventário e Partilha:</strong> Redigida pelo advogado e enviada ao Tabelião de Notas;</li>
-  <li><strong>Assinatura da Escritura e Registro:</strong> Lavratura da escritura pública e posterior apresentação nos cartórios de imóveis e bancos para transferência dos bens e liberação de saldos e contas.</li>
+  <li>Certidão de casamento atualizada ou certidão de nascimento dos filhos;</li>
+  <li>Documentos comprobatórios dos bens a serem partilhados (imóveis, veículos, contas bancárias);</li>
+  <li>Comprovantes de rendimentos e despesas para fixação de pensão alimentícia;</li>
+  <li>Documentos pessoais (RG, CPF e comprovante de residência atualizado).</li>
 </ol>
         `
       }
@@ -1122,6 +1123,20 @@ try {
       );
     }
     console.log('📰 [BLOG] 4 artigos informativos jurídicos iniciais semeados com sucesso para SEO!');
+  }
+
+  // Migração idempotente: converter artigo antigo de Inventário para Direito de Família se existir
+  const oldPost = db.prepare(`SELECT id FROM blog_posts WHERE slug = 'inventario-extrajudicial-cartorio-juiz-de-fora'`).get();
+  if (oldPost) {
+    db.prepare(`
+      UPDATE blog_posts SET 
+        slug = 'divorcio-pensao-guarda-juiz-de-fora',
+        title = 'Divórcio, Pensão Alimentícia e Guarda de Filhos em Juiz de Fora: Guia Prático',
+        summary = 'Entenda como funciona o divórcio consensual e litigioso, fixação de pensão alimentícia e guarda compartilhada de filhos perante as Varas de Família de Juiz de Fora.',
+        category = 'Direito de Família',
+        tags = 'Divórcio, Pensão Alimentícia, Guarda Compartilhada, Direito de Família, Juiz de Fora, União Estável, Partilha de Bens'
+      WHERE id = ?
+    `).run(oldPost.id);
   }
 
   // Garantir artigo sobre RDE e FATD (Direito Militar) de forma idempotente
@@ -1585,6 +1600,7 @@ app.use(legaltechRouter);
 app.use(legalDocsRouter);
 app.use(metaAdsRouter);
 app.use(siteContentRouter);
+app.use(faqRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
