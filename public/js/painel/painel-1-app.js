@@ -726,6 +726,8 @@
       });
       const btnSiteBoxesTop = document.getElementById('tab-btn-site-boxes-top');
       if (btnSiteBoxesTop) btnSiteBoxesTop.className = inactiveClass;
+      const btnFaqTop = document.getElementById('tab-btn-faq-top');
+      if (btnFaqTop) btnFaqTop.className = inactiveClass;
 
       if (tab === 'leads') {
         tabLeads.classList.remove('hidden');
@@ -846,8 +848,10 @@
       } else if (tab === 'faq') {
         const c = document.getElementById('tab-content-faq');
         const b = document.getElementById('tab-btn-faq');
+        const bTop = document.getElementById('tab-btn-faq-top');
         if (c) c.classList.remove('hidden');
         if (b) b.className = activeClass;
+        if (bTop) bTop.className = activeClass;
         if (typeof window.loadFaqTab === 'function') {
           window.loadFaqTab();
         }

@@ -865,6 +865,18 @@
           <span class="px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">6 Boxes</span>
         </button>
 
+        <!-- Aba 6.2: Perguntas Frequentes (FAQ & SEO Local) -->
+        <button 
+          id="tab-btn-faq-top" 
+          onclick="switchTab('faq')" 
+          class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-amber-800 hover:text-amber-950 hover:bg-amber-50 transition-all border border-amber-300 bg-amber-50/50 cursor-pointer" 
+          title="Gerenciar e Editar Perguntas Frequentes (FAQ) da Página Inicial"
+        >
+          <span class="text-amber-600 font-bold text-sm">❓</span>
+          <span class="font-bold text-amber-950">Editar FAQs (Site)</span>
+          <span id="tab-faq-badge-top" class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">FAQ &amp; SEO</span>
+        </button>
+
         <!-- Aba 7: Auditoria & Logs de Histórico -->
         <button 
           id="tab-btn-audit" 
@@ -3671,11 +3683,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <button 
               type="button" 
               onclick="switchTab('site-boxes')" 
-              class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer border border-indigo-200 shadow-2xs"
+              class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer border border-indigo-200 shadow-2xs" 
               title="Gerenciar os 6 Boxes de Áreas de Atuação da Página Inicial"
             >
               <span>🏛️</span>
               <span>Boxes da Home</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="switchTab('faq')" 
+              class="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer border border-amber-200 shadow-2xs" 
+              title="Gerenciar e Editar Perguntas Frequentes (FAQ) da Página Inicial"
+            >
+              <span>❓</span>
+              <span>Editar FAQs</span>
             </button>
             <button 
               type="button" 
@@ -3924,6 +3945,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
               </svg>
               <span>Imprimir</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="switchTab('faq')" 
+              class="px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs flex items-center space-x-1.5 border border-amber-500/40 transition-all cursor-pointer shadow-sm" 
+              title="Gerenciar e Editar Perguntas Frequentes (FAQ) da Página Inicial">
+              <span>❓</span>
+              <span>Editar FAQs</span>
             </button>
           </div>
         </div>
@@ -5870,6 +5899,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <span>⚙️</span>
                 <span>Configurar Meta API</span>
               </button>
+              <button 
+                type="button" 
+                onclick="switchTab('faq')" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition-all border border-amber-500/40 shadow-sm cursor-pointer active:scale-95" 
+                title="Editar Perguntas Frequentes (FAQ) da Página Inicial">
+                <span>❓</span>
+                <span>Editar FAQs</span>
+              </button>
               <a 
                 href="https://business.facebook.com/" 
                 target="_blank" 
@@ -6421,6 +6458,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 shadow-sm cursor-pointer active:scale-95">
                 <span>🔄</span>
                 <span>Recarregar Boxes</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="switchTab('faq')" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-slate-950 font-bold text-xs transition-all shadow-md cursor-pointer border border-gold-400/50 active:scale-95" 
+                title="Editar Perguntas Frequentes (FAQ) da Página Inicial">
+                <span>❓</span>
+                <span>Editar FAQs</span>
               </button>
               <a 
                 href="/#areas" 

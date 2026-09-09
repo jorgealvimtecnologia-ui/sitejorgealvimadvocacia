@@ -19,7 +19,7 @@
       drive:{label:'Drive do Escritório',emoji:'📁'},
       users:{label:'Usuários & Senhas',emoji:'🔐'},
       blog:{label:'Blog & Moderação',emoji:'💬'},
-      faq:{label:'Perguntas Frequentes (FAQ)',emoji:'❓'},
+      faq:{label:'Editar Perguntas Frequentes (FAQ)',emoji:'❓'},
       'site-boxes':{label:'Boxes da Home (Site)',emoji:'🏛️'},
       audit:{label:'Auditoria & Logs',emoji:'🛡️'},
       lgpd:{label:'LGPD & Privacidade',emoji:'🔒'},
@@ -976,7 +976,7 @@
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
-      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
+      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', faq:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
     var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
@@ -1013,6 +1013,10 @@
           var btn = document.getElementById('tab-btn-' + id);
           if(btn){
             btn.style.display = moduleAllowed(id) ? '' : 'none';
+          }
+          var btnTop = document.getElementById('tab-btn-' + id + '-top');
+          if(btnTop){
+            btnTop.style.display = moduleAllowed(id) ? '' : 'none';
           }
         });
       }
