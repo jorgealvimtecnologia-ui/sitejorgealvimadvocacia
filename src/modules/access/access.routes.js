@@ -622,39 +622,71 @@ accessRouter.get('/api/access-control/my-permissions', (req, res) => {
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || req.headers['x-access-token']);
     const session = validateToken(token);
 
-    if (session) {
-      const isMaster = session.userId === 'USR-MASTER-01' || session.username === 'jorgealvimtecnologia' || (session.name || '').toLowerCase().includes('jorge alvim') || session.role === 'master';
-      if (isMaster) {
-        return res.json({
-          success: true,
-          is_master: true,
-          role_name: 'Dr. Jorge Alvim (Mestre)',
-          permissions: ROLE_TEMPLATES.master.tabs
-        });
-      }
-
-      const perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(session.userId);
-      if (perm) {
-        return res.json({
-          success: true,
-          is_master: false,
-          role_name: perm.role_template,
-          permissions: {
-            tab_leads: perm.tab_leads, tab_clients: perm.tab_clients, tab_lawsuits: perm.tab_lawsuits,
-            tab_radar: perm.tab_radar, tab_offices: perm.tab_offices, tab_drive: perm.tab_drive,
-            tab_calendar: perm.tab_calendar, tab_publications: perm.tab_publications, tab_hr: perm.tab_hr,
-            tab_financial: perm.tab_financial, tab_colaborador: perm.tab_colaborador,
-            tab_portal_cliente: perm.tab_portal_cliente, tab_users: perm.tab_users, tab_settings: perm.tab_settings
-          }
-        });
-      }
+    if (!session) {
+      return res.status(401).json({ error: 'Sessão não autenticada. Faça login para acessar o sistema.' });
     }
 
-    // Default permissivo para operadores autenticados
+    // 2. Checar se é Usuário Mestre (Dr. Jorge Alvim)
+    const isMaster = session.userId === 'USR-MASTER-01' || session.username === 'jorgealvimtecnologia' || (session.name || '').toLowerCase().includes('jorge alvim') || session.role === 'master';
+    if (isMaster) {
+      return res.json({
+        success: true,
+        is_master: true,
+        role_name: 'Dr. Jorge Alvim (Mestre)',
+        permissions: ROLE_TEMPLATES.master.tabs
+      });
+    }
+
+    // 3. Buscar permissões customizadas na Matriz RBAC (access_permissions)
+    const perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(session.userId);
+    if (perm) {
+      // Se estiver explicitamente desativado na matriz
+      if (perm.is_active === 0) {
+        return res.status(403).json({ error: 'Perfil de operador desativado na Matriz de Controle de Acesso.' });
+      }
+
+      return res.json({
+        success: true,
+        is_master: perm.role_template === 'master',
+        role_name: perm.role_template,
+        permissions: {
+          tab_leads: perm.tab_leads, tab_clients: perm.tab_clients, tab_lawsuits: perm.tab_lawsuits,
+          tab_radar: perm.tab_radar, tab_offices: perm.tab_offices, tab_drive: perm.tab_drive,
+          tab_calendar: perm.tab_calendar, tab_publications: perm.tab_publications, tab_hr: perm.tab_hr,
+          tab_financial: perm.tab_financial, tab_colaborador: perm.tab_colaborador,
+          tab_portal_cliente: perm.tab_portal_cliente, tab_users: perm.tab_users, tab_settings: perm.tab_settings
+        }
+      });
+    }
+
+    // 4. Fallback estrito ao template do cargo do usuário (session.role)
+    const roleKey = session.role || 'advogado';
+    const tpl = ROLE_TEMPLATES[roleKey] || ROLE_TEMPLATES.advogado;
+
+    // Auto-registrar na matriz access_permissions para manter rastreabilidade
+    try {
+      const now = new Date().toISOString();
+      db.prepare(`
+        INSERT OR IGNORE INTO access_permissions (
+          id, user_id, user_type, user_name, user_identifier, user_email, user_phone,
+          role_template, tab_leads, tab_clients, tab_lawsuits, tab_radar, tab_offices,
+          tab_drive, tab_calendar, tab_publications, tab_hr, tab_financial, tab_colaborador,
+          tab_portal_cliente, tab_users, tab_settings, is_active, data_scope, notes, created_at, updated_at
+        ) VALUES (?, ?, 'admin', ?, ?, '', '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 'Auto-gerado via Login RBAC', ?, ?)
+      `).run(
+        `PERM-${session.userId}`, session.userId, session.name || session.username, session.username,
+        roleKey, tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
+        tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
+        tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
+        tpl.tabs.tab_users, tpl.tabs.tab_settings, tpl.data_scope, now, now
+      );
+    } catch (e) {}
+
     return res.json({
       success: true,
-      is_master: true,
-      permissions: ROLE_TEMPLATES.master.tabs
+      is_master: false,
+      role_name: roleKey,
+      permissions: tpl.tabs
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });

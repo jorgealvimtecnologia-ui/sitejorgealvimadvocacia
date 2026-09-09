@@ -26,6 +26,9 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      - name: Checagem de Arquitetura Modular
+        run: npm run check:architecture
+
       - name: ESLint (falha em ERROS; avisos não bloqueiam)
         run: npm run lint
 

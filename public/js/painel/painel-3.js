@@ -976,9 +976,10 @@
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
       audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
-    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1,'meta-ads':1,'site-boxes':1};
+    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
+      // 1. Menu Bar do Desktop
       document.querySelectorAll('#jaw-menubar .jaw-group').forEach(function(g){
         var vis=0; g.querySelectorAll('.jaw-dropdown button').forEach(function(b){
           var mid=b.getAttribute('data-mid');
@@ -986,6 +987,36 @@
         });
         g.style.display = vis ? '' : 'none';
       });
+
+      // 2. Dropdown rápido global de abas
+      var quickSelect = document.getElementById('global-tab-quick-select');
+      if(quickSelect){
+        Array.from(quickSelect.options).forEach(function(opt){
+          if(!opt.value) return;
+          if(!moduleAllowed(opt.value)){
+            opt.disabled = true;
+            opt.hidden = true;
+            opt.style.display = 'none';
+          } else {
+            opt.disabled = false;
+            opt.hidden = false;
+            opt.style.display = '';
+          }
+        });
+      }
+
+      // 3. Barra horizontal de abas (mobile/legado)
+      var oldbar = document.getElementById('tabs-horizontal-bar');
+      if(oldbar){
+        Object.keys(MODULES).forEach(function(id){
+          var btn = document.getElementById('tab-btn-' + id);
+          if(btn){
+            btn.style.display = moduleAllowed(id) ? '' : 'none';
+          }
+        });
+      }
+
+      // 4. Fechar janelas ativas não autorizadas
       order.slice().forEach(function(id){ if(!moduleAllowed(id)) closeWin(id); });
     }
     function fetchPerms(){
@@ -1032,6 +1063,9 @@
       window.toggleMax=toggleMax;
       window.minimizeWin=minimizeWin;
       window.snapWindow=function(id, side){ if(windows[id]) applySnap(windows[id], id, side); };
+      window.fetchPerms=fetchPerms;
+      window.applyPerms=applyPerms;
+      window.moduleAllowed=moduleAllowed;
       updateEmpty();
       if(typeof getToken==='function' && getToken()){ openModule('dashboard'); fetchPerms(); }
       if(typeof window.showPanelScreen==='function'){
