@@ -187,10 +187,13 @@
           <td class="p-3.5">${statusBadge}</td>
           <td class="p-3.5 text-[11px] text-slate-500">${dateStr}</td>
           <td class="p-3.5 text-right space-x-1 whitespace-nowrap">
+            <a href="https://business.facebook.com/latest/composer?business_id=670238677973768" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="Abrir no Meta Business Suite para publicar no Instagram e Facebook">
+              <span>🚀</span><span>Publicar</span>
+            </a>
             <button onclick="loadMetaPostIntoForm('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="Carregar este material no formulário">
-              <span>🔁</span><span>Usar Material</span>
+              <span>🔁</span><span>Usar</span>
             </button>
-            <button onclick="previewMetaPost('${p.id}')" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer" title="Ver Detalhes e Copiar">
+            <button onclick="previewMetaPost('${p.id}')" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer" title="Ver Detalhes e Copiar Legenda">
               👁️
             </button>
             <button onclick="deleteMetaPost('${p.id}', '${escapeHtml(p.title)}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="Excluir Material">
@@ -660,6 +663,23 @@
               </div>
             </div>
           </div>
+          ${(post.status === 'SIMULATED_DRAFT' || post.status === 'DRAFT_LOCAL') ? `
+          <div class="p-3.5 bg-amber-50/80 border border-amber-200 rounded-2xl text-xs space-y-2 text-amber-900">
+            <div class="font-bold flex items-center gap-1.5 text-xs">
+              <span class="text-sm">💡</span><span>Pronto para Publicar no Instagram & Facebook</span>
+            </div>
+            <p class="text-[11px] text-amber-800 leading-relaxed">
+              O material foi homologado com ética OAB. Para veicular no feed agora mesmo, clique em <strong>Publicar no Meta Suite</strong> (já abre com seu Instagram e Página prontos para postar) ou configure o Token da API para envio automático sem sair do painel.
+            </p>
+            <div class="pt-0.5 flex flex-wrap gap-2">
+              <a href="https://business.facebook.com/latest/composer?business_id=670238677973768" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs">
+                <span>🚀</span><span>Publicar no Meta Business Suite</span>
+              </a>
+              <button type="button" onclick="closeMetaPreviewModal(); openMetaConfigModal();" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-bold text-[11px] flex items-center gap-1">
+                <span>⚙️</span><span>Configurar Token da API</span>
+              </button>
+            </div>
+          </div>` : ''}
           <div class="pt-3 flex flex-wrap gap-2 justify-end border-t border-slate-100">
             <button type="button" onclick="copyMetaPostText('${post.id}')" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
               <span>📋</span><span>Copiar Legenda</span>

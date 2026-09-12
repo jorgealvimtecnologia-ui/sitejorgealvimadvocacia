@@ -546,7 +546,7 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       success: true,
       message: status === 'SENT_TO_META_PAUSED'
         ? 'Rascunho enviado com sucesso para o Meta Ads Manager (status: PAUSED)!'
-        : 'Material salvo com sucesso no painel (Modo Homologado / Simulado)!',
+        : 'Material salvo com sucesso no histórico! Clique em "Publicar" ou abra o Meta Suite para veicular.',
       post: {
         id: postId,
         title,
