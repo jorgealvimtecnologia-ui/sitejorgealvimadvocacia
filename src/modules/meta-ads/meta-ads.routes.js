@@ -99,6 +99,23 @@ for (const col of adPostColumns) {
   } catch (_) {}
 }
 
+// Semeador seguro das contas oficiais da Meta (Instagram, Ads, WhatsApp, Página)
+const officialMetaDefaults = [
+  ['meta_instagram_account_id', '17841460928822628'],
+  ['meta_ad_account_id', '705653348893835'],
+  ['meta_whatsapp_account_id', '114822078371308'],
+  ['meta_page_id', '696494846890195']
+];
+for (const [k, v] of officialMetaDefaults) {
+  try {
+    db.prepare(`
+      INSERT INTO meta_api_settings (key, value, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(key) DO NOTHING
+    `).run(k, v, new Date().toISOString());
+  } catch (_) {}
+}
+
 // ------------------------------------------------------------------------------
 // Validador de Compliance Ético OAB (Prov. 205/2021) & Diretrizes da Meta
 // ------------------------------------------------------------------------------
