@@ -6862,6 +6862,29 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </div>
   </div>
 
+  <!-- Modal: Assistente de Publicação no Meta Business Suite -->
+  <div id="modal-meta-publish-assist" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-slate-200 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-xs">🚀</div>
+          <div>
+            <h3 class="font-serif font-bold text-base text-navy-950">Assistente de Publicação Meta</h3>
+            <p class="text-[11px] text-slate-500 font-medium">Facebook e Instagram · Jorge Alvim Advocacia</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeMetaPublishAssistModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold">✕</button>
+      </div>
+      <div id="modal-publish-assist-body"></div>
+      <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100">
+        <button type="button" onclick="closeMetaPublishAssistModal(); openMetaConfigModal();" class="text-[11px] text-blue-700 hover:text-blue-900 font-bold underline flex items-center gap-1 cursor-pointer">
+          <span>⚙️</span><span>Inserir Token para envio 100% automático</span>
+        </button>
+        <button type="button" onclick="closeMetaPublishAssistModal()" class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Solicitar Novo Campo ao Programador (Fase 4) -->
   <div id="modal-request-field" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-5 border border-slate-200 my-auto">

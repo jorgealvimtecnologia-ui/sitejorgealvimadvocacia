@@ -603,8 +603,8 @@ metaAdsRouter.patch('/api/meta-ads/posts/:id/status', requireAuth, async (req, r
   try {
     const { id } = req.params;
     const { status: newStatus } = req.body;
-    if (!['ACTIVE', 'PAUSED'].includes(newStatus)) {
-      return res.status(400).json({ error: 'Status deve ser ACTIVE ou PAUSED.' });
+    if (!['ACTIVE', 'PAUSED', 'PUBLISHED'].includes(newStatus)) {
+      return res.status(400).json({ error: 'Status deve ser ACTIVE, PAUSED ou PUBLISHED.' });
     }
 
     const post = db.prepare('SELECT * FROM meta_marketing_posts WHERE id = ?').get(id);
@@ -615,7 +615,7 @@ metaAdsRouter.patch('/api/meta-ads/posts/:id/status', requireAuth, async (req, r
     const config = getMetaConfig();
     let metaUpdated = false;
 
-    if (post.meta_ad_id && config.isConfigured && config.systemUserToken && !post.meta_ad_id.startsWith('meta_ad_sim_')) {
+    if (post.meta_ad_id && config.isConfigured && config.systemUserToken && !post.meta_ad_id.startsWith('meta_ad_sim_') && ['ACTIVE', 'PAUSED'].includes(newStatus)) {
       try {
         const response = await fetch(`https://graph.facebook.com/v21.0/${post.meta_ad_id}`, {
           method: 'POST',
@@ -633,12 +633,13 @@ metaAdsRouter.patch('/api/meta-ads/posts/:id/status', requireAuth, async (req, r
     }
 
     const now = new Date().toISOString();
-    const dbStatus = newStatus === 'ACTIVE' ? 'ACTIVE' : 'SENT_TO_META_PAUSED';
+    const dbStatus = newStatus === 'PUBLISHED' ? 'PUBLISHED_ORGANIC' : (newStatus === 'ACTIVE' ? 'ACTIVE' : 'SENT_TO_META_PAUSED');
+    const adStatus = newStatus === 'PAUSED' ? 'PAUSED' : 'ACTIVE';
     db.prepare(`
       UPDATE meta_marketing_posts
       SET ad_status = ?, status = ?, updated_at = ?
       WHERE id = ?
-    `).run(newStatus, dbStatus, now, id);
+    `).run(adStatus, dbStatus, now, id);
 
     logAudit(req, {
       event_type: 'ALTERACAO',
@@ -650,13 +651,124 @@ metaAdsRouter.patch('/api/meta-ads/posts/:id/status', requireAuth, async (req, r
 
     res.json({
       success: true,
-      message: `Status alterado para ${newStatus === 'ACTIVE' ? 'ATIVO (Veiculando)' : 'PAUSADO'} com sucesso!`,
-      ad_status: newStatus,
+      message: `Status alterado para ${newStatus === 'ACTIVE' ? 'ATIVO (Veiculando)' : newStatus === 'PUBLISHED' ? 'PUBLICADO' : 'PAUSADO'} com sucesso!`,
+      ad_status: adStatus,
       status: dbStatus,
       metaUpdated
     });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao alterar status do anúncio: ' + err.message });
+  }
+});
+
+// ------------------------------------------------------------------------------
+// 7. PUBLICAR MATERIAL EXISTENTE NA META (OU RETORNAR STATUS SE REQUER TOKEN)
+// ------------------------------------------------------------------------------
+metaAdsRouter.post('/api/meta-ads/posts/:id/publish', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = db.prepare('SELECT * FROM meta_marketing_posts WHERE id = ?').get(id);
+    if (!post) {
+      return res.status(404).json({ error: 'Material não encontrado.' });
+    }
+
+    const config = getMetaConfig();
+    if (!config.isConfigured || !config.systemUserToken) {
+      return res.json({
+        success: false,
+        requiresToken: true,
+        message: 'Token de Acesso da Meta não configurado. Use o assistente com cópia automática ou insira o token na engrenagem ⚙️.',
+        post
+      });
+    }
+
+    let metaAdId = null;
+    let metaCreativeId = null;
+    let newStatus = 'ACTIVE';
+
+    if (post.destination_type === 'AD_DRAFT_PAUSED' && config.adAccountId) {
+      const storySpec = {
+        page_id: config.pageId || undefined,
+        link_data: {
+          link: post.link_url || 'https://jorgealvimadvocacia.com.br',
+          message: post.message,
+          name: post.title,
+          call_to_action: { type: post.call_to_action || 'LEARN_MORE' }
+        }
+      };
+      if (config.instagramAccountId) {
+        storySpec.instagram_actor_id = config.instagramAccountId;
+      }
+      const creativeRes = await fetch(`https://graph.facebook.com/v21.0/${config.adAccountId}/adcreatives`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: config.systemUserToken,
+          name: `Criativo: ${post.title}`,
+          object_story_spec: storySpec
+        })
+      });
+      const creativeData = await creativeRes.json();
+      metaCreativeId = creativeData.id || null;
+
+      if (metaCreativeId && config.defaultAdsetId) {
+        const adRes = await fetch(`https://graph.facebook.com/v21.0/${config.adAccountId}/ads`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: config.systemUserToken,
+            name: `Anúncio: ${post.title}`,
+            adset_id: config.defaultAdsetId,
+            creative: { creative_id: metaCreativeId },
+            status: post.ad_status || 'ACTIVE'
+          })
+        });
+        const adData = await adRes.json();
+        metaAdId = adData.id || null;
+      }
+      newStatus = post.ad_status === 'PAUSED' ? 'SENT_TO_META_PAUSED' : 'ACTIVE';
+    } else if (post.destination_type === 'FACEBOOK_PAGE_POST' && config.pageId) {
+      const fbRes = await fetch(`https://graph.facebook.com/v21.0/${config.pageId}/feed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: config.systemUserToken,
+          message: `${post.title}\n\n${post.message}`,
+          link: post.link_url || undefined
+        })
+      });
+      const fbData = await fbRes.json();
+      metaAdId = fbData.id || fbData.post_id || null;
+      newStatus = 'PUBLISHED_ORGANIC';
+    }
+
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE meta_marketing_posts
+      SET meta_ad_id = COALESCE(?, meta_ad_id),
+          meta_creative_id = COALESCE(?, meta_creative_id),
+          status = ?,
+          ad_status = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).run(metaAdId, metaCreativeId, newStatus, 'ACTIVE', now, id);
+
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'META_POST_PUBLISHED',
+      module: 'META_ADS',
+      resource_id: id,
+      description: `Material "${post.title}" publicado na Meta.`
+    });
+
+    res.json({
+      success: true,
+      message: 'Material publicado na Meta com sucesso!',
+      meta_ad_id: metaAdId,
+      status: newStatus
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao publicar material na Meta: ' + err.message });
   }
 });
 

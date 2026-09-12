@@ -457,7 +457,7 @@
       docs: ['legal-doc-modal', 'doc-preview-modal'],
       blog: ['blog-post-editor-modal'],
       'site-boxes': ['card-site-box', 'tab-content-site-boxes'],
-      'meta-ads': ['modal-meta-config', 'modal-meta-preview'],
+      'meta-ads': ['modal-meta-config', 'modal-meta-preview', 'modal-meta-publish-assist'],
       users: ['user-modal', 'edit-user-modal', 'new-user-modal'],
       hr: ['hr-modal-time-sign', 'hr-modal-time-punch', 'hr-modal-payslip', 'hr-modal-vacation-form', 'hr-modal-employee', 'hr-modal-exam-form', 'modal-labor-termination', 'hr-modal', 'labor-termination-modal'],
       offices: ['office-modal'],

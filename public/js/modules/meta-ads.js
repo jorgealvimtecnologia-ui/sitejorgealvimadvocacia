@@ -198,9 +198,9 @@
                 <span>${(p.ad_status === 'ACTIVE' || p.status === 'ACTIVE') ? '⏸️ Pausar' : '▶️ Ativar'}</span>
               </button>
             ` : ''}
-            <a href="https://business.facebook.com/latest/composer?business_id=670238677973768" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="Abrir no Meta Business Suite para publicar no Instagram e Facebook">
+            <button type="button" onclick="startMetaPostPublish('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all inline-flex items-center gap-1 cursor-pointer shadow-2xs" title="Publicar este material no Meta Business Suite / Instagram">
               <span>🚀</span><span>Publicar</span>
-            </a>
+            </button>
             <button onclick="loadMetaPostIntoForm('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="Carregar este material no formulário">
               <span>🔁</span><span>Usar</span>
             </button>
@@ -709,9 +709,9 @@
               O material foi homologado com ética OAB. Para veicular no feed agora mesmo, clique em <strong>Publicar no Meta Suite</strong> (já abre com seu Instagram e Página prontos para postar) ou configure o Token da API para envio automático sem sair do painel.
             </p>
             <div class="pt-0.5 flex flex-wrap gap-2">
-              <a href="https://business.facebook.com/latest/composer?business_id=670238677973768" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs">
+              <button type="button" onclick="closeMetaPreviewModal(); startMetaPostPublish('${post.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer">
                 <span>🚀</span><span>Publicar no Meta Business Suite</span>
-              </a>
+              </button>
               <button type="button" onclick="closeMetaPreviewModal(); openMetaConfigModal();" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 font-bold text-[11px] flex items-center gap-1">
                 <span>⚙️</span><span>Configurar Token da API</span>
               </button>
@@ -742,15 +742,169 @@
 
   function copyMetaPostText(id) {
     const post = cachedPosts.find(p => p.id === id);
-    if (!post || !post.message) return;
+    if (!post) return;
+    const fullText = `${post.title}\n\n${post.message}${post.link_url ? `\n\nSaiba mais: ${post.link_url}` : ''}\n\n⚖️ Jorge Alvim Advocacia | OAB/MG 222.943\n#Direito #Advocacia #JorgeAlvimAdvocacia`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(post.message).then(() => {
-        toast('Legenda copiada com sucesso! Pronto para colar no Instagram ou Facebook.', 'success');
+      navigator.clipboard.writeText(fullText).then(() => {
+        toast('Legenda copiada com sucesso! Pronto para colar no Instagram ou Facebook (Ctrl+V).', 'success');
       }).catch(() => {
         toast('Não foi possível copiar automaticamente. Selecione e copie o texto.', 'info');
       });
     } else {
       toast('Selecione e copie o texto manualmente.', 'info');
+    }
+  }
+
+  async function startMetaPostPublish(id) {
+    const post = cachedPosts.find(p => p.id === id);
+    if (!post) {
+      toast('Material não encontrado.', 'error');
+      return;
+    }
+
+    const token = getAuthToken();
+    // 1. Se houver integração com API ativa, tenta publicar direto via servidor
+    try {
+      const res = await fetch(`/api/meta-ads/posts/${id}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.success && !data.requiresToken) {
+        toast('🚀 Material publicado na Meta com sucesso!', 'success');
+        await fetchMetaPosts();
+        return;
+      }
+    } catch (_) {}
+
+    // 2. Modo Assistido (contingência e facilidade sem precisar digitar nada):
+    // Monta texto completo
+    const fullText = `${post.title}\n\n${post.message}${post.link_url ? `\n\nSaiba mais: ${post.link_url}` : ''}\n\n⚖️ Jorge Alvim Advocacia | OAB/MG 222.943\n#Direito #Advocacia #JorgeAlvimAdvocacia`;
+
+    // Copia imediatamente para o clipboard
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      }
+    } catch (_) {}
+
+    // Dispara download da imagem automaticamente se houver
+    if (post.media_path) {
+      try {
+        const a = document.createElement('a');
+        a.href = post.media_path;
+        a.download = post.media_path.split('/').pop() || 'criativo-jorge-alvim.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (_) {}
+    }
+
+    // Abre modal de assistência
+    openMetaPublishAssistModal(post, fullText);
+  }
+
+  function openMetaPublishAssistModal(post, fullText) {
+    const modal = document.getElementById('modal-meta-publish-assist');
+    const body = document.getElementById('modal-publish-assist-body');
+    if (!modal || !body) return;
+
+    body.innerHTML = `
+      <div class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 space-y-1.5">
+        <div class="font-bold flex items-center gap-1.5 text-xs">
+          <span class="text-base">✅</span><span>Texto e Legenda Copiados para a Área de Transferência!</span>
+        </div>
+        <p class="text-[11px] text-emerald-800 leading-relaxed">
+          O título, texto e dados éticos do escritório já estão na memória do computador. No Facebook/Instagram, basta clicar no campo de texto e apertar <strong>Ctrl + V</strong> (ou botão direito > Colar).
+        </p>
+      </div>
+
+      ${post.media_path ? `
+      <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <img src="${post.media_path}" class="w-12 h-12 object-cover rounded-xl border border-blue-200 flex-shrink-0">
+          <div class="min-w-0">
+            <div class="font-bold text-blue-950 text-xs truncate">Imagem do Post</div>
+            <div class="text-[10px] text-blue-700">Arquivo baixado para anexar na postagem</div>
+          </div>
+        </div>
+        <a href="${post.media_path}" download target="_blank" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex-shrink-0 flex items-center gap-1 cursor-pointer">
+          <span>📥</span><span>Baixar Novamente</span>
+        </a>
+      </div>` : ''}
+
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+        <div class="font-bold text-slate-800 text-xs flex items-center gap-1">
+          <span>📋</span><span>Como publicar na Meta em 3 passos:</span>
+        </div>
+        <div class="space-y-2 text-[11px] text-slate-600">
+          <div class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
+            <div>Volte na aba do <strong>Meta Business Suite</strong> (ou clique no botão azul abaixo).</div>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
+            <div>No campo <strong>Texto</strong>, aperte <strong>Ctrl + V</strong> (o texto aparecerá na hora na prévia!).</div>
+          </div>
+          ${post.media_path ? `
+          <div class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">3</span>
+            <div>Clique em <strong>"Adicionar foto/vídeo"</strong> e escolha a imagem baixada.</div>
+          </div>` : ''}
+          <div class="flex items-start gap-2">
+            <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">${post.media_path ? '4' : '3'}</span>
+            <div>Clique no botão azul <strong>"Publicar"</strong> no canto da tela da Meta!</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <a href="https://business.facebook.com/latest/composer?business_id=670238677973768" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+          <span>🚀</span><span>Ir para o Criador no Meta Business Suite</span>
+        </a>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="copyMetaPostText('${post.id}')" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer">
+            <span>📋</span><span>Copiar Texto Novamente</span>
+          </button>
+          <button type="button" onclick="markMetaPostAsPublished('${post.id}')" class="py-2 px-3 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer">
+            <span>✅</span><span>Marcar como Publicado</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeMetaPublishAssistModal() {
+    const modal = document.getElementById('modal-meta-publish-assist');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  async function markMetaPostAsPublished(id) {
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`/api/meta-ads/posts/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'PUBLISHED' })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast('✅ Material marcado como PUBLICADO no painel!', 'success');
+        closeMetaPublishAssistModal();
+        await fetchMetaPosts();
+      } else {
+        toast(data.error || 'Erro ao atualizar status.', 'error');
+      }
+    } catch (err) {
+      toast('Falha de rede: ' + err.message, 'error');
     }
   }
 
@@ -1187,5 +1341,9 @@
   window.calcTotalAdInvestment = calcTotalAdInvestment;
   window.onMetaDestinationSelectChange = onMetaDestinationSelectChange;
   window.toggleMetaPostStatus = toggleMetaPostStatus;
+  window.startMetaPostPublish = startMetaPostPublish;
+  window.openMetaPublishAssistModal = openMetaPublishAssistModal;
+  window.closeMetaPublishAssistModal = closeMetaPublishAssistModal;
+  window.markMetaPostAsPublished = markMetaPostAsPublished;
 
 })();
