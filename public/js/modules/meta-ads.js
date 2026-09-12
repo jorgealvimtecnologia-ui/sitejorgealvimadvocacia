@@ -140,7 +140,8 @@
     tbody.innerHTML = posts.map(p => {
       let destBadge = '';
       if (p.destination_type === 'AD_DRAFT_PAUSED') {
-        destBadge = '<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">🎯 Meta Ads (PAUSED)</span>';
+        const isAdActive = (p.ad_status === 'ACTIVE' || p.status === 'ACTIVE');
+        destBadge = `<span class="px-2 py-0.5 rounded-full ${isAdActive ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'} text-[10px] font-bold">🎯 Meta Ads (${isAdActive ? 'ATIVO' : 'PAUSADO'})</span>`;
       } else if (p.destination_type === 'FACEBOOK_PAGE_POST') {
         destBadge = '<span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">📘 Facebook Feed</span>';
       } else if (p.destination_type === 'INSTAGRAM_FEED') {
@@ -150,8 +151,10 @@
       }
 
       let statusBadge = '';
-      if (p.status === 'SENT_TO_META_PAUSED') {
-        statusBadge = '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ No Gerenciador (PAUSED)</span>';
+      if (p.status === 'ACTIVE' || p.ad_status === 'ACTIVE') {
+        statusBadge = '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">▶️ Ativo (Veiculando)</span>';
+      } else if (p.status === 'SENT_TO_META_PAUSED' || p.ad_status === 'PAUSED') {
+        statusBadge = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">⏸️ Pausado</span>';
       } else if (p.status === 'SIMULATED_DRAFT') {
         statusBadge = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">🟡 Rascunho Homologado</span>';
       } else if (p.status === 'PUBLISHED_ORGANIC') {
@@ -167,6 +170,7 @@
         : `<div class="w-11 h-11 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold">📄</div>`;
 
       const dateStr = p.created_at ? new Date(p.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '--';
+      const endDateLabel = p.end_date ? `🏁 Até ${new Date(p.end_date).toLocaleDateString('pt-BR')}` : `♾️ Contínuo`;
 
       return `
         <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
@@ -174,12 +178,14 @@
           <td class="p-3.5">
             <div class="font-bold text-xs text-navy-950">${escapeHtml(p.title)}</div>
             <div class="text-[11px] text-slate-500 truncate max-w-xs mt-0.5">${escapeHtml(p.message)}</div>
-            <div class="text-[10px] text-blue-700 font-semibold mt-0.5 flex items-center gap-1">
+            <div class="text-[10px] text-blue-700 font-semibold mt-0.5 flex flex-wrap items-center gap-1.5">
               <span>💰 R$ ${(p.daily_budget_cents ? (p.daily_budget_cents/100).toFixed(2) : '20.00').replace('.', ',')}/dia</span>
               <span>•</span>
               <span>📍 ${escapeHtml(p.target_city || 'Juiz de Fora')} (+${p.target_radius_km || 40}km)</span>
               <span>•</span>
               <span>👥 ${p.target_age_min || 25}-${p.target_age_max || 65}a</span>
+              <span>•</span>
+              <span class="text-slate-600 font-bold">${endDateLabel}</span>
             </div>
             <div class="text-[10px] text-slate-400 font-mono mt-0.5">${p.meta_ad_id ? `ID Meta: ${p.meta_ad_id}` : `Ref: #${p.id}`}</div>
           </td>
@@ -187,6 +193,11 @@
           <td class="p-3.5">${statusBadge}</td>
           <td class="p-3.5 text-[11px] text-slate-500">${dateStr}</td>
           <td class="p-3.5 text-right space-x-1 whitespace-nowrap">
+            ${p.destination_type === 'AD_DRAFT_PAUSED' ? `
+              <button onclick="toggleMetaPostStatus('${p.id}')" class="px-2.5 py-1.5 rounded-xl ${(p.ad_status === 'ACTIVE' || p.status === 'ACTIVE') ? 'bg-amber-100 text-amber-900 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'} font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="${(p.ad_status === 'ACTIVE' || p.status === 'ACTIVE') ? 'Pausar anúncio' : 'Ativar veiculação do anúncio'}">
+                <span>${(p.ad_status === 'ACTIVE' || p.status === 'ACTIVE') ? '⏸️ Pausar' : '▶️ Ativar'}</span>
+              </button>
+            ` : ''}
             <a href="https://business.facebook.com/latest/composer?business_id=670238677973768" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="Abrir no Meta Business Suite para publicar no Instagram e Facebook">
               <span>🚀</span><span>Publicar</span>
             </a>
@@ -515,6 +526,21 @@
     formData.append('target_gender', genderSelect ? genderSelect.value : 'ALL');
     formData.append('target_interests', JSON.stringify(activeInterests));
 
+    // Status do anúncio (Ativo vs Pausado) e Programação com Data Final
+    const statusRadio = document.querySelector('input[name="meta_ad_status"]:checked');
+    const adStatus = statusRadio ? statusRadio.value : 'ACTIVE';
+    formData.append('ad_status', adStatus);
+
+    const scheduleRadio = document.querySelector('input[name="meta_schedule_type"]:checked');
+    const scheduleType = scheduleRadio ? scheduleRadio.value : 'CONTINUOUS';
+    const startDateInput = document.getElementById('meta-ad-start-date');
+    const endDateInput = document.getElementById('meta-ad-end-date');
+
+    if (scheduleType === 'SET_END_DATE') {
+      if (startDateInput && startDateInput.value) formData.append('start_date', startDateInput.value);
+      if (endDateInput && endDateInput.value) formData.append('end_date', endDateInput.value);
+    }
+
     if (mediaInput && mediaInput.files && mediaInput.files[0]) {
       formData.append('media', mediaInput.files[0]);
     }
@@ -644,22 +670,33 @@
             <div class="text-[11px] font-bold text-blue-900 uppercase mb-1.5 flex items-center gap-1">
               <span>🎯</span><span>Configuração de Segmentação & Orçamento</span>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-[11px]">
-              <div>
-                <span class="text-slate-500 block">Orçamento Diário:</span>
-                <span class="font-bold text-blue-800 font-mono">R$ ${(post.daily_budget_cents ? (post.daily_budget_cents / 100).toFixed(2) : '20.00').replace('.', ',')}/dia</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">Objetivo:</span>
-                <span class="font-bold text-slate-800">${post.campaign_goal || 'OUTCOME_LEADS'}</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">Praça / Raio:</span>
-                <span class="font-bold text-slate-800">${escapeHtml(post.target_city || 'Juiz de Fora')} (+${post.target_radius_km || 40}km)</span>
-              </div>
-              <div>
-                <span class="text-slate-500 block">Público / Idade:</span>
-                <span class="font-bold text-slate-800">${post.target_age_min || 25} a ${post.target_age_max || 65} anos (${post.target_gender === 'WOMEN' ? 'Mulheres' : post.target_gender === 'MEN' ? 'Homens' : 'Todos'})</span>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span class="text-slate-500 block">Orçamento Diário:</span>
+                  <span class="font-bold text-blue-800 font-mono">R$ ${(post.daily_budget_cents ? (post.daily_budget_cents / 100).toFixed(2) : '20.00').replace('.', ',')}/dia</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Status de Veiculação:</span>
+                  <span class="font-bold ${(post.ad_status === 'ACTIVE' || post.status === 'ACTIVE') ? 'text-emerald-700' : 'text-amber-700'}">
+                    ${(post.ad_status === 'ACTIVE' || post.status === 'ACTIVE') ? '▶️ Ativo (Veiculando)' : '⏸️ Pausado'}
+                  </span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Praça / Raio:</span>
+                  <span class="font-bold text-slate-800">${escapeHtml(post.target_city || 'Juiz de Fora')} (+${post.target_radius_km || 40}km)</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Programação / Término:</span>
+                  <span class="font-bold text-slate-800">${post.end_date ? `🏁 Até ${new Date(post.end_date).toLocaleDateString('pt-BR')}` : `♾️ Veiculação Contínua`}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Público / Idade:</span>
+                  <span class="font-bold text-slate-800">${post.target_age_min || 25} a ${post.target_age_max || 65} anos (${post.target_gender === 'WOMEN' ? 'Mulheres' : post.target_gender === 'MEN' ? 'Homens' : 'Todos'})</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Objetivo:</span>
+                  <span class="font-bold text-slate-800">${post.campaign_goal || 'OUTCOME_LEADS'}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -681,6 +718,11 @@
             </div>
           </div>` : ''}
           <div class="pt-3 flex flex-wrap gap-2 justify-end border-t border-slate-100">
+            ${post.destination_type === 'AD_DRAFT_PAUSED' ? `
+              <button type="button" onclick="toggleMetaPostStatus('${post.id}'); closeMetaPreviewModal();" class="px-3.5 py-2 rounded-xl ${(post.ad_status === 'ACTIVE' || post.status === 'ACTIVE') ? 'bg-amber-100 text-amber-900 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'} font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                <span>${(post.ad_status === 'ACTIVE' || post.status === 'ACTIVE') ? '⏸️ Pausar Anúncio' : '▶️ Ativar Anúncio'}</span>
+              </button>
+            ` : ''}
             <button type="button" onclick="copyMetaPostText('${post.id}')" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
               <span>📋</span><span>Copiar Legenda</span>
             </button>
@@ -758,6 +800,33 @@
       if (thumbName) thumbName.innerText = `Mídia importada: ${post.title.slice(0, 30)}...`;
     }
 
+    if (post.ad_status) {
+      const radActive = document.querySelector('input[name="meta_ad_status"][value="ACTIVE"]');
+      const radPaused = document.querySelector('input[name="meta_ad_status"][value="PAUSED"]');
+      if (post.ad_status === 'PAUSED') {
+        if (radPaused) radPaused.checked = true;
+        onMetaStatusChange('PAUSED');
+      } else {
+        if (radActive) radActive.checked = true;
+        onMetaStatusChange('ACTIVE');
+      }
+    }
+
+    if (post.end_date) {
+      const radEnd = document.querySelector('input[name="meta_schedule_type"][value="SET_END_DATE"]');
+      if (radEnd) radEnd.checked = true;
+      toggleMetaScheduleMode('SET_END_DATE');
+      const startInput = document.getElementById('meta-ad-start-date');
+      const endInput = document.getElementById('meta-ad-end-date');
+      if (startInput && post.start_date) startInput.value = post.start_date;
+      if (endInput && post.end_date) endInput.value = post.end_date;
+      calcTotalAdInvestment();
+    } else {
+      const radCont = document.querySelector('input[name="meta_schedule_type"][value="CONTINUOUS"]');
+      if (radCont) radCont.checked = true;
+      toggleMetaScheduleMode('CONTINUOUS');
+    }
+
     updateMockupAndCompliance();
     syncMetaAudienceMockup();
 
@@ -772,6 +841,164 @@
   function closeMetaPreviewModal() {
     const modal = document.getElementById('modal-meta-preview');
     if (modal) modal.classList.add('hidden');
+  }
+
+  // --------------------------------------------------------------------------
+  // CONTROLE DE STATUS (ATIVO vs PAUSADO) E PROGRAMAÇÃO COM DATA FINAL
+  // --------------------------------------------------------------------------
+  function onMetaStatusChange(status) {
+    const lblActive = document.getElementById('label-status-active');
+    const lblPaused = document.getElementById('label-status-paused');
+    const indicator = document.getElementById('meta-status-badge-indicator');
+    const helpText = document.getElementById('meta-status-help-text');
+    const btnText = document.getElementById('btn-submit-meta-text');
+
+    if (status === 'ACTIVE') {
+      if (lblActive) {
+        lblActive.className = 'flex items-center gap-2 p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 cursor-pointer text-xs font-bold text-emerald-950 transition-all';
+      }
+      if (lblPaused) {
+        lblPaused.className = 'flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer text-xs font-semibold text-slate-700 transition-all';
+      }
+      if (indicator) {
+        indicator.className = 'text-[10px] text-emerald-700 font-bold bg-emerald-100/80 px-2 py-0.5 rounded-full';
+        indicator.innerText = '▶️ Modo Ativo';
+      }
+      if (helpText) {
+        helpText.innerHTML = '<strong>Modo Ativo:</strong> O anúncio começará a veicular na conta da Meta assim que for aprovado.';
+      }
+      if (btnText) {
+        btnText.innerText = 'Publicar Anúncio no Meta Ads (Campanha ATIVA)';
+      }
+    } else {
+      if (lblActive) {
+        lblActive.className = 'flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer text-xs font-semibold text-slate-700 transition-all';
+      }
+      if (lblPaused) {
+        lblPaused.className = 'flex items-center gap-2 p-2.5 rounded-xl border-2 border-amber-500 bg-amber-50/60 cursor-pointer text-xs font-bold text-amber-950 transition-all';
+      }
+      if (indicator) {
+        indicator.className = 'text-[10px] text-amber-800 font-bold bg-amber-100/80 px-2 py-0.5 rounded-full';
+        indicator.innerText = '⏸️ Modo Pausado';
+      }
+      if (helpText) {
+        helpText.innerHTML = '<strong>Modo Pausado:</strong> O anúncio será salvo como rascunho pausado no Gerenciador para revisão antes de ligar.';
+      }
+      if (btnText) {
+        btnText.innerText = 'Salvar Rascunho no Meta Ads (PAUSADO)';
+      }
+    }
+  }
+
+  function toggleMetaScheduleMode(mode) {
+    const lblCont = document.getElementById('label-sched-continuous');
+    const lblEnd = document.getElementById('label-sched-enddate');
+    const container = document.getElementById('meta-schedule-dates-container');
+    const startInput = document.getElementById('meta-ad-start-date');
+    const endInput = document.getElementById('meta-ad-end-date');
+
+    if (mode === 'SET_END_DATE') {
+      if (lblCont) lblCont.className = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-white cursor-pointer text-xs font-semibold text-slate-700';
+      if (lblEnd) lblEnd.className = 'flex items-center gap-2 p-2 rounded-xl border-2 border-blue-500 bg-blue-50/50 cursor-pointer text-xs font-bold text-blue-950';
+      if (container) container.classList.remove('hidden');
+
+      const today = new Date();
+      if (startInput && !startInput.value) {
+        startInput.value = today.toISOString().split('T')[0];
+      }
+      if (endInput && !endInput.value) {
+        const in15Days = new Date(today);
+        in15Days.setDate(today.getDate() + 15);
+        endInput.value = in15Days.toISOString().split('T')[0];
+      }
+      calcTotalAdInvestment();
+    } else {
+      if (lblCont) lblCont.className = 'flex items-center gap-2 p-2 rounded-xl border-2 border-blue-500 bg-blue-50/50 cursor-pointer text-xs font-bold text-blue-950';
+      if (lblEnd) lblEnd.className = 'flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-white cursor-pointer text-xs font-semibold text-slate-700';
+      if (container) container.classList.add('hidden');
+    }
+  }
+
+  function setAdDurationDays(days) {
+    const startInput = document.getElementById('meta-ad-start-date');
+    const endInput = document.getElementById('meta-ad-end-date');
+    const today = new Date();
+    if (startInput) startInput.value = today.toISOString().split('T')[0];
+    if (endInput) {
+      const target = new Date(today);
+      target.setDate(today.getDate() + days);
+      endInput.value = target.toISOString().split('T')[0];
+    }
+    calcTotalAdInvestment();
+  }
+
+  function calcTotalAdInvestment() {
+    const startInput = document.getElementById('meta-ad-start-date');
+    const endInput = document.getElementById('meta-ad-end-date');
+    const budgetInput = document.getElementById('meta-ad-budget-input');
+    const totalEl = document.getElementById('meta-total-budget-val');
+    if (!startInput || !endInput || !budgetInput || !totalEl) return;
+
+    const dailyVal = parseFloat(budgetInput.value) || 20;
+    const d1 = new Date(startInput.value);
+    const d2 = new Date(endInput.value);
+    if (isNaN(d1) || isNaN(d2) || d2 <= d1) {
+      totalEl.innerText = `R$ ${(dailyVal * 7).toFixed(2).replace('.', ',')} (mínimo 7d)`;
+      return;
+    }
+    const diffTime = Math.abs(d2 - d1);
+    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    const total = diffDays * dailyVal;
+    totalEl.innerText = `R$ ${total.toFixed(2).replace('.', ',')} (${diffDays} dias a R$ ${dailyVal}/dia)`;
+  }
+
+  function onMetaDestinationSelectChange(dest) {
+    const btnText = document.getElementById('btn-submit-meta-text');
+    if (!btnText) return;
+    if (dest === 'AD_DRAFT_PAUSED') {
+      const statusRadio = document.querySelector('input[name="meta_ad_status"]:checked');
+      btnText.innerText = (statusRadio && statusRadio.value === 'PAUSED')
+        ? 'Salvar Rascunho no Meta Ads (PAUSADO)'
+        : 'Publicar Anúncio no Meta Ads (Campanha ATIVA)';
+    } else if (dest === 'INSTAGRAM_FEED') {
+      btnText.innerText = 'Publicar no Instagram (@jorgealvim10advocacia)';
+    } else if (dest === 'FACEBOOK_PAGE_POST') {
+      btnText.innerText = 'Publicar na Página do Facebook';
+    } else {
+      btnText.innerText = 'Salvar Rascunho no Sistema';
+    }
+  }
+
+  async function toggleMetaPostStatus(id) {
+    const post = cachedPosts.find(p => p.id === id);
+    if (!post) return;
+
+    const isCurrentlyActive = (post.ad_status === 'ACTIVE' || post.status === 'ACTIVE');
+    const nextStatus = isCurrentlyActive ? 'PAUSED' : 'ACTIVE';
+    const actionLabel = isCurrentlyActive ? 'pausar' : 'ativar';
+
+    if (!confirm(`Deseja realmente ${actionLabel} a veiculação do anúncio "${post.title}"?`)) return;
+
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`/api/meta-ads/posts/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast(data.message || `Status alterado para ${nextStatus}!`, 'success');
+        await fetchMetaPosts();
+      } else {
+        toast(data.error || 'Erro ao alterar status.', 'error');
+      }
+    } catch (err) {
+      toast('Falha de rede ao alterar status: ' + err.message, 'error');
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -954,5 +1181,11 @@
   window.loadArticleIntoMetaMarketing = loadArticleIntoMetaMarketing;
   window.loadMetaPostIntoForm = loadMetaPostIntoForm;
   window.copyMetaPostText = copyMetaPostText;
+  window.onMetaStatusChange = onMetaStatusChange;
+  window.toggleMetaScheduleMode = toggleMetaScheduleMode;
+  window.setAdDurationDays = setAdDurationDays;
+  window.calcTotalAdInvestment = calcTotalAdInvestment;
+  window.onMetaDestinationSelectChange = onMetaDestinationSelectChange;
+  window.toggleMetaPostStatus = toggleMetaPostStatus;
 
 })();

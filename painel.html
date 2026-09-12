@@ -5910,10 +5910,29 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <span>Editar FAQs</span>
               </button>
               <a 
-                href="https://business.facebook.com/" 
+                href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=705653348893835" 
                 target="_blank" 
-                class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all border border-slate-700 shadow-sm cursor-pointer">
-                <span>🔗</span>
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
+                title="Abrir Conta de Anúncios Oficial 705653348893835 no Gerenciador da Meta">
+                <span>🎯</span>
+                <span>Gerenciador de Anúncios (Conta Ativa)</span>
+              </a>
+              <a 
+                href="https://business.facebook.com/billing_hub/payment_settings?business_id=670238677973768&asset_id=705653348893835" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs transition-all border border-emerald-500 shadow-sm cursor-pointer"
+                title="Conferir saldo pré-pago disponível de R$ 49,99 na Meta">
+                <span>💳</span>
+                <span>Saldo Meta (R$ 49,99)</span>
+              </a>
+              <a 
+                href="https://business.facebook.com/latest/home?business_id=670238677973768" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all border border-slate-700 shadow-sm cursor-pointer">
+                <span>📱</span>
                 <span>Meta Business Suite</span>
               </a>
             </div>
@@ -6002,11 +6021,11 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <!-- Destino -->
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Destino do Material</label>
-                <select id="meta-ad-destination" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
-                  <option value="AD_DRAFT_PAUSED">🎯 Rascunho de Anúncio Pago no Meta Ads (status: PAUSED)</option>
-                  <option value="FACEBOOK_PAGE_POST">📘 Post Orgânico na Página do Facebook</option>
-                  <option value="INSTAGRAM_FEED">📸 Post Orgânico no Instagram Comercial</option>
-                  <option value="LOCAL_DRAFT">📁 Salvar apenas Rascunho Interno no Sistema</option>
+                <select id="meta-ad-destination" onchange="onMetaDestinationSelectChange(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-500 shadow-2xs">
+                  <option value="AD_DRAFT_PAUSED" selected>🎯 Anúncio Patrocinado no Meta Ads (Campanha Oficial)</option>
+                  <option value="INSTAGRAM_FEED">📸 Post Orgânico no Instagram (@jorgealvim10advocacia)</option>
+                  <option value="FACEBOOK_PAGE_POST">📘 Post Orgânico no Facebook (Jorgealvimadvocacia-anuncios)</option>
+                  <option value="LOCAL_DRAFT">📁 Salvar apenas Rascunho Local no Sistema</option>
                 </select>
               </div>
 
@@ -6148,6 +6167,80 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   </div>
                 </div>
 
+                <!-- Programação de Duração & Data Final do Anúncio -->
+                <div class="p-3.5 bg-white/90 rounded-2xl border border-blue-200/80 space-y-2.5 shadow-2xs">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>📅</span><span>Programação & Data Final do Anúncio</span>
+                    </label>
+                    <span class="text-[10px] text-blue-700 font-bold bg-blue-100/70 px-2 py-0.5 rounded-full">
+                      Duração da Campanha
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center gap-2 p-2 rounded-xl border-2 border-blue-500 bg-blue-50/50 cursor-pointer text-xs font-bold text-blue-950" id="label-sched-continuous">
+                      <input type="radio" name="meta_schedule_type" value="CONTINUOUS" checked onchange="toggleMetaScheduleMode(this.value)" class="text-blue-600 focus:ring-0">
+                      <span>Veicular continuamente</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-white cursor-pointer text-xs font-semibold text-slate-700" id="label-sched-enddate">
+                      <input type="radio" name="meta_schedule_type" value="SET_END_DATE" onchange="toggleMetaScheduleMode(this.value)" class="text-blue-600 focus:ring-0">
+                      <span>Definir Data Final</span>
+                    </label>
+                  </div>
+
+                  <div id="meta-schedule-dates-container" class="hidden space-y-2.5 pt-2 border-t border-slate-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Data de Início</label>
+                        <input type="date" id="meta-ad-start-date" onchange="calcTotalAdInvestment()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 bg-white shadow-2xs">
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Data de Término (Final)</label>
+                        <input type="date" id="meta-ad-end-date" onchange="calcTotalAdInvestment()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 bg-white shadow-2xs">
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span class="text-[11px] text-slate-500 font-medium">Duração rápida:</span>
+                      <button type="button" onclick="setAdDurationDays(7)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50 text-[11px] font-bold text-slate-700 cursor-pointer transition-colors">+ 7 dias</button>
+                      <button type="button" onclick="setAdDurationDays(15)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50 text-[11px] font-bold text-slate-700 cursor-pointer transition-colors">+ 15 dias</button>
+                      <button type="button" onclick="setAdDurationDays(30)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50 text-[11px] font-bold text-slate-700 cursor-pointer transition-colors">+ 30 dias</button>
+                    </div>
+
+                    <div id="meta-total-investment-display" class="p-2.5 rounded-xl bg-blue-50/80 border border-blue-100 text-[11px] text-blue-950 font-medium flex justify-between items-center">
+                      <span>Investimento Total Previsto:</span>
+                      <span id="meta-total-budget-val" class="font-black font-mono text-xs text-blue-900">R$ 140,00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Status Inicial de Publicação na Meta (Ativo vs Pausado) -->
+                <div class="p-3.5 bg-white/90 rounded-2xl border border-blue-200/80 space-y-2 shadow-2xs">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>⚡</span><span>Status de Veiculação na Meta</span>
+                    </label>
+                    <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100/80 px-2 py-0.5 rounded-full" id="meta-status-badge-indicator">
+                      ▶️ Modo Ativo
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 cursor-pointer text-xs font-bold text-emerald-950 transition-all" id="label-status-active">
+                      <input type="radio" name="meta_ad_status" value="ACTIVE" checked onchange="onMetaStatusChange(this.value)" class="text-emerald-600 focus:ring-0">
+                      <span>▶️ Publicar Ativo</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer text-xs font-semibold text-slate-700 transition-all" id="label-status-paused">
+                      <input type="radio" name="meta_ad_status" value="PAUSED" onchange="onMetaStatusChange(this.value)" class="text-slate-600 focus:ring-0">
+                      <span>⏸️ Salvar Pausado</span>
+                    </label>
+                  </div>
+                  <p class="text-[11px] text-slate-500" id="meta-status-help-text">
+                    <strong>Modo Ativo:</strong> O anúncio começará a veicular na conta da Meta assim que for aprovado.
+                  </p>
+                </div>
+
                 <!-- 3. Localização Geográfica & Raio -->
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div class="sm:col-span-7">
@@ -6260,9 +6353,9 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <button 
                   type="submit" 
                   id="btn-submit-meta-ad" 
-                  class="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98">
-                  <span>🎯</span>
-                  <span>Criar Rascunho no Meta Ads (Patrocinado / PAUSED)</span>
+                  class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+                  <span>🚀</span>
+                  <span id="btn-submit-meta-text">Publicar Anúncio no Meta Ads (Campanha ATIVA)</span>
                 </button>
               </div>
             </form>

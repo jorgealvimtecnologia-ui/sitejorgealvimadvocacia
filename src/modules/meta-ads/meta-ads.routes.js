@@ -82,7 +82,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_mmp_dest ON meta_marketing_posts(destination_type);
 `);
 
-// Migrações seguras e retrocompatíveis para segmentação de público e orçamento diário
+// Migrações seguras e retrocompatíveis para segmentação de público, orçamento diário e agendamento
 const adPostColumns = [
   "daily_budget_cents INTEGER DEFAULT 2000",
   "campaign_goal TEXT DEFAULT 'OUTCOME_LEADS'",
@@ -91,7 +91,10 @@ const adPostColumns = [
   "target_age_min INTEGER DEFAULT 25",
   "target_age_max INTEGER DEFAULT 65",
   "target_gender TEXT DEFAULT 'ALL'",
-  "target_interests TEXT DEFAULT '[]'"
+  "target_interests TEXT DEFAULT '[]'",
+  "start_date TEXT",
+  "end_date TEXT",
+  "ad_status TEXT DEFAULT 'ACTIVE'"
 ];
 for (const col of adPostColumns) {
   try {
@@ -279,7 +282,10 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       target_age_min = 25,
       target_age_max = 65,
       target_gender = 'ALL',
-      target_interests = '[]'
+      target_interests = '[]',
+      start_date = null,
+      end_date = null,
+      ad_status = 'ACTIVE'
     } = req.body;
 
     if (!title || !message) {
@@ -294,6 +300,7 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
     const ageMin = Math.max(18, Math.min(65, parseInt(target_age_min, 10) || 25));
     const ageMax = Math.max(ageMin, Math.min(65, parseInt(target_age_max, 10) || 65));
     const gender = ['ALL', 'MEN', 'WOMEN'].includes(target_gender) ? target_gender : 'ALL';
+    const desiredStatus = ad_status === 'PAUSED' ? 'PAUSED' : 'ACTIVE';
     let targetInterestsJson = '[]';
     try {
       if (typeof target_interests === 'string') {
@@ -390,15 +397,15 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
                 name: `Anúncio: ${title}`,
                 adset_id: config.defaultAdsetId,
                 creative: { creative_id: metaCreativeId },
-                status: 'PAUSED'
+                status: desiredStatus
               })
             });
             const adData = await adRes.json();
             metaAdId = adData.id || null;
             metaResponseObj = adData;
-            status = 'SENT_TO_META_PAUSED';
+            status = desiredStatus === 'ACTIVE' ? 'ACTIVE' : 'SENT_TO_META_PAUSED';
           } else {
-            status = metaCreativeId ? 'SENT_TO_META_PAUSED' : 'DRAFT_LOCAL';
+            status = metaCreativeId ? (desiredStatus === 'ACTIVE' ? 'ACTIVE' : 'SENT_TO_META_PAUSED') : 'DRAFT_LOCAL';
             metaResponseObj = creativeData;
           }
 
@@ -502,8 +509,9 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
         meta_ad_id, meta_creative_id, compliance_flags, created_by,
         daily_budget_cents, campaign_goal, target_city, target_radius_km,
         target_age_min, target_age_max, target_gender, target_interests,
+        start_date, end_date, ad_status,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     insertStmt.run(
@@ -530,6 +538,9 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       ageMax,
       gender,
       targetInterestsJson,
+      start_date || null,
+      end_date || null,
+      desiredStatus,
       now,
       now
     );
@@ -539,14 +550,20 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       event_name: 'META_POST_CREATED',
       module: 'META_ADS',
       resource_id: postId,
-      description: `Material de marketing criado: "${title}" (${destination_type}) com orçamento de R$ ${(dailyBudgetCents/100).toFixed(2)}/dia em ${target_city} (+${radiusKm}km).`
+      description: `Material de marketing criado: "${title}" (${destination_type}) status=${desiredStatus} término=${end_date || 'contínuo'} com orçamento de R$ ${(dailyBudgetCents/100).toFixed(2)}/dia em ${target_city} (+${radiusKm}km).`
     });
+
+    const responseMsg = status === 'ACTIVE'
+      ? 'Campanha ativada com sucesso no Meta Ads Manager!'
+      : (status === 'SENT_TO_META_PAUSED'
+          ? 'Rascunho salvo no Meta Ads Manager (status: PAUSED)!'
+          : (desiredStatus === 'ACTIVE'
+              ? 'Material homologado como ATIVO! Clique em "Publicar" para veicular.'
+              : 'Material salvo com sucesso no histórico como Rascunho Pausado!'));
 
     res.status(201).json({
       success: true,
-      message: status === 'SENT_TO_META_PAUSED'
-        ? 'Rascunho enviado com sucesso para o Meta Ads Manager (status: PAUSED)!'
-        : 'Material salvo com sucesso no histórico! Clique em "Publicar" ou abra o Meta Suite para veicular.',
+      message: responseMsg,
       post: {
         id: postId,
         title,
@@ -557,6 +574,9 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
         media_path: mediaPath,
         media_type: mediaType,
         status,
+        ad_status: desiredStatus,
+        start_date,
+        end_date,
         meta_ad_id: metaAdId,
         daily_budget_cents: dailyBudgetCents,
         campaign_goal: campaign_goal,
@@ -573,6 +593,70 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
   } catch (err) {
     console.error('Erro ao processar post da Meta:', err);
     res.status(500).json({ error: 'Erro ao processar material: ' + err.message });
+  }
+});
+
+// ------------------------------------------------------------------------------
+// 6. ALTERAR STATUS DO ANÚNCIO (ATIVAR / PAUSAR NO META ADS OU LOCAL)
+// ------------------------------------------------------------------------------
+metaAdsRouter.patch('/api/meta-ads/posts/:id/status', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status: newStatus } = req.body;
+    if (!['ACTIVE', 'PAUSED'].includes(newStatus)) {
+      return res.status(400).json({ error: 'Status deve ser ACTIVE ou PAUSED.' });
+    }
+
+    const post = db.prepare('SELECT * FROM meta_marketing_posts WHERE id = ?').get(id);
+    if (!post) {
+      return res.status(404).json({ error: 'Material não encontrado.' });
+    }
+
+    const config = getMetaConfig();
+    let metaUpdated = false;
+
+    if (post.meta_ad_id && config.isConfigured && config.systemUserToken && !post.meta_ad_id.startsWith('meta_ad_sim_')) {
+      try {
+        const response = await fetch(`https://graph.facebook.com/v21.0/${post.meta_ad_id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: newStatus,
+            access_token: config.systemUserToken
+          })
+        });
+        const rData = await response.json();
+        if (rData.success) metaUpdated = true;
+      } catch (err) {
+        console.warn('[META ADS API] Erro ao sincronizar status na Meta:', err.message);
+      }
+    }
+
+    const now = new Date().toISOString();
+    const dbStatus = newStatus === 'ACTIVE' ? 'ACTIVE' : 'SENT_TO_META_PAUSED';
+    db.prepare(`
+      UPDATE meta_marketing_posts
+      SET ad_status = ?, status = ?, updated_at = ?
+      WHERE id = ?
+    `).run(newStatus, dbStatus, now, id);
+
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'META_AD_STATUS_TOGGLE',
+      module: 'META_ADS',
+      resource_id: id,
+      description: `Status do anúncio "${post.title}" alterado para ${newStatus}.`
+    });
+
+    res.json({
+      success: true,
+      message: `Status alterado para ${newStatus === 'ACTIVE' ? 'ATIVO (Veiculando)' : 'PAUSADO'} com sucesso!`,
+      ad_status: newStatus,
+      status: dbStatus,
+      metaUpdated
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao alterar status do anúncio: ' + err.message });
   }
 });
 
