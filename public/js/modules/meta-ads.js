@@ -186,11 +186,14 @@
           <td class="p-3.5">${destBadge}</td>
           <td class="p-3.5">${statusBadge}</td>
           <td class="p-3.5 text-[11px] text-slate-500">${dateStr}</td>
-          <td class="p-3.5 text-right space-x-1">
-            <button onclick="previewMetaPost('${p.id}')" class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="Ver Mockup Detalhado">
+          <td class="p-3.5 text-right space-x-1 whitespace-nowrap">
+            <button onclick="loadMetaPostIntoForm('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer" title="Carregar este material no formulário">
+              <span>🔁</span><span>Usar Material</span>
+            </button>
+            <button onclick="previewMetaPost('${p.id}')" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer" title="Ver Detalhes e Copiar">
               👁️
             </button>
-            <button onclick="deleteMetaPost('${p.id}', '${escapeHtml(p.title)}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors" title="Excluir Material">
+            <button onclick="deleteMetaPost('${p.id}', '${escapeHtml(p.title)}')" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" title="Excluir Material">
               🗑️
             </button>
           </td>
@@ -657,10 +660,93 @@
               </div>
             </div>
           </div>
+          <div class="pt-3 flex flex-wrap gap-2 justify-end border-t border-slate-100">
+            <button type="button" onclick="copyMetaPostText('${post.id}')" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <span>📋</span><span>Copiar Legenda</span>
+            </button>
+            ${post.media_path ? `
+            <a href="${post.media_path}" target="_blank" download class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <span>📥</span><span>Baixar Imagem</span>
+            </a>` : ''}
+            <button type="button" onclick="closeMetaPreviewModal(); loadMetaPostIntoForm('${post.id}')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+              <span>🔁</span><span>Carregar no Formulário e Postar</span>
+            </button>
+          </div>
         </div>
       `;
     }
     if (modal) modal.classList.remove('hidden');
+  }
+
+  function copyMetaPostText(id) {
+    const post = cachedPosts.find(p => p.id === id);
+    if (!post || !post.message) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(post.message).then(() => {
+        toast('Legenda copiada com sucesso! Pronto para colar no Instagram ou Facebook.', 'success');
+      }).catch(() => {
+        toast('Não foi possível copiar automaticamente. Selecione e copie o texto.', 'info');
+      });
+    } else {
+      toast('Selecione e copie o texto manualmente.', 'info');
+    }
+  }
+
+  function loadMetaPostIntoForm(id) {
+    const post = cachedPosts.find(p => p.id === id);
+    if (!post) return;
+
+    const titleInput = document.getElementById('meta-ad-title');
+    const msgInput = document.getElementById('meta-ad-message');
+    const linkInput = document.getElementById('meta-ad-link');
+    const destSelect = document.getElementById('meta-ad-destination');
+    const ctaSelect = document.getElementById('meta-ad-cta');
+    const budgetInput = document.getElementById('meta-ad-budget-input');
+    const cityInput = document.getElementById('meta-ad-city');
+    const radiusSelect = document.getElementById('meta-ad-radius');
+    const ageMinSelect = document.getElementById('meta-ad-age-min');
+    const ageMaxSelect = document.getElementById('meta-ad-age-max');
+    const genderSelect = document.getElementById('meta-ad-gender');
+
+    if (titleInput) titleInput.value = post.title || '';
+    if (msgInput) msgInput.value = post.message || '';
+    if (linkInput) linkInput.value = post.link_url || 'https://jorgealvimadvocacia.com.br';
+    if (destSelect) destSelect.value = post.destination_type || 'FACEBOOK_PAGE_POST';
+    if (ctaSelect) ctaSelect.value = post.call_to_action || 'LEARN_MORE';
+
+    if (budgetInput && post.daily_budget_cents) {
+      const budgetReais = Math.round(post.daily_budget_cents / 100);
+      budgetInput.value = budgetReais;
+      if (typeof setMetaDailyBudget === 'function') {
+        setMetaDailyBudget(budgetReais);
+      }
+    }
+    if (cityInput && post.target_city) cityInput.value = post.target_city;
+    if (radiusSelect && post.target_radius_km) radiusSelect.value = post.target_radius_km;
+    if (ageMinSelect && post.target_age_min) ageMinSelect.value = post.target_age_min;
+    if (ageMaxSelect && post.target_age_max) ageMaxSelect.value = post.target_age_max;
+    if (genderSelect && post.target_gender) genderSelect.value = post.target_gender;
+
+    const previewContainer = document.getElementById('mockup-media-container');
+    const thumbName = document.getElementById('meta-media-filename-display');
+    if (post.media_path && previewContainer) {
+      if (post.media_type === 'video') {
+        previewContainer.innerHTML = `<video src="${post.media_path}" controls class="w-full h-52 object-cover border-y border-slate-200"></video>`;
+      } else {
+        previewContainer.innerHTML = `<img src="${post.media_path}" alt="${escapeHtml(post.title)}" class="w-full h-52 object-cover border-y border-slate-200">`;
+      }
+      if (thumbName) thumbName.innerText = `Mídia importada: ${post.title.slice(0, 30)}...`;
+    }
+
+    updateMockupAndCompliance();
+    syncMetaAudienceMockup();
+
+    const formEl = document.getElementById('form-meta-ad-create');
+    if (formEl) {
+      formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    toast('Material carregado no formulário! Escolha o canal e clique no botão de postar.', 'success');
   }
 
   function closeMetaPreviewModal() {
@@ -846,5 +932,7 @@
   window.toggleMetaInterestChip = toggleMetaInterestChip;
   window.syncMetaAudienceMockup = syncMetaAudienceMockup;
   window.loadArticleIntoMetaMarketing = loadArticleIntoMetaMarketing;
+  window.loadMetaPostIntoForm = loadMetaPostIntoForm;
+  window.copyMetaPostText = copyMetaPostText;
 
 })();
