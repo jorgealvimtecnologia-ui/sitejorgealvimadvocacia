@@ -378,6 +378,33 @@ describe('Blog (módulo extraído)', () => {
     const r = await request(app).get('/api/admin/blog/comments');
     assert.equal(r.status, 401);
   });
+
+  it('POST /api/blog/posts/:id/share-social sem token de auth → 401', async () => {
+    const r = await request(app).post('/api/blog/posts/1/share-social');
+    assert.equal(r.status, 401);
+  });
+
+  it('POST /api/blog/posts/:id/share-social post inexistente → 404', async () => {
+    const r = await auth(request(app).post('/api/blog/posts/999999/share-social'), masterToken);
+    assert.equal(r.status, 404);
+  });
+
+  it('POST /api/blog/posts/:id/share-social sem meta token configurado → requiresToken', async () => {
+    // Primeiro buscar um post existente
+    const postsRes = await request(app).get('/api/blog/posts');
+    const existingPost = postsRes.body.posts?.[0];
+    if (existingPost) {
+      const r = await auth(request(app).post(`/api/blog/posts/${existingPost.id}/share-social`), masterToken)
+        .send({ channels: ['FACEBOOK_PAGE_POST'] });
+      // Se não há token da Meta configurado no ambiente de teste, deve pedir o token
+      if (r.body.requiresToken) {
+        assert.equal(r.body.success, false);
+        assert.equal(r.body.requiresToken, true);
+      } else {
+        assert.ok(r.status === 200 || r.status === 400);
+      }
+    }
+  });
 });
 
 describe('Validação do Kanban', () => {

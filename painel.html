@@ -9349,6 +9349,137 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </div>
   </div>
 
+  <!-- ================= MODAL: DISPARO RÁPIDO DE MATÉRIA PARA REDES SOCIAIS ================= -->
+  <div id="modal-direct-social-share" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-auto max-h-[92vh] overflow-y-auto">
+      <button onclick="closeDirectSocialShareModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none cursor-pointer">&times;</button>
+      
+      <div class="flex items-center space-x-3 pb-4 border-b border-slate-100 mb-5">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md flex-shrink-0">
+          🚀
+        </div>
+        <div>
+          <h3 class="font-serif font-bold text-lg text-navy-950">Disparar para Redes Sociais</h3>
+          <p class="text-xs text-slate-500">Publique este artigo no Feed do Instagram e na Página do Facebook com 1 clique.</p>
+        </div>
+      </div>
+
+      <input type="hidden" id="social-share-post-id" />
+
+      <!-- Card de Prévia do Artigo -->
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 mb-4 flex items-center space-x-3">
+        <img id="social-share-preview-img" src="" alt="Capa" class="w-14 h-14 rounded-xl object-cover border border-slate-200 shadow-xs flex-shrink-0 bg-slate-200" />
+        <div class="min-w-0 flex-1">
+          <span id="social-share-preview-cat" class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[10px] border border-amber-200 uppercase tracking-wider">
+            Categoria
+          </span>
+          <h4 id="social-share-preview-title" class="font-serif font-bold text-navy-950 text-xs sm:text-sm truncate mt-1">
+            Título do Artigo
+          </h4>
+          <p id="social-share-preview-url" class="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+            /blog/slug
+          </p>
+        </div>
+      </div>
+
+      <!-- Destinos de Postagem -->
+      <div class="space-y-2 mb-4">
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Destinos de Publicação *</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label class="flex items-center space-x-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/70 cursor-pointer transition-colors">
+            <input type="checkbox" id="social-share-dest-ig" checked class="w-4 h-4 text-pink-600 rounded border-slate-300 focus:ring-pink-500 cursor-pointer" />
+            <div class="flex items-center space-x-1.5 min-w-0">
+              <span class="text-base">📸</span>
+              <div class="truncate">
+                <p class="text-xs font-bold text-slate-800 truncate">Instagram Feed</p>
+                <p class="text-[10px] text-slate-400">@jorgealvim10advocacia</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="flex items-center space-x-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/70 cursor-pointer transition-colors">
+            <input type="checkbox" id="social-share-dest-fb" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer" />
+            <div class="flex items-center space-x-1.5 min-w-0">
+              <span class="text-base">📘</span>
+              <div class="truncate">
+                <p class="text-xs font-bold text-slate-800 truncate">Página do Facebook</p>
+                <p class="text-[10px] text-slate-400">Jorge Alvim</p>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Mensagem / Legenda Pré-formatada -->
+      <div class="space-y-1.5 mb-4">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Legenda do Post</label>
+          <span class="text-[10px] text-slate-400">Texto automático gerado do artigo</span>
+        </div>
+        <textarea 
+          id="social-share-caption" 
+          rows="5" 
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 text-xs focus:outline-none focus:border-blue-500 focus:bg-white resize-none font-sans leading-relaxed"
+          placeholder="Escreva ou revise a legenda do post..."
+        ></textarea>
+      </div>
+
+      <!-- Alerta / Mensagem de Status -->
+      <div id="social-share-status-alert" class="hidden mb-4 p-3 rounded-xl text-xs font-medium"></div>
+
+      <!-- Seção Opcional: Configurar / Atualizar Token da Meta -->
+      <div class="mb-5 pt-3 border-t border-slate-100">
+        <button 
+          type="button" 
+          onclick="toggleSocialShareTokenBox()" 
+          class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer"
+        >
+          <span id="social-share-token-toggle-icon">⚙️</span>
+          <span>Configurar / Atualizar Token da Meta (opcional)</span>
+        </button>
+        <div id="social-share-token-box" class="hidden mt-2 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <label class="block text-[11px] font-bold text-slate-600">Cole o Token de Acesso da Meta aqui:</label>
+          <div class="flex space-x-2">
+            <input 
+              type="password" 
+              id="social-share-token-input" 
+              placeholder="EAGSQGjxE... (Token permanente da Meta)" 
+              class="flex-1 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-mono focus:outline-none focus:border-blue-500"
+            />
+            <button 
+              type="button" 
+              onclick="saveTokenFromSocialShareModal()" 
+              class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold cursor-pointer transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400">O token é salvo diretamente no banco com criptografia para os próximos disparos.</p>
+        </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-2 border-t border-slate-100">
+        <button 
+          type="button" 
+          onclick="closeDirectSocialShareModal()" 
+          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          id="btn-confirm-social-share" 
+          onclick="executeDirectSocialShare()" 
+          class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95"
+        >
+          <span>🚀</span>
+          <span id="btn-confirm-social-share-text">Disparar para Redes Sociais Agora</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ================= MODAL: CADASTRAR / EDITAR COMPROMISSO NA AGENDA ================= -->
   <div id="modal-calendar-event" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">

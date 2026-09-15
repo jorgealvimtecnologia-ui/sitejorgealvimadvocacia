@@ -744,3 +744,186 @@ blogRouter.post('/api/admin/blog/comments/:id/convert-to-lead', requireAuth, (re
     res.status(500).json({ error: 'Erro ao converter comentarista em lead.' });
   }
 });
+
+// 10. Disparo Rápido de Matéria para Redes Sociais (Instagram Feed & Facebook Page)
+blogRouter.post('/api/blog/posts/:id/share-social', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      channels = ['INSTAGRAM_FEED', 'FACEBOOK_PAGE_POST'], 
+      custom_message,
+      token
+    } = req.body || {};
+
+    const post = db.prepare('SELECT * FROM blog_posts WHERE id = ?').get(id);
+    if (!post) {
+      return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
+    }
+
+    // Se o usuário enviou um novo token no modal, salva nas configurações
+    if (token && typeof token === 'string' && token.trim()) {
+      const now = new Date().toISOString();
+      db.prepare(`
+        INSERT INTO meta_api_settings (key, value, updated_at)
+        VALUES ('meta_system_user_token', ?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `).run(token.trim(), now);
+    }
+
+    // Helper para recuperar configurações da Meta
+    const getSetting = (key, envVar) => {
+      try {
+        const row = db.prepare('SELECT value FROM meta_api_settings WHERE key = ?').get(key);
+        if (row && row.value) return row.value;
+      } catch (_) {}
+      return process.env[envVar] || '';
+    };
+
+    const metaToken = getSetting('meta_system_user_token', 'META_SYSTEM_USER_TOKEN');
+    const pageId = getSetting('meta_page_id', 'META_PAGE_ID') || '696494846890195';
+    const igAccountId = getSetting('meta_instagram_account_id', 'META_INSTAGRAM_ACCOUNT_ID') || '17841460928822628';
+
+    if (!metaToken) {
+      return res.json({
+        success: false,
+        requiresToken: true,
+        message: 'Token de Acesso da Meta não configurado. Por favor, insira o Token no formulário para disparar.',
+        pageId,
+        igAccountId
+      });
+    }
+
+    const origin = 'https://jorgealvimadvocacia.com.br';
+    const articleUrl = `${origin}/blog/${post.slug}`;
+    const cleanSummary = (post.summary || post.title || '').trim();
+    const caption = custom_message && custom_message.trim()
+      ? custom_message.trim()
+      : `📢 NOVO ARTIGO JURÍDICO:\n\n${post.title}\n\n${cleanSummary}\n\n👉 Acesse o artigo completo em nosso blog oficial:\n${articleUrl}\n\n⚖️ Dr. Jorge Alvim | OAB/MG 222.943\n📍 Benfica — Juiz de Fora - MG\n#direito #advocacia #juizdefora #jorgealvim #noticiasjuridicas`;
+
+    const fullImageUrl = post.cover_image && post.cover_image.startsWith('http')
+      ? post.cover_image
+      : (post.cover_image ? `${origin}${post.cover_image}` : `${origin}/img/blog/rde-fatd-militar.jpg`);
+
+    const results = {};
+    const errors = [];
+
+    // Disparo para Página do Facebook
+    if (channels.includes('FACEBOOK_PAGE_POST')) {
+      try {
+        const fbRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/feed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: metaToken,
+            message: caption,
+            link: articleUrl
+          })
+        });
+        const fbData = await fbRes.json();
+        if (fbData.error) {
+          errors.push(`Facebook: ${fbData.error.message || 'Erro na API da Meta'}`);
+          results.facebook = { success: false, error: fbData.error };
+        } else {
+          results.facebook = { success: true, id: fbData.id || fbData.post_id };
+        }
+      } catch (fbErr) {
+        errors.push(`Facebook: ${fbErr.message}`);
+        results.facebook = { success: false, error: fbErr.message };
+      }
+    }
+
+    // Disparo para Feed do Instagram
+    if (channels.includes('INSTAGRAM_FEED')) {
+      try {
+        const igMediaRes = await fetch(`https://graph.facebook.com/v21.0/${igAccountId}/media`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: metaToken,
+            image_url: fullImageUrl,
+            caption: caption
+          })
+        });
+        const igMediaData = await igMediaRes.json();
+        if (igMediaData.id) {
+          const igPubRes = await fetch(`https://graph.facebook.com/v21.0/${igAccountId}/media_publish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              access_token: metaToken,
+              creation_id: igMediaData.id
+            })
+          });
+          const igPubData = await igPubRes.json();
+          if (igPubData.error) {
+            errors.push(`Instagram: ${igPubData.error.message || 'Erro ao publicar mídia'}`);
+            results.instagram = { success: false, error: igPubData.error };
+          } else {
+            results.instagram = { success: true, id: igPubData.id };
+          }
+        } else {
+          errors.push(`Instagram: ${igMediaData.error?.message || 'Falha ao criar container de mídia'}`);
+          results.instagram = { success: false, error: igMediaData.error };
+        }
+      } catch (igErr) {
+        errors.push(`Instagram: ${igErr.message}`);
+        results.instagram = { success: false, error: igErr.message };
+      }
+    }
+
+    const hasAnySuccess = (results.facebook?.success) || (results.instagram?.success);
+
+    if (hasAnySuccess) {
+      db.prepare('UPDATE blog_posts SET shares_count = COALESCE(shares_count, 0) + 1 WHERE id = ?').run(id);
+
+      try {
+        const mId = 'meta_post_' + Date.now();
+        const now = new Date().toISOString();
+        db.prepare(`
+          INSERT INTO meta_marketing_posts (
+            id, title, message, link_url, call_to_action, destination_type,
+            media_path, media_type, status, meta_response, created_by, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, 'LEARN_MORE', 'SOCIAL_DISPATCH', ?, 'image', 'PUBLISHED_ORGANIC', ?, ?, ?, ?)
+        `).run(
+          mId,
+          post.title,
+          caption,
+          articleUrl,
+          fullImageUrl,
+          JSON.stringify(results),
+          req.user?.username || 'admin',
+          now,
+          now
+        );
+      } catch (_) {}
+
+      logAudit(req, {
+        event_type: 'CRIACAO',
+        event_name: 'BLOG_SOCIAL_DISPATCH',
+        module: 'BLOG',
+        resource_id: id,
+        description: `Disparo do artigo '${post.title}' para redes sociais.`
+      });
+
+      return res.json({
+        success: true,
+        message: errors.length > 0
+          ? `Disparado com alertas: ${errors.join(' | ')}`
+          : 'Matéria disparada com sucesso para as redes sociais!',
+        results,
+        shares_count: (post.shares_count || 0) + 1
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: errors.join('; ') || 'Falha ao disparar para as redes sociais.',
+      results
+    });
+
+  } catch (err) {
+    console.error('Erro ao disparar post para redes sociais:', err);
+    res.status(500).json({ success: false, error: 'Erro interno ao processar disparo: ' + err.message });
+  }
+});
+

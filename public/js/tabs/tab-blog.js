@@ -106,12 +106,12 @@
                   ↗
                 </a>
                 <button 
-                  onclick="shareAdminBlogPostToMeta(${p.id})" 
-                  class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition-colors flex items-center space-x-1 border border-blue-200"
-                  title="Divulgar este artigo no Instagram e Facebook"
+                  onclick="openDirectSocialShareModal(${p.id})" 
+                  class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs transition-transform active:scale-95 flex items-center space-x-1 shadow-xs cursor-pointer"
+                  title="Disparar esta matéria direto para o Instagram e Facebook"
                 >
-                  <span>📢</span>
-                  <span>Postar no Insta/Face</span>
+                  <span>🚀</span>
+                  <span>Disparar Redes</span>
                 </button>
                 <button 
                   onclick="openEditBlogPostModal(${p.id})" 
@@ -133,15 +133,183 @@
     }
 
     function shareAdminBlogPostToMeta(id) {
-      const post = adminBlogPosts.find(p => p.id === id);
-      if (!post) return;
-      if (typeof window.loadArticleIntoMetaMarketing === 'function') {
-        window.loadArticleIntoMetaMarketing(post);
-      } else if (typeof window.switchTab === 'function') {
-        window.switchTab('meta-ads');
-      }
+      openDirectSocialShareModal(id);
     }
     window.shareAdminBlogPostToMeta = shareAdminBlogPostToMeta;
+
+    function openDirectSocialShareModal(id) {
+      const post = adminBlogPosts.find(p => p.id === id);
+      if (!post) {
+        if (typeof toast === 'function') toast('Artigo não encontrado para compartilhamento.', 'error');
+        return;
+      }
+
+      document.getElementById('social-share-post-id').value = post.id;
+      
+      const previewImg = document.getElementById('social-share-preview-img');
+      const previewCat = document.getElementById('social-share-preview-cat');
+      const previewTitle = document.getElementById('social-share-preview-title');
+      const previewUrl = document.getElementById('social-share-preview-url');
+
+      if (previewImg) previewImg.src = post.cover_image || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=200&q=80';
+      if (previewCat) previewCat.textContent = post.category || 'Direito & Legislação';
+      if (previewTitle) previewTitle.textContent = post.title || 'Artigo sem título';
+      if (previewUrl) previewUrl.textContent = `/blog/${post.slug}`;
+
+      const origin = window.location.origin || 'https://jorgealvimadvocacia.com.br';
+      const articleUrl = `${origin}/blog/${post.slug}`;
+      const cleanSummary = (post.summary || post.title || '').trim();
+      const defaultCaption = `📢 NOVO ARTIGO JURÍDICO:\n\n${post.title}\n\n${cleanSummary}\n\n👉 Acesse o artigo completo em nosso blog oficial:\n${articleUrl}\n\n⚖️ Dr. Jorge Alvim | OAB/MG 222.943\n📍 Benfica — Juiz de Fora - MG\n#direito #advocacia #juizdefora #jorgealvim #noticiasjuridicas`;
+
+      const captionInput = document.getElementById('social-share-caption');
+      if (captionInput) captionInput.value = defaultCaption;
+
+      const igCheck = document.getElementById('social-share-dest-ig');
+      const fbCheck = document.getElementById('social-share-dest-fb');
+      if (igCheck) igCheck.checked = true;
+      if (fbCheck) fbCheck.checked = true;
+
+      const alertBox = document.getElementById('social-share-status-alert');
+      if (alertBox) {
+        alertBox.className = 'hidden mb-4 p-3 rounded-xl text-xs font-medium';
+        alertBox.innerHTML = '';
+      }
+
+      const tokenBox = document.getElementById('social-share-token-box');
+      if (tokenBox) tokenBox.classList.add('hidden');
+
+      const modal = document.getElementById('modal-direct-social-share');
+      if (modal) modal.classList.remove('hidden');
+    }
+    window.openDirectSocialShareModal = openDirectSocialShareModal;
+
+    function closeDirectSocialShareModal() {
+      const modal = document.getElementById('modal-direct-social-share');
+      if (modal) modal.classList.add('hidden');
+    }
+    window.closeDirectSocialShareModal = closeDirectSocialShareModal;
+
+    function toggleSocialShareTokenBox() {
+      const box = document.getElementById('social-share-token-box');
+      if (box) box.classList.toggle('hidden');
+    }
+    window.toggleSocialShareTokenBox = toggleSocialShareTokenBox;
+
+    async function saveTokenFromSocialShareModal() {
+      const tokenInput = document.getElementById('social-share-token-input');
+      const token = tokenInput ? tokenInput.value.trim() : '';
+      if (!token) {
+        if (typeof toast === 'function') toast('Digite o token antes de salvar.', 'warning');
+        return;
+      }
+      try {
+        const authH = typeof getAuthHeaders === 'function' ? getAuthHeaders() : {};
+        const res = await fetch('/api/meta-ads/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authH },
+          body: JSON.stringify({ system_user_token: token })
+        });
+        const contentType = res.headers.get('content-type') || '';
+        const data = contentType.includes('application/json') ? await res.json() : { error: await res.text() };
+        if (data.success) {
+          if (typeof toast === 'function') toast('Token da Meta salvo com sucesso!', 'success');
+          toggleSocialShareTokenBox();
+          const alertBox = document.getElementById('social-share-status-alert');
+          if (alertBox) alertBox.classList.add('hidden');
+        } else {
+          if (typeof toast === 'function') toast(data.error || 'Erro ao salvar token', 'error');
+        }
+      } catch (err) {
+        if (typeof toast === 'function') toast('Erro ao salvar token: ' + err.message, 'error');
+      }
+    }
+    window.saveTokenFromSocialShareModal = saveTokenFromSocialShareModal;
+
+    async function executeDirectSocialShare() {
+      const postId = document.getElementById('social-share-post-id').value;
+      if (!postId) return;
+
+      const channels = [];
+      if (document.getElementById('social-share-dest-ig')?.checked) channels.push('INSTAGRAM_FEED');
+      if (document.getElementById('social-share-dest-fb')?.checked) channels.push('FACEBOOK_PAGE_POST');
+
+      if (channels.length === 0) {
+        if (typeof toast === 'function') toast('Selecione ao menos um destino (Instagram ou Facebook).', 'warning');
+        return;
+      }
+
+      const caption = document.getElementById('social-share-caption')?.value || '';
+      const tokenInput = document.getElementById('social-share-token-input');
+      const token = tokenInput ? tokenInput.value.trim() : '';
+
+      const btn = document.getElementById('btn-confirm-social-share');
+      const btnText = document.getElementById('btn-confirm-social-share-text');
+      const alertBox = document.getElementById('social-share-status-alert');
+
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.textContent = '🚀 Disparando nas redes...';
+      if (alertBox) alertBox.classList.add('hidden');
+
+      try {
+        const authH = typeof getAuthHeaders === 'function' ? getAuthHeaders() : {};
+        const res = await fetch(`/api/blog/posts/${postId}/share-social`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authH },
+          body: JSON.stringify({
+            channels,
+            custom_message: caption,
+            token: token || undefined
+          })
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        let data;
+        if (contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const rawText = await res.text();
+          data = { error: `Servidor retornou resposta inesperada (${res.status}): ${rawText.slice(0, 120)}` };
+        }
+
+        if (data.requiresToken) {
+          if (alertBox) {
+            alertBox.className = 'mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium space-y-1 block';
+            alertBox.innerHTML = `⚠️ <strong>Token da Meta não configurado:</strong> Abra o campo abaixo, cole o seu token da Meta e clique em disparar novamente.`;
+          }
+          const box = document.getElementById('social-share-token-box');
+          if (box) box.classList.remove('hidden');
+          if (typeof toast === 'function') toast('Token da Meta necessário. Insira o token abaixo.', 'warning');
+          return;
+        }
+
+        if (data.success) {
+          if (typeof toast === 'function') toast(data.message || 'Artigo publicado nas redes sociais com sucesso!', 'success');
+          closeDirectSocialShareModal();
+          
+          const targetPost = adminBlogPosts.find(p => p.id === parseInt(postId));
+          if (targetPost && data.shares_count) {
+            targetPost.shares_count = data.shares_count;
+          }
+        } else {
+          if (alertBox) {
+            alertBox.className = 'mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-medium block';
+            alertBox.innerHTML = `❌ <strong>Falha no disparo:</strong> ${data.error || 'Verifique as credenciais da página/Instagram'}`;
+          }
+          if (typeof toast === 'function') toast(data.error || 'Erro ao disparar nas redes.', 'error');
+        }
+      } catch (err) {
+        if (alertBox) {
+          alertBox.className = 'mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-medium block';
+          alertBox.innerHTML = `❌ <strong>Erro de conexão:</strong> ${err.message}`;
+        }
+        if (typeof toast === 'function') toast('Erro ao conectar com o servidor: ' + err.message, 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = 'Disparar para Redes Sociais Agora';
+      }
+    }
+    window.executeDirectSocialShare = executeDirectSocialShare;
+
 
     function filterAdminBlogPosts() {
       const search = document.getElementById('admin-blog-search').value.toLowerCase().trim();
@@ -273,10 +441,10 @@
               cover_image,
               slug: data.slug || (adminBlogPosts.find(p => p.id == id)?.slug) || ''
             };
-            if (typeof window.loadArticleIntoMetaMarketing === 'function') {
+            if (typeof window.openDirectSocialShareModal === 'function') {
+              window.openDirectSocialShareModal(targetPost.id);
+            } else if (typeof window.loadArticleIntoMetaMarketing === 'function') {
               window.loadArticleIntoMetaMarketing(targetPost);
-            } else if (typeof window.switchTab === 'function') {
-              window.switchTab('meta-ads');
             }
           } else {
             alert('✅ Artigo salvo com sucesso!');
@@ -891,6 +1059,11 @@
   window.loadAdminBlogPosts = typeof loadAdminBlogPosts !== 'undefined' ? loadAdminBlogPosts : window.loadAdminBlogPosts;
   window.renderAdminBlogTable = typeof renderAdminBlogTable !== 'undefined' ? renderAdminBlogTable : window.renderAdminBlogTable;
   window.shareAdminBlogPostToMeta = typeof shareAdminBlogPostToMeta !== 'undefined' ? shareAdminBlogPostToMeta : window.shareAdminBlogPostToMeta;
+  window.openDirectSocialShareModal = typeof openDirectSocialShareModal !== 'undefined' ? openDirectSocialShareModal : window.openDirectSocialShareModal;
+  window.closeDirectSocialShareModal = typeof closeDirectSocialShareModal !== 'undefined' ? closeDirectSocialShareModal : window.closeDirectSocialShareModal;
+  window.toggleSocialShareTokenBox = typeof toggleSocialShareTokenBox !== 'undefined' ? toggleSocialShareTokenBox : window.toggleSocialShareTokenBox;
+  window.saveTokenFromSocialShareModal = typeof saveTokenFromSocialShareModal !== 'undefined' ? saveTokenFromSocialShareModal : window.saveTokenFromSocialShareModal;
+  window.executeDirectSocialShare = typeof executeDirectSocialShare !== 'undefined' ? executeDirectSocialShare : window.executeDirectSocialShare;
   window.filterAdminBlogPosts = typeof filterAdminBlogPosts !== 'undefined' ? filterAdminBlogPosts : window.filterAdminBlogPosts;
   window.openNewBlogPostModal = typeof openNewBlogPostModal !== 'undefined' ? openNewBlogPostModal : window.openNewBlogPostModal;
   window.openEditBlogPostModal = typeof openEditBlogPostModal !== 'undefined' ? openEditBlogPostModal : window.openEditBlogPostModal;
