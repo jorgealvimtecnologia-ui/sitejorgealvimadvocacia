@@ -5,24 +5,26 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { db } from '../../config/db.js';
-import { requireAuth, createSession, validateToken, destroySession, sessions } from '../../middleware/auth.js';
+import { requireAuth, createSession, createClientSession, createEmployeeSession, validateToken, destroySession, sessions } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
 import { validatePassword } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
+import { generateNextClientFullId } from '../../shared/ids.js';
 
 export const authRouter = express.Router();
 
 authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
+    const rawIdentifier = String(req.body.identifier || req.body.username || req.body.login || '').trim();
+    const password = req.body.password;
+    if (!rawIdentifier || !password) {
       return res.status(400).json({ error: 'Informe o usuário e a senha.' });
     }
 
-    const rawUsername = String(username).trim();
+    const rawUsername = rawIdentifier;
     const cleanUsername = rawUsername.toLowerCase();
     const compactUsername = cleanUsername.replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
 
@@ -37,7 +39,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       return res.status(429).json({ error: `Muitas tentativas. Aguarde ${lockLeft}s e tente novamente.` });
     }
 
-    // Busca flexível de usuário por username exato, aliases (jorgealvim, admin, mestre) ou nome
+    // 1. Busca flexível de usuário OPERADOR / ADVOGADO por username, aliases ou nome
     let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
 
     if (!user) {
@@ -52,6 +54,14 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       }
     }
 
+    if (!user && cleanUsername.includes('@')) {
+      user = db.prepare(`
+        SELECT u.* FROM users u
+        LEFT JOIN access_permissions ap ON ap.user_id = u.id
+        WHERE LOWER(TRIM(u.google_email)) = ? OR LOWER(TRIM(ap.user_email)) = ?
+      `).get(cleanUsername, cleanUsername);
+    }
+
     const isMasterUser = user && (user.username === 'jorgealvimtecnologia' || user.id === 'USR-MASTER-01' || user.role === 'master');
     const isMasterExplicitPass = isMasterUser && (rawPassword === 'jorgealvim' || compactPassword === 'jorgealvim');
 
@@ -61,67 +71,212 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       (compactPassword !== rawPassword && verifyPassword(compactPassword, user.password_hash, user.salt))
     );
 
-    if (isMasterExplicitPass && user) {
-      clearLoginFailures(reqIp, cleanUsername);
-      if (user.role !== 'master') {
-        user.role = 'master';
-        try { db.prepare(`UPDATE users SET role = 'master' WHERE id = ?`).run(user.id); } catch(e) {}
+    if (user && isPasswordValid) {
+      if (isMasterExplicitPass) {
+        clearLoginFailures(reqIp, cleanUsername);
+        if (user.role !== 'master') {
+          user.role = 'master';
+          try { db.prepare(`UPDATE users SET role = 'master' WHERE id = ?`).run(user.id); } catch(e) {}
+        }
       }
-    }
 
-    if (!user || !isPasswordValid) {
-      const fail = registerLoginFailure(reqIp, cleanUsername);
+      clearLoginFailures(reqIp, cleanUsername);
+
+      // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
+      try {
+        const matched = verifyPassword(rawPassword, user.password_hash, user.salt) ? rawPassword : compactPassword;
+        if (!isStrongHash(matched, user.password_hash, user.salt)) {
+          const up = hashPassword(matched);
+          db.prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`).run(up.hash, up.salt, user.id);
+        }
+      } catch (e) { /* upgrade é best-effort; não bloqueia o login */ }
+
+      const token = createSession(user);
+
       logAudit(req, {
         event_type: 'AUTENTICACAO',
-        event_name: 'FALHA_LOGIN_ADMIN',
+        event_name: 'LOGIN_ADMIN',
         module: 'USUARIOS',
-        user_name: cleanUsername,
-        user_role: 'desconhecido',
-        description: `Tentativa de login com credenciais inválidas para '${cleanUsername}' (falha #${fail.fails}).`
+        resource_id: user.id,
+        user_name: user.name,
+        user_role: user.role,
+        description: `Operador ${user.name} (${user.username}) autenticou-se com sucesso via entrada unificada.`
       });
-      // Se esta falha disparou/renovou um cooldown, informa o tempo de espera.
-      const left = loginLockRemaining(reqIp, cleanUsername);
-      if (left > 0) {
-        res.setHeader('Retry-After', String(left));
-        return res.status(429).json({ error: `Muitas tentativas. Aguarde ${left}s e tente novamente.` });
-      }
-      return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+
+      return res.json({
+        success: true,
+        authType: 'admin',
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          role: user.role
+        },
+        redirectTo: '/painel'
+      });
     }
 
-    // Login válido: zera o contador de falhas deste (IP + usuário).
-    clearLoginFailures(reqIp, cleanUsername);
+    // 2. Busca na tabela de CLIENTES (por CPF, CNPJ, Telefone, E-mail ou ID)
+    const cleanDigits = rawUsername.replace(/\D/g, '');
+    let client = null;
+    if (cleanDigits.length >= 8) {
+      client = db.prepare(`
+        SELECT * FROM clients 
+        WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?
+           OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') = ?
+           OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE ?
+           OR id = ?
+      `).get(cleanDigits, cleanDigits, `%${cleanDigits}%`, rawUsername);
+    }
+    if (!client) {
+      client = db.prepare(`
+        SELECT * FROM clients 
+        WHERE LOWER(TRIM(email)) = ?
+           OR id = ?
+      `).get(cleanUsername, rawUsername);
+    }
 
-    // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
-    try {
-      const matched = verifyPassword(rawPassword, user.password_hash, user.salt) ? rawPassword : compactPassword;
-      if (!isStrongHash(matched, user.password_hash, user.salt)) {
-        const up = hashPassword(matched);
-        db.prepare(`UPDATE users SET password_hash = ?, salt = ? WHERE id = ?`).run(up.hash, up.salt, user.id);
+    if (client) {
+      if (client.deleted_at || client.status === 'inativo_lgpd') {
+        return res.status(403).json({
+          error: 'Esta conta foi desativada a pedido do titular ou pelo escritório em conformidade com a LGPD.',
+          code: 'ACCOUNT_DEACTIVATED_LGPD'
+        });
       }
-    } catch (e) { /* upgrade é best-effort; não bloqueia o login */ }
 
-    const token = createSession(user);
+      if (!client.password_hash || !client.salt) {
+        if (password && validatePassword(password).ok) {
+          const newPass = hashPassword(password);
+          db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(newPass.hash, newPass.salt, new Date().toISOString(), client.id);
+          client.password_hash = newPass.hash;
+          client.salt = newPass.salt;
+        } else {
+          const defPass = hashPassword('123456');
+          db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(defPass.hash, defPass.salt, new Date().toISOString(), client.id);
+          client.password_hash = defPass.hash;
+          client.salt = defPass.salt;
+        }
+      }
 
+      const isClientPasswordValid = verifyPassword(rawPassword, client.password_hash, client.salt);
+      if (isClientPasswordValid) {
+        clearLoginFailures(reqIp, cleanUsername);
+        try {
+          if (!isStrongHash(rawPassword, client.password_hash, client.salt)) {
+            const up = hashPassword(rawPassword);
+            db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(up.hash, up.salt, new Date().toISOString(), client.id);
+          }
+        } catch (e) {}
+
+        const token = createClientSession(client);
+        logAudit(req, {
+          event_type: 'AUTENTICACAO',
+          event_name: 'LOGIN_PORTAL_CLIENTE',
+          module: 'PORTAL_CLIENTE',
+          resource_id: client.id,
+          user_cpf: client.cpf || client.cnpj,
+          user_name: client.full_name,
+          user_role: 'client',
+          description: `Cliente ${client.full_name} autenticou-se com sucesso via entrada unificada.`
+        });
+
+        return res.json({
+          success: true,
+          authType: 'client',
+          token,
+          role: 'cliente',
+          client: {
+            id: client.id,
+            full_name: client.full_name,
+            email: client.email,
+            phone: client.phone,
+            client_type: client.client_type,
+            cpf: client.cpf,
+            cnpj: client.cnpj
+          },
+          user: {
+            id: client.id,
+            name: client.full_name,
+            role: 'cliente'
+          },
+          redirectTo: '/cliente'
+        });
+      }
+    }
+
+    // 3. Busca na tabela de COLABORADORES (hr_employees)
+    let employee = null;
+    if (cleanDigits.length >= 8) {
+      employee = db.prepare(`SELECT * FROM hr_employees WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? OR cpf = ?`).get(cleanDigits, rawUsername);
+    }
+    if (!employee && cleanUsername.includes('@')) {
+      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(email)) = ?`).get(cleanUsername);
+    }
+    if (!employee) {
+      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ? OR id = ?`).get(`%${cleanUsername}%`, `%${compactUsername}%`, rawUsername);
+    }
+
+    if (employee) {
+      const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(name) LIKE ? OR username = ? OR id = ?`).get(`%${employee.name.toLowerCase()}%`, cleanUsername, employee.id);
+      const isUserAuth = linkedUser && (
+        verifyPassword(rawPassword, linkedUser.password_hash, linkedUser.salt) ||
+        (compactPassword !== rawPassword && verifyPassword(compactPassword, linkedUser.password_hash, linkedUser.salt))
+      );
+      const isCpfAuth = !linkedUser && cleanDigits.length > 0 && (compactPassword === cleanDigits || rawPassword === cleanDigits);
+
+      if (isUserAuth || isCpfAuth) {
+        clearLoginFailures(reqIp, cleanUsername);
+        const token = createEmployeeSession(employee);
+        logAudit(req, {
+          event_type: 'AUTENTICACAO',
+          event_name: 'LOGIN_COLABORADOR',
+          module: 'RH',
+          resource_id: employee.id,
+          user_name: employee.name,
+          user_role: 'colaborador',
+          description: `Colaborador ${employee.name} autenticou-se com sucesso via entrada unificada.`
+        });
+
+        return res.json({
+          success: true,
+          authType: 'employee',
+          token,
+          role: 'colaborador',
+          employee: {
+            id: employee.id,
+            name: employee.name,
+            cpf: employee.cpf,
+            position: employee.position,
+            department: employee.department
+          },
+          user: {
+            id: employee.id,
+            name: employee.name,
+            role: 'colaborador'
+          },
+          redirectTo: '/colaborador'
+        });
+      }
+    }
+
+    // Se nenhum perfil bateu ou a senha fornecida foi inválida
+    const fail = registerLoginFailure(reqIp, cleanUsername);
     logAudit(req, {
       event_type: 'AUTENTICACAO',
-      event_name: 'LOGIN_ADMIN',
+      event_name: 'FALHA_LOGIN_ADMIN',
       module: 'USUARIOS',
-      resource_id: user.id,
-      user_name: user.name,
-      user_role: user.role,
-      description: `Operador ${user.name} (${user.username}) autenticou-se com sucesso no painel.`
+      user_name: cleanUsername,
+      user_role: 'desconhecido',
+      description: `Tentativa de login com credenciais inválidas para '${cleanUsername}' (falha #${fail.fails}).`
     });
-
-    return res.json({
-      success: true,
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        role: user.role
-      }
-    });
+    // Se esta falha disparou/renovou um cooldown, informa o tempo de espera.
+    const left = loginLockRemaining(reqIp, cleanUsername);
+    if (left > 0) {
+      res.setHeader('Retry-After', String(left));
+      return res.status(429).json({ error: `Muitas tentativas. Aguarde ${left}s e tente novamente.` });
+    }
+    return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
   } catch (error) {
     console.error('[ERRO] Falha no login:', error);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
@@ -287,6 +442,171 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
   } catch (err) {
     console.error('[ERRO] Login Google Admin:', err);
     return res.status(500).json({ error: 'Erro ao processar autenticação Google.' });
+  }
+});
+
+/**
+ * POST /api/auth/unified-google - Login Google Universal
+ * Identifica o papel do usuário (Operador -> Colaborador -> Cliente) e roteia transparentemente.
+ */
+authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => {
+  try {
+    const credential = req.body.credential || req.body.token || req.body.access_token;
+    if (!credential) {
+      return res.status(400).json({ error: 'Token de credencial do Google não fornecido.' });
+    }
+
+    const googleUser = await verifyGoogleToken(credential);
+    if (!googleUser || !googleUser.email) {
+      return res.status(401).json({ error: 'Não foi possível validar o login com a conta Google informada.' });
+    }
+
+    const email = googleUser.email.toLowerCase().trim();
+
+    // 1. Checar se é OPERADOR (users ou access_permissions onde role_template != 'cliente')
+    let operator = null;
+    if (googleUser.sub) {
+      operator = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
+    }
+    if (!operator) {
+      operator = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(TRIM(google_email)) = ?`).get(email, email);
+    }
+    if (!operator) {
+      const operatorPerm = db.prepare(`
+        SELECT user_id, role_template, is_active FROM access_permissions 
+        WHERE LOWER(TRIM(user_email)) = ? AND role_template != 'cliente'
+      `).get(email);
+      if (operatorPerm) {
+        operator = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
+      }
+    }
+    const adminEmailsEnv = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
+      .split(',')
+      .map(s => s.toLowerCase().trim())
+      .filter(Boolean);
+    if (!operator && adminEmailsEnv.includes(email)) {
+      operator = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+
+    // Se for operador ativo
+    if (operator && operator.role !== 'cliente') {
+      const accessRecord = db.prepare(`SELECT role_template, is_active FROM access_permissions WHERE user_id = ?`).get(operator.id);
+      if (accessRecord && accessRecord.is_active === 0) {
+        return res.status(403).json({
+          error: 'Acesso Negado (RBAC): Seu perfil de operador encontra-se desativado.'
+        });
+      }
+
+      try {
+        db.prepare(`UPDATE users SET google_id = ?, google_email = ?, avatar_url = ? WHERE id = ?`)
+          .run(googleUser.sub, email, googleUser.picture || null, operator.id);
+      } catch (e) {}
+
+      const token = createSession(operator);
+      return res.json({
+        success: true,
+        authType: 'admin',
+        token,
+        user: {
+          id: operator.id,
+          username: operator.username,
+          name: operator.name,
+          role: operator.role,
+          avatar_url: googleUser.picture || operator.avatar_url || ''
+        },
+        redirectTo: '/painel'
+      });
+    }
+
+    // 2. Checar se é COLABORADOR do RH
+    let employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(cpf)) = ? OR id = ?`).get(email, email);
+    if (!employee && operator) {
+      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ?`).get(`%${operator.name.toLowerCase()}%`);
+    }
+
+    if (employee) {
+      const empToken = createEmployeeSession(employee);
+      return res.json({
+        success: true,
+        authType: 'employee',
+        token: empToken,
+        employee: {
+          id: employee.id,
+          name: employee.name,
+          cpf: employee.cpf,
+          position: employee.position,
+          department: employee.department
+        },
+        redirectTo: '/colaborador'
+      });
+    }
+
+    // 3. Caso contrário, gerencia como CLIENTE (busca ou cria novo cliente)
+    let client = db.prepare(`SELECT * FROM clients WHERE google_id = ?`).get(googleUser.sub);
+    if (!client) {
+      client = db.prepare(`SELECT * FROM clients WHERE LOWER(TRIM(email)) = ?`).get(email);
+    }
+
+    if (!client) {
+      const newClientId = generateNextClientFullId();
+      const nowIso = new Date().toISOString();
+      db.prepare(`
+        INSERT INTO clients (
+          id, client_type, full_name, email, phone, google_id, avatar_url,
+          city, state, contract_status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        newClientId,
+        'PF',
+        googleUser.name || 'Cliente Google',
+        email,
+        '(Aguardando WhatsApp)',
+        googleUser.sub,
+        googleUser.picture || null,
+        'Juiz de Fora',
+        'MG',
+        'Ativo',
+        nowIso,
+        nowIso
+      );
+      client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(newClientId);
+
+      try {
+        const msg = `🚨 *NOVO CLIENTE CADASTRADO VIA GOOGLE!*\n\n👤 *Nome:* ${client.full_name}\n📧 *E-mail:* ${client.email}\n🆔 *Código:* ${client.id}\n📍 *Origem:* Portal do Cliente / Entrada Unificada\n📅 *Data:* ${new Date().toLocaleString('pt-BR')}`;
+        sendLawyerWhatsAppNotification(msg, { clientId: client.id, email: client.email });
+      } catch (errNotify) {}
+    } else {
+      if (client.deleted_at || client.status === 'inativo_lgpd') {
+        return res.status(403).json({
+          error: 'Esta conta foi desativada a pedido do titular ou pelo escritório em conformidade com a LGPD.',
+          code: 'ACCOUNT_DEACTIVATED_LGPD'
+        });
+      }
+      try {
+        db.prepare(`UPDATE clients SET google_id = ?, avatar_url = ?, updated_at = ? WHERE id = ?`)
+          .run(googleUser.sub, googleUser.picture || client.avatar_url || null, new Date().toISOString(), client.id);
+      } catch (e) {}
+    }
+
+    const clientToken = createClientSession(client);
+    return res.json({
+      success: true,
+      authType: 'client',
+      token: clientToken,
+      client: {
+        id: client.id,
+        full_name: client.full_name,
+        email: client.email,
+        phone: client.phone,
+        client_type: client.client_type,
+        cpf: client.cpf,
+        cnpj: client.cnpj
+      },
+      redirectTo: '/cliente'
+    });
+  } catch (err) {
+    console.error('[ERRO] Login Google Unificado:', err);
+    return res.status(500).json({ error: 'Erro ao processar autenticação Google unificada.' });
   }
 });
 
