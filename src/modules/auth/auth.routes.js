@@ -105,10 +105,28 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
       const perm = db.prepare(`SELECT role_template FROM access_permissions WHERE user_id = ?`).get(user.id);
 
+      // Se este operador/usuário também for colaborador cadastrado no RH (ex: motorista, secretária, estagiário)
+      let employeeToken = null;
+      let matchedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${user.name.toLowerCase()}%`, user.id);
+      if (!matchedEmp) {
+        const parts = user.name.trim().split(/\s+/);
+        if (parts.length >= 2) {
+          matchedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? AND LOWER(name) LIKE ?`).get(`%${parts[0].toLowerCase()}%`, `%${parts[parts.length - 1].toLowerCase()}%`);
+        }
+      }
+      if (matchedEmp) {
+        try {
+          employeeToken = createEmployeeSession(matchedEmp);
+        } catch (e) {}
+      }
+
+      const isDriverOrColab = user.role === 'motorista' || user.role === 'colaborador' || (perm && (perm.role_template === 'motorista' || perm.role_template === 'colaborador'));
+
       return res.json({
         success: true,
-        authType: 'admin',
+        authType: isDriverOrColab ? 'employee' : 'admin',
         token,
+        employeeToken,
         user: {
           id: user.id,
           username: user.username,
@@ -116,7 +134,8 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
           role: user.role,
           role_template: perm ? perm.role_template : user.role
         },
-        redirectTo: '/painel'
+        employee: matchedEmp || undefined,
+        redirectTo: isDriverOrColab ? '/colaborador' : '/painel'
       });
     }
 
@@ -241,10 +260,19 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
           description: `Colaborador ${employee.name} autenticou-se com sucesso via entrada unificada.`
         });
 
+        let adminToken = null;
+        if (linkedUser) {
+          try {
+            adminToken = createSession(linkedUser);
+          } catch (e) {}
+        }
+
         return res.json({
           success: true,
           authType: 'employee',
           token,
+          employeeToken: token,
+          adminToken,
           role: 'colaborador',
           employee: {
             id: employee.id,
@@ -253,7 +281,12 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
             position: employee.position,
             department: employee.department
           },
-          user: {
+          user: linkedUser ? {
+            id: linkedUser.id,
+            username: linkedUser.username,
+            name: linkedUser.name,
+            role: linkedUser.role
+          } : {
             id: employee.id,
             name: employee.name,
             role: 'colaborador'

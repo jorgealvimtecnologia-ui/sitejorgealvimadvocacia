@@ -996,7 +996,18 @@
           const form = document.getElementById('login-form');
           if (form) form.reset();
           localStorage.setItem(TOKEN_KEY, data.token);
+          localStorage.setItem('ja_admin_token', data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+          if (data.employeeToken) {
+            localStorage.setItem('ja_employee_token', data.employeeToken);
+          }
+          if (data.employee) {
+            localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+          }
+          if (data.redirectTo === '/colaborador') {
+            window.location.href = '/colaborador';
+            return;
+          }
           showPanelScreen(data.user);
           loadLeads(); // popula o badge "Atendimentos" já na carga inicial
           loadClients();

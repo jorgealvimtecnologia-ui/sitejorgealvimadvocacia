@@ -3043,20 +3043,37 @@
         if (res.ok && data.success) {
           showUAuthAlert('Identificado com sucesso! Redirecionando com segurança...', 'success');
           
-          if (data.authType === 'admin' || data.redirectTo === '/painel') {
+          // Salva tokens de sessão de forma integrada e transparente
+          if (data.token) {
             localStorage.setItem('ja_admin_token', data.token);
-            if (data.user) localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
-            setTimeout(() => { window.location.href = data.redirectTo || '/painel'; }, 250);
-          } else if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.setItem('ja_token', data.token);
+          }
+          if (data.employeeToken) {
+            localStorage.setItem('ja_employee_token', data.employeeToken);
+          }
+          if (data.authType === 'employee' && !data.employeeToken && data.token) {
+            localStorage.setItem('ja_employee_token', data.token);
+          }
+          if (data.adminToken) {
+            localStorage.setItem('ja_admin_token', data.adminToken);
+            localStorage.setItem('ja_token', data.adminToken);
+          }
+          if (data.user) {
+            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+            localStorage.setItem('ja_user', JSON.stringify(data.user));
+          }
+          if (data.employee) {
+            localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+          }
+
+          if (data.authType === 'client' || data.redirectTo === '/cliente') {
             localStorage.setItem('jorgealvim_client_token', data.token);
             if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
             setTimeout(() => { window.location.href = data.redirectTo || '/cliente'; }, 250);
           } else if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
-            localStorage.setItem('ja_employee_token', data.token);
-            if (data.employee || data.user) localStorage.setItem('ja_employee_user', JSON.stringify(data.employee || data.user));
             setTimeout(() => { window.location.href = data.redirectTo || '/colaborador'; }, 250);
           } else {
-            window.location.href = data.redirectTo || '/painel';
+            setTimeout(() => { window.location.href = data.redirectTo || '/painel'; }, 250);
           }
         } else {
           showUAuthAlert(data.error || 'Credenciais inválidas. Verifique os dados digitados.', 'error');

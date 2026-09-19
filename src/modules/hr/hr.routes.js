@@ -3,7 +3,7 @@
  */
 import express from 'express';
 import { db } from '../../config/db.js';
-import { requireAuth, requireEmployeeAuth, createEmployeeSession } from '../../middleware/auth.js';
+import { requireAuth, requireEmployeeAuth, createEmployeeSession, createSession } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { getClientIp } from '../../shared/net.js';
 import { hashPassword, verifyPassword, isStrongHash } from '../../shared/password-crypto.js';
@@ -831,6 +831,20 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
       employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ? OR id = ?`).get(`%${cleanId}%`, `%${compactId}%`, rawId);
     }
 
+    // Se informou um nome de usuário (ex: 'carlos.motorista', 'patricia.secretaria')
+    if (!employee) {
+      const uMatch = db.prepare(`SELECT * FROM users WHERE LOWER(username) = ? OR id = ?`).get(cleanId, rawId);
+      if (uMatch) {
+        employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${uMatch.name.toLowerCase()}%`, uMatch.id);
+        if (!employee) {
+          const parts = uMatch.name.trim().split(/\s+/);
+          if (parts.length >= 2) {
+            employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? AND LOWER(name) LIKE ?`).get(`%${parts[0].toLowerCase()}%`, `%${parts[parts.length - 1].toLowerCase()}%`);
+          }
+        }
+      }
+    }
+
     // Se for o Dr. Jorge Alvim / Master entrando no Portal do Colaborador
     if (!employee && ['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim'].includes(compactId)) {
       employee = {
@@ -884,10 +898,24 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
 
     const token = createEmployeeSession(employee);
 
+    let adminToken = null;
+    if (authUser && authUser.id) {
+      try {
+        adminToken = createSession(authUser);
+      } catch (e) {}
+    }
+
     return res.json({
       success: true,
       message: `Bem-vindo(a) ao Portal do Colaborador, ${employee.name}!`,
       token,
+      adminToken,
+      user: authUser ? {
+        id: authUser.id,
+        username: authUser.username,
+        name: authUser.name,
+        role: authUser.role
+      } : undefined,
       employee: {
         id: employee.id,
         name: employee.name,

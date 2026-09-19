@@ -14,6 +14,7 @@
       finance:{label:'Financeiro & Caixa',emoji:'💰'},
       nfse:{label:'Notas Fiscais (NFS-e)',emoji:'🧾'},
       esign:{label:'Assinaturas',emoji:'✍️'},
+      colaborador:{label:'Meu Ponto & Documentos',emoji:'👤'},
       hr:{label:'RH & Pessoal',emoji:'👔'},
       offices:{label:'Escritórios',emoji:'🏢'},
       drive:{label:'Drive do Escritório',emoji:'📁'},
@@ -37,7 +38,7 @@
       {label:'Clientes & Atendimento',emoji:'👥',items:['leads','clients','rockets']},
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
-      {label:'Escritório & Pessoas',emoji:'🏛️',items:['hr','offices','drive','users']},
+      {label:'Escritório & Pessoas',emoji:'🏛️',items:['colaborador','hr','offices','drive','users']},
       {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
@@ -856,9 +857,24 @@
       function load(p){ api('/api/explorer/list?path='+encodeURIComponent(p||'')).then(function(d){ if(!d.success){ wmToast&&wmToast(d.error||'Erro ao listar.'); return; } state.path=d.path; state.parent=d.parent; state.entries=d.entries; render(); }).catch(function(){ wmToast&&wmToast('Falha ao carregar o explorador.'); }); }
       box.appendChild(bar); box.appendChild(crumb); box.appendChild(scroll); box.appendChild(status);
       load('');
+    function buildColaborador(){
+      var box=document.createElement('div');
+      box.className='space-y-4';
+      box.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0a192f,#132b4d);padding:14px 18px;border-radius:16px;color:#fff;border:1px solid #1e3a5f;box-shadow:0 4px 12px rgba(0,0,0,0.15)">'
+        +'<div style="flex:1">'
+          +'<h3 style="font-weight:800;font-size:14px;color:#f3e3a2;margin:0">👤 Portal do Colaborador (Meu Ponto & Documentos)</h3>'
+          +'<p style="font-size:12px;color:#cbd5e1;margin:4px 0 0 0">Acesso seguro ao seu Cartão de Ponto Digital, Holerites, Contrato e Ficha Cadastral.</p>'
+        +'</div>'
+        +'<a href="/colaborador" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,#b8860b,#d4af37);color:#0a192f;font-weight:800;font-size:12px;border-radius:10px;text-decoration:none;box-shadow:0 2px 8px rgba(184,134,11,0.4);flex-shrink:0">'
+          +'<span>Abrir em Tela Cheia ↗</span>'
+        +'</a>'
+      +'</div>'
+      +'<div style="width:100%;height:680px;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;box-shadow:inset 0 2px 4px rgba(0,0,0,0.05)">'
+        +'<iframe src="/colaborador" style="width:100%;height:100%;border:none;" title="Portal do Colaborador"></iframe>'
+      +'</div>';
       return box;
     }
-    var BUILDERS={editor:buildEditor,calc:buildCalc,kanban:buildKanban,explorer:buildExplorer};
+    var BUILDERS={editor:buildEditor,calc:buildCalc,kanban:buildKanban,explorer:buildExplorer,colaborador:buildColaborador};
 
     function openModule(id){
       var meta=MODULES[id]; if(!meta||!desktop) return;
@@ -975,6 +991,7 @@
     var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', clients:'tab_clients', docs:'tab_clients',
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
+      colaborador:'tab_colaborador',
       finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
       audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', faq:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
     var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
@@ -1033,7 +1050,10 @@
             else { WM_MASTER=false; WM_ALLOWED={}; var p=d.permissions||{};
               Object.keys(MODULE_PERM).forEach(function(id){ if(p[MODULE_PERM[id]]) WM_ALLOWED[id]=1; }); }
             applyPerms();
-            if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})) openModule('dashboard');
+            if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})){
+              var defMod = (!moduleAllowed('lawsuits') && moduleAllowed('colaborador')) ? 'colaborador' : 'dashboard';
+              openModule(defMod);
+            }
           }).catch(function(){});
       }catch(e){}
     }

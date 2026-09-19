@@ -643,6 +643,7 @@
               title="Navegue rapidamente entre as 16 abas"
             >
               <option value="">🧭 Ir para Aba...</option>
+              <option value="colaborador">👤 Portal do Colaborador (Meu Ponto & Documentos)</option>
               <option value="leads">1. 📥 Atendimentos & Leads</option>
               <option value="clients">2. 👥 Clientes & Contratos</option>
               <option value="lawsuits">3. ⚖️ Processos & Prazos (CNJ)</option>
@@ -670,6 +671,17 @@
             <span class="text-slate-500">Usuário:</span>
             <span id="current-user-display" class="font-bold text-navy-950">—</span>
           </div>
+
+          <!-- Atalho Portal do Colaborador (Meu Ponto & Documentos) -->
+          <a 
+            id="btn-goto-colaborador"
+            href="/colaborador" 
+            target="_blank"
+            class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-navy-900 to-navy-850 hover:from-navy-850 hover:to-navy-800 text-gold-400 text-xs font-bold border border-gold-500/40 transition-all cursor-pointer shadow-2xs active:scale-95" 
+            title="Acessar Meu Ponto Eletrônico, Holerites, Contrato e Documentos de Trabalhador">
+            <span>👤</span>
+            <span class="hidden sm:inline">Meu Ponto & Documentos</span>
+          </a>
 
           <!-- Botão Paleta de Comandos Ctrl+K (Fase 2) -->
           <button 

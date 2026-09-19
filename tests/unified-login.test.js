@@ -126,4 +126,45 @@ describe('Entrada Unificada (Identity-First Login)', () => {
     assert.ok(res.body.token);
   });
 
+  it('7. Login de Motorista/Colaborador pelo username via /api/auth/login -> gera token, employeeToken e redireciona /colaborador', async () => {
+    const userId = `USR-TEST-${Date.now()}`;
+    const empId = `EMP-TEST-${Date.now()}`;
+    const pwdHash = hashPassword('carlos123');
+
+    db.prepare(`
+      INSERT INTO users (id, username, password_hash, salt, name, role, created_at)
+      VALUES (?, 'carlos.motorista.test', ?, ?, 'Carlos Motorista Teste', 'motorista', datetime('now'))
+    `).run(userId, pwdHash.hash, pwdHash.salt);
+
+    db.prepare(`
+      INSERT INTO hr_employees (id, name, cpf, position, department, contract_type, admission_date, created_at, updated_at)
+      VALUES (?, 'Carlos Motorista Teste', '999.888.777-66', 'Motorista', 'Operacional', 'CLT', '2024-01-01', datetime('now'), datetime('now'))
+    `).run(empId);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ identifier: 'carlos.motorista.test', password: 'carlos123' });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.authType, 'employee');
+    assert.equal(res.body.redirectTo, '/colaborador');
+    assert.ok(res.body.token, 'Token de sessão do sistema');
+    assert.ok(res.body.employeeToken, 'Token do colaborador para autoatendimento');
+    assert.equal(res.body.user.username, 'carlos.motorista.test');
+    assert.equal(res.body.employee.id, empId);
+  });
+
+  it('8. Login de Colaborador via /api/hr/employee/login aceitando username -> retorna token e adminToken', async () => {
+    const res = await request(app)
+      .post('/api/hr/employee/login')
+      .send({ identifier: 'carlos.motorista.test', password: 'carlos123' });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.token, 'Token do portal do colaborador');
+    assert.ok(res.body.adminToken, 'Token do painel administrativo gerado transparentemente');
+    assert.equal(res.body.employee.name, 'Carlos Motorista Teste');
+  });
+
 });
