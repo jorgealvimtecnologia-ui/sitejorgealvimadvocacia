@@ -29,9 +29,22 @@ function updateUserBanner() {
   const elSender = document.getElementById('rocket-sender-display');
   const btnGlobal = document.getElementById('rocket-box-btn-global');
 
+  const roleLabels = {
+    master: 'Sócio Mestre',
+    dono_escritorio: 'Sócio Titular',
+    advogado: 'Advogado(a)',
+    estagiario: 'Estagiário(a)',
+    secretaria: 'Secretária / Atendimento',
+    gerente: 'Gerência / Administrativo',
+    motorista: 'Motorista / Apoio Operacional',
+    cliente: 'Cliente',
+    colaborador: 'Colaborador(a)'
+  };
+
+  const roleKey = user.role_template || user.role || 'colaborador';
   const roleLabel = (user.role === 'master' || user.username === 'jorgealvimtecnologia')
     ? 'Sócio Mestre'
-    : (user.role === 'admin' ? 'Advogado / Operador' : (user.role || 'Membro da Equipe'));
+    : (roleLabels[roleKey] || (user.role === 'admin' ? 'Operador' : user.role));
 
   if (elName) elName.textContent = user.name || user.username || 'Dr. Jorge Alvim';
   if (elRole) elRole.textContent = roleLabel;

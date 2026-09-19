@@ -103,6 +103,8 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
         description: `Operador ${user.name} (${user.username}) autenticou-se com sucesso via entrada unificada.`
       });
 
+      const perm = db.prepare(`SELECT role_template FROM access_permissions WHERE user_id = ?`).get(user.id);
+
       return res.json({
         success: true,
         authType: 'admin',
@@ -111,7 +113,8 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
           id: user.id,
           username: user.username,
           name: user.name,
-          role: user.role
+          role: user.role,
+          role_template: perm ? perm.role_template : user.role
         },
         redirectTo: '/painel'
       });

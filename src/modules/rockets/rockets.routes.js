@@ -31,12 +31,30 @@ rocketsRouter.get('/api/rockets/recipients', requireAuth, (req, res) => {
     const users = db.prepare(`SELECT id, username, name, role FROM users ORDER BY name ASC`).all();
     users.forEach(u => {
       if (u.id === userId || (u.username && u.username === req.user.username)) return;
+      let rTemplate = u.role;
+      try {
+        const perm = db.prepare(`SELECT role_template FROM access_permissions WHERE user_id = ?`).get(u.id);
+        if (perm && perm.role_template) rTemplate = perm.role_template;
+      } catch (e) {}
+
+      const roleLabels = {
+        master: 'Sócio Mestre',
+        dono_escritorio: 'Sócio Titular',
+        advogado: 'Advogado(a)',
+        estagiario: 'Estagiário(a)',
+        secretaria: 'Secretária',
+        gerente: 'Gerente',
+        motorista: 'Motorista',
+        cliente: 'Cliente'
+      };
+      const labelRole = roleLabels[rTemplate] || (u.role === 'master' ? 'Sócio Mestre' : 'Operador');
+
       list.push({
         id: u.id,
         name: u.name || u.username,
-        role: u.role || 'admin',
+        role: rTemplate || u.role || 'admin',
         type: 'user',
-        label: `👤 ${u.name || u.username} (${u.role === 'master' ? 'Sócio Mestre' : 'Operador'})`
+        label: `👤 ${u.name || u.username} (${labelRole})`
       });
     });
 

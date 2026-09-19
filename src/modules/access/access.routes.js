@@ -290,15 +290,52 @@ export function syncAllAccessPermissions() {
     // 1. Sincronizar Usuários do Painel
     const users = db.prepare(`SELECT * FROM users`).all();
     for (const u of users) {
-      const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.name.toLowerCase().includes('jorge alvim');
+      const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.name.toLowerCase().includes('jorge alvim') || u.role === 'master';
       const isDraMariana = u.name.toLowerCase().includes('mariana') || u.username.includes('mariana');
       const isDraGabriela = u.name.toLowerCase().includes('gabriela') || u.username.includes('gabriela');
       
-      let tplKey = isMaster ? 'master' : ((isDraMariana || isDraGabriela) ? 'dono_escritorio' : 'advogado');
-      let userType = isMaster ? 'master' : 'admin';
+      // Buscar colaborador correspondente no RH para herdar cargo real
+      let linkedEmp = null;
+      try {
+        linkedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) = ? OR LOWER(name) LIKE ?`).get(u.name.toLowerCase(), `%${u.name.toLowerCase()}%`);
+      } catch (e) {}
+
+      const pos = ((linkedEmp && linkedEmp.position) || '').toLowerCase();
+      const uname = (u.username || '').toLowerCase();
+      const urole = (u.role || '').toLowerCase();
+
+      let tplKey = 'advogado';
+      let userType = 'admin';
+
+      if (isMaster) {
+        tplKey = 'master';
+        userType = 'master';
+      } else if (urole === 'cliente' || u.id.includes('CLI-')) {
+        tplKey = 'cliente';
+        userType = 'cliente';
+      } else if (isDraMariana || isDraGabriela || pos.includes('sóci') || pos.includes('socio') || pos.includes('titular')) {
+        tplKey = 'dono_escritorio';
+        userType = 'dono_escritorio';
+      } else if (pos.includes('motorist') || pos.includes('externo') || uname.includes('motorista') || urole === 'motorista') {
+        tplKey = 'motorista';
+        userType = 'motorista';
+      } else if (pos.includes('secret') || pos.includes('recepc') || uname.includes('secretaria') || uname.includes('recepcao') || urole === 'secretaria') {
+        tplKey = 'secretaria';
+        userType = 'secretaria';
+      } else if (pos.includes('estagi') || uname.includes('estagiario') || uname.includes('estagio') || urole === 'estagiario') {
+        tplKey = 'estagiario';
+        userType = 'estagiario';
+      } else if (pos.includes('gerente') || pos.includes('financ') || uname.includes('adm') || urole === 'gerente') {
+        tplKey = 'gerente';
+        userType = 'gerente';
+      } else if (pos.includes('advog') || uname.includes('adv') || urole === 'advogado') {
+        tplKey = 'advogado';
+        userType = 'advogado';
+      }
+
       const tpl = ROLE_TEMPLATES[tplKey];
 
-      const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(u.id);
+      const exists = db.prepare(`SELECT id, role_template FROM access_permissions WHERE user_id = ?`).get(u.id);
       if (!exists) {
         db.prepare(`
           INSERT INTO access_permissions (
@@ -312,7 +349,7 @@ export function syncAllAccessPermissions() {
           tplKey, tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
           tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
           tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
-          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, 'Usuário Painel', now, now
+          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, tpl.name, now, now
         );
       } else if (isMaster) {
         // Enforce God Mode para Dr. Jorge Alvim
@@ -324,6 +361,23 @@ export function syncAllAccessPermissions() {
               is_active = 1, data_scope = 'all', updated_at = ?
           WHERE user_id = ?
         `).run(now, u.id);
+      } else if (exists.role_template === 'advogado' && tplKey !== 'advogado') {
+        // Corrige operadores que haviam caído indevidamente no perfil genérico 'advogado'
+        db.prepare(`
+          UPDATE access_permissions 
+          SET role_template = ?, user_type = ?,
+              tab_leads = ?, tab_clients = ?, tab_lawsuits = ?, tab_radar = ?,
+              tab_offices = ?, tab_drive = ?, tab_calendar = ?, tab_publications = ?,
+              tab_hr = ?, tab_financial = ?, tab_colaborador = ?, tab_portal_cliente = ?,
+              tab_users = ?, tab_settings = ?, data_scope = ?, notes = ?, updated_at = ?
+          WHERE user_id = ?
+        `).run(
+          tplKey, userType,
+          tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
+          tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
+          tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
+          tpl.tabs.tab_users, tpl.tabs.tab_settings, tpl.data_scope, tpl.name, now, u.id
+        );
       }
     }
 
