@@ -56,8 +56,10 @@
     }
 
     function getAuthHeaders() {
+      const token = getToken();
       return {
-        'Authorization': `Bearer ${getToken()}`
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       };
     }
 

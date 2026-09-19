@@ -1803,6 +1803,11 @@ app.get(['/teste-pratico', '/teste-pratico.html'], (req, res) => {
   sendFreshFile(res, 'teste-pratico.html');
 });
 
+// Demonstração Visual da Caixa de Boas-Vindas
+app.get(['/exemplo-boas-vindas', '/exemplo-boas-vindas.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'exemplo-boas-vindas.html'));
+});
+
 app.get('/portal-cliente', (req, res) => {
   sendFreshFile(res, 'cliente.html');
 });

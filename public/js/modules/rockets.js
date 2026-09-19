@@ -1,9 +1,20 @@
 // Módulo Frontend: 🚀 Central de Foguetes (Comunicação Interna & Despachos Rápidos)
 
-let currentRocketBox = 'all';
+let currentRocketBox = 'inbox';
+let currentRocketScope = 'personal';
 let currentActiveRocket = null;
+let currentLoadedTemplates = [];
+
+function getActiveUserData() {
+  try {
+    const raw = localStorage.getItem('ja_admin_user');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { id: 'USR-MASTER-01', name: 'Dr. Jorge Alvim', role: 'master', username: 'jorgealvimtecnologia' };
+}
 
 async function initRocketsTab() {
+  updateUserBanner();
   await Promise.all([
     loadRocketStats(),
     loadRockets(),
@@ -11,9 +22,32 @@ async function initRocketsTab() {
   ]);
 }
 
+function updateUserBanner() {
+  const user = getActiveUserData();
+  const elName = document.getElementById('rocket-active-username');
+  const elRole = document.getElementById('rocket-active-role');
+  const elSender = document.getElementById('rocket-sender-display');
+  const btnGlobal = document.getElementById('rocket-box-btn-global');
+
+  const roleLabel = (user.role === 'master' || user.username === 'jorgealvimtecnologia')
+    ? 'Sócio Mestre'
+    : (user.role === 'admin' ? 'Advogado / Operador' : (user.role || 'Membro da Equipe'));
+
+  if (elName) elName.textContent = user.name || user.username || 'Dr. Jorge Alvim';
+  if (elRole) elRole.textContent = roleLabel;
+  if (elSender) elSender.textContent = `${user.name || user.username} (${roleLabel})`;
+
+  // Visão Geral do Escritório visível se for Sócio Mestre
+  const isMaster = user.role === 'master' || user.username === 'jorgealvimtecnologia';
+  if (btnGlobal) {
+    if (isMaster) btnGlobal.classList.remove('hidden');
+    else btnGlobal.classList.add('hidden');
+  }
+}
+
 async function loadRocketStats() {
   try {
-    const res = await apiFetch('/api/rockets/stats');
+    const res = await apiFetch(`/api/rockets/stats?scope=${currentRocketScope}`);
     const data = await res.json();
     if (res.ok && data.success) {
       const s = data.stats;
@@ -21,11 +55,23 @@ async function loadRocketStats() {
       const elPendingExec = document.getElementById('rocket-stat-pending-exec');
       const elPendingKnow = document.getElementById('rocket-stat-pending-know');
       const elDone = document.getElementById('rocket-stat-done');
+      const badgeInbox = document.getElementById('rocket-badge-inbox');
 
       if (elActive) elActive.textContent = s.total_active || 0;
       if (elPendingExec) elPendingExec.textContent = s.pending_execution || 0;
       if (elPendingKnow) elPendingKnow.textContent = s.pending_knowledge || 0;
       if (elDone) elDone.textContent = s.mission_accomplished || 0;
+
+      // Badge numérico de mensagens pendentes na Caixa de Entrada
+      const unread = s.unread_inbox || (data.personal_stats ? data.personal_stats.unread_inbox : 0);
+      if (badgeInbox) {
+        if (unread > 0) {
+          badgeInbox.textContent = unread;
+          badgeInbox.classList.remove('hidden');
+        } else {
+          badgeInbox.classList.add('hidden');
+        }
+      }
     }
   } catch (err) {
     console.error('[FOGUETES] Erro ao carregar métricas:', err);
@@ -61,15 +107,43 @@ async function loadRocketRecipients() {
 
 function switchRocketBox(box) {
   currentRocketBox = box;
-  const boxes = ['all', 'inbox', 'outbox', 'archived'];
-  const activeClass = "px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-white shadow-sm transition-all";
-  const inactiveClass = "px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all";
+  currentRocketScope = 'personal';
+
+  const boxes = ['inbox', 'outbox', 'saved', 'all', 'archived'];
+  const activeClass = "px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-white shadow-sm transition-all cursor-pointer flex items-center space-x-1.5";
+  const inactiveClass = "px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer flex items-center space-x-1.5";
 
   boxes.forEach(b => {
     const btn = document.getElementById(`rocket-box-btn-${b}`);
     if (btn) btn.className = (b === box) ? activeClass : inactiveClass;
   });
 
+  const btnGlobal = document.getElementById('rocket-box-btn-global');
+  if (btnGlobal) {
+    btnGlobal.className = "px-4 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-amber-300 hover:bg-slate-800 transition-all cursor-pointer border border-amber-500/40";
+  }
+
+  loadRockets();
+}
+
+function toggleRocketGlobalScope() {
+  currentRocketScope = 'global';
+  currentRocketBox = 'all';
+
+  const boxes = ['inbox', 'outbox', 'saved', 'all', 'archived'];
+  const inactiveClass = "px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer flex items-center space-x-1.5";
+
+  boxes.forEach(b => {
+    const btn = document.getElementById(`rocket-box-btn-${b}`);
+    if (btn) btn.className = inactiveClass;
+  });
+
+  const btnGlobal = document.getElementById('rocket-box-btn-global');
+  if (btnGlobal) {
+    btnGlobal.className = "px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md transition-all cursor-pointer border border-amber-400";
+  }
+
+  loadRocketStats();
   loadRockets();
 }
 
@@ -89,6 +163,7 @@ async function loadRockets() {
 
     const params = new URLSearchParams({
       box: currentRocketBox,
+      scope: currentRocketScope,
       type: typeFilter,
       priority: priorityFilter,
       status: statusFilter,
@@ -102,7 +177,7 @@ async function loadRockets() {
 
     if (res.ok && data.success && data.rockets.length > 0) {
       if (tableBody) {
-        tableBody.innerHTML = data.rockets.map(r => renderRocketRow(r)).join('');
+        tableBody.innerHTML = data.rockets.map(r => renderRocketRow(r, data.current_user_id, data.is_master)).join('');
       }
       if (emptyState) emptyState.classList.add('hidden');
     } else {
@@ -115,7 +190,7 @@ async function loadRockets() {
   }
 }
 
-function renderRocketRow(r) {
+function renderRocketRow(r, currentUserId, isMaster) {
   const isUrgent = r.priority === 'urgente' || r.priority === 'altissima';
   const priorityBadge = isUrgent
     ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-rose-100 text-rose-800 border border-rose-200">🔥 ${r.priority.toUpperCase()}</span>`
@@ -137,20 +212,61 @@ function renderRocketRow(r) {
   const dateFormatted = new Date(r.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   const deadlineFormatted = r.deadline ? new Date(r.deadline).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 
+  // Ícone de estrela salvo/favorito
+  const starIcon = r.is_saved ? '⭐' : '☆';
+  const starTitle = r.is_saved ? 'Remover dos Salvos' : 'Salvar / Favoritar Despacho';
+  const starClass = r.is_saved ? 'text-amber-500 hover:text-amber-600' : 'text-slate-300 hover:text-amber-400';
+
+  // Exibição de Remetente / Destinatário
+  let partyDisplay = '';
+  if (currentRocketBox === 'inbox') {
+    partyDisplay = `<div><span class="text-[10px] text-slate-400 block uppercase font-bold">De:</span><span class="font-bold text-slate-800">${escapeHtml(r.sender_name)}</span></div>`;
+  } else if (currentRocketBox === 'outbox') {
+    partyDisplay = `<div><span class="text-[10px] text-slate-400 block uppercase font-bold">Para:</span><span class="font-bold text-slate-800">${r.recipient_id === 'all' ? '📢 Toda a Equipe' : escapeHtml(r.recipient_name)}</span></div>`;
+  } else {
+    partyDisplay = `
+      <div class="text-[11px] leading-tight">
+        <span class="text-slate-600 font-semibold">${escapeHtml(r.sender_name)}</span>
+        <span class="text-amber-500 font-bold mx-1">➔</span>
+        <span class="text-slate-800 font-bold">${r.recipient_id === 'all' ? '📢 Equipe' : escapeHtml(r.recipient_name)}</span>
+      </div>
+    `;
+  }
+
+  // Ações Rápidas por Linha
+  const isAuthor = r.sender_id === currentUserId;
+  const canDelete = isAuthor || isMaster;
+  let quickActionBtn = '';
+  if (r.status === 'pendente') {
+    quickActionBtn = `
+      <button onclick="quickReplyFromRow(${r.id}, 'ciente', event)" class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-[10px] font-bold" title="Dar Ciência Imediata">
+        👁️ Ciente
+      </button>
+    `;
+  } else if (r.status === 'ciente' && r.message_type === 'execucao') {
+    quickActionBtn = `
+      <button onclick="quickReplyFromRow(${r.id}, 'missao_cumprida', event)" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold" title="Cumprir Missão">
+        🎯 Concluir
+      </button>
+    `;
+  }
+
   return `
     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 text-xs">
       <td class="px-4 py-3 font-mono font-bold text-navy-950">
-        <button onclick="viewRocketDetails(${r.id})" class="text-amber-600 hover:text-amber-800 underline flex items-center space-x-1">
-          <span>🚀</span>
-          <span>#${r.protocol_number}</span>
-        </button>
+        <div class="flex items-center space-x-1.5">
+          <button onclick="toggleSaveRocketRow(${r.id}, event)" class="text-base cursor-pointer ${starClass} transition-colors" title="${starTitle}">
+            ${starIcon}
+          </button>
+          <button onclick="viewRocketDetails(${r.id})" class="text-amber-600 hover:text-amber-800 underline flex items-center space-x-1 font-mono font-bold">
+            <span>🚀</span>
+            <span>#${r.protocol_number}</span>
+          </button>
+        </div>
+        <div class="text-[10px] text-slate-400 mt-0.5">${dateFormatted}</div>
       </td>
       <td class="px-4 py-3 font-medium text-slate-800">
-        <div>${escapeHtml(r.sender_name)}</div>
-        <div class="text-[10px] text-slate-400">${dateFormatted}</div>
-      </td>
-      <td class="px-4 py-3 font-medium text-slate-800">
-        ${r.recipient_id === 'all' ? '<span class="font-bold text-amber-700">📢 Toda a Equipe</span>' : escapeHtml(r.recipient_name)}
+        ${partyDisplay}
       </td>
       <td class="px-4 py-3">
         <div class="font-bold text-navy-950 truncate max-w-xs">${escapeHtml(r.subject)}</div>
@@ -161,15 +277,91 @@ function renderRocketRow(r) {
       <td class="px-4 py-3 font-mono text-[11px] text-slate-600">${deadlineFormatted}</td>
       <td class="px-4 py-3">${statusBadge}</td>
       <td class="px-4 py-3 text-right">
-        <button onclick="viewRocketDetails(${r.id})" class="px-2.5 py-1 rounded-lg bg-navy-950 hover:bg-gold-600 text-white font-medium text-xs shadow-sm transition-all" title="Abrir Thread">
-          Abrir
-        </button>
+        <div class="flex items-center justify-end space-x-1.5">
+          ${quickActionBtn}
+          <button onclick="viewRocketDetails(${r.id})" class="px-2.5 py-1 rounded-lg bg-navy-950 hover:bg-gold-600 text-white font-medium text-xs shadow-sm transition-all" title="Abrir Despacho Completo">
+            Abrir
+          </button>
+          ${canDelete ? `
+            <button onclick="deleteRocketRow(${r.id}, event)" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Excluir Despacho">
+              🗑️
+            </button>
+          ` : ''}
+        </div>
       </td>
     </tr>
   `;
 }
 
+async function toggleSaveRocketRow(id, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  try {
+    const res = await apiFetch(`/api/rockets/${id}/save`, { method: 'PATCH' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      await Promise.all([loadRocketStats(), loadRockets()]);
+    } else {
+      alert(data.error || 'Erro ao salvar despacho.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao alternar salvo:', err);
+  }
+}
+
+async function toggleSaveActiveRocket() {
+  if (!currentActiveRocket) return;
+  await toggleSaveRocketRow(currentActiveRocket.id);
+  // Atualiza detalhes do modal aberto
+  await viewRocketDetails(currentActiveRocket.id);
+}
+
+async function quickReplyFromRow(id, type, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  try {
+    const res = await apiFetch(`/api/rockets/${id}/reply`, {
+      method: 'POST',
+      body: JSON.stringify({ reply_type: type })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      await Promise.all([loadRocketStats(), loadRockets()]);
+    } else {
+      alert(data.error || 'Erro ao registrar ciência.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao responder despacho:', err);
+  }
+}
+
+async function deleteRocketRow(id, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  if (!confirm('Deseja realmente excluir este despacho permanentemente? Esta ação não pode ser desfeita.')) {
+    return;
+  }
+
+  try {
+    const res = await apiFetch(`/api/rockets/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (currentActiveRocket && currentActiveRocket.id === id) {
+        closeViewRocketModal();
+      }
+      await Promise.all([loadRocketStats(), loadRockets()]);
+    } else {
+      alert(data.error || 'Erro ao excluir despacho.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao excluir foguete:', err);
+  }
+}
+
+async function deleteActiveRocket() {
+  if (!currentActiveRocket) return;
+  await deleteRocketRow(currentActiveRocket.id);
+}
+
 function openNewRocketModal() {
+  updateUserBanner();
   const modal = document.getElementById('rocket-new-modal');
   if (modal) modal.classList.remove('hidden');
 }
@@ -263,18 +455,24 @@ function renderRocketModal(rocket, replies = []) {
   const elStatus = document.getElementById('rocket-view-status');
   const elOriginalMsg = document.getElementById('rocket-view-original-msg');
   const timeline = document.getElementById('rocket-view-timeline');
+  const saveText = document.getElementById('rocket-view-save-text');
+  const saveIcon = document.getElementById('rocket-view-save-icon');
 
   if (elProtocol) elProtocol.textContent = `#${rocket.protocol_number}`;
   if (elSubject) elSubject.textContent = rocket.subject;
-  if (elSender) elSender.textContent = `${rocket.sender_name} (${rocket.sender_role || 'Mestre'})`;
+  if (elSender) elSender.textContent = `${rocket.sender_name} (${rocket.sender_role || 'Membro'})`;
   if (elRecipient) elRecipient.textContent = rocket.recipient_id === 'all' ? '📢 Toda a Equipe' : rocket.recipient_name;
   if (elDate) elDate.textContent = new Date(rocket.created_at).toLocaleString('pt-BR');
   if (elDeadline) elDeadline.textContent = rocket.deadline ? new Date(rocket.deadline).toLocaleString('pt-BR') : 'Sem prazo fatal';
   if (elOriginalMsg) elOriginalMsg.textContent = rocket.message;
 
+  if (saveIcon) saveIcon.textContent = rocket.is_saved ? '⭐' : '☆';
+  if (saveText) saveText.textContent = rocket.is_saved ? 'Salvo' : 'Salvar';
+
   if (elStatus) {
     let stText = '⏳ Pendente';
     if (rocket.status === 'ciente') stText = '👁️ Ciente';
+    if (rocket.status === 'em_andamento') stText = '⚡ Em Andamento';
     if (rocket.status === 'missao_cumprida') stText = '🎯 Missão Cumprida';
     elStatus.textContent = stText;
   }
@@ -363,6 +561,286 @@ async function submitRocketReply(e) {
     }
   } catch (err) {
     console.error('[FOGUETES] Erro ao registrar réplica:', err);
+  }
+}
+
+// ============================================================
+// MODAL: CONTROLE DE USUÁRIOS DO FOGUETE
+// ============================================================
+function openRocketUsersModal() {
+  const modal = document.getElementById('rocket-users-modal');
+  if (modal) modal.classList.remove('hidden');
+  loadRocketUsers();
+}
+
+function closeRocketUsersModal() {
+  const modal = document.getElementById('rocket-users-modal');
+  if (modal) modal.classList.add('hidden');
+  const form = document.getElementById('rocket-new-user-form');
+  if (form) form.reset();
+}
+
+async function loadRocketUsers() {
+  const tbody = document.getElementById('rusers-table-body');
+  const badge = document.getElementById('rusers-count-badge');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Carregando usuários...</td></tr>`;
+
+  try {
+    const res = await apiFetch('/api/rockets/users');
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (badge) badge.textContent = `${data.users.length} usuários cadastrados`;
+      if (!tbody) return;
+
+      if (data.users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Nenhum usuário encontrado.</td></tr>`;
+        return;
+      }
+
+      const currentUser = getActiveUserData();
+      tbody.innerHTML = data.users.map(u => {
+        const isMaster = u.is_master || u.role === 'master' || u.username === 'jorgealvimtecnologia';
+        const isSelf = u.id === currentUser.id || u.username === currentUser.username;
+        const roleBadge = isMaster
+          ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300 text-[10px]">👑 Sócio Mestre</span>`
+          : `<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[10px]">${escapeHtml(u.role || 'Operador')}</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td class="px-4 py-3 font-bold text-navy-950">
+              ${escapeHtml(u.name)}
+              ${isSelf ? '<span class="ml-1 text-[10px] text-amber-600 font-bold">(Você)</span>' : ''}
+            </td>
+            <td class="px-4 py-3 font-mono text-slate-600">@${escapeHtml(u.username)}</td>
+            <td class="px-4 py-3">${roleBadge}</td>
+            <td class="px-4 py-3 text-center font-mono font-bold text-slate-700">${u.sent_count || 0}</td>
+            <td class="px-4 py-3 text-center font-mono font-bold text-slate-700">${u.received_count || 0}</td>
+            <td class="px-4 py-3 text-right">
+              ${(!isMaster && !isSelf) ? `
+                <button onclick="deleteRocketUser('${u.id}', '${escapeHtml(u.name)}')" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all cursor-pointer">
+                  Excluir
+                </button>
+              ` : '<span class="text-slate-400 text-[10px]">—</span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao carregar usuários:', err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-500 font-bold">Erro ao carregar lista de usuários.</td></tr>`;
+  }
+}
+
+async function handleCreateRocketUser(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const name = document.getElementById('ruser-name')?.value.trim();
+  const username = document.getElementById('ruser-username')?.value.trim();
+  const role = document.getElementById('ruser-role')?.value || 'admin';
+  const password = document.getElementById('ruser-password')?.value;
+
+  if (!name || !username || !password) {
+    alert('Preencha nome, login e senha inicial.');
+    return;
+  }
+
+  try {
+    const res = await apiFetch('/api/rockets/users', {
+      method: 'POST',
+      body: JSON.stringify({ name, username, role, password })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`Usuário ${name} cadastrado com sucesso!`);
+      const form = document.getElementById('rocket-new-user-form');
+      if (form) form.reset();
+      await Promise.all([loadRocketUsers(), loadRocketRecipients()]);
+    } else {
+      alert(data.error || 'Erro ao cadastrar usuário.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao cadastrar usuário:', err);
+    alert('Erro de comunicação ao criar usuário.');
+  }
+}
+
+async function deleteRocketUser(id, name) {
+  if (!confirm(`Deseja realmente remover o usuário "${name}" do sistema de foguetes?`)) {
+    return;
+  }
+
+  try {
+    const res = await apiFetch(`/api/rockets/users/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      await Promise.all([loadRocketUsers(), loadRocketRecipients()]);
+    } else {
+      alert(data.error || 'Erro ao excluir usuário.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao excluir usuário:', err);
+  }
+}
+
+// ============================================================
+// MODAL: MODELOS DE MENSAGENS SALVAS (TEMPLATES)
+// ============================================================
+function openRocketTemplatesModal() {
+  const modal = document.getElementById('rocket-templates-modal');
+  if (modal) modal.classList.remove('hidden');
+  loadRocketTemplates();
+}
+
+function closeRocketTemplatesModal() {
+  const modal = document.getElementById('rocket-templates-modal');
+  if (modal) modal.classList.add('hidden');
+  const form = document.getElementById('rocket-new-tpl-form');
+  if (form) form.reset();
+}
+
+async function loadRocketTemplates() {
+  const container = document.getElementById('rtpl-cards-container');
+  if (container) container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Carregando modelos...</div>`;
+
+  try {
+    const res = await apiFetch('/api/rockets/templates');
+    const data = await res.json();
+    if (res.ok && data.success) {
+      currentLoadedTemplates = data.templates || [];
+      if (!container) return;
+
+      if (currentLoadedTemplates.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Nenhum modelo salvo ainda. Crie um acima!</div>`;
+        return;
+      }
+
+      container.innerHTML = currentLoadedTemplates.map(tpl => {
+        const typeBadge = tpl.message_type === 'execucao'
+          ? `<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold">🎯 Execução</span>`
+          : `<span class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 text-[10px] font-bold">👁️ Conhecimento</span>`;
+
+        return `
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 transition-all space-y-2 shadow-xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-navy-950 text-xs">${escapeHtml(tpl.title)}</span>
+                ${typeBadge}
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <button onclick="useRocketTemplate(${tpl.id})" class="px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition-all flex items-center space-x-1 cursor-pointer">
+                  <span>🚀</span>
+                  <span>Usar Modelo</span>
+                </button>
+                <button onclick="deleteRocketTemplate(${tpl.id})" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 transition-colors" title="Excluir Modelo">
+                  🗑️
+                </button>
+              </div>
+            </div>
+            <div class="text-[11px] font-semibold text-slate-700">Assunto: "${escapeHtml(tpl.subject)}"</div>
+            <div class="text-[11px] text-slate-500 line-clamp-2 bg-slate-50 p-2 rounded-xl">${escapeHtml(tpl.message)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao carregar modelos:', err);
+    if (container) container.innerHTML = `<div class="text-xs text-rose-500 py-4 text-center font-bold">Erro ao listar modelos.</div>`;
+  }
+}
+
+function useRocketTemplate(tplId) {
+  const tpl = currentLoadedTemplates.find(t => t.id === tplId);
+  if (!tpl) return;
+
+  closeRocketTemplatesModal();
+  openNewRocketModal();
+
+  const elSubject = document.getElementById('rocket-subject');
+  const elMessage = document.getElementById('rocket-message');
+  const elPriority = document.getElementById('rocket-priority');
+  const radios = document.querySelectorAll('input[name="rocket-type"]');
+
+  if (elSubject) elSubject.value = tpl.subject;
+  if (elMessage) elMessage.value = tpl.message;
+  if (elPriority && tpl.priority) elPriority.value = tpl.priority;
+  radios.forEach(r => {
+    r.checked = (r.value === tpl.message_type);
+  });
+}
+
+async function handleCreateRocketTemplate(e) {
+  if (e && e.preventDefault) e.preventDefault();
+
+  const title = document.getElementById('rtpl-title')?.value.trim();
+  const subject = document.getElementById('rtpl-subject')?.value.trim();
+  const message = document.getElementById('rtpl-message')?.value.trim();
+  const message_type = document.getElementById('rtpl-type')?.value || 'execucao';
+
+  if (!title || !subject || !message) {
+    alert('Preencha título, assunto e texto do modelo.');
+    return;
+  }
+
+  try {
+    const res = await apiFetch('/api/rockets/templates', {
+      method: 'POST',
+      body: JSON.stringify({ title, subject, message, message_type })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const form = document.getElementById('rocket-new-tpl-form');
+      if (form) form.reset();
+      await loadRocketTemplates();
+    } else {
+      alert(data.error || 'Erro ao salvar modelo.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao salvar modelo:', err);
+  }
+}
+
+async function saveCurrentRocketAsTemplate() {
+  const subject = document.getElementById('rocket-subject')?.value.trim();
+  const message = document.getElementById('rocket-message')?.value.trim();
+  const message_type = document.querySelector('input[name="rocket-type"]:checked')?.value || 'execucao';
+  const priority = document.getElementById('rocket-priority')?.value || 'normal';
+
+  if (!subject || !message) {
+    alert('Preencha ao menos o assunto e a mensagem do foguete para salvar como modelo.');
+    return;
+  }
+
+  const title = prompt('Digite um título para identificar este modelo:', subject.substring(0, 40));
+  if (!title) return;
+
+  try {
+    const res = await apiFetch('/api/rockets/templates', {
+      method: 'POST',
+      body: JSON.stringify({ title, subject, message, message_type, priority })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(`Modelo "${title}" salvo com sucesso! Você pode reutilizá-lo sempre que precisar.`);
+    } else {
+      alert(data.error || 'Erro ao salvar modelo.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao salvar como modelo:', err);
+  }
+}
+
+async function deleteRocketTemplate(id) {
+  if (!confirm('Deseja excluir este modelo salvo?')) return;
+  try {
+    const res = await apiFetch(`/api/rockets/templates/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      await loadRocketTemplates();
+    } else {
+      alert(data.error || 'Erro ao excluir modelo.');
+    }
+  } catch (err) {
+    console.error('[FOGUETES] Erro ao excluir modelo:', err);
   }
 }
 

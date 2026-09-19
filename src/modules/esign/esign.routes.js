@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
@@ -411,7 +412,10 @@ esignRouter.post('/api/esign/public/:token/sign', (req, res) => {
       const chancelledHtml = generateChancelledHtml(r, signature_data, signature_type, signedAt, ip, geo, evidenceHash, verifyUrl);
 
       if (linkedClientId) {
-        const clientStorageDir = path.join(process.cwd(), 'storage', 'clients', String(linkedClientId));
+        const baseStorageDir = process.env.NODE_ENV === 'test'
+          ? path.join(os.tmpdir(), 'jaw-test-storage')
+          : path.join(process.cwd(), 'storage');
+        const clientStorageDir = path.join(baseStorageDir, 'clients', String(linkedClientId));
         fs.mkdirSync(clientStorageDir, { recursive: true });
 
         const safeDocType = (r.doc_type || 'documento').replace(/[^a-zA-Z0-9_-]/g, '_');

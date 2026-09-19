@@ -6,6 +6,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
@@ -272,7 +273,9 @@ blogRouter.delete('/api/admin/blog/posts/:id', requireAuth, (req, res) => {
 // Configuração de Armazenamento para Upload de Mídias do Blog (Imagens e Infográficos)
 const blogUploadStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const blogImgDir = path.join(process.cwd(), 'public', 'img', 'blog');
+    const blogImgDir = process.env.NODE_ENV === 'test'
+      ? path.join(os.tmpdir(), 'jaw-blog-uploads')
+      : path.join(process.cwd(), 'public', 'img', 'blog');
     if (!fs.existsSync(blogImgDir)) {
       fs.mkdirSync(blogImgDir, { recursive: true });
     }

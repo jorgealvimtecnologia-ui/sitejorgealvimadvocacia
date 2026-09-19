@@ -16,6 +16,7 @@ function getAuthHeaders() {
 
 async function apiFetch(url, options = {}) {
   const headers = {
+    'Content-Type': 'application/json',
     ...getAuthHeaders(),
     ...(options.headers || {})
   };

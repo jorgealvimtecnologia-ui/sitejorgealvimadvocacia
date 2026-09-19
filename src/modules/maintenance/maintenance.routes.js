@@ -21,7 +21,9 @@ import { logAudit } from '../../middleware/audit.js';
 
 export const maintenanceRouter = express.Router();
 
-const BACKUPS_DIR = path.join(ROOT_DIR, 'backups');
+const BACKUPS_DIR = process.env.NODE_ENV === 'test'
+  ? path.join(os.tmpdir(), 'jaw-test-backups')
+  : path.join(ROOT_DIR, 'backups');
 if (!fs.existsSync(BACKUPS_DIR)) {
   fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 }

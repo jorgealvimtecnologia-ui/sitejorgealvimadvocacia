@@ -221,6 +221,29 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rocket_saved_messages (
+    user_id TEXT NOT NULL,
+    rocket_id INTEGER NOT NULL,
+    saved_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, rocket_id),
+    FOREIGN KEY (rocket_id) REFERENCES rockets(id) ON DELETE CASCADE
+  );
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rocket_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    message_type TEXT NOT NULL DEFAULT 'execucao',
+    priority TEXT NOT NULL DEFAULT 'normal',
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_by TEXT,
+    created_at TEXT NOT NULL
+  );
+`);
+
 // NOTA: a tabela `access_permissions` e seu preenchimento são criados/geridos
 // pelo server.js (esquema atual com role_template + tab_*). Este módulo apenas
 // garante a existência do usuário mestre; as permissões são semeadas depois,

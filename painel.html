@@ -5398,11 +5398,40 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               Dispare ordens de trabalho, orientações estratégicas e avisos com protocolo sequencial e controle de ciência em tempo real.
             </p>
           </div>
-          <div class="flex items-center space-x-3">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <button onclick="openRocketTemplatesModal()" class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs sm:text-sm border border-slate-700 shadow-md transition-all flex items-center space-x-2 cursor-pointer">
+              <span>💾</span>
+              <span>Modelos Salvos</span>
+            </button>
+            <button onclick="openRocketUsersModal()" class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm border border-slate-700 shadow-md transition-all flex items-center space-x-2 cursor-pointer">
+              <span>👥</span>
+              <span>Controle de Usuários</span>
+            </button>
             <button onclick="openNewRocketModal()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 transition-all flex items-center space-x-2 cursor-pointer">
               <span>🚀</span>
               <span>Lançar Foguete</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Banner Personalizado do Usuário Autenticado -->
+        <div id="rocket-user-banner" class="bg-gradient-to-r from-amber-50 via-white to-amber-50/40 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white font-bold flex items-center justify-center text-lg shadow-sm">
+              👤
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-black text-slate-800 text-sm" id="rocket-active-username">Dr. Jorge Alvim</span>
+                <span id="rocket-active-role" class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold">Sócio Mestre</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5" id="rocket-active-desc">
+                Painel Pessoal de Despachos & Comunicação. Suas mensagens recebidas e ordens disparadas.
+              </p>
+            </div>
+          </div>
+          <div id="rocket-master-toggle-container" class="flex items-center space-x-2">
+            <!-- Botão de Auditoria Macro (exibido para o Mestre via JS) -->
           </div>
         </div>
 
@@ -5455,17 +5484,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             
             <!-- Sub-Abas / Caixas -->
             <div class="flex items-center space-x-2 overflow-x-auto pb-1">
-              <button id="rocket-box-btn-all" onclick="switchRocketBox('all')" class="px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-white shadow-sm transition-all cursor-pointer">
-                📂 Todos os Foguetes
-              </button>
-              <button id="rocket-box-btn-inbox" onclick="switchRocketBox('inbox')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
-                📥 Caixa de Entrada
+              <button id="rocket-box-btn-inbox" onclick="switchRocketBox('inbox')" class="px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-white shadow-sm transition-all cursor-pointer flex items-center space-x-1.5">
+                <span>📥 Caixa de Entrada</span>
+                <span id="rocket-badge-inbox" class="px-1.5 py-0.2 text-[10px] rounded-full bg-white text-amber-700 font-bold hidden">0</span>
               </button>
               <button id="rocket-box-btn-outbox" onclick="switchRocketBox('outbox')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
                 📤 Enviados por Mim
               </button>
+              <button id="rocket-box-btn-saved" onclick="switchRocketBox('saved')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
+                ⭐ Salvos
+              </button>
+              <button id="rocket-box-btn-all" onclick="switchRocketBox('all')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
+                📂 Meus Despachos
+              </button>
               <button id="rocket-box-btn-archived" onclick="switchRocketBox('archived')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all cursor-pointer">
                 📦 Arquivados
+              </button>
+              <button id="rocket-box-btn-global" onclick="toggleRocketGlobalScope()" class="hidden px-4 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-amber-300 hover:bg-slate-800 transition-all cursor-pointer border border-amber-500/40">
+                🌐 Visão Geral do Escritório (Mestre)
               </button>
             </div>
 
@@ -10888,6 +10924,20 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       <form id="rocket-new-form" onsubmit="handleCreateRocket(event)" class="space-y-4">
         
+        <!-- Remetente e Carregar Modelo -->
+        <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-slate-600">👤 Remetente:</span>
+            <span id="rocket-sender-display" class="font-extrabold text-navy-950">Dr. Jorge Alvim</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="openRocketTemplatesModal()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 underline flex items-center space-x-1 cursor-pointer">
+              <span>💾</span>
+              <span>Carregar Modelo Salvo...</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Destinatário (De -> Para) -->
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -10964,14 +11014,22 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
 
         <!-- Botões de Ação -->
-        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
-          <button type="button" onclick="closeNewRocketModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all">
-            Cancelar
-          </button>
-          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-black text-xs shadow-md transition-all flex items-center space-x-2">
-            <span>🚀</span>
-            <span>Disparar Foguete</span>
-          </button>
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+          <div>
+            <button type="button" onclick="saveCurrentRocketAsTemplate()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer">
+              <span>💾</span>
+              <span>Salvar como Modelo</span>
+            </button>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button type="button" onclick="closeNewRocketModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 hover:to-gold-600 text-white font-black text-xs shadow-md transition-all flex items-center space-x-2 cursor-pointer">
+              <span>🚀</span>
+              <span>Disparar Foguete</span>
+            </button>
+          </div>
         </div>
 
       </form>
@@ -11003,6 +11061,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
         <div class="flex items-center space-x-2">
+          <button id="rocket-view-save-btn" onclick="toggleSaveActiveRocket()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold flex items-center space-x-1 border border-amber-300 transition-colors" title="Salvar / Favoritar Mensagem">
+            <span id="rocket-view-save-icon">⭐</span>
+            <span id="rocket-view-save-text" class="hidden sm:inline">Salvar</span>
+          </button>
+          <button id="rocket-view-delete-btn" onclick="deleteActiveRocket()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center space-x-1 border border-rose-200 transition-colors" title="Excluir Despacho">
+            <span>🗑️</span>
+            <span class="hidden sm:inline">Excluir</span>
+          </button>
           <button onclick="printRocketSlip()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center space-x-1" title="Imprimir Comprovante">
             <span>🖨️</span>
             <span class="hidden sm:inline">Imprimir</span>
@@ -11060,6 +11126,149 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </form>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal 3: Controle de Usuários do Foguete -->
+  <div id="rocket-users-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-slate-900 text-amber-400 flex items-center justify-center font-bold text-xl shadow-md">
+            👥
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-navy-950 font-serif">Controle de Usuários do Foguete</h3>
+            <p class="text-xs text-slate-500">Gerencie membros da equipe com acesso ao envio e recebimento de despachos</p>
+          </div>
+        </div>
+        <button onclick="closeRocketUsersModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+          ✕
+        </button>
+      </div>
+
+      <!-- Formulário de Criação de Novo Usuário -->
+      <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/60 space-y-3">
+        <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center space-x-1">
+          <span>➕</span>
+          <span>Adicionar Novo Usuário ao Canal</span>
+        </h4>
+        <form id="rocket-new-user-form" onsubmit="handleCreateRocketUser(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Nome Completo *</label>
+            <input type="text" id="ruser-name" required placeholder="Ex: Dr. Lucas Silveira" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Usuário / Login *</label>
+            <input type="text" id="ruser-username" required placeholder="Ex: lucas.silveira" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Função / Perfil</label>
+            <select id="ruser-role" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500">
+              <option value="admin">Advogado / Operador</option>
+              <option value="estagiario">Estagiário de Direito</option>
+              <option value="secretaria">Secretária / Recepção</option>
+              <option value="colaborador">Colaborador / RH</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Senha Inicial *</label>
+            <div class="flex gap-2">
+              <input type="password" id="ruser-password" required placeholder="Mín. 8 caracteres" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500" />
+              <button type="submit" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm transition-all whitespace-nowrap cursor-pointer">
+                + Criar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabela de Usuários Cadastrados -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+          <span>Membros com Acesso ao Foguete</span>
+          <span id="rusers-count-badge" class="text-[11px] text-slate-400 font-normal">0 usuários</span>
+        </h4>
+        <div class="overflow-x-auto rounded-2xl border border-slate-200">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                <th class="px-4 py-3">Membro</th>
+                <th class="px-4 py-3">Usuário / Identificador</th>
+                <th class="px-4 py-3">Papel</th>
+                <th class="px-4 py-3 text-center">Enviados</th>
+                <th class="px-4 py-3 text-center">Recebidos</th>
+                <th class="px-4 py-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="rusers-table-body" class="divide-y divide-slate-100">
+              <tr><td colspan="6" class="text-center py-6 text-slate-400">Carregando membros...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Modelos de Mensagens Salvas (Templates) -->
+  <div id="rocket-templates-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-5 sm:p-8 shadow-2xl space-y-6 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xl shadow-md">
+            💾
+          </div>
+          <div>
+            <h3 class="text-lg font-black text-navy-950 font-serif">Modelos de Mensagens Salvas</h3>
+            <p class="text-xs text-slate-500">Salve despachos e instruções frequentes para disparar com 1 clique</p>
+          </div>
+        </div>
+        <button onclick="closeRocketTemplatesModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+          ✕
+        </button>
+      </div>
+
+      <!-- Criar Novo Modelo -->
+      <form id="rocket-new-tpl-form" onsubmit="handleCreateRocketTemplate(event)" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1">
+          <span>➕</span>
+          <span>Salvar Novo Modelo</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Título do Modelo *</label>
+            <input type="text" id="rtpl-title" required placeholder="Ex: Urgência: Elaboração de Contestação" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Finalidade</label>
+            <select id="rtpl-type" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500">
+              <option value="execucao">🎯 Execução</option>
+              <option value="conhecimento">👁️ Conhecimento</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Assunto do Despacho *</label>
+          <input type="text" id="rtpl-subject" required placeholder="Ex: Elaborar manifestação urgente nos autos" class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500" />
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Texto Padrão da Mensagem *</label>
+          <textarea id="rtpl-message" rows="3" required placeholder="Instruções e texto padrão deste modelo..." class="w-full p-2.5 text-xs rounded-xl bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="px-4 py-2 rounded-xl bg-navy-950 hover:bg-gold-600 text-white font-bold text-xs shadow-sm transition-all cursor-pointer">
+            Salvar Modelo
+          </button>
+        </div>
+      </form>
+
+      <!-- Lista de Modelos Existentes -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Modelos Disponíveis</h4>
+        <div id="rtpl-cards-container" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+          <!-- Carregado via JS -->
+        </div>
+      </div>
     </div>
   </div>
 

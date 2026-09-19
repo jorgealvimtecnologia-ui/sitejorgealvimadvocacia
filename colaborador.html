@@ -325,6 +325,11 @@
           <span>📊</span>
           <span>Ficha Financeira Anual</span>
         </button>
+        <button type="button" onclick="switchEmployeeTab('foguetes'); loadEmployeeRockets();" id="tab-btn-foguetes" class="tab-btn-emp px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 text-slate-600 hover:text-navy-950 hover:bg-slate-100 cursor-pointer">
+          <span>🚀</span>
+          <span>Despachos & Foguetes</span>
+          <span id="emp-rockets-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">0</span>
+        </button>
       </div>
 
       <!-- ================= CONTEÚDO DAS SUB-ABAS ================= -->
@@ -643,6 +648,51 @@
         </div>
       </div>
 
+      <!-- SUB-ABA 8: DESPACHOS & FOGUETES -->
+      <div id="subtab-foguetes" class="subtab-emp-content hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold mb-2">
+                <span>🚀</span> Canal Ágil de Comunicação Interna
+              </div>
+              <h2 class="font-serif text-lg sm:text-xl font-bold text-navy-950">Meus Despachos & Foguetes</h2>
+              <p class="text-xs text-slate-500">Comunicações diretas, tarefas prioritárias e despachos do escritório.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openEmployeeNewRocketModal()" class="px-4 py-2.5 text-xs font-bold bg-navy-950 hover:bg-navy-900 text-white rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <span>🚀</span>
+                <span>Novo Despacho</span>
+              </button>
+              <button type="button" onclick="loadEmployeeRockets()" class="p-2.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all cursor-pointer" title="Atualizar">
+                🔄
+              </button>
+            </div>
+          </div>
+
+          <!-- Filtros Rápidos -->
+          <div class="flex items-center gap-2 pt-4">
+            <button type="button" onclick="filterEmpRockets('inbox')" id="emp-filt-inbox" class="emp-rock-filt px-3 py-1.5 rounded-lg text-xs font-bold bg-navy-950 text-white transition-all cursor-pointer">
+              📥 Recebidos
+            </button>
+            <button type="button" onclick="filterEmpRockets('outbox')" id="emp-filt-outbox" class="emp-rock-filt px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+              📤 Enviados
+            </button>
+            <button type="button" onclick="filterEmpRockets('saved')" id="emp-filt-saved" class="emp-rock-filt px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+              ⭐ Salvos
+            </button>
+          </div>
+
+          <!-- Lista de Despachos -->
+          <div id="emp-rockets-list" class="space-y-3 pt-4">
+            <div class="text-center py-12 text-slate-400">
+              <span class="text-3xl">🚀</span>
+              <p class="text-xs mt-2">Carregando seus despachos...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </main>
@@ -732,6 +782,120 @@
           <button type="submit" class="px-5 py-2.5 bg-gold-600 hover:bg-gold-500 text-white text-xs font-bold uppercase rounded-xl shadow-xs cursor-pointer">Assinar Eletronicamente</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL NOVO FOGUETE DO COLABORADOR ================= -->
+  <div id="modal-emp-new-rocket" class="fixed inset-0 z-[999999] bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 class="font-serif text-lg font-bold text-navy-950 flex items-center space-x-2">
+          <span>🚀</span>
+          <span>Disparar Despacho / Foguete</span>
+        </h3>
+        <button type="button" onclick="closeEmployeeNewRocketModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-emp-new-rocket" onsubmit="handleEmployeeSendRocket(event)" class="space-y-4 pt-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Título do Despacho *</label>
+          <input type="text" id="emp-rock-title" required placeholder="Ex: Solicitação de Documento / Protocolo Urgente" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-gold-200 outline-none font-medium">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Destinatário *</label>
+            <select id="emp-rock-recipient" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-gold-200 outline-none font-medium bg-white">
+              <option value="">Carregando destinatários...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Prioridade</label>
+            <select id="emp-rock-priority" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-gold-200 outline-none font-medium bg-white">
+              <option value="normal">🟢 Normal</option>
+              <option value="alta">🟡 Alta</option>
+              <option value="urgente">🔴 Urgente (Alerta Máximo)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Mensagem / Instruções do Despacho *</label>
+          <textarea id="emp-rock-message" rows="4" required placeholder="Descreva claramente o despacho, providência ou solicitação..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-gold-200 outline-none font-sans"></textarea>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeEmployeeNewRocketModal()" class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">Cancelar</button>
+          <button type="submit" id="btn-emp-submit-rocket" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold uppercase rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer">
+            <span>🚀</span>
+            <span>Disparar Agora</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL VISUALIZAÇÃO DE FOGUETE DO COLABORADOR ================= -->
+  <div id="modal-emp-view-rocket" class="fixed inset-0 z-[999999] bg-navy-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-slate-200 shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🚀</span>
+          <div>
+            <h3 id="emp-view-title" class="font-serif text-lg font-bold text-navy-950">Detalhes do Despacho</h3>
+            <p id="emp-view-meta" class="text-xs text-slate-500">-</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeEmployeeViewRocketModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 py-4 space-y-4">
+        <!-- Corpo da Mensagem -->
+        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+          <div class="flex items-center justify-between mb-2">
+            <span id="emp-view-badge" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700">Normal</span>
+            <span id="emp-view-saved-btn" class="cursor-pointer text-base" title="Salvar/Favoritar">⭐</span>
+          </div>
+          <p id="emp-view-content" class="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed font-sans">-</p>
+        </div>
+
+        <!-- Histórico de Respostas e Ciências -->
+        <div>
+          <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Histórico de Tramitação & Respostas</h4>
+          <div id="emp-view-replies-list" class="space-y-2">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Ações do Colaborador: Dar Ciência e Responder -->
+        <div class="pt-2 border-t border-slate-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <button type="button" id="btn-emp-give-ciente" onclick="handleEmpGiveCiente()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs">
+              <span>👁️</span>
+              <span>Acusar Recebimento / Dar Ciência</span>
+            </button>
+            <span id="emp-ciente-status" class="text-xs text-emerald-700 font-bold"></span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Enviar Resposta / Esclarecimento</label>
+            <div class="flex gap-2">
+              <input type="text" id="emp-reply-input" placeholder="Digite sua resposta..." class="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-gold-200 outline-none">
+              <button type="button" onclick="handleEmpSendReply()" class="px-4 py-2 bg-navy-950 hover:bg-navy-900 text-white rounded-xl text-xs font-bold cursor-pointer">
+                Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -953,6 +1117,7 @@
         renderVacationsAnd13th(data.vacations, data.thirteenth);
         renderExams(data.exams);
         await loadAnnualFinancialReport(data.employee.id, 2026);
+        await loadEmployeeRocketsBadge();
 
         // Header actions
         document.getElementById('auth-header-actions').innerHTML = `
@@ -1337,6 +1502,390 @@
       const names = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       const mIdx = parseInt(month, 10) - 1;
       return `${names[mIdx] || month} de ${year}`;
+    }
+
+    // =========================================================================
+    // MÓDULO DE FOGUETES & DESPACHOS DO COLABORADOR
+    // =========================================================================
+    let currentEmpRocketBox = 'inbox';
+    let currentEmpActiveRocket = null;
+
+    async function loadEmployeeRocketsBadge() {
+      if (!employeeToken) return;
+      try {
+        const res = await fetch('/api/rockets/stats', {
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('emp-rockets-badge');
+        if (badge) {
+          const count = data.myPendingAcknowledge || data.totalActive || 0;
+          if (count > 0) {
+            badge.innerText = count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao atualizar badge de foguetes:', err);
+      }
+    }
+
+    function filterEmpRockets(box) {
+      currentEmpRocketBox = box;
+      document.querySelectorAll('.emp-rock-filt').forEach(btn => {
+        btn.classList.remove('bg-navy-950', 'text-white', 'font-bold');
+        btn.classList.add('text-slate-600', 'font-medium');
+      });
+      const activeBtn = document.getElementById(`emp-filt-${box}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-navy-950', 'text-white', 'font-bold');
+        activeBtn.classList.remove('text-slate-600', 'font-medium');
+      }
+      loadEmployeeRockets();
+    }
+
+    async function loadEmployeeRockets() {
+      const container = document.getElementById('emp-rockets-list');
+      if (!container) return;
+      container.innerHTML = `
+        <div class="text-center py-12 text-slate-400">
+          <span class="text-3xl animate-bounce inline-block">🚀</span>
+          <p class="text-xs mt-2">Carregando despachos...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`/api/rockets?box=${currentEmpRocketBox}`, {
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          }
+        });
+        if (!res.ok) throw new Error('Não foi possível carregar os despachos.');
+        const rockets = await res.json();
+
+        if (!rockets || rockets.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <span class="text-3xl">📭</span>
+              <p class="text-xs text-slate-500 mt-2 font-medium">Nenhum despacho encontrado nesta pasta.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = rockets.map(r => {
+          const isUrgent = r.priority === 'urgente';
+          const isAlta = r.priority === 'alta';
+          const priorityClass = isUrgent
+            ? 'bg-rose-100 text-rose-800 border-rose-200'
+            : (isAlta ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-slate-100 text-slate-700 border-slate-200');
+          const priorityLabel = isUrgent ? '🔴 Urgente' : (isAlta ? '🟡 Alta' : '🟢 Normal');
+          const isSaved = !!r.is_saved;
+
+          return `
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 hover:border-slate-300 transition-all shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="space-y-1.5 flex-1 cursor-pointer" onclick="openEmpRocketDetails(${r.id})">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${priorityClass}">${priorityLabel}</span>
+                  <span class="text-xs text-slate-400 font-mono">#JA-FOG-${String(r.id).padStart(4, '0')}</span>
+                  <span class="text-xs text-slate-400">• ${new Date(r.created_at).toLocaleString('pt-BR')}</span>
+                  ${r.status === 'concluido' ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">🎯 Concluído</span>' : ''}
+                </div>
+                <h4 class="text-sm sm:text-base font-bold text-navy-950">${escapeHtml(r.title)}</h4>
+                <p class="text-xs text-slate-600 line-clamp-2">${escapeHtml(r.message)}</p>
+                <div class="text-[11px] text-slate-500 flex items-center gap-3 pt-1">
+                  <span>De: <strong class="text-navy-900">${escapeHtml(r.sender_name || 'Diretoria')}</strong></span>
+                  <span>Para: <strong class="text-navy-900">${escapeHtml(r.recipient_name || 'Toda a Equipe')}</strong></span>
+                  ${r.has_acknowledged ? '<span class="text-emerald-600 font-bold">✓ Ciência confirmada</span>' : '<span class="text-amber-600 font-bold">⚠️ Aguardando sua ciência</span>'}
+                </div>
+              </div>
+              <div class="flex items-center gap-2 sm:self-center border-t sm:border-t-0 pt-3 sm:pt-0">
+                <button type="button" onclick="toggleEmpRocketSave(${r.id}, ${isSaved})" class="p-2 rounded-xl text-sm border border-slate-200 hover:bg-slate-100 transition-all cursor-pointer" title="${isSaved ? 'Remover dos Salvos' : 'Salvar Despacho'}">
+                  ${isSaved ? '⭐' : '☆'}
+                </button>
+                ${!r.has_acknowledged ? `
+                  <button type="button" onclick="quickEmpGiveCiente(${r.id})" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer">
+                    <span>👁️</span>
+                    <span>Ciente</span>
+                  </button>
+                ` : ''}
+                <button type="button" onclick="openEmpRocketDetails(${r.id})" class="px-3 py-2 bg-navy-950 hover:bg-navy-900 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer">
+                  Abrir
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        loadEmployeeRocketsBadge();
+      } catch (err) {
+        container.innerHTML = `
+          <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs">
+            Erro ao carregar despachos: ${err.message}
+          </div>
+        `;
+      }
+    }
+
+    async function quickEmpGiveCiente(id) {
+      try {
+        const res = await fetch(`/api/rockets/${id}/reply`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          },
+          body: JSON.stringify({ reply_type: 'ciente', message: 'Ciente do despacho.' })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Erro ao acusar recebimento.');
+        loadEmployeeRockets();
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      }
+    }
+
+    async function toggleEmpRocketSave(id, currentSaved) {
+      try {
+        const res = await fetch(`/api/rockets/${id}/save`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          }
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Erro ao atualizar favorito.');
+        loadEmployeeRockets();
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      }
+    }
+
+    async function openEmpRocketDetails(id) {
+      try {
+        const res = await fetch(`/api/rockets/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          }
+        });
+        if (!res.ok) throw new Error('Não foi possível carregar os detalhes do despacho.');
+        const r = await res.json();
+        currentEmpActiveRocket = r;
+
+        document.getElementById('emp-view-title').innerText = r.title;
+        document.getElementById('emp-view-meta').innerText = `De ${r.sender_name} para ${r.recipient_name} em ${new Date(r.created_at).toLocaleString('pt-BR')}`;
+        document.getElementById('emp-view-content').innerText = r.message;
+
+        const isUrgent = r.priority === 'urgente';
+        const isAlta = r.priority === 'alta';
+        const badgeEl = document.getElementById('emp-view-badge');
+        badgeEl.className = isUrgent
+          ? 'px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800'
+          : (isAlta ? 'px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800' : 'px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700');
+        badgeEl.innerText = isUrgent ? '🔴 Urgente' : (isAlta ? '🟡 Alta' : '🟢 Normal');
+
+        const savedBtn = document.getElementById('emp-view-saved-btn');
+        savedBtn.innerText = r.is_saved ? '⭐ Salvo' : '☆ Salvar';
+        savedBtn.onclick = async () => {
+          await toggleEmpRocketSave(r.id, r.is_saved);
+          openEmpRocketDetails(r.id);
+        };
+
+        const cienteBtn = document.getElementById('btn-emp-give-ciente');
+        const cienteStatus = document.getElementById('emp-ciente-status');
+        if (r.has_acknowledged) {
+          cienteBtn.classList.add('hidden');
+          cienteStatus.innerText = '✓ Ciência confirmada por você';
+        } else {
+          cienteBtn.classList.remove('hidden');
+          cienteStatus.innerText = '';
+        }
+
+        const repliesContainer = document.getElementById('emp-view-replies-list');
+        if (!r.replies || r.replies.length === 0) {
+          repliesContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Nenhuma resposta registrada ainda.</p>';
+        } else {
+          repliesContainer.innerHTML = r.replies.map(rep => `
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs">
+              <div class="flex items-center justify-between font-semibold text-navy-950 mb-1">
+                <span>${escapeHtml(rep.author_name)} ${rep.reply_type === 'ciente' ? '<span class="text-emerald-600 font-bold">(Ciência)</span>' : ''}</span>
+                <span class="text-[10px] text-slate-400 font-normal">${new Date(rep.created_at).toLocaleString('pt-BR')}</span>
+              </div>
+              <p class="text-slate-700 font-sans whitespace-pre-wrap">${escapeHtml(rep.message)}</p>
+            </div>
+          `).join('');
+        }
+
+        document.getElementById('modal-emp-view-rocket').classList.remove('hidden');
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      }
+    }
+
+    function closeEmployeeViewRocketModal() {
+      document.getElementById('modal-emp-view-rocket').classList.add('hidden');
+      currentEmpActiveRocket = null;
+    }
+
+    async function handleEmpGiveCiente() {
+      if (!currentEmpActiveRocket) return;
+      await quickEmpGiveCiente(currentEmpActiveRocket.id);
+      openEmpRocketDetails(currentEmpActiveRocket.id);
+    }
+
+    async function handleEmpSendReply() {
+      if (!currentEmpActiveRocket) return;
+      const input = document.getElementById('emp-reply-input');
+      const text = (input.value || '').trim();
+      if (!text) return;
+
+      try {
+        const res = await fetch(`/api/rockets/${currentEmpActiveRocket.id}/reply`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Erro ao enviar resposta.');
+        input.value = '';
+        openEmpRocketDetails(currentEmpActiveRocket.id);
+        loadEmployeeRockets();
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      }
+    }
+
+    async function openEmployeeNewRocketModal() {
+      try {
+        const res = await fetch('/api/rockets/recipients', {
+          headers: {
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          }
+        });
+        if (!res.ok) throw new Error('Não foi possível carregar os destinatários.');
+        const data = await res.json();
+        const select = document.getElementById('emp-rock-recipient');
+        select.innerHTML = '<option value="">Selecione quem receberá o despacho...</option>';
+        select.innerHTML += '<option value="all">🌐 Toda a Equipe do Escritório</option>';
+
+        if (data.users && data.users.length) {
+          const grp = document.createElement('optgroup');
+          grp.label = 'Diretoria & Advogados';
+          data.users.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = `user:${u.id}:${u.name}`;
+            opt.textContent = `${u.name} (${u.role || 'Advogado'})`;
+            grp.appendChild(opt);
+          });
+          select.appendChild(grp);
+        }
+
+        if (data.employees && data.employees.length) {
+          const grp = document.createElement('optgroup');
+          grp.label = 'Colaboradores & Equipe';
+          data.employees.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = `emp:${e.id}:${e.name}`;
+            opt.textContent = `${e.name} (${e.position})`;
+            grp.appendChild(opt);
+          });
+          select.appendChild(grp);
+        }
+
+        document.getElementById('modal-emp-new-rocket').classList.remove('hidden');
+      } catch (err) {
+        alert('Erro ao abrir novo despacho: ' + err.message);
+      }
+    }
+
+    function closeEmployeeNewRocketModal() {
+      document.getElementById('modal-emp-new-rocket').classList.add('hidden');
+      const form = document.getElementById('form-emp-new-rocket');
+      if (form) form.reset();
+    }
+
+    async function handleEmployeeSendRocket(e) {
+      e.preventDefault();
+      const title = document.getElementById('emp-rock-title').value.trim();
+      const rawRecip = document.getElementById('emp-rock-recipient').value;
+      const priority = document.getElementById('emp-rock-priority').value;
+      const message = document.getElementById('emp-rock-message').value.trim();
+
+      if (!title || !rawRecip || !message) {
+        alert('Preencha todos os campos obrigatórios.');
+        return;
+      }
+
+      let recipient_type = 'individual';
+      let recipient_id = null;
+      let recipient_name = 'Destinatário';
+
+      if (rawRecip === 'all') {
+        recipient_type = 'all';
+        recipient_name = 'Toda a Equipe';
+      } else {
+        const parts = rawRecip.split(':');
+        recipient_id = `${parts[0] === 'user' ? 'USR' : 'EMP'}-${parts[1]}`;
+        recipient_name = parts[2] || 'Destinatário';
+      }
+
+      const btn = document.getElementById('btn-emp-submit-rocket');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/rockets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${employeeToken}`,
+            'x-employee-token': employeeToken
+          },
+          body: JSON.stringify({
+            title,
+            message,
+            priority,
+            recipient_type,
+            recipient_id,
+            recipient_name
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Erro ao disparar despacho.');
+
+        alert('🚀 Despacho disparado com sucesso!');
+        closeEmployeeNewRocketModal();
+        currentEmpRocketBox = 'outbox';
+        filterEmpRockets('outbox');
+      } catch (err) {
+        alert('Erro: ' + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
   </script>
   <script defer src="/js/enhance-ui.js"></script>

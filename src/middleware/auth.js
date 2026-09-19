@@ -92,7 +92,23 @@ export function requireAuth(req, res, next) {
     ? authHeader.substring(7)
     : (req.query.token || req.headers['x-access-token']);
 
-  const session = validateToken(token);
+  let session = validateToken(token);
+  if (!session) {
+    const empSession = validateEmployeeToken(token);
+    if (empSession) {
+      session = {
+        userId: `EMP-${empSession.employeeId || empSession.id}`,
+        id: `EMP-${empSession.employeeId || empSession.id}`,
+        rawId: empSession.employeeId || empSession.id,
+        username: empSession.cpf,
+        name: empSession.fullName || empSession.name,
+        role: 'colaborador',
+        isEmployee: true
+      };
+      req.employee = empSession;
+    }
+  }
+
   if (!session) {
     return res.status(401).json({ error: 'Acesso não autorizado. Faça login no painel.' });
   }
