@@ -904,7 +904,7 @@
   <!-- ================= JAVASCRIPT CONTROLADOR DO PORTAL ================= -->
   <script>
     let currentEmployeeData = null;
-    let employeeToken = localStorage.getItem('ja_employee_token') || '';
+    let employeeToken = localStorage.getItem('ja_employee_token') || localStorage.getItem('employeeToken') || localStorage.getItem('ja_token') || localStorage.getItem('token') || '';
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
@@ -1106,7 +1106,7 @@
         pwd.value = '';
         pwd.type = 'password';
       }
-      if (!localStorage.getItem('ja_employee_token')) {
+      if (!localStorage.getItem('ja_employee_token') && !localStorage.getItem('employeeToken') && !localStorage.getItem('ja_token') && !localStorage.getItem('token')) {
         const idInput = document.getElementById('login-identifier');
         if (idInput) idInput.value = '';
         const form = document.getElementById('form-employee-login');

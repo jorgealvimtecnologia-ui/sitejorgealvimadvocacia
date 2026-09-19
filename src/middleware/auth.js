@@ -239,6 +239,22 @@ export function requireEmployeeAuth(req, res, next) {
   const adminSession = validateToken(token);
   if (adminSession) {
     req.user = adminSession;
+    if (!req.employee) {
+      try {
+        const emp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${(adminSession.name || '').toLowerCase()}%`, adminSession.id);
+        if (emp) {
+          req.employee = {
+            employeeId: emp.id,
+            id: emp.id,
+            fullName: emp.name,
+            name: emp.name,
+            cpf: emp.cpf,
+            position: emp.position,
+            contractType: emp.contract_type
+          };
+        }
+      } catch (e) {}
+    }
     return next();
   }
 

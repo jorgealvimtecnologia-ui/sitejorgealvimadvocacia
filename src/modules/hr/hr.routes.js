@@ -1048,9 +1048,16 @@ hrRouter.post('/api/hr/portal/auth/google', loginRateLimit, handleEmployeeGoogle
  */
 hrRouter.get('/api/hr/employee/me', requireEmployeeAuth, (req, res) => {
   try {
-    const employeeId = req.employee ? req.employee.employeeId : (req.query.employee_id || 'EMP-2026-0001');
+    let employeeId = req.employee ? (req.employee.employeeId || req.employee.id) : null;
+    if (!employeeId && req.user) {
+      try {
+        const emp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${(req.user.name || '').toLowerCase()}%`, req.user.id);
+        if (emp) employeeId = emp.id;
+      } catch (e) {}
+    }
+    if (!employeeId) employeeId = req.query.employee_id || 'EMP-2026-0001';
 
-    const employee = db.prepare(`
+    let employee = db.prepare(`
       SELECT *, 
         name as full_name, 
         pis_pasep as pis_number, 
@@ -1059,6 +1066,21 @@ hrRouter.get('/api/hr/employee/me', requireEmployeeAuth, (req, res) => {
       FROM hr_employees 
       WHERE id = ?
     `).get(employeeId);
+
+    if (!employee && req.user) {
+      try {
+        employee = db.prepare(`
+          SELECT *, 
+            name as full_name, 
+            pis_pasep as pis_number, 
+            vt_daily_value as vt_daily_amount, 
+            va_monthly_value as va_monthly_amount 
+          FROM hr_employees 
+          WHERE LOWER(name) LIKE ? OR id = ?
+        `).get(`%${(req.user.name || '').toLowerCase()}%`, req.user.id);
+        if (employee) employeeId = employee.id;
+      } catch (e) {}
+    }
 
     let activeEmp = employee;
     let queryEmpId = employeeId;

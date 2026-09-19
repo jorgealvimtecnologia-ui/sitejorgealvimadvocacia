@@ -167,4 +167,21 @@ describe('Entrada Unificada (Identity-First Login)', () => {
     assert.equal(res.body.employee.name, 'Carlos Motorista Teste');
   });
 
+  it('9. Acesso a /api/hr/employee/me usando o token gerado pelo login unificado -> retorna dados pessoais, contratos e ponto', async () => {
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ identifier: 'carlos.motorista.test', password: 'carlos123' });
+
+    assert.equal(loginRes.status, 200);
+    const token = loginRes.body.employeeToken || loginRes.body.token;
+
+    const meRes = await request(app)
+      .get('/api/hr/employee/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(meRes.status, 200);
+    assert.equal(meRes.body.employee.name, 'Carlos Motorista Teste');
+    assert.equal(meRes.body.employee.position, 'Motorista');
+  });
+
 });
