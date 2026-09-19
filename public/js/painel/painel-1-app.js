@@ -642,7 +642,50 @@
           window.clearUnsavedChanges(currentTab);
         }
       }
+
+      if (tab === 'colaborador') {
+        window.location.href = '/colaborador';
+        return;
+      }
+
+      // Validação de Permissão RBAC antes de abrir a aba
+      if (window.currentUserPermissions && !window.currentUserPermissions.is_master) {
+        const p = window.currentUserPermissions.permissions || {};
+        const isAllowed = (
+          (tab === 'leads' && p.tab_leads === 1) ||
+          (tab === 'clients' && p.tab_clients === 1) ||
+          (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
+          (tab === 'calendar' && p.tab_calendar === 1) ||
+          (tab === 'publications' && p.tab_publications === 1) ||
+          (tab === 'docs' && p.tab_lawsuits === 1) ||
+          (tab === 'finance' && p.tab_financial === 1) ||
+          (tab === 'nfse' && p.tab_financial === 1) ||
+          (tab === 'judicial' && p.tab_radar === 1) ||
+          (tab === 'offices' && p.tab_offices === 1) ||
+          (tab === 'drive' && p.tab_drive === 1) ||
+          (tab === 'users' && p.tab_users === 1) ||
+          (tab === 'hr' && p.tab_hr === 1) ||
+          (tab === 'rockets') ||
+          (['blog', 'site-boxes', 'faq', 'lgpd', 'notifications', 'meta-ads'].includes(tab) && p.tab_settings === 1) ||
+          (tab === 'audit' && p.tab_users === 1) ||
+          (tab === 'maintenance' && p.tab_users === 1)
+        );
+        if (!isAllowed) {
+          console.warn(`[RBAC] Acesso restrito à aba: ${tab}`);
+          const fallback = (p.tab_calendar === 1) ? 'calendar' : ((p.tab_leads === 1) ? 'leads' : 'rockets');
+          if (tab !== fallback) {
+            return switchTab(fallback);
+          }
+          return;
+        }
+      }
+
       window._currentActiveTab = tab;
+
+      const quickSel = document.getElementById('global-tab-quick-select');
+      if (quickSel && quickSel.value !== tab) {
+        quickSel.value = tab;
+      }
 
       const tabLeads = document.getElementById('tab-content-leads');
       const tabClients = document.getElementById('tab-content-clients');
@@ -864,6 +907,120 @@
       renderTabChart(tab);
     }
 
+    // ================= CONTROLE DE ACESSO VISUAL POR PERMISSÕES (RBAC) =================
+    async function loadAndApplyUserPermissions() {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/access-control/my-permissions', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !data.success) return;
+
+        window.currentUserPermissions = data;
+        applyPermissionsToUI(data);
+      } catch (err) {
+        console.warn('[RBAC] Erro ao carregar permissões do usuário:', err);
+      }
+    }
+
+    function applyPermissionsToUI(data) {
+      if (!data) return;
+      const isMaster = data.is_master || false;
+      const perms = data.permissions || {};
+
+      const TAB_RULES = {
+        'leads': isMaster || perms.tab_leads === 1,
+        'clients': isMaster || perms.tab_clients === 1,
+        'lawsuits': isMaster || perms.tab_lawsuits === 1,
+        'calendar': isMaster || perms.tab_calendar === 1,
+        'publications': isMaster || perms.tab_publications === 1,
+        'docs': isMaster || perms.tab_lawsuits === 1,
+        'finance': isMaster || perms.tab_financial === 1,
+        'nfse': isMaster || perms.tab_financial === 1,
+        'blog': isMaster || perms.tab_settings === 1,
+        'site-boxes-top': isMaster || perms.tab_settings === 1,
+        'faq-top': isMaster || perms.tab_settings === 1,
+        'audit': isMaster || perms.tab_users === 1,
+        'pre-clients': isMaster || perms.tab_clients === 1,
+        'judicial': isMaster || perms.tab_radar === 1,
+        'offices': isMaster || perms.tab_offices === 1,
+        'drive': isMaster || perms.tab_drive === 1,
+        'users': isMaster || perms.tab_users === 1,
+        'hr': isMaster || perms.tab_hr === 1,
+        'rockets': true,
+        'colaborador': isMaster || perms.tab_colaborador === 1,
+        'dashboard': isMaster || perms.tab_lawsuits === 1 || perms.tab_clients === 1 || perms.tab_financial === 1,
+        'notifications': isMaster || perms.tab_settings === 1,
+        'esign': isMaster || perms.tab_financial === 1,
+        'lgpd': isMaster || perms.tab_settings === 1,
+        'admin-requests': isMaster || perms.tab_lawsuits === 1,
+        'maintenance': isMaster || perms.tab_users === 1,
+        'meta-ads': isMaster || perms.tab_settings === 1,
+        'site-boxes': isMaster || perms.tab_settings === 1,
+        'faq': isMaster || perms.tab_settings === 1
+      };
+
+      // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
+      Object.keys(TAB_RULES).forEach(tabKey => {
+        const btn = document.getElementById('tab-btn-' + tabKey);
+        const allowed = TAB_RULES[tabKey];
+        if (btn) {
+          if (allowed) {
+            btn.classList.remove('!hidden');
+            btn.style.display = '';
+          } else {
+            btn.classList.add('!hidden');
+            btn.style.display = 'none';
+          }
+        }
+      });
+
+      // 2. Filtra o dropdown rápido (#global-tab-quick-select)
+      const selectEl = document.getElementById('global-tab-quick-select');
+      if (selectEl) {
+        Array.from(selectEl.options).forEach(opt => {
+          if (!opt.value) return;
+          if (opt.value === 'colaborador') {
+            const allowed = isMaster || perms.tab_colaborador === 1;
+            opt.hidden = !allowed;
+            opt.disabled = !allowed;
+            opt.style.display = allowed ? '' : 'none';
+            return;
+          }
+          const allowed = TAB_RULES[opt.value];
+          if (allowed !== undefined) {
+            opt.hidden = !allowed;
+            opt.disabled = !allowed;
+            opt.style.display = allowed ? '' : 'none';
+          }
+        });
+      }
+
+      // 3. Se a aba atual não for permitida ou não inicializada, ativa a aba apropriada
+      const current = window._currentActiveTab;
+      if (!current || !TAB_RULES[current]) {
+        let targetTab = null;
+        if (TAB_RULES.clients) targetTab = 'clients';
+        else if (TAB_RULES.calendar) targetTab = 'calendar';
+        else if (TAB_RULES.rockets) targetTab = 'rockets';
+        else if (TAB_RULES.leads) targetTab = 'leads';
+        else if (TAB_RULES.lawsuits) targetTab = 'lawsuits';
+        else {
+          const keys = Object.keys(TAB_RULES).filter(k => TAB_RULES[k]);
+          if (keys.length > 0) targetTab = keys[0];
+        }
+        if (targetTab) {
+          switchTab(targetTab);
+        }
+      }
+    }
+    window.loadAndApplyUserPermissions = loadAndApplyUserPermissions;
+    window.applyPermissionsToUI = applyPermissionsToUI;
+
     // 1. Autenticação & Inicialização
     async function checkAuth() {
       const token = getToken();
@@ -877,13 +1034,18 @@
         if (res.ok) {
           const data = await res.json();
           showPanelScreen(data.user);
-          loadLeads(); // popula o badge "Atendimentos" já na carga inicial
-          loadClients();
-          loadLawsuits();
-          loadOffices();
-          loadDriveFiles();
-          loadCalendarSummary();
-          loadPublicationsStats();
+          await loadAndApplyUserPermissions();
+
+          // Popula apenas dados dos módulos autorizados
+          const p = window.currentUserPermissions?.permissions || {};
+          const isM = window.currentUserPermissions?.is_master;
+          if (isM || p.tab_leads === 1) loadLeads();
+          if (isM || p.tab_clients === 1) loadClients();
+          if (isM || p.tab_lawsuits === 1) loadLawsuits();
+          if (isM || p.tab_offices === 1) loadOffices();
+          if (isM || p.tab_drive === 1) loadDriveFiles();
+          if (isM || p.tab_calendar === 1) loadCalendarSummary();
+          if (isM || p.tab_publications === 1) loadPublicationsStats();
         } else {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
@@ -948,6 +1110,19 @@
       document.documentElement.classList.add('has-admin-session');
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
+
+      // Se for perfil operacional restrito (motorista / colaborador), esconde preventivamente a aba de clientes
+      const role = user ? (user.role || '').toLowerCase() : '';
+      if (role === 'motorista' || role === 'colaborador') {
+        const tabClients = document.getElementById('tab-content-clients');
+        if (tabClients) tabClients.classList.add('hidden');
+        const btnClients = document.getElementById('tab-btn-clients');
+        if (btnClients) {
+          btnClients.classList.add('!hidden');
+          btnClients.style.display = 'none';
+        }
+      }
+
       const form = document.getElementById('login-form');
       if (form) form.reset();
       const pwd = document.getElementById('login-password');
@@ -1009,14 +1184,19 @@
             return;
           }
           showPanelScreen(data.user);
-          loadLeads(); // popula o badge "Atendimentos" já na carga inicial
-          loadClients();
-          loadLawsuits();
-          loadOffices();
-          loadDriveFiles();
-          loadCalendarSummary();
-          loadPublicationsStats();
-          loadHrDashboard();
+          await loadAndApplyUserPermissions();
+
+          // Popula apenas dados dos módulos autorizados
+          const p = window.currentUserPermissions?.permissions || {};
+          const isM = window.currentUserPermissions?.is_master;
+          if (isM || p.tab_leads === 1) loadLeads();
+          if (isM || p.tab_clients === 1) loadClients();
+          if (isM || p.tab_lawsuits === 1) loadLawsuits();
+          if (isM || p.tab_offices === 1) loadOffices();
+          if (isM || p.tab_drive === 1) loadDriveFiles();
+          if (isM || p.tab_calendar === 1) loadCalendarSummary();
+          if (isM || p.tab_publications === 1) loadPublicationsStats();
+          if (isM || p.tab_hr === 1) loadHrDashboard();
         } else {
           errorText.textContent = data.error || 'Credenciais inválidas.';
           errorMsg.classList.remove('hidden');
