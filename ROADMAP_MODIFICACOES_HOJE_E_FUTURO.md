@@ -97,6 +97,20 @@ Alinhamento aos padrões adotados pelas maiores bancas mundiais (*Global 100 / M
 
 ---
 
+### 🌊 4.1 Cronograma Estruturado por Ondas de Entrega (Metodologia Ágil 0 a 4)
+
+A estratégia de engenharia da plataforma divide as entregas em 5 Ondas priorizadas por risco e valor de negócio:
+
+| Onda | Janela Estimada | Foco Estratégico | Itens Prioritários | Prioridade & Status |
+| :--- | :---: | :--- | :--- | :---: |
+| **Onda 0 — Blindagem Imediata** | **~48 horas** | Fechar vulnerabilidades críticas (P0), latência transatlântica e DRP. | • Deploy do hardening S1–S8 e rotação da senha mestre (`set-master-password.js`)<br/>• Proteção de `/storage/*` com autenticação e verificação de ownership<br/>• Cloudflare Edge Brasil (<15ms) e DRP 3-2-1 off-site<br/>• Sessão em cookies HttpOnly + Secure + SameSite e sanitização de innerHTML | 🔴 **P0 (Em Andamento)** |
+| **Onda 1 — Confiabilidade & SRE** | **~7 dias** | Resiliência de banco, proteção do event loop e transações. | • Migração para `better-sqlite3` (WAL + `synchronous=NORMAL`)<br/>• Deep Healthchecks corporativos (`/health/live` e `/health/ready`)<br/>• Graceful Shutdown (`SIGTERM`/`SIGINT`) com término limpo de transações<br/>• Tabela de Idempotência `processed_webhooks` para Asaas/PIX<br/>• Circuit Breaker com backoff exponencial em APIs de Tribunais | 🟠 **P1 (Planejado)** |
+| **Onda 2 — Governança & CI/CD** | **~15 dias** | Observabilidade, limpeza de dados e automação de testes. | • Cron diário de expurgo de temporários em `/storage/temp` (>7d)<br/>• Rotina periódica de anonimização e retenção da LGPD<br/>• Logs estruturados em formato JSON com Pino<br/>• Esteira de CI/CD no GitHub Actions com Playwright noturno<br/>• Consolidação do módulo JawSupport 100% ativo | 🟡 **P2 (Planejado)** |
+| **Onda 3 — Produto & Captação** | **Contínuo** | Expansão de conversão de leads, UX forense e segurança de acesso. | • FAQ Inteligente na Home com busca local (Juiz de Fora - SEO)<br/>• Simuladores rescisórios/previdenciários via WhatsApp com protocolo<br/>• 2FA / TOTP (Google Authenticator) para o advogado mestre<br/>• Toast discreto de atendimento substituindo modal bloqueante<br/>• Confirmação e arquivamento de assinatura digital em tempo real<br/>• Recibo de prestação de contas de alvará/RPV timbrado em 1 clique<br/>• Lock Colaborativo Anti-Sobrescrita na mesma ficha<br/>• PWA Offline-First para consultas em fóruns e audiências sem sinal | 🔵 **P1/P2 (Planejado)** |
+| **Onda 4 — Escala SaaS B2B** | **Q2/2027** | Transformação em produto recorrente multi-escritório. | • Lapidação das abas (empty states, máscaras, debounce 300ms)<br/>• Desacoplamento modular do `painel-1-app.js` em submódulos<br/>• Virada Multi-Tenant com `tenant_id` e Super Admin de planos<br/>• Faturamento recorrente automatizado (Asaas/cartão/PIX)<br/>• Conteinerização Docker completa com SSL nativo e rollout | 🟣 **P0/P1 (Estratégico)** |
+
+---
+
 ## 🏢 5. Comparativo com Soluções Líderes de Mercado
 
 | Critério de Avaliação | **Plataforma Jorge Alvim** | **Projuris** | **SAJ ADV** | **Astrea (Aurum)** |

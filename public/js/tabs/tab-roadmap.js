@@ -10,6 +10,7 @@
 
   var _roadmapData = null;
   var _selectedYear = '2026';
+  var _viewMode = 'years'; // 'years' | 'waves'
 
   function getToken() {
     if (typeof window.getToken === 'function') {
@@ -356,32 +357,45 @@
           </div>
         </div>
 
-        <!-- 5. Checklists Ano a Ano Unificados (Seletor 2026 - 2029) -->
+        <!-- 5. Checklists Ano a Ano & Ondas de Entrega -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
               <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                <span>📅</span> Checklists de Implementação Ano a Ano & Horizontes
+                <span>🎯</span> Planejamento & Cronograma de Execução
               </h2>
-              <p class="text-xs text-slate-500 mt-0.5">Metas operacionais, prazos trimestrais e prioridades de refatoração</p>
+              <p class="text-xs text-slate-500 mt-0.5">Navegue pelas entregas por ano civil ou pela metodologia ágil de 5 Ondas de Entrega</p>
             </div>
 
-            <!-- Botões Seletor de Ano -->
-            <div class="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
-              ${['2026', '2027', '2028', '2029'].map(function(y){
-                var active = (_selectedYear === y);
-                return `
-                  <button type="button" onclick="window.selectRoadmapYear('${y}')" class="px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${active ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                    ${y} ${y === '2026' ? '🔥' : ''}
-                  </button>
-                `;
-              }).join('')}
+            <!-- Seletor de Modo de Visualização (Anos vs Ondas) -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
+                <button type="button" onclick="window.switchRoadmapView('years')" class="px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'years' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  📅 Por Ano (2026–2029)
+                </button>
+                <button type="button" onclick="window.switchRoadmapView('waves')" class="px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'waves' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  🌊 Por Ondas (0 a 4)
+                </button>
+              </div>
+
+              ${_viewMode === 'years' ? `
+                <div class="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
+                  ${['2026', '2027', '2028', '2029'].map(function(y){
+                    var active = (_selectedYear === y);
+                    return `
+                      <button type="button" onclick="window.selectRoadmapYear('${y}')" class="px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${active ? 'bg-amber-500 text-slate-950 font-black shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                        ${y} ${y === '2026' ? '🔥' : ''}
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+              ` : ''}
             </div>
           </div>
 
-          <!-- Conteúdo do Ano Selecionado -->
-          <div id="roadmap-year-content">
-            ${renderYearChecklist(_selectedYear)}
+          <!-- Conteúdo Dinâmico (Anos ou Ondas) -->
+          <div id="roadmap-plan-content">
+            ${_viewMode === 'years' ? renderYearChecklist(_selectedYear) : renderWavesChecklist()}
           </div>
         </div>
 
@@ -532,6 +546,76 @@
       </div>
     `;
   }
+
+  function renderWavesChecklist() {
+    var waves = (_roadmapData && _roadmapData.waves) || [];
+    if (!waves.length) return '<p class="text-xs text-slate-400 py-4">Nenhuma onda configurada na telemetria.</p>';
+
+    return `
+      <div class="space-y-4">
+        <div class="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/60 text-xs font-semibold text-sky-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <span>🌊 <strong>Metodologia por Ondas de Entrega</strong>: Priorização orientada a risco, separando correções críticas imediatas (P0 em 48h) de confiabilidade, governança e expansão SaaS B2B.</span>
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-sky-200 text-sky-900 shrink-0 self-start sm:self-auto">5 Ondas Estratégicas</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+          ${waves.map(function(wave){
+            return `
+              <div class="p-5 rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <span class="w-3 h-3 rounded-full shrink-0" style="background:${wave.color};"></span>
+                    <h3 class="font-black text-slate-900 text-sm sm:text-base">${escapeHtml(wave.name)}</h3>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:${wave.color}15; color:${wave.color}; border: 1px solid ${wave.color}40;">
+                      ${escapeHtml(wave.badge)}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-xs">
+                    <span class="text-slate-500 font-medium">Janela estimada:</span>
+                    <span class="font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">${escapeHtml(wave.window)}</span>
+                  </div>
+                </div>
+
+                <div class="text-xs text-slate-600 font-medium mt-2.5">
+                  <strong class="text-slate-800">Foco Principal:</strong> ${escapeHtml(wave.focus)}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mt-3.5">
+                  ${wave.items.map(function(it){
+                    var isDone = it.done;
+                    var priColor = it.priority === 'P0' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                                   it.priority === 'P1' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300';
+                    return `
+                      <div class="p-3 rounded-2xl border transition-all flex items-start gap-2.5 ${isDone ? 'bg-emerald-50/40 border-emerald-200' : 'bg-slate-50/70 border-slate-200'}">
+                        <div class="mt-0.5 text-sm">${isDone ? '✅' : '⏳'}</div>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-xs font-bold ${isDone ? 'text-emerald-950' : 'text-slate-900'} leading-tight">
+                            ${escapeHtml(it.task)}
+                          </div>
+                          <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${it.priority || 'P1'}</span>
+                            <span class="text-[10px] ${isDone ? 'text-emerald-700 font-semibold' : 'text-slate-500'}">
+                              ${isDone ? '🟢 Entregue em produção' : '⚪ Programado'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  window.switchRoadmapView = function (mode) {
+    _viewMode = mode;
+    var container = document.getElementById('roadmap-live-container');
+    if (container) renderRoadmap(container);
+  };
 
   window.selectRoadmapYear = function (y) {
     _selectedYear = y;

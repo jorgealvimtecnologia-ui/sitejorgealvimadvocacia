@@ -143,6 +143,88 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       { id: '7', title: 'Autenticação Multifator Avançada (2FA / TOTP)', type: 'SEGURANÇA', origin: 'Google Authenticator', impact: 'Segundo fator opcional de 6 dígitos para o advogado mestre', badge: '# ROADMAP SEGURANÇA' }
     ];
 
+    // 3.4 Cronograma Estruturado por Ondas de Entrega (Ondas 0 a 4)
+    const waves = [
+      {
+        id: 'wave-0',
+        name: 'Onda 0 — Blindagem Imediata',
+        badge: 'Em Andamento',
+        window: '~48 horas',
+        focus: 'Fechar vulnerabilidades críticas (P0) e latência transatlântica',
+        color: '#dc2626',
+        items: [
+          { task: 'Deploy do Hardening S1–S8 e rotação da senha mestre (set-master-password.js)', done: false, priority: 'P0' },
+          { task: 'Proteção de /storage/* com autenticação e verificação de proprietário (Ownership)', done: false, priority: 'P0' },
+          { task: 'Ativação do Cloudflare Edge no Brasil para atenuar latência da Contabo (<15ms)', done: false, priority: 'P0' },
+          { task: 'Backup externo off-site automatizado (DRP 3-2-1) em S3 / Google Drive / R2', done: false, priority: 'P0' },
+          { task: 'Sessão em cookies HttpOnly + Secure + SameSite e sanitização de innerHTML', done: false, priority: 'P0' }
+        ]
+      },
+      {
+        id: 'wave-1',
+        name: 'Onda 1 — Confiabilidade & SRE',
+        badge: 'Planejado',
+        window: '~7 dias',
+        focus: 'Engenharia de resiliência e proteção do event loop',
+        color: '#ea580c',
+        items: [
+          { task: 'Migração do driver SQLite para better-sqlite3 (WAL + synchronous=NORMAL)', done: false, priority: 'P1' },
+          { task: 'Deep Healthchecks corporativos (/health/live e /health/ready com teste de disco)', done: false, priority: 'P1' },
+          { task: 'Graceful Shutdown (SIGTERM/SIGINT com encerramento seguro de transações)', done: false, priority: 'P1' },
+          { task: 'Tabela de Idempotência em pagamentos (processed_webhooks para Asaas/PIX)', done: checkTableExists('processed_webhooks'), priority: 'P1' },
+          { task: 'Circuit Breaker com backoff exponencial em APIs de Tribunais (DataJud/PJe)', done: false, priority: 'P1' }
+        ]
+      },
+      {
+        id: 'wave-2',
+        name: 'Onda 2 — Governança & CI/CD',
+        badge: 'Planejado',
+        window: '~15 dias',
+        focus: 'Observabilidade, limpeza de dados e automação de testes',
+        color: '#ca8a04',
+        items: [
+          { task: 'Cron diário de expurgo de arquivos temporários abandonados em /storage/temp (>7 dias)', done: false, priority: 'P2' },
+          { task: 'Rotina periódica de anonimização e conformidade de retenção da LGPD', done: false, priority: 'P2' },
+          { task: 'Logs estruturados em formato JSON com Pino para auditoria forense', done: false, priority: 'P2' },
+          { task: 'Esteira de CI/CD no GitHub Actions com execução noturna do Playwright', done: false, priority: 'P2' },
+          { task: 'Módulo de Apoio ao Usuário e Resiliência (JawSupport 100% ativo)', done: checkFileExists('public/js/core/user-support.js'), priority: 'P2' }
+        ]
+      },
+      {
+        id: 'wave-3',
+        name: 'Onda 3 — Produto & Captação de Leads',
+        badge: 'Planejado',
+        window: 'Contínuo',
+        focus: 'Expansão de conversão, experiência e ergonomia forense',
+        color: '#2563eb',
+        items: [
+          { task: 'FAQ Inteligente na Home com busca local (Juiz de Fora) para reforço de SEO', done: false, priority: 'P1' },
+          { task: 'Simuladores interativos de rescisão e previdência conectados ao WhatsApp com protocolo', done: false, priority: 'P1' },
+          { task: 'Autenticação multifator 2FA / TOTP (Google Authenticator) para o painel', done: false, priority: 'P1' },
+          { task: 'Toast discreto de atendimento substituindo o modal bloqueante de 1.2s', done: false, priority: 'P2' },
+          { task: 'Confirmação automática de assinatura digital & arquivamento em tempo real', done: false, priority: 'P1' },
+          { task: 'Recibo de Prestação de Contas de Alvará/RPV timbrado em 1 clique', done: false, priority: 'P1' },
+          { task: 'Lock Colaborativo Anti-Sobrescrita (aviso de edição simultânea da mesma ficha)', done: false, priority: 'P2' },
+          { task: 'PWA Offline-First para consultas em fóruns e salas de audiência sem sinal 4G', done: false, priority: 'P2' }
+        ]
+      },
+      {
+        id: 'wave-4',
+        name: 'Onda 4 — Escala SaaS B2B',
+        badge: 'Estratégico',
+        window: 'Q2/2027',
+        focus: 'Transformação da plataforma em negócio recorrente multi-escritório',
+        color: '#7c3aed',
+        items: [
+          { task: 'Lapidação das abas (empty states, máscaras de digitação, debounce 300ms, paginação)', done: false, priority: 'P1' },
+          { task: 'Desacoplamento modular do painel-1-app.js em submódulos específicos em public/js/tabs/', done: false, priority: 'P1' },
+          { task: 'Virada Multi-Tenant (injeção de tenant_id e painel Super Admin de clientes e planos)', done: checkColumnExists('clients', 'tenant_id'), priority: 'P0' },
+          { task: 'Faturamento recorrente automatizado (Asaas/cartão/PIX com bloqueio por inadimplência)', done: false, priority: 'P1' },
+          { task: 'Publicação em Docker conteinerizado com SSL nativo e automação de rollout', done: false, priority: 'P1' }
+        ]
+      }
+    ];
+
     // 4. Introspecção Dinâmica do Sistema em Tempo Real
     const hasDmsFiles = checkTableExists('lawsuit_movement_files');
     const hasSoftDelete = checkColumnExists('clients', 'deleted_at');
@@ -172,7 +254,10 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
           { name: 'Leitor OCR Automático (Zero Digitação)', status: 'partial', badge: '🟡 Q4/2026', details: 'Extração automática de RG/CNH via Tesseract.js' },
           { name: 'CRM Jurídico & Funil de Captação', status: 'delivered', badge: '🟢 No Ar (90%)', details: 'Leads anti-bot, histórico 360º de clientes e Meta Ads' },
           { name: 'BI Cockpit Executivo (5 Segundos)', status: 'delivered', badge: '🟢 No Ar (100%)', details: 'Semáforo de risco, 8 cards 1-clique e Sala de Situação 360º' },
-          { name: 'Agenda & Kanban 5W2H', status: 'delivered', badge: '🟢 No Ar (100%)', details: 'RFC 5545 iCal, lembretes VALARM e despachos Foguete' }
+          { name: 'Agenda & Kanban 5W2H', status: 'delivered', badge: '🟢 No Ar (100%)', details: 'RFC 5545 iCal, lembretes VALARM e despachos Foguete' },
+          { name: 'Trava de Prazos em Dias Não Úteis', status: 'delivered', badge: '🟢 No Ar (100%)', details: 'Projeção automática para o 1º dia útil seguinte' },
+          { name: 'Lock Colaborativo Anti-Sobrescrita', status: 'planned', badge: '⚪ Q1/2027', details: 'Aviso em tempo real de edição simultânea da mesma ficha' },
+          { name: 'Detector de Anexo Esquecido', status: 'planned', badge: '⚪ Q1/2027', details: 'Alerta se o texto citar anexo sem arquivo anexado' }
         ]
       },
       ai: {
@@ -282,11 +367,17 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         { task: 'Módulo de Apoio ao Usuário e Resiliência (JawSupport Auto-Save & Undo)', done: hasJawSupport, tag: 'Resilience' },
         { task: 'Recursos Windows 11 no Painel (Aero Snap, Menu de Contexto, Lock Screen)', done: hasWinFeatures, tag: 'UX' },
         { task: 'Auditor Nativo de Fluxo Forense (Score 90/100 Ouro)', done: true, tag: 'Audit' },
+        { task: 'Trava de Prazos em Dias Não Úteis (projeção para 1º dia útil)', done: true, tag: 'Core' },
         { task: 'DMS Matter-Centric com anexo direto na linha do andamento (iManage)', done: hasDmsFiles, horizon: 'Q4/2026', priority: 'P1' },
         { task: 'Leitor OCR Automático de Documentos (Zero Digitação via Tesseract)', done: false, horizon: 'Q4/2026', priority: 'P1' },
         { task: 'WhatsApp Business Cloud API Oficial para andamentos automáticos', done: false, horizon: 'Q4/2026', priority: 'P1' },
         { task: 'Minutas Inteligentes com RAG Local sobre o acervo do Dr. Jorge', done: false, horizon: 'Q4/2026', priority: 'P1' },
-        { task: 'Deploy do Hardening de Segurança (PBKDF2 210k) no servidor Contabo', done: false, horizon: 'Q4/2026', priority: 'P0' }
+        { task: 'Deploy do Hardening de Segurança (PBKDF2 210k) no servidor Contabo', done: false, horizon: 'Q4/2026', priority: 'P0' },
+        { task: 'Cloudflare Edge no Brasil (<15ms de latência e blindagem WAF)', done: false, horizon: 'Q4/2026', priority: 'P0' },
+        { task: 'Backup off-site 3-2-1 automatizado (DRP em R2/Drive/S3)', done: false, horizon: 'Q4/2026', priority: 'P0' },
+        { task: 'Deep Healthchecks corporativos (/health/live e /health/ready)', done: false, horizon: 'Q4/2026', priority: 'P1' },
+        { task: 'Graceful Shutdown SIGTERM/SIGINT com término limpo de conexões', done: false, horizon: 'Q4/2026', priority: 'P1' },
+        { task: 'Tabela de Idempotência em Webhooks (processed_webhooks para PIX/Asaas)', done: hasIdempotency, horizon: 'Q4/2026', priority: 'P1' }
       ],
       '2027': [
         { task: 'Geração de Petições por LLM com Revisão Obrigatória (Human-in-the-Loop)', done: false, horizon: 'Q1/2027' },
@@ -294,8 +385,12 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         { task: 'Calculadora Previdenciária CNIS (importador de extrato Meu INSS)', done: false, horizon: 'Q1/2027' },
         { task: 'Quality Gates & Travas de Controladoria (bloqueio sem procuração/custas)', done: false, horizon: 'Q1/2027' },
         { task: 'Planilhas Dinâmicas & BI Forense Multidimensional (Tabulator.js)', done: false, horizon: 'Q1/2027' },
+        { task: 'Lock Colaborativo Anti-Sobrescrita na mesma ficha processual', done: false, horizon: 'Q1/2027', priority: 'P2' },
+        { task: 'Detector de Anexo Esquecido no envio de despachos', done: false, horizon: 'Q1/2027', priority: 'P2' },
+        { task: 'Recibo de Prestação de Contas de Alvará/RPV timbrado em 1 clique', done: false, horizon: 'Q1/2027', priority: 'P1' },
         { task: 'Biometria Facial (Liveness Detection) no E-Sign para grandes contratos', done: false, horizon: 'Q2/2027' },
         { task: 'Arquitetura Multi-Tenant com isolamento tenant_id para expansão SaaS B2B', done: hasTenantId, horizon: 'Q2/2027' },
+        { task: 'PWA Offline-First para consultas em fóruns e audiências sem sinal', done: false, horizon: 'Q2/2027', priority: 'P2' },
         { task: 'Chatbot 24/7 com Escalação Inteligente para Plantonista', done: false, horizon: 'Q3/2027' }
       ],
       '2028': [
@@ -319,6 +414,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       cloudAudit,
       userSupport,
       externalPendingActions,
+      waves,
       layers,
       telemetry: {
         total_lawsuits: totalLawsuits,
