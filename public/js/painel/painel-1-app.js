@@ -1017,6 +1017,11 @@
           switchTab(targetTab);
         }
       }
+
+      // Sincroniza permissões RBAC com a barra de menus em cascata (jaw-menubar)
+      if (typeof window.applyPerms === 'function') {
+        window.applyPerms();
+      }
     }
     window.loadAndApplyUserPermissions = loadAndApplyUserPermissions;
     window.applyPermissionsToUI = applyPermissionsToUI;

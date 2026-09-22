@@ -1055,45 +1055,173 @@
     <!-- Conteúdo Principal -->
     <main id="conteudo" tabindex="-1" class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 flex-1">
 
-      <!-- ================= ABA: VISÃO GERAL (DASHBOARD EXECUTIVO) ================= -->
-      <section id="tab-content-dashboard" class="hidden space-y-6">
-        <div class="flex items-center justify-between">
-          <h2 class="font-serif text-xl font-bold text-navy-950">Visão Geral do Escritório</h2>
-          <button onclick="loadDashboardOverview(); window.loadMeuDiaHoje && window.loadMeuDiaHoje();" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100">↻ Atualizar</button>
+      <!-- ================= ABA: VISÃO GERAL (PAINEL DE COMANDO EXECUTIVO) ================= -->
+      <section id="tab-content-dashboard" class="hidden space-y-5">
+        <!-- Barra de Comando Superior: Saudação do Titular + Ações Rápidas de 1 Clique -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sm:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-lg font-bold text-amber-700 shadow-xs">⚖️</span>
+              <div>
+                <h2 id="dash-executive-greeting" class="font-serif text-lg sm:text-xl font-black text-navy-950 tracking-tight">Bom dia, Dr. Jorge Alvim</h2>
+                <p id="dash-executive-subtitle" class="text-xs text-slate-500 font-medium mt-0.5">Painel de Comando Estratégico • Carregando data...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações Rápidas de 1 Clique (Zero Dead-Ends) -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="if(typeof openNewClientModal==='function') openNewClientModal(); else openModule('clients');" style="background:#0f172a;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+              <span>➕</span> <span>Novo Cliente</span>
+            </button>
+            <button type="button" onclick="if(typeof openNewLawsuitModal==='function') openNewLawsuitModal(); else openModule('lawsuits');" style="background:#1d4ed8;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+              <span>⚖️</span> <span>Novo Processo</span>
+            </button>
+            <button type="button" onclick="if(typeof openNewTransactionModal==='function') openNewTransactionModal(); else openModule('finance');" style="background:#047857;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+              <span>💰</span> <span>Novo Lançamento</span>
+            </button>
+            <button type="button" onclick="if(typeof openNewRocketModal==='function') openNewRocketModal(); else openModule('rockets');" style="background:#7e22ce;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+              <span>🚀</span> <span>Novo Despacho</span>
+            </button>
+            <button type="button" onclick="loadDashboardOverview(true); window.loadMeuDiaHoje && window.loadMeuDiaHoje();" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition hover:bg-slate-100">
+              <span>↻</span> <span>Atualizar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Semáforo de Risco Estratégico Matinal (Fórmula dos 5 Segundos) -->
+        <div id="dash-risk-banner">
+          <!-- Renderizado dinamicamente por loadDashboardOverview(): VERDE / AMARELO / VERMELHO -->
+          <div class="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-600 text-xs flex items-center gap-2">
+            <span class="animate-spin text-base">⏳</span> Avaliando status de risco e prazos do escritório…
+          </div>
+        </div>
+
+        <!-- Faixa Compacta de Sincronização Automática (ComunicaAPI & DJEN) -->
+        <div class="bg-gradient-to-r from-amber-50/70 via-white to-slate-50 rounded-2xl border border-gold-300/80 shadow-sm p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-700 border border-amber-200 flex items-center justify-center text-sm font-bold flex-shrink-0">🔄</span>
+            <div>
+              <div class="font-bold text-navy-950 text-xs flex items-center gap-2">
+                <span>ComunicaAPI & DJEN (Tribunais)</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">Conectado</span>
+              </div>
+              <div id="sync-status-text" class="text-xs text-slate-500">Verificando status de sincronização…</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-sync-all" type="button" onclick="runFullSyncNow()" class="text-xs font-bold px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-gold-500 text-white hover:from-amber-600 hover:to-gold-600 shadow-sm transition flex items-center gap-1.5">
+              <span>↻</span> Sincronizar Tudo agora
+            </button>
+            <button type="button" onclick="var d=document.getElementById('sync-history-box'); if(d){ d.classList.toggle('hidden'); if(!d.classList.contains('hidden')) loadSyncHistory(); }" class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition">
+              Histórico
+            </button>
+          </div>
+        </div>
+
+        <!-- Histórico Retrátil de Sincronização -->
+        <div id="sync-history-box" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hidden">
+          <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+            <span class="text-xs font-bold text-navy-950 flex items-center gap-2">🕑 Histórico de Sincronização Automática</span>
+            <button type="button" onclick="document.getElementById('sync-history-box').classList.add('hidden')" class="text-xs text-slate-400 hover:text-slate-700">✕ Fechar</button>
+          </div>
+          <div id="sync-history" class="text-xs text-slate-600 overflow-x-auto">Abrir para carregar…</div>
         </div>
 
         <!-- Cockpit Matinal do Advogado (Fase 2) -->
         <div id="meu-dia-hoje-container"></div>
-        <div class="bg-gradient-to-r from-amber-50 to-white rounded-2xl border border-gold-300 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <span class="text-lg">🔄</span>
-            <div>
-              <div class="font-bold text-navy-950 text-sm">Sincronização automática</div>
-              <div id="sync-status-text" class="text-xs text-slate-500">Verificando…</div>
+
+        <!-- 8 Cards Executivos Interativos de 1 Clique (Zero Dead-Ends) -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-400">Indicadores Chave de Gestão (KPIs)</h3>
+            <span class="text-[11px] text-slate-400">Clique em qualquer cartão para abrir o módulo detalhado</span>
+          </div>
+          <div id="dash-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+        </div>
+
+        <!-- Sala de Situação 360º: Jurídico & Prazos (Col 1) vs Gestão, Equipe & Compliance (Col 2) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Coluna 1: Jurídico, Prazos Fatais e DJEN -->
+          <div class="space-y-5">
+            <!-- Prazos Fatais dos Próximos 15 Dias -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-100">
+                <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
+                  <span>⏰</span> Próximos Prazos (15 dias)
+                </h3>
+                <button type="button" onclick="openModule('calendar')" class="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1">
+                  <span>Ver Agenda Completa</span> <span>➔</span>
+                </button>
+              </div>
+              <div id="dash-deadlines" class="space-y-2.5 text-sm text-slate-600 max-h-[380px] overflow-y-auto pr-1">Carregando prazos…</div>
+            </div>
+
+            <!-- Radar de Intimações e Comunicações dos Tribunais -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
+                  <span>📢</span> Intimações & DJEN (Publicações Oficiais)
+                </h3>
+                <button type="button" onclick="openModule('publications')" class="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1">
+                  <span>Abrir Diário Oficial</span> <span>➔</span>
+                </button>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">🏛️</span>
+                  <span>Monitoramento contínuo da OAB no CNJ/DJEN e tribunais integrados.</span>
+                </div>
+                <button type="button" onclick="openModule('publications')" class="px-3 py-1.5 rounded-lg bg-navy-950 text-white font-bold text-xs hover:bg-slate-900 shadow-sm flex-shrink-0">
+                  Ver Diário ➔
+                </button>
+              </div>
             </div>
           </div>
-          <button id="btn-sync-all" onclick="runFullSyncNow()" class="text-xs font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 text-white hover:from-amber-600 hover:to-gold-600 shadow-sm">Sincronizar Tudo agora</button>
-        </div>
-        <details class="bg-white rounded-2xl border border-slate-200 shadow-sm" ontoggle="if(this.open) loadSyncHistory()">
-          <summary class="cursor-pointer select-none px-4 py-2.5 text-sm font-bold text-navy-950">🕑 Histórico de sincronização</summary>
-          <div id="sync-history" class="px-4 pb-4 text-xs text-slate-600">Abrir para carregar…</div>
-        </details>
-        <div id="dash-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h3 class="font-bold text-navy-950 mb-3 flex items-center gap-2">⏰ Próximos prazos (15 dias)</h3>
-            <div id="dash-deadlines" class="space-y-2 text-sm text-slate-600">Carregando…</div>
+
+          <!-- Coluna 2: Gestão, Equipe, Compliance & Comercial -->
+          <div class="space-y-5">
+            <!-- Presença da Equipe Hoje (Ponto Digital) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
+                  <span>👔</span> Equipe & Presença Hoje
+                </h3>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="openModule('colaborador')" class="text-xs font-bold text-slate-600 hover:text-navy-950 hover:underline">Meu Ponto</button>
+                  <span class="text-slate-300">•</span>
+                  <button type="button" onclick="openModule('hr')" class="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline">Painel RH ➔</button>
+                </div>
+              </div>
+              <div id="dash-team-status" class="space-y-2">
+                <div class="text-xs text-slate-500">Carregando status da equipe…</div>
+              </div>
+            </div>
+
+            <!-- Compliance, Assinaturas & LGPD -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
+                  <span>🧭</span> Compliance & Governança
+                </h3>
+                <span class="text-[11px] text-slate-400">Clique para abrir</span>
+              </div>
+              <div id="dash-compliance" class="space-y-2 text-sm text-slate-600">Carregando…</div>
+            </div>
+
+            <!-- Funil de Captação & Conversão do Site -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
+                  <span>🔻</span> Funil de Captação & Conversão <span class="text-[10px] font-normal text-slate-400">(30 dias)</span>
+                </h3>
+                <button type="button" onclick="openModule('leads')" class="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1">
+                  <span>Ver Leads</span> <span>➔</span>
+                </button>
+              </div>
+              <div id="dash-funnel" class="space-y-2 text-sm text-slate-600">Carregando…</div>
+            </div>
           </div>
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <h3 class="font-bold text-navy-950 mb-3 flex items-center gap-2">🧭 Compliance & Pendências</h3>
-            <div id="dash-compliance" class="space-y-2 text-sm text-slate-600">Carregando…</div>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-bold text-navy-950 flex items-center gap-2">🔻 Funil de conversão do site <span class="text-[10px] font-normal text-slate-400">(analytics anônimo • 30 dias)</span></h3>
-          </div>
-          <div id="dash-funnel" class="space-y-2 text-sm text-slate-600">Carregando…</div>
         </div>
       </section>
 
@@ -11313,7 +11441,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/modules/cockpit.js?v=20260907-v4"></script>
   <script src="/js/modules/legal-docs.js?v=20260907-v4"></script>
   <script src="/js/modules/meta-ads.js?v=20260907-v6"></script>
-  <script src="/js/painel/painel-1-app.js?v=20260909-v2"></script>
+  <script src="/js/painel/painel-1-app.js?v=20260921-v3"></script>
 
   <!-- ================= SUBMÓDULOS DESACOPLADOS DE ABAS (public/js/tabs/) ================= -->
   <script src="/js/tabs/tab-clients.js?v=20260909-v1"></script>
@@ -11341,7 +11469,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/painel/painel-2.js?v=20260907-v4"></script>
 
   <!-- ================= GERENCIADOR DE JANELAS (estilo Windows) ================= -->
-  <script src="/js/painel/painel-3.js?v=20260909-v2"></script>
+  <script src="/js/painel/painel-3.js?v=20260921-v3"></script>
 
   <!-- ================= RECURSOS WINDOWS (Menu de Contexto & Bloqueio LGPD) ================= -->
   <script src="/js/core/windows-features.js?v=20260907-v4"></script>

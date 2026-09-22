@@ -4,35 +4,314 @@
     async function jget(url) { const r = await fetch(url, { headers: getAuthHeaders() }); if (r.status === 401) { handleLogout(); throw new Error('401'); } return r.json(); }
     async function jsend(url, method, body) { const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: body ? JSON.stringify(body) : undefined }); const d = await r.json().catch(() => ({})); return { ok: r.ok, data: d }; }
 
-    // ---------------- DASHBOARD ----------------
-    async function loadDashboardOverview() {
+    // ---------------- DASHBOARD (PAINEL DE COMANDO EXECUTIVO) ----------------
+    async function loadDashboardOverview(forceRefresh) {
       try {
-        const d = await jget('/api/dashboard/overview');
+        const url = forceRefresh ? '/api/dashboard/overview?refresh=1' : '/api/dashboard/overview';
+        const d = await jget(url);
         if (!d.success) return;
-        const card = (label, value, tone) => `<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">${label}</div>
-          <div class="text-lg sm:text-xl font-bold ${tone || 'text-navy-950'} mt-1">${value}</div></div>`;
-        document.getElementById('dash-cards').innerHTML =
-          card('Receita do mês', BRL(d.financeiro.receita_mes), 'text-emerald-600') +
-          card('Despesa do mês', BRL(d.financeiro.despesa_mes), 'text-red-600') +
-          card('Saldo do mês', BRL(d.financeiro.saldo_mes), d.financeiro.saldo_mes >= 0 ? 'text-emerald-700' : 'text-red-700') +
-          card('A receber', BRL(d.financeiro.a_receber), 'text-amber-600') +
-          card('Clientes ativos', d.juridico.clientes_ativos + '/' + d.juridico.clientes_total) +
-          card('Processos em andamento', d.juridico.processos_andamento) +
-          card('Prazos fatais (3 dias)', d.prazos.fatais_3dias, d.prazos.fatais_3dias ? 'text-red-600' : 'text-navy-950') +
-          card('Leads no mês', d.comercial.leads_mes);
-        document.getElementById('dash-deadlines').innerHTML = d.prazos.proximos.length
-          ? d.prazos.proximos.map(p => `<div class="flex items-center justify-between gap-2 border-b border-slate-50 pb-1">
-              <span class="truncate">${esc(p.title)} ${p.lawsuit_number ? '<span class=\"text-slate-400\">• ' + esc(p.lawsuit_number) + '</span>' : ''}</span>
-              <span class="text-xs font-bold text-slate-500 whitespace-nowrap">${fmtDate(p.date)}</span></div>`).join('')
-          : '<span class="text-slate-400">Nenhum prazo nos próximos 15 dias.</span>';
-        const c = d.compliance;
-        document.getElementById('dash-compliance').innerHTML = [
-          ['Assinaturas pendentes', c.assinaturas_pendentes, '#tab:esign'],
-          ['Assinaturas concluídas', c.assinaturas_concluidas, '#tab:esign'],
-          ['Solicitações LGPD abertas', c.lgpd_abertas, '#tab:lgpd'],
-          ['Notificações não lidas', c.notificacoes_nao_lidas, '#tab:notifications']
-        ].map(([l, v]) => `<div class="flex justify-between border-b border-slate-50 pb-1"><span>${l}</span><span class="font-bold text-navy-950">${v}</span></div>`).join('');
+
+        // 1. Atualizar Saudação do Titular & Data
+        const greetingEl = document.getElementById('dash-executive-greeting');
+        const subtitleEl = document.getElementById('dash-executive-subtitle');
+        if (greetingEl || subtitleEl) {
+          const now = new Date();
+          const hr = now.getHours();
+          const saudacao = hr < 12 ? 'Bom dia' : (hr < 18 ? 'Boa tarde' : 'Boa noite');
+          let userName = 'Dr. Jorge Alvim';
+          try {
+            const rawUser = localStorage.getItem('ja_admin_user');
+            if (rawUser) {
+              const u = JSON.parse(rawUser);
+              if (u.name) userName = u.name;
+            }
+          } catch (e) {}
+          if (greetingEl) greetingEl.textContent = `${saudacao}, ${userName}`;
+          if (subtitleEl) {
+            const dataExtensa = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            subtitleEl.textContent = `Painel de Comando Estratégico • ${dataExtensa.charAt(0).toUpperCase() + dataExtensa.slice(1)}`;
+          }
+        }
+
+        // 2. Renderizar Semáforo de Risco Estratégico (Fórmula dos 5 Segundos)
+        const riskEl = document.getElementById('dash-risk-banner');
+        if (riskEl && d.risco) {
+          const r = d.risco;
+          if (r.nivel === 'VERMELHO') {
+            riskEl.innerHTML = `
+              <div class="p-4 rounded-2xl bg-gradient-to-r from-red-600 via-rose-700 to-red-800 text-white shadow-md border border-red-500 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <span class="text-3xl flex-shrink-0 animate-pulse">🚨</span>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider">Semáforo Vermelho</span>
+                      <span class="text-xs text-red-100 font-bold">Ação Imediata Requerida</span>
+                    </div>
+                    <div class="font-bold text-sm sm:text-base mt-0.5">${esc(r.mensagem)}</div>
+                    <div class="text-xs text-red-100 mt-0.5">Vencimento fatal improrrogável hoje. Risco de preclusão!</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="openModule('calendar')" class="px-3.5 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                    <span>Ver Prazos Fatais</span> <span>➔</span>
+                  </button>
+                  <button type="button" onclick="openModule('publications')" class="px-3 py-2 bg-red-950/40 hover:bg-red-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
+                    DJEN / Intimações
+                  </button>
+                </div>
+              </div>`;
+          } else if (r.nivel === 'AMARELO') {
+            riskEl.innerHTML = `
+              <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-slate-950 shadow-md border border-amber-400 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <span class="text-3xl flex-shrink-0">⚠️</span>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-full bg-black/15 text-slate-950 text-[10px] font-black uppercase tracking-wider">Semáforo Amarelo</span>
+                      <span class="text-xs text-amber-950/80 font-bold">Atenção Operacional</span>
+                    </div>
+                    <div class="font-bold text-sm sm:text-base mt-0.5">${esc(r.mensagem)}</div>
+                    <div class="text-xs text-amber-950/80 mt-0.5">Prazos fatais ou audiências iminentes nos próximos 3 dias.</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="openModule('calendar')" class="px-3.5 py-2 bg-slate-950 text-amber-400 hover:bg-slate-900 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                    <span>Ver Agenda</span> <span>➔</span>
+                  </button>
+                  <button type="button" onclick="openModule('lawsuits')" class="px-3 py-2 bg-white/40 hover:bg-white/60 text-slate-950 font-semibold text-xs rounded-xl border border-black/10 transition">
+                    Processos
+                  </button>
+                </div>
+              </div>`;
+          } else {
+            riskEl.innerHTML = `
+              <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white shadow-md border border-emerald-500 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <span class="text-3xl flex-shrink-0">🛡️</span>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider">Semáforo Verde</span>
+                      <span class="text-xs text-emerald-100 font-bold">Operação Regular & Segura</span>
+                    </div>
+                    <div class="font-bold text-sm sm:text-base mt-0.5">${esc(r.mensagem)}</div>
+                    <div class="text-xs text-emerald-100 mt-0.5">Nenhum prazo fatal para hoje • Radar Judicial e DJEN em dia.</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="openModule('judicial')" class="px-3.5 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                    <span>Radar Judicial</span> <span>➔</span>
+                  </button>
+                  <button type="button" onclick="openModule('calendar')" class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
+                    Ver Agenda
+                  </button>
+                </div>
+              </div>`;
+          }
+        }
+
+        // 3. Renderizar os 8 Cards Executivos Interativos de 1 Clique
+        const makeCard = (opt) => `
+          <div onclick="openModule('${opt.module}')" class="group bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-gold-300 hover:scale-[1.01] transition-all duration-150 cursor-pointer flex flex-col justify-between" title="Abrir módulo ${opt.moduleName}">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] uppercase tracking-wider font-extrabold text-slate-400">${opt.label}</span>
+                <span class="text-base group-hover:scale-110 transition-transform">${opt.icon}</span>
+              </div>
+              <div class="text-xl sm:text-2xl font-black ${opt.tone || 'text-navy-950'} mt-1.5 tracking-tight">${opt.value}</div>
+              <div class="text-[11px] text-slate-500 mt-1 line-clamp-1">${opt.sub}</div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-amber-700 group-hover:text-amber-600">
+              <span>${opt.actionText}</span>
+              <span class="group-hover:translate-x-0.5 transition-transform">➔</span>
+            </div>
+          </div>`;
+
+        const fin = d.financeiro || {};
+        const jur = d.juridico || {};
+        const prz = d.prazos || {};
+        const eqp = d.equipe || {};
+
+        const cardsEl = document.getElementById('dash-cards');
+        if (cardsEl) {
+          cardsEl.innerHTML =
+            makeCard({
+              module: 'finance',
+              moduleName: 'Financeiro',
+              label: 'Receita do Mês',
+              value: BRL(fin.receita_mes),
+              tone: 'text-emerald-600',
+              sub: `Despesas: ${BRL(fin.despesa_mes)} • Saldo: ${BRL(fin.saldo_mes)}`,
+              icon: '💰',
+              actionText: 'Financeiro & Caixa'
+            }) +
+            makeCard({
+              module: 'finance',
+              moduleName: 'Financeiro',
+              label: 'Saldo em Caixa',
+              value: BRL(fin.saldo_mes),
+              tone: (fin.saldo_mes >= 0 ? 'text-emerald-700' : 'text-red-600'),
+              sub: 'Fluxo operacional líquido do mês',
+              icon: '🏦',
+              actionText: 'Extrato de Caixa'
+            }) +
+            makeCard({
+              module: 'finance',
+              moduleName: 'Financeiro',
+              label: 'Honorários a Receber',
+              value: BRL(fin.a_receber),
+              tone: 'text-amber-600',
+              sub: 'Parcelas e contratos pendentes',
+              icon: '📑',
+              actionText: 'Ver Recebimentos'
+            }) +
+            makeCard({
+              module: 'finance',
+              moduleName: 'Financeiro',
+              label: 'Inadimplência Real',
+              value: BRL(fin.inadimplente),
+              tone: (fin.inadimplente > 0 ? 'text-red-600' : 'text-slate-700'),
+              sub: `${fin.inadimplente_qtd || 0} lançamento(s) em atraso`,
+              icon: '⚠️',
+              actionText: 'Gestão de Cobrança'
+            }) +
+            makeCard({
+              module: 'finance',
+              moduleName: 'Financeiro',
+              label: 'Alvarás a Levantar',
+              value: BRL(fin.alvaras_pendentes_gross || fin.alvaras_pendentes_fees || 0),
+              tone: 'text-amber-700',
+              sub: `${fin.alvaras_pendentes_qtd || 0} alvará(s) • Honorários: ${BRL(fin.alvaras_pendentes_fees)}`,
+              icon: '⚖️',
+              actionText: 'Ver Alvarás / RPV'
+            }) +
+            makeCard({
+              module: 'clients',
+              moduleName: 'Clientes',
+              label: 'Clientes Ativos',
+              value: `${jur.clientes_ativos || 0} <span class="text-xs font-normal text-slate-400">/ ${jur.clientes_total || 0} tot.</span>`,
+              tone: 'text-navy-950',
+              sub: 'Clientes com contrato ativo no escritório',
+              icon: '👥',
+              actionText: 'Carteira de Clientes'
+            }) +
+            makeCard({
+              module: 'lawsuits',
+              moduleName: 'Processos',
+              label: 'Processos Ativos',
+              value: `${jur.processos_andamento || 0} <span class="text-xs font-normal text-slate-400">/ ${jur.processos_total || 0} tot.</span>`,
+              tone: 'text-blue-700',
+              sub: 'Ações ativas sob acompanhamento CNJ',
+              icon: '⚖️',
+              actionText: 'Painel de Processos'
+            }) +
+            makeCard({
+              module: 'rockets',
+              moduleName: 'Foguetes',
+              label: 'Foguetes & Despachos',
+              value: `${eqp.foguetes_pendentes || 0} <span class="text-xs font-normal text-slate-400">pendente(s)</span>`,
+              tone: (eqp.foguetes_pendentes > 0 ? 'text-purple-700' : 'text-slate-700'),
+              sub: 'Comunicação interna e despachos rápidos',
+              icon: '🚀',
+              actionText: 'Central de Foguetes'
+            });
+        }
+
+        // 4. Renderizar Prazos Fatais (com tags visuais e 1-clique)
+        const deadlinesEl = document.getElementById('dash-deadlines');
+        if (deadlinesEl) {
+          if (prz.proximos && prz.proximos.length) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            deadlinesEl.innerHTML = prz.proximos.map(p => {
+              const pDateStr = String(p.date || '').slice(0, 10);
+              let pill = '';
+              if (pDateStr === todayStr) {
+                pill = '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-800 text-[10px] font-black uppercase tracking-wider flex-shrink-0">HOJE</span>';
+              } else {
+                const diffDays = Math.ceil((new Date(pDateStr + 'T23:59:59') - new Date()) / 86400000);
+                if (diffDays === 1) {
+                  pill = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider flex-shrink-0">AMANHÃ</span>';
+                } else if (diffDays <= 3) {
+                  pill = `<span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold tracking-wider flex-shrink-0">EM ${diffDays} DIAS</span>`;
+                } else {
+                  pill = `<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold flex-shrink-0">${fmtDate(p.date).slice(0, 5)}</span>`;
+                }
+              }
+
+              return `
+                <div onclick="openModule('calendar')" class="p-2.5 rounded-xl border border-slate-100 hover:border-gold-300 hover:bg-amber-50/40 transition cursor-pointer flex items-center justify-between gap-2.5">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                      ${pill}
+                      <span class="font-bold text-xs text-navy-950 truncate">${esc(p.title || 'Prazo Processual')}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 truncate mt-0.5 flex items-center gap-2">
+                      ${p.lawsuit_number ? `<span class="text-blue-700 font-mono font-medium">${esc(p.lawsuit_number)}</span>` : ''}
+                      ${p.lawyer_name ? `<span>• Adv: ${esc(p.lawyer_name)}</span>` : ''}
+                      ${p.client_name ? `<span>• Cli: ${esc(p.client_name)}</span>` : ''}
+                    </div>
+                  </div>
+                  <div class="text-right flex-shrink-0">
+                    <div class="text-xs font-bold text-slate-700">${fmtDate(p.date)}</div>
+                    <span class="text-[10px] text-amber-700 font-semibold group-hover:underline">Abrir ➔</span>
+                  </div>
+                </div>`;
+            }).join('');
+          } else {
+            deadlinesEl.innerHTML = `
+              <div class="p-6 text-center rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-2xl">🎉</span>
+                <div class="text-xs font-bold text-slate-600 mt-1">Nenhum prazo fatal nos próximos 15 dias!</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">Todas as pendências processuais estão em dia.</div>
+              </div>`;
+          }
+        }
+
+        // 5. Presença da Equipe Hoje (Ponto Digital)
+        const teamEl = document.getElementById('dash-team-status');
+        if (teamEl) {
+          const ativos = eqp.funcionarios_ativos || 0;
+          const presentes = eqp.ponto_hoje || 0;
+          const pct = ativos > 0 ? Math.min(100, Math.round((presentes / ativos) * 100)) : 0;
+          teamEl.innerHTML = `
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <div class="flex items-center justify-between text-xs mb-1.5">
+                <span class="font-bold text-navy-950">Presença Registrada Hoje</span>
+                <span class="font-black text-amber-800">${presentes} de ${ativos} colaboradores (${pct}%)</span>
+              </div>
+              <div class="h-2 rounded-full bg-slate-200 overflow-hidden mb-2">
+                <div class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width:${Math.max(pct, 4)}%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-slate-500">
+                <span>Ponto eletrônico homologado</span>
+                <span class="text-amber-700 font-bold cursor-pointer hover:underline" onclick="openModule('hr')">Gerenciar RH ➔</span>
+              </div>
+            </div>`;
+        }
+
+        // 6. Compliance & Governança (Clickable Rows)
+        const c = d.compliance || {};
+        const compEl = document.getElementById('dash-compliance');
+        if (compEl) {
+          const compItem = (icon, label, count, modId, warn) => `
+            <div onclick="openModule('${modId}')" class="p-2.5 rounded-xl border border-slate-100 hover:border-gold-300 hover:bg-amber-50/40 transition cursor-pointer flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-base">${icon}</span>
+                <span class="text-xs font-semibold text-navy-950">${label}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full text-xs font-bold ${warn && count > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}">${count}</span>
+                <span class="text-xs text-slate-400">➔</span>
+              </div>
+            </div>`;
+
+          compEl.innerHTML =
+            compItem('✍️', 'Assinaturas Eletrônicas Pendentes', c.assinaturas_pendentes || 0, 'esign', true) +
+            compItem('✅', 'Assinaturas Concluídas', c.assinaturas_concluidas || 0, 'esign', false) +
+            compItem('🔒', 'Solicitações LGPD / Privacidade', c.lgpd_abertas || 0, 'lgpd', true) +
+            compItem('🔔', 'Alertas e Notificações Não Lidas', c.notificacoes_nao_lidas || 0, 'notifications', true);
+        }
+
+        // 7. Funil e Sincronização
         loadDashboardFunnel();
         loadSyncStatus();
       } catch (e) { console.error('[dashboard]', e); }

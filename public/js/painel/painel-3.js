@@ -857,6 +857,9 @@
       function load(p){ api('/api/explorer/list?path='+encodeURIComponent(p||'')).then(function(d){ if(!d.success){ wmToast&&wmToast(d.error||'Erro ao listar.'); return; } state.path=d.path; state.parent=d.parent; state.entries=d.entries; render(); }).catch(function(){ wmToast&&wmToast('Falha ao carregar o explorador.'); }); }
       box.appendChild(bar); box.appendChild(crumb); box.appendChild(scroll); box.appendChild(status);
       load('');
+      return box;
+    }
+
     function buildColaborador(){
       var box=document.createElement('div');
       box.className='space-y-4';
