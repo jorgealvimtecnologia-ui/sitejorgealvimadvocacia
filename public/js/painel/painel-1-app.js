@@ -902,6 +902,14 @@
         if (typeof window.loadFaqTab === 'function') {
           window.loadFaqTab();
         }
+      } else if (tab === 'roadmap') {
+        const c = document.getElementById('tab-content-roadmap');
+        const b = document.getElementById('tab-btn-roadmap');
+        if (c) c.classList.remove('hidden');
+        if (b) b.className = activeClass;
+        if (typeof window.loadRoadmapTab === 'function') {
+          window.loadRoadmapTab();
+        }
       }
 
       renderTabChart(tab);

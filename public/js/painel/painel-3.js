@@ -30,7 +30,8 @@
       kanban:{label:'Fluxo de Trabalho (Kanban 5W2H)',emoji:'🗂️'},
       explorer:{label:'Explorar Arquivos',emoji:'🗃️'},
       maintenance:{label:'Manutenção & Saúde',emoji:'🛠️'},
-      'meta-ads':{label:'Meta Ads & Marketing',emoji:'📢'}
+      'meta-ads':{label:'Meta Ads & Marketing',emoji:'📢'},
+      roadmap:{label:'Radar & Roadmap Legaltech',emoji:'🗺️'}
     };
     var TOOLS={editor:1,calc:1,kanban:1,explorer:1,maintenance:1};
     var GROUPS=[
@@ -39,7 +40,7 @@
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['colaborador','hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['roadmap','blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
@@ -48,7 +49,7 @@
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
-      'meta-ads':'loadMetaAdsTab'};
+      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab'};
 
     var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
 

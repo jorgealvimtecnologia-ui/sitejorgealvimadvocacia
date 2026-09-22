@@ -1049,6 +1049,12 @@
           <span>Perguntas Frequentes (FAQ)</span>
         </button>
 
+        <!-- Aba: Radar & Roadmap Legaltech -->
+        <button id="tab-btn-roadmap" onclick="switchTab('roadmap')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-purple-700 hover:text-purple-900 hover:bg-purple-50 transition-all border border-purple-300 bg-purple-50/50 cursor-pointer" title="Radar Tecnológico & Roadmap Vivo 2026–2029">
+          <span>🗺️</span>
+          <span>Roadmap Vivo</span>
+        </button>
+
       </div>
     </header>
 
@@ -1082,6 +1088,9 @@
             </button>
             <button type="button" onclick="if(typeof openNewRocketModal==='function') openNewRocketModal(); else openModule('rockets');" style="background:#7e22ce;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>🚀</span> <span>Novo Despacho</span>
+            </button>
+            <button type="button" onclick="openModule('roadmap')" style="background:#4338ca;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]" title="Abrir Radar Tecnológico & Roadmap Vivo 2026–2029">
+              <span>🗺️</span> <span>Roadmap Vivo</span>
             </button>
             <button type="button" onclick="loadDashboardOverview(true); window.loadMeuDiaHoje && window.loadMeuDiaHoje();" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition hover:bg-slate-100">
               <span>↻</span> <span>Atualizar</span>
@@ -6857,6 +6866,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
       </section>
 
+      <!-- ================= ABA: RADAR TECNOLÓGICO & ROADMAP VIVO 2026-2029 ================= -->
+      <section id="tab-content-roadmap" class="hidden space-y-6">
+        <div id="roadmap-live-container">
+          <!-- Renderizado dinamicamente por public/js/tabs/tab-roadmap.js -->
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -11461,6 +11477,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-publications.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-hr.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-charts.js?v=20260909-v1"></script>
+  <script src="/js/tabs/tab-roadmap.js?v=20260922-v1"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD
