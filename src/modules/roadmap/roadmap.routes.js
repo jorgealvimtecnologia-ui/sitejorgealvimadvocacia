@@ -1,11 +1,15 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 
 export const roadmapRouter = express.Router();
+
+// Raiz do projeto a partir deste arquivo (independe da pasta de onde o Node foi iniciado)
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
 /**
  * Funções de Auto-Auditoria e Introspecção Dinâmica em Tempo Real
@@ -40,7 +44,7 @@ function countIndexes() {
 
 function checkFileExists(relPath) {
   try {
-    return fs.existsSync(path.join(process.cwd(), relPath));
+    return fs.existsSync(path.join(PROJECT_ROOT, relPath));
   } catch (e) {
     return false;
   }
@@ -456,7 +460,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
  * Antes ficavam em /public (abertos na internet); agora exigem sessão de operador.
  * Aceita ?token= porque é aberto por link <a>.
  */
-const REPORTS_DIR = path.join(process.cwd(), 'docs', 'relatorios');
+const REPORTS_DIR = path.join(PROJECT_ROOT, 'docs', 'relatorios');
 
 roadmapRouter.get('/api/admin/relatorios/:file', requireAuth, (req, res) => {
   if (req.user?.isEmployee) return res.status(403).json({ error: 'Acesso restrito ao painel.' });
