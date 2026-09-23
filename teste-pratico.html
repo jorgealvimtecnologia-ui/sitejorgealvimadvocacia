@@ -35,7 +35,7 @@
           <span>🚀</span>
           <span>Abrir Painel Oficial</span>
         </a>
-        <a href="/resumo_funcionalidades_jorge_alvim.pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 flex items-center gap-1.5 transition-all">
+        <a href="/api/admin/relatorios/resumo_funcionalidades_jorge_alvim.pdf" onclick="this.href=this.href.split('?')[0]+'?token='+encodeURIComponent(localStorage.getItem('ja_admin_token')||'')" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 flex items-center gap-1.5 transition-all">
           <span>📥</span>
           <span>Baixar PDF</span>
         </a>
@@ -211,24 +211,17 @@
     let cachedToken = null;
     let cachedClientId = null;
 
+    // Usa a sessão de quem já entrou no painel — sem senha embutida na página.
     async function getMasterAuth() {
       if (cachedToken) return cachedToken;
       try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: 'jorgealvimtecnologia', password: 'jorgealvim' })
-        });
-        const data = await res.json();
-        if (data.token) {
-          cachedToken = data.token;
-          localStorage.setItem('jaw_token', data.token);
-          return cachedToken;
-        }
-      } catch (e) {
-        console.error('Erro de autenticação:', e);
+        cachedToken = localStorage.getItem('ja_admin_token') || sessionStorage.getItem('ja_admin_token');
+      } catch (e) { cachedToken = null; }
+      if (!cachedToken) {
+        alert('Entre no painel (/painel) antes de usar o laboratório de testes.');
+        return null;
       }
-      return null;
+      return cachedToken;
     }
 
     async function getOrCreateTestClient() {

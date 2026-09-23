@@ -701,7 +701,7 @@ async function generatePDF() {
 
   const outputPaths = [
     path.join(ROOT_DIR, 'ROADMAP_EXECUTIVO_JORGE_ALVIM_2026.pdf'),
-    path.join(ROOT_DIR, 'public', 'ROADMAP_EXECUTIVO_JORGE_ALVIM_2026.pdf'),
+    path.join(ROOT_DIR, 'docs', 'relatorios', 'ROADMAP_EXECUTIVO_JORGE_ALVIM_2026.pdf'),
     path.join(ROOT_DIR, 'dist', 'ROADMAP_EXECUTIVO_JORGE_ALVIM_2026.pdf')
   ];
 

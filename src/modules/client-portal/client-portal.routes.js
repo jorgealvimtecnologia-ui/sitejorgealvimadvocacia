@@ -19,6 +19,14 @@ import { verifyGoogleToken } from '../../shared/google-auth.js';
 
 export const clientPortalRouter = express.Router();
 
+// Cliente-mestre (modo visualização do Dr. Jorge): só a senha REAL do usuário
+// mestre ou a senha própria do cliente-mestre autenticam — sem senha universal.
+function verifyMasterPortalPassword(password, client) {
+  const masterUser = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+  if (masterUser && verifyPassword(password, masterUser.password_hash, masterUser.salt)) return true;
+  return !!(client.password_hash && verifyPassword(password, client.password_hash, client.salt));
+}
+
 const magicStorageEngine = multer.diskStorage({
   destination: (req, file, cb) => {
     const token = req.params.token;
@@ -337,11 +345,11 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
     }
 
     const compactIdent = cleanInput.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
-    const isMasterPortalLogin = ['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim'].includes(compactIdent);
+    const isMasterPortalLogin = ['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactIdent);
 
     if (!client && isMasterPortalLogin) {
       const masterUser = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
-      const validMasterPass = (password === 'jorgealvim') || (masterUser && verifyPassword(password, masterUser.password_hash, masterUser.salt));
+      const validMasterPass = !!(masterUser && verifyPassword(password, masterUser.password_hash, masterUser.salt));
       if (validMasterPass) {
         client = db.prepare(`SELECT * FROM clients WHERE id = 'CLI-MASTER-01' OR cpf = '000.000.000-00'`).get();
         if (!client) {
@@ -418,7 +426,7 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
 
     const isMasterClient = client && (client.id === 'CLI-MASTER-01' || isMasterPortalLogin);
     const valid = isMasterClient
-      ? (password === 'jorgealvim' || (client.password_hash ? verifyPassword(password, client.password_hash, client.salt) : true))
+      ? verifyMasterPortalPassword(password, client)
       : verifyPassword(password, client.password_hash, client.salt);
 
     if (!valid) {

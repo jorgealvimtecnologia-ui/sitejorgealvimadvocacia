@@ -110,7 +110,7 @@
                 <div class="text-[10px]" style="color: #94a3b8;">${overall.delivered_count} no ar • ${overall.partial_count} parciais • ${overall.planned_count} planejados</div>
               </div>
               <div class="flex items-center gap-2 mt-1">
-                <a href="/relatorio_roadmap_modificacoes.pdf" target="_blank" class="px-3.5 py-2 rounded-xl text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer" style="background: #d97706;">
+                <a href="/api/admin/relatorios/relatorio_roadmap_modificacoes.pdf?token=${encodeURIComponent(getToken())}" target="_blank" class="px-3.5 py-2 rounded-xl text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer" style="background: #d97706;">
                   <span>📄</span> Baixar Relatório PDF
                 </a>
                 <button onclick="window.loadRoadmapTab()" class="px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer" style="background: #1e293b; color: #e2e8f0; border: 1px solid #334155;" title="Recarregar telemetria">

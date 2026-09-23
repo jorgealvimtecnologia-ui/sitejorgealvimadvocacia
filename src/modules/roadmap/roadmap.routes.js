@@ -30,6 +30,14 @@ function checkColumnExists(tableName, colName) {
   }
 }
 
+function countIndexes() {
+  try {
+    return db.prepare("SELECT count(*) AS c FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'").get().c || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
 function checkFileExists(relPath) {
   try {
     return fs.existsSync(path.join(process.cwd(), relPath));
@@ -98,19 +106,26 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
     ];
 
     // 3.1 Auditoria de Arquitetura Cloud & Engenharia de Software (Parecer Técnico)
+    const indexCount = countIndexes();
+    const hasCiPipeline = checkFileExists('.github/workflows/ci.yml');
+    const hasNightlyE2e = checkFileExists('.github/workflows/e2e-checklist.yml');
+    const hasFaq = checkTableExists('site_faqs');
+    const hasStorageGuard = checkFileExists('src/middleware/storage-guard.js');
+    const reportsArePrivate = !checkFileExists('public/relatorio_roadmap_modificacoes.pdf');
+
     const cloudAudit = {
       vps_server: 'Contabo Frankfurt (Alemanha) • KVM Virtualizado',
-      rtt_latency: '220ms - 320ms p/ Brasil (Exige Cloudflare Edge <15ms)',
-      db_engine: 'SQLite WAL com 43 índices em NVMe local (<5ms de resposta)',
+      rtt_latency: 'Origem na Alemanha (~250ms) atrás do Cloudflare (edge no Brasil)',
+      db_engine: `SQLite WAL com ${indexCount} índices em NVMe local`,
       scorecard: [
-        { pilar: '1. Persistência & CRUD', estado: 'SQLite WAL com 43 índices em leads.db', risco: 'MÉDIO', veredito: 'Ultra-rápido (<5ms), isolado e sem sobrecarga TCP.', acao: 'Backup local VACUUM INTO ativo; exportação DRP externa planejada.' },
-        { pilar: '2. Rede Internacional', estado: 'VPS Contabo Frankfurt (RTT ~250ms)', risco: 'CRÍTICO', veredito: 'Exige Cloudflare Edge p/ cache de estáticos no Brasil (<15ms).', acao: 'Código pronto (CF-Connecting-IP); aguardando DNS no Registro.br.' },
-        { pilar: '3. Segredos & Auth', estado: 'Variáveis .env + Argon2 + JWT com fallback estático', risco: 'MÉDIO', veredito: 'Blindar segredos de produção e rotatividade de chaves.', acao: 'Preparado no código; aguardando chaves reais de produção.' },
+        { pilar: '1. Persistência & CRUD', estado: `SQLite WAL com ${indexCount} índices em leads.db`, risco: 'MÉDIO', veredito: 'Ultra-rápido (<5ms), isolado e sem sobrecarga TCP.', acao: 'Backup local VACUUM INTO ativo; exportação DRP externa planejada.' },
+        { pilar: '2. Rede Internacional', estado: 'VPS Contabo Frankfurt atrás do Cloudflare (proxy + SSL)', risco: 'BAIXO', veredito: 'Cloudflare ativo: estáticos servidos pelo edge no Brasil.', acao: 'Concluído (DNS apontado para o Cloudflare).' },
+        { pilar: '3. Segredos & Auth', estado: 'Variáveis .env + PBKDF2-SHA512 210k + tokens de sessão em memória', risco: 'MÉDIO', veredito: 'Senha universal do mestre removida e /storage protegido; falta publicar no servidor.', acao: 'Publicar a correção no Contabo.' },
         { pilar: '4. LGPD vs Estatuto OAB', estado: 'Soft Delete com Trava Ética (Art. 16, I da LGPD)', risco: 'BLINDADO', veredito: 'Bloqueio legal com barreira 409 se houver processos judiciais ativos.', acao: '100% Homologado e ativo no Portal do Cliente com testes unitários.' },
         { pilar: '5. Retenção de Arquivos', estado: 'Storage local com caçador de arquivos órfãos', risco: 'BAIXO', veredito: 'Expurgo automatizado de rascunhos e temporários > 7 dias.', acao: 'Módulo de manutenção operacional ativo em /api/admin/maintenance.' }
       ],
       phases: [
-        { name: 'FASE 1: BLINDAGEM (48h)', items: ['Soft Delete com trava Art. 16 LGPD (CONCLUÍDO)', 'Ativação Cloudflare Edge no Brasil (AGUARDA DNS)', 'Backup externo automatizado DRP 3-2-1 (PLANEJADO)'], status: 'Em Finalização' },
+        { name: 'FASE 1: BLINDAGEM (48h)', items: ['Soft Delete com trava Art. 16 LGPD (CONCLUÍDO)', 'Ativação Cloudflare Edge no Brasil (CONCLUÍDO)', 'Backup externo automatizado DRP 3-2-1 (PLANEJADO)'], status: 'Em Finalização' },
         { name: 'FASE 2: CONFIABILIDADE (7 DIAS)', items: ['Idempotência em webhooks PIX/cartão (processed_webhooks)', 'Circuit breaker com backoff em APIs judiciais', 'Sanitização de segredos em .env'], status: 'Planejado' },
         { name: 'FASE 3: GOVERNANÇA (15 DIAS)', items: ['Cron diário de expurgo de arquivos temporários (>7 dias)', 'Rotina de anonimização periódica LGPD', 'Monitoramento contínuo de logs e alertas'], status: 'Planejado' }
       ]
@@ -135,12 +150,10 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
     // 3.3 Ações Externas & Credenciais do Titular (Backlog do Dr. Jorge)
     const externalPendingActions = [
       { id: '1', title: 'Inserir Google Client ID Real no .env', type: 'CONFIGURAR', origin: 'Google Cloud Console', impact: 'Ativa login nativo Google sem necessidade de simulação', badge: '! AÇÃO RECOMENDADA' },
-      { id: '2', title: 'Ativar Cloudflare Free (CDN + SSL + WAF)', type: 'CONFIGURAR', origin: 'Registro.br + Cloudflare', impact: 'Reduz latência da Alemanha de 300ms para <15ms no Brasil', badge: '! AÇÃO RECOMENDADA' },
       { id: '3', title: 'Fomentar 3 Primeiras Vendas na Vitrine Amazon', type: 'DIVULGAR', origin: 'Amazon Associates', impact: 'Destrava chave oficial da Amazon Product Advertising API (PA-API v5)', badge: '! AÇÃO RECOMENDADA' },
       { id: '4', title: 'Decisão de UX: Modal de Boas-Vindas para Toast', type: 'DECIDIR', origin: 'Design System', impact: 'Converte modal de 1.2s em aviso flutuante discreto no canto inferior', badge: '! DECISÃO DE UX' },
       { id: '5', title: 'Ativação Direta de Cobrança Meta Ads API', type: 'SEGURANÇA', origin: 'Meta Marketing API', impact: 'Campanhas criadas como PAUSED para controle rigoroso de verba', badge: '# TRAVA DE SEGURANÇA' },
-      { id: '6', title: 'Esteira Automatizada de CI/CD no GitHub Actions', type: 'BACKLOG', origin: 'GitHub Workflows', impact: 'Execução periódica da suíte Playwright na nuvem a cada commit', badge: '# BACKLOG CI/CD' },
-      { id: '7', title: 'Autenticação Multifator Avançada (2FA / TOTP)', type: 'SEGURANÇA', origin: 'Google Authenticator', impact: 'Segundo fator opcional de 6 dígitos para o advogado mestre', badge: '# ROADMAP SEGURANÇA' }
+      { id: '6', title: 'Publicar no Contabo as correções de segurança (senha universal e /storage)', type: 'SEGURANÇA', origin: 'Servidor Contabo', impact: 'O código em produção ainda aceita uma senha fixa para o mestre, além da senha real', badge: '! AÇÃO URGENTE' }
     ];
 
     // 3.4 Cronograma Estruturado por Ondas de Entrega (Ondas 0 a 4)
@@ -153,9 +166,12 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         focus: 'Fechar vulnerabilidades críticas (P0) e latência transatlântica',
         color: '#dc2626',
         items: [
-          { task: 'Deploy do Hardening S1–S8 e rotação da senha mestre (set-master-password.js)', done: false, priority: 'P0' },
-          { task: 'Proteção de /storage/* com autenticação e verificação de proprietário (Ownership)', done: false, priority: 'P0' },
-          { task: 'Ativação do Cloudflare Edge no Brasil para atenuar latência da Contabo (<15ms)', done: false, priority: 'P0' },
+          { task: 'Deploy do Hardening S1–S8 (PBKDF2 210k, RBAC fail-closed)', done: true, priority: 'P0' },
+          { task: 'Remoção da senha universal do mestre no código (login e portais)', done: true, priority: 'P0' },
+          { task: 'Primeiro acesso do cliente sem senha: exigir validação (hoje a 1ª senha digitada vira a senha)', done: false, priority: 'P0' },
+          { task: 'Proteção de /storage/* com autenticação e verificação de proprietário (Ownership)', done: hasStorageGuard, priority: 'P0' },
+          { task: 'Relatórios internos fora de /public (download só com login)', done: reportsArePrivate, priority: 'P0' },
+          { task: 'Ativação do Cloudflare Edge no Brasil para atenuar latência da Contabo', done: true, priority: 'P0' },
           { task: 'Backup externo off-site automatizado (DRP 3-2-1) em S3 / Google Drive / R2', done: false, priority: 'P0' },
           { task: 'Sessão em cookies HttpOnly + Secure + SameSite e sanitização de innerHTML', done: false, priority: 'P0' }
         ]
@@ -186,7 +202,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
           { task: 'Cron diário de expurgo de arquivos temporários abandonados em /storage/temp (>7 dias)', done: false, priority: 'P2' },
           { task: 'Rotina periódica de anonimização e conformidade de retenção da LGPD', done: false, priority: 'P2' },
           { task: 'Logs estruturados em formato JSON com Pino para auditoria forense', done: false, priority: 'P2' },
-          { task: 'Esteira de CI/CD no GitHub Actions com execução noturna do Playwright', done: false, priority: 'P2' },
+          { task: 'Esteira de CI/CD no GitHub Actions com execução noturna do Playwright', done: hasCiPipeline && hasNightlyE2e, priority: 'P2' },
           { task: 'Módulo de Apoio ao Usuário e Resiliência (JawSupport 100% ativo)', done: checkFileExists('public/js/core/user-support.js'), priority: 'P2' }
         ]
       },
@@ -198,9 +214,8 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         focus: 'Expansão de conversão, experiência e ergonomia forense',
         color: '#2563eb',
         items: [
-          { task: 'FAQ Inteligente na Home com busca local (Juiz de Fora) para reforço de SEO', done: false, priority: 'P1' },
+          { task: 'FAQ Inteligente na Home com busca local (Juiz de Fora) para reforço de SEO', done: hasFaq, priority: 'P1' },
           { task: 'Simuladores interativos de rescisão e previdência conectados ao WhatsApp com protocolo', done: false, priority: 'P1' },
-          { task: 'Autenticação multifator 2FA / TOTP (Google Authenticator) para o painel', done: false, priority: 'P1' },
           { task: 'Toast discreto de atendimento substituindo o modal bloqueante de 1.2s', done: false, priority: 'P2' },
           { task: 'Confirmação automática de assinatura digital & arquivamento em tempo real', done: false, priority: 'P1' },
           { task: 'Recibo de Prestação de Contas de Alvará/RPV timbrado em 1 clique', done: false, priority: 'P1' },
@@ -302,7 +317,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
             badge: hasSoftDelete ? '🟢 No Ar (100%)' : '🟡 Parcial (85%)', 
             details: 'Gestão de consentimentos, protocolo 15 dias e soft delete' 
           },
-          { name: 'RBAC Fail-Closed & Auditoria de Fluxo', status: 'delivered', badge: '🟢 No Ar (95%)', details: 'Matriz estrita de papéis + auditor nativo Nota 90/100 Ouro' },
+          { name: 'RBAC Fail-Closed & Auditoria de Fluxo', status: 'partial', badge: '🟡 Parcial (85%)', details: 'Matriz estrita de papéis, /storage protegido e login sem busca parcial por nome; pendente: 1º acesso do cliente' },
           { name: 'Criptografia TLS 1.3 + PBKDF2 210k', status: 'partial', badge: '🟡 Parcial (75%)', details: 'TLS 1.3 e HSTS no ar; SQLCipher em repouso planejado' },
           { name: 'Biometria Facial Liveness (DocuSign/Ironclad)', status: 'partial', badge: '🟡 Q2/2027', details: 'Prova de vida ativa no E-Sign para grandes contratos' },
           { 
@@ -352,7 +367,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       titular: 'Dr. Jorge Eduardo da Silva Alvim',
       oab: 'OAB/MG 222.943',
       cnpj: '58.204.305/0001-00',
-      server_env: 'Node.js + Docker VPS Contabo (Produção)',
+      server_env: 'Node.js + systemd no VPS Contabo, atrás do Cloudflare (Produção)',
       infrastructure_cost: 'R$ 40/mês (Zero royalties)',
       updated_at: new Date().toISOString()
     };
@@ -372,8 +387,10 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         { task: 'Leitor OCR Automático de Documentos (Zero Digitação via Tesseract)', done: false, horizon: 'Q4/2026', priority: 'P1' },
         { task: 'WhatsApp Business Cloud API Oficial para andamentos automáticos', done: false, horizon: 'Q4/2026', priority: 'P1' },
         { task: 'Minutas Inteligentes com RAG Local sobre o acervo do Dr. Jorge', done: false, horizon: 'Q4/2026', priority: 'P1' },
-        { task: 'Deploy do Hardening de Segurança (PBKDF2 210k) no servidor Contabo', done: false, horizon: 'Q4/2026', priority: 'P0' },
-        { task: 'Cloudflare Edge no Brasil (<15ms de latência e blindagem WAF)', done: false, horizon: 'Q4/2026', priority: 'P0' },
+        { task: 'Deploy do Hardening de Segurança (PBKDF2 210k) no servidor Contabo', done: true, tag: 'Security' },
+        { task: 'Cloudflare Edge no Brasil (proxy + SSL)', done: true, tag: 'Infra' },
+        { task: 'Remoção da senha universal do mestre no código (login e portais)', done: true, tag: 'Security' },
+        { task: 'Arquivos de clientes e Drive protegidos por login (/storage)', done: hasStorageGuard, tag: 'Security' },
         { task: 'Backup off-site 3-2-1 automatizado (DRP em R2/Drive/S3)', done: false, horizon: 'Q4/2026', priority: 'P0' },
         { task: 'Deep Healthchecks corporativos (/health/live e /health/ready)', done: false, horizon: 'Q4/2026', priority: 'P1' },
         { task: 'Graceful Shutdown SIGTERM/SIGINT com término limpo de conexões', done: false, horizon: 'Q4/2026', priority: 'P1' },
@@ -432,4 +449,20 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
     console.error('[ROADMAP] Erro ao obter dados do roadmap vivo:', error);
     return res.status(500).json({ error: 'Erro ao carregar telemetria do roadmap vivo.' });
   }
+});
+
+/**
+ * GET /api/admin/relatorios/:file - Relatórios internos (PDF/MD) em docs/relatorios.
+ * Antes ficavam em /public (abertos na internet); agora exigem sessão de operador.
+ * Aceita ?token= porque é aberto por link <a>.
+ */
+const REPORTS_DIR = path.join(process.cwd(), 'docs', 'relatorios');
+
+roadmapRouter.get('/api/admin/relatorios/:file', requireAuth, (req, res) => {
+  if (req.user?.isEmployee) return res.status(403).json({ error: 'Acesso restrito ao painel.' });
+  const name = path.basename(String(req.params.file || ''));
+  if (!/^[\w.-]+\.(pdf|md)$/i.test(name)) return res.status(400).json({ error: 'Arquivo inválido.' });
+  const full = path.join(REPORTS_DIR, name);
+  if (!fs.existsSync(full)) return res.status(404).json({ error: 'Relatório não encontrado.' });
+  return res.sendFile(full);
 });

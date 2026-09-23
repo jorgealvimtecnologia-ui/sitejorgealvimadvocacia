@@ -496,7 +496,7 @@ async function generateDossierPDF() {
 
   const outputPaths = [
     path.join(ROOT_DIR, 'CONVERSA_COMPLETA_PLANEJAMENTO_JORGE_ALVIM_2026.pdf'),
-    path.join(ROOT_DIR, 'public', 'CONVERSA_COMPLETA_PLANEJAMENTO_JORGE_ALVIM_2026.pdf'),
+    path.join(ROOT_DIR, 'docs', 'relatorios', 'CONVERSA_COMPLETA_PLANEJAMENTO_JORGE_ALVIM_2026.pdf'),
     path.join(ROOT_DIR, 'dist', 'CONVERSA_COMPLETA_PLANEJAMENTO_JORGE_ALVIM_2026.pdf')
   ];
 

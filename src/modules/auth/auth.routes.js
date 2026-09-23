@@ -43,14 +43,15 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
 
     if (!user) {
-      if (['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim', 'jorge'].includes(compactUsername)) {
+      if (['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
         user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
       } else if (compactUsername.includes('mariana')) {
         user = db.prepare(`SELECT * FROM users WHERE username LIKE '%mariana%' OR name LIKE '%mariana%'`).get();
       } else if (compactUsername.includes('gabriela')) {
         user = db.prepare(`SELECT * FROM users WHERE username LIKE '%gabriela%' OR name LIKE '%gabriela%'`).get();
       } else {
-        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(name)) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ?`).get(`%${cleanUsername}%`, `%${compactUsername}%`);
+        // Nome COMPLETO exato (sem busca parcial: um pedaço do nome não localiza contas)
+        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(name)) = ?`).get(cleanUsername);
       }
     }
 
@@ -62,24 +63,13 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       `).get(cleanUsername, cleanUsername);
     }
 
-    const isMasterUser = user && (user.username === 'jorgealvimtecnologia' || user.id === 'USR-MASTER-01' || user.role === 'master');
-    const isMasterExplicitPass = isMasterUser && (rawPassword === 'jorgealvim' || compactPassword === 'jorgealvim');
-
+    // SEGURANÇA: sem senha universal do mestre — só a senha real (hash) autentica.
     const isPasswordValid = user && (
-      isMasterExplicitPass ||
       verifyPassword(rawPassword, user.password_hash, user.salt) ||
       (compactPassword !== rawPassword && verifyPassword(compactPassword, user.password_hash, user.salt))
     );
 
     if (user && isPasswordValid) {
-      if (isMasterExplicitPass) {
-        clearLoginFailures(reqIp, cleanUsername);
-        if (user.role !== 'master') {
-          user.role = 'master';
-          try { db.prepare(`UPDATE users SET role = 'master' WHERE id = ?`).run(user.id); } catch(e) {}
-        }
-      }
-
       clearLoginFailures(reqIp, cleanUsername);
 
       // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
@@ -665,7 +655,7 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
     let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
 
     if (!user) {
-      if (['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim', 'jorge'].includes(compactUsername)) {
+      if (['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
         user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
       } else {
         user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(name)) LIKE ?`).get(cleanUsername, `%${cleanUsername}%`);
@@ -730,7 +720,7 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
 
     let user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR REPLACE(LOWER(username), ' ', '') = ?`).get(cleanUsername, compactUsername);
 
-    if (!user && ['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim', 'jorge'].includes(compactUsername)) {
+    if (!user && ['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
       user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
     }
 

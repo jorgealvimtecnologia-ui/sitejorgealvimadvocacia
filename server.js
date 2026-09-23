@@ -13,6 +13,7 @@ import {
   employeeSessions, createEmployeeSession, validateEmployeeToken, requireEmployeeAuth,
   destroySession
 } from './src/middleware/auth.js';
+import { requireStorageAccess } from './src/middleware/storage-guard.js';
 import { logAudit } from './src/middleware/audit.js';
 import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
 import { notificationsRouter, startDeadlineScanner } from './src/modules/notifications/notifications.routes.js';
@@ -1562,7 +1563,7 @@ app.use((req, res, next) => {
     const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || req.headers['x-access-token']);
     const s = validateToken(token);
     if (!s) return next(); // sem sessão: o requireAuth da rota devolve 401
-    const isMaster = s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master' || (s.name || '').toLowerCase().includes('jorge alvim');
+    const isMaster = s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master';
     if (isMaster) return next();
     let perm = null; try { perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(s.userId); } catch (e) {}
     // FAIL-CLOSED: perfil restrito sem matriz de permissões NÃO passa (antes era
@@ -1578,9 +1579,9 @@ app.use((req, res, next) => {
   }
 });
 
-// Rota para Download/Acesso Seguro aos Ficheiros dos Clientes e Drive do Escritório
-app.use('/storage/clients', express.static(STORAGE_DIR));
-app.use('/storage/office_drive', express.static(STORAGE_DRIVE_DIR));
+// Arquivos de clientes e Drive do escritório: exigem sessão (ver src/middleware/storage-guard.js)
+app.use('/storage/clients', requireStorageAccess('clients'), express.static(STORAGE_DIR));
+app.use('/storage/office_drive', requireStorageAccess('drive'), express.static(STORAGE_DRIVE_DIR));
 app.use('/storage/marketing', express.static(path.join(__dirname, 'storage', 'marketing')));
 app.use('/img', express.static(path.join(__dirname, 'public', 'img'), { maxAge: '7d' }));
 // /js contém o JS da APLICAÇÃO (painel/*.js, api.js) que muda a cada deploy.

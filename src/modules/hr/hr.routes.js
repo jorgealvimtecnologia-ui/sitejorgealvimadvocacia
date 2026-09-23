@@ -846,7 +846,7 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
     }
 
     // Se for o Dr. Jorge Alvim / Master entrando no Portal do Colaborador
-    if (!employee && ['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre', 'drjorgealvim', 'drjorge', 'jorge.alvim'].includes(compactId)) {
+    if (!employee && ['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactId)) {
       employee = {
         id: 'EMP-MASTER-01',
         name: 'Dr. Jorge Alvim',
@@ -864,17 +864,16 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
     const compactPassword = rawPassword.toLowerCase().replace(/\s+/g, '');
 
     // Validar Senha:
-    // 1) Senha Mestre do Escritório 'jorgealvim', 'jorge alvim', '123456', 'admin'
+    // 1) Senha real do usuário mestre (sem senha universal)
     // 2) CPF em dígitos limpos (primeiro acesso)
     // 3) Senha do usuário na tabela `users` se houver vínculo
     const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(name) LIKE ? OR username = ? OR id = ?`).get(`%${employee.name.toLowerCase()}%`, cleanId, employee.id);
     const authUser = linkedUser || (employee.id === 'EMP-MASTER-01'
       ? db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get()
       : null);
-    const isMasterEmployee = employee.id === 'EMP-MASTER-01' || ['jorgealvim', 'jorgealvimtecnologia', 'admin', 'mestre'].includes(compactId);
 
     // SEGURANÇA: sem senhas universais. Só senha real (com upgrade) ou CPF no 1º acesso.
-    const isUserAuth = (isMasterEmployee && (rawPassword === 'jorgealvim' || compactPassword === 'jorgealvim')) || (authUser && (
+    const isUserAuth = !!(authUser && (
       verifyPassword(rawPassword, authUser.password_hash, authUser.salt) ||
       (compactPassword !== rawPassword && verifyPassword(compactPassword, authUser.password_hash, authUser.salt))
     ));
@@ -961,7 +960,7 @@ const handleEmployeeGoogleAuth = async (req, res) => {
       .map(s => s.toLowerCase().trim())
       .filter(Boolean);
 
-    if (!employee && (masterEmails.includes(email) || email === 'jorgealvimtecnologia@gmail.com' || email.includes('jorgealvim'))) {
+    if (!employee && masterEmails.includes(email)) {
       employee = {
         id: 'EMP-MASTER-01',
         name: 'Dr. Jorge Alvim',

@@ -290,7 +290,7 @@ export function syncAllAccessPermissions() {
     // 1. Sincronizar Usuários do Painel
     const users = db.prepare(`SELECT * FROM users`).all();
     for (const u of users) {
-      const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.name.toLowerCase().includes('jorge alvim') || u.role === 'master';
+      const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.role === 'master';
       const isDraMariana = u.name.toLowerCase().includes('mariana') || u.username.includes('mariana');
       const isDraGabriela = u.name.toLowerCase().includes('gabriela') || u.username.includes('gabriela');
       
@@ -497,7 +497,7 @@ accessRouter.get('/api/access-control/matrix', requireAuth, (req, res) => {
       const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
       return {
         ...r,
-        is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01' || (r.user_name || '').toLowerCase().includes('jorge alvim'),
+        is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01',
         badge_label: tpl.badge_label,
         badge_class: tpl.badge_class,
         role_name: tpl.name
@@ -543,7 +543,7 @@ accessRouter.post('/api/access-control/toggle', requireAuth, (req, res) => {
     }
 
     // Regra de Ouro: Dr. Jorge Alvim / Mestre NUNCA pode ter acesso revogado (God Mode)
-    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01' || (record.user_name || '').toLowerCase().includes('jorge alvim');
+    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01';
     if (isMaster && !enabled) {
       return res.status(403).json({
         error: '👑 Acesso Mestre Protegido: O Dr. Jorge Alvim possui acesso total permanente e irrestrito a todos os recursos.'
@@ -597,7 +597,7 @@ accessRouter.post('/api/access-control/apply-template', requireAuth, (req, res) 
     }
 
     // Regra de Ouro: Dr. Jorge Alvim sempre permanece como Master
-    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01' || (record.user_name || '').toLowerCase().includes('jorge alvim');
+    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01';
     const targetKey = isMaster ? 'master' : template_key;
     const tpl = ROLE_TEMPLATES[targetKey];
     const now = new Date().toISOString();
@@ -647,7 +647,7 @@ accessRouter.post('/api/access-control/toggle-user-status', requireAuth, (req, r
       return res.status(404).json({ error: 'Registro não encontrado.' });
     }
 
-    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01' || (record.user_name || '').toLowerCase().includes('jorge alvim');
+    const isMaster = record.role_template === 'master' || record.user_id === 'USR-MASTER-01';
     if (isMaster && !is_active) {
       return res.status(403).json({ error: '👑 O acesso do Dr. Jorge Alvim não pode ser inativado.' });
     }
@@ -679,7 +679,7 @@ accessRouter.get('/api/access-control/my-permissions', (req, res) => {
     }
 
     // 2. Checar se é Usuário Mestre (Dr. Jorge Alvim)
-    const isMaster = session.userId === 'USR-MASTER-01' || session.username === 'jorgealvimtecnologia' || (session.name || '').toLowerCase().includes('jorge alvim') || session.role === 'master';
+    const isMaster = session.userId === 'USR-MASTER-01' || session.username === 'jorgealvimtecnologia' || session.role === 'master';
     if (isMaster) {
       return res.json({
         success: true,
