@@ -16,6 +16,10 @@ import { generateNextClientFullId } from '../../shared/ids.js';
 
 export const authRouter = express.Router();
 
+// Tentativas erradas do código de redefinição por usuário (após 5, o código é invalidado)
+const resetCodeFailures = new Map();
+const MAX_RESET_CODE_FAILURES = 5;
+
 authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
   try {
     const rawIdentifier = String(req.body.identifier || req.body.username || req.body.login || '').trim();
@@ -157,18 +161,12 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
         });
       }
 
+      // SEGURANÇA: cliente sem senha não adota a senha digitada — 1º acesso pelo código do escritório.
       if (!client.password_hash || !client.salt) {
-        if (password && validatePassword(password).ok) {
-          const newPass = hashPassword(password);
-          db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(newPass.hash, newPass.salt, new Date().toISOString(), client.id);
-          client.password_hash = newPass.hash;
-          client.salt = newPass.salt;
-        } else {
-          const defPass = hashPassword('123456');
-          db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(defPass.hash, defPass.salt, new Date().toISOString(), client.id);
-          client.password_hash = defPass.hash;
-          client.salt = defPass.salt;
-        }
+        return res.status(403).json({
+          error: 'Primeiro acesso: clique em "Esqueci minha senha" no Portal do Cliente para receber seu código de ativação pelo escritório.',
+          code: 'FIRST_ACCESS_REQUIRED'
+        });
       }
 
       const isClientPasswordValid = verifyPassword(rawPassword, client.password_hash, client.salt);
@@ -662,9 +660,12 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
       }
     }
 
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado no sistema.' });
-    }
+    // Resposta idêntica exista ou não o usuário (não revela contas do painel).
+    const genericResponse = {
+      success: true,
+      message: 'Se o usuário existir, o código de verificação foi enviado ao WhatsApp do Administrador.'
+    };
+    if (!user) return res.json(genericResponse);
 
     // Gerar token de 6 dígitos numéricos
     const resetCode = String(crypto.randomInt(100000, 999999));
@@ -693,10 +694,7 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
       description: `Código de redefinição de senha solicitado para ${user.name} (${user.username}).`
     });
 
-    return res.json({
-      success: true,
-      message: 'Código de verificação enviado com sucesso ao WhatsApp do Administrador.'
-    });
+    return res.json(genericResponse);
   } catch (err) {
     console.error('[ERRO] Forgot Password:', err);
     return res.status(500).json({ error: 'Falha ao processar solicitação de recuperação de senha.' });
@@ -724,13 +722,21 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
       user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
     }
 
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
-    }
-
-    if (!user.reset_token || user.reset_token !== cleanCode) {
+    if (!user || !user.reset_token) {
       return res.status(400).json({ error: 'Código de segurança inválido.' });
     }
+
+    if (user.reset_token !== cleanCode) {
+      const fails = (resetCodeFailures.get(user.id) || 0) + 1;
+      resetCodeFailures.set(user.id, fails);
+      if (fails >= MAX_RESET_CODE_FAILURES) {
+        db.prepare(`UPDATE users SET reset_token = NULL, reset_token_expires = NULL WHERE id = ?`).run(user.id);
+        resetCodeFailures.delete(user.id);
+        return res.status(400).json({ error: 'Muitas tentativas com código incorreto. Solicite um novo código.' });
+      }
+      return res.status(400).json({ error: 'Código de segurança inválido.' });
+    }
+    resetCodeFailures.delete(user.id);
 
     if (user.reset_token_expires && new Date(user.reset_token_expires).getTime() < Date.now()) {
       return res.status(400).json({ error: 'Código de segurança expirado. Solicite um novo código.' });
@@ -769,3 +775,18 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
   }
 });
 
+
+/**
+ * POST /api/auth/unlock - Desbloqueio da tela de bloqueio do painel.
+ * Confere a senha REAL do operador da sessão (antes o front aceitava PIN 1234 ou
+ * qualquer texto com 4+ caracteres).
+ */
+authRouter.post('/api/auth/unlock', loginRateLimit, requireAuth, (req, res) => {
+  const password = String(req.body?.password || '').trim();
+  if (!password || req.user?.isEmployee) return res.status(401).json({ error: 'Senha incorreta.' });
+  const user = db.prepare(`SELECT id, password_hash, salt FROM users WHERE id = ?`).get(req.user.userId);
+  if (!user || !verifyPassword(password, user.password_hash, user.salt)) {
+    return res.status(401).json({ error: 'Senha incorreta.' });
+  }
+  return res.json({ success: true });
+});

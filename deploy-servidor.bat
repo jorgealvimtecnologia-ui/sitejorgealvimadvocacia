@@ -24,8 +24,13 @@ ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "D=%REMOTE%/backups/pre
 if errorlevel 1 goto :erro
 echo.
 
-echo [2/3] Enviando server.js, paginas publicas (*.html), src/, public/ e scripts/...
-scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js *.html src public scripts %SRV%:%REMOTE%/
+echo [2/3] Enviando server.js, paginas publicas (*.html), src/, public/, scripts/ e docs/...
+scp -i "%KEY%" -o StrictHostKeyChecking=accept-new -r server.js *.html src public scripts docs %SRV%:%REMOTE%/
+if errorlevel 1 goto :erro
+echo.
+
+echo [2b/3] Removendo de public/ os relatorios internos antigos (agora em docs/relatorios)...
+ssh -i "%KEY%" -o StrictHostKeyChecking=accept-new %SRV% "cd %REMOTE% && rm -f public/CONVERSA_COMPLETA_PLANEJAMENTO_JORGE_ALVIM_2026.pdf public/MAPA_ATUALIZADO_INOVACOES_HOJE.pdf public/RELATORIO_MELHORIAS_IMPLEMENTADAS.md public/ROADMAP_ATUALIZADO_JORGE_ALVIM.pdf public/ROADMAP_EXECUTIVO_JORGE_ALVIM_2026.pdf public/ROADMAP_FUNCIONALIDADES_E_PROXIMOS_PASSOS_08_SETEMBRO_2026.pdf public/auditoria_tecnica_arquitetura_cloud.pdf public/relatorio_evolucao_saas_jorge_alvim.pdf public/relatorio_melhorias_implementadas.pdf public/relatorio_roadmap_modificacoes.pdf public/relatorio_unificado_atualizacoes_e_roadmap.pdf public/resumo_funcionalidades_jorge_alvim.pdf public/roadmap_completo_jorge_alvim.pdf"
 if errorlevel 1 goto :erro
 echo.
 

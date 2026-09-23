@@ -13,6 +13,13 @@
 (function () {
   'use strict';
 
+  // Cabeçalhos com o token do painel (as rotas do Cockpit exigem login)
+  function cockpitHeaders(extra) {
+    var t = null;
+    try { t = localStorage.getItem('ja_admin_token'); } catch (e) {}
+    return Object.assign({}, extra || {}, t ? { 'Authorization': 'Bearer ' + t } : {});
+  }
+
   // ============================================================================
   // 1. VALIDADORES MATEMÁTICOS EM TEMPO REAL (Módulo 11 e Módulo 97)
   // ============================================================================
@@ -414,7 +421,7 @@
     try {
       const res = await fetch('/api/court/deadline/calculate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: cockpitHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ start_date: startDate, days: Number(days), regime })
       });
       const data = await res.json();
@@ -478,7 +485,7 @@
     try {
       const res = await fetch('/api/court/deadline/launch-to-calendar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: cockpitHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           publication_id: pubId,
           title,
@@ -738,7 +745,7 @@
     if (!container) return;
 
     try {
-      const res = await fetch('/api/dashboard/meu-dia-hoje');
+      const res = await fetch('/api/dashboard/meu-dia-hoje', { headers: cockpitHeaders() });
       if (!res.ok) return;
       const data = await res.json();
       if (!data.success) return;
@@ -924,7 +931,7 @@
     try {
       const res = await fetch(`/api/juridico/publications/${id}/triage`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: cockpitHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ action })
       });
       const data = await res.json();

@@ -30,8 +30,12 @@ echo "[1/3] Fazendo backup COMPLETO no servidor (para rollback)..."
 ssh "${SSH_OPTS[@]}" "$SRV" "D=$REMOTE/backups/predeploy-\$(date +%Y%m%d-%H%M%S); mkdir -p \$D && cp -r $REMOTE/server.js $REMOTE/*.html $REMOTE/src $REMOTE/public \$D/ 2>/dev/null; echo \$D > $REMOTE/backups/LAST && echo '   Backup criado em: '\$D"
 echo
 
-echo "[2/3] Enviando server.js, páginas públicas (*.html), src/, public/ e scripts/..."
-scp "${SSH_OPTS[@]}" -r server.js *.html src public scripts "$SRV:$REMOTE/"
+echo "[2/3] Enviando server.js, páginas públicas (*.html), src/, public/, scripts/ e docs/..."
+scp "${SSH_OPTS[@]}" -r server.js *.html src public scripts docs "$SRV:$REMOTE/"
+echo
+
+echo "[2b/3] Removendo de public/ os relatórios internos antigos (agora em docs/relatorios)..."
+ssh "${SSH_OPTS[@]}" "$SRV" "cd $REMOTE && rm -f public/CONVERSA_COMPLETA_PLANEJAMENTO_JORGE_ALVIM_2026.pdf public/MAPA_ATUALIZADO_INOVACOES_HOJE.pdf public/RELATORIO_MELHORIAS_IMPLEMENTADAS.md public/ROADMAP_ATUALIZADO_JORGE_ALVIM.pdf public/ROADMAP_EXECUTIVO_JORGE_ALVIM_2026.pdf public/ROADMAP_FUNCIONALIDADES_E_PROXIMOS_PASSOS_08_SETEMBRO_2026.pdf public/auditoria_tecnica_arquitetura_cloud.pdf public/relatorio_evolucao_saas_jorge_alvim.pdf public/relatorio_melhorias_implementadas.pdf public/relatorio_roadmap_modificacoes.pdf public/relatorio_unificado_atualizacoes_e_roadmap.pdf public/resumo_funcionalidades_jorge_alvim.pdf public/roadmap_completo_jorge_alvim.pdf"
 echo
 
 echo "[3/3] Ajustando permissões, reiniciando e checando saúde (com AUTO-ROLLBACK)..."

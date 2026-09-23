@@ -361,15 +361,12 @@
       '  <!-- Formulário de Desbloqueio -->',
       '  <form id="jaw-lock-form" onsubmit="return false;" style="margin-top:20px;width:100%">',
       '    <div style="position:relative">',
-      '      <input type="password" id="jaw-lock-input" placeholder="Digite o PIN (1234) ou senha..." autocomplete="current-password" style="width:100%;background:rgba(2,6,23,0.7);border:1.5px solid #475569;border-radius:12px;padding:12px 42px 12px 14px;color:#ffffff;font-size:14px;font-weight:600;outline:none;transition:border-color 0.2s,box-shadow 0.2s" />',
+      '      <input type="password" id="jaw-lock-input" placeholder="Digite sua senha de acesso..." autocomplete="current-password" style="width:100%;background:rgba(2,6,23,0.7);border:1.5px solid #475569;border-radius:12px;padding:12px 42px 12px 14px;color:#ffffff;font-size:14px;font-weight:600;outline:none;transition:border-color 0.2s,box-shadow 0.2s" />',
       '      <button type="submit" id="jaw-lock-submit-btn" title="Desbloquear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:linear-gradient(135deg,#d97706,#b45309);border:none;color:#fff;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;box-shadow:0 2px 8px rgba(217,119,6,0.5)">➔</button>',
       '    </div>',
       '    <div id="jaw-lock-error" style="display:none;color:#f87171;font-size:11.5px;font-weight:600;margin-top:8px">Senha incorreta. Tente novamente.</div>',
       '  </form>',
 
-      '  <div style="margin-top:16px;padding:8px 12px;background:rgba(255,255,255,0.05);border-radius:10px;font-size:11px;color:#cbd5e1;line-height:1.4">',
-      '    💡 <strong>Dica de teste:</strong> Digite o PIN <strong>1234</strong> ou sua senha de acesso.',
-      '  </div>',
       '</div>',
 
       '<!-- Rodapé: Status de Proteção -->',
@@ -388,17 +385,28 @@
     var input = el.querySelector('#jaw-lock-input');
     var errorMsg = el.querySelector('#jaw-lock-error');
 
+    function showUnlockError(){
+      errorMsg.style.display = 'block';
+      input.style.borderColor = '#ef4444';
+      input.classList.add('jaw-shake');
+      setTimeout(function(){ input.classList.remove('jaw-shake'); }, 500);
+    }
+
+    // Confere a senha real do operador no servidor (sem PIN fixo).
     function tryUnlock(){
       var val = (input.value || '').trim();
-      // Credenciais aceitas: '1234', 'jorgealvim', ou senha com 4+ caracteres
-      if(val === '1234' || val === 'jorgealvim' || val.length >= 4){
-        unlockSystem();
-      } else {
-        errorMsg.style.display = 'block';
-        input.style.borderColor = '#ef4444';
-        input.classList.add('jaw-shake');
-        setTimeout(function(){ input.classList.remove('jaw-shake'); }, 500);
-      }
+      if(!val){ showUnlockError(); return; }
+      var token = null;
+      try { token = localStorage.getItem('ja_admin_token') || sessionStorage.getItem('ja_admin_token'); } catch(e) {}
+      fetch('/api/auth/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token || '') },
+        body: JSON.stringify({ password: val })
+      }).then(function(r){
+        if(r.ok){ input.value = ''; unlockSystem(); }
+        else if(r.status === 401 && !token){ window.location.href = '/painel'; }
+        else { showUnlockError(); }
+      }).catch(showUnlockError);
     }
 
     form.addEventListener('submit', function(e){

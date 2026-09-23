@@ -1256,9 +1256,11 @@ describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
     assert.ok(res.body.error);
   });
 
-  it('POST /api/auth/forgot-password com usuário inexistente → 404', async () => {
+  it('POST /api/auth/forgot-password com usuário inexistente → mesma resposta genérica (não revela contas)', async () => {
     const res = await request(app).post('/api/auth/forgot-password').send({ username: 'usuario_inexistente_xyz_123' });
-    assert.equal(res.status, 404);
+    const ok = await request(app).post('/api/auth/forgot-password').send({ username: 'jorgealvimtecnologia' });
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, ok.body);
   });
 
   it('POST /api/auth/forgot-password com usuário válido → 200 e gera código no banco', async () => {

@@ -1414,6 +1414,13 @@
           if (form) form.reset();
           localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
           await loadClientPortal();
+        } else if (data.code === 'FIRST_ACCESS_REQUIRED') {
+          // 1º acesso: abre a recuperação já com o identificador preenchido
+          errorMsg.textContent = data.error;
+          errorMsg.classList.remove('hidden');
+          openForgotPasswordModal();
+          const forgotId = document.getElementById('forgot-identifier');
+          if (forgotId) forgotId.value = login;
         } else {
           errorMsg.textContent = data.error || 'Credenciais inválidas. Tente novamente.';
           errorMsg.classList.remove('hidden');
@@ -2122,9 +2129,6 @@
           alert(data.message);
           document.getElementById('forgot-step-1').classList.add('hidden');
           document.getElementById('forgot-step-2').classList.remove('hidden');
-          if (data.reset_code_demo) {
-            document.getElementById('forgot-code').value = data.reset_code_demo;
-          }
         } else {
           alert(data.error || 'Cadastro não encontrado.');
         }

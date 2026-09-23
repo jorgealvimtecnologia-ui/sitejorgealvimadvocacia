@@ -19,6 +19,15 @@ import { verifyGoogleToken } from '../../shared/google-auth.js';
 
 export const clientPortalRouter = express.Router();
 
+export const FIRST_ACCESS_RESPONSE = {
+  error: 'Primeiro acesso: clique em "Esqueci minha senha" para receber seu código de ativação pelo escritório.',
+  code: 'FIRST_ACCESS_REQUIRED'
+};
+
+// Tentativas erradas de código de redefinição por cliente (após 5, o código é invalidado)
+const resetCodeFailures = new Map();
+const MAX_RESET_CODE_FAILURES = 5;
+
 // Cliente-mestre (modo visualização do Dr. Jorge): só a senha REAL do usuário
 // mestre ou a senha própria do cliente-mestre autenticam — sem senha universal.
 function verifyMasterPortalPassword(password, client) {
@@ -122,141 +131,74 @@ clientPortalRouter.post('/api/client-portal/register', (req, res) => {
     const { hash, salt } = hashPassword(password);
     const now = new Date().toISOString();
 
-    let clientId;
-
+    // SEGURANÇA: o cadastro NÃO pode assumir um cliente já existente (antes sobrescrevia
+    // senha, e-mail e telefone de quem tivesse o CPF/e-mail informado). Cliente já
+    // cadastrado ativa o acesso pelo código do escritório ("Esqueci minha senha").
     if (existing) {
-      // Se o cliente já foi cadastrado previamente pelo advogado ou formulário, apenas define/atualiza a senha e dados
-      clientId = existing.id;
-      db.prepare(`
-        UPDATE clients SET
-          client_type = ?,
-          full_name = ?,
-          cpf = COALESCE(?, cpf),
-          rg = COALESCE(?, rg),
-          cnpj = COALESCE(?, cnpj),
-          email = ?,
-          phone = ?,
-          password_hash = ?,
-          salt = ?,
-          street = COALESCE(?, street),
-          number = COALESCE(?, number),
-          neighborhood = COALESCE(?, neighborhood),
-          city = COALESCE(?, city),
-          state = COALESCE(?, state),
-          cep = COALESCE(?, cep),
-          complement = COALESCE(?, complement),
-          filiation_father = COALESCE(?, filiation_father),
-          filiation_mother = COALESCE(?, filiation_mother),
-          nationality = COALESCE(?, nationality),
-          marital_status = COALESCE(?, marital_status),
-          profession = COALESCE(?, profession),
-          rep_name = COALESCE(?, rep_name),
-          rep_cpf = COALESCE(?, rep_cpf),
-          rep_rg = COALESCE(?, rep_rg),
-          rep_street = COALESCE(?, rep_street),
-          rep_number = COALESCE(?, rep_number),
-          rep_neighborhood = COALESCE(?, rep_neighborhood),
-          rep_city = COALESCE(?, rep_city),
-          rep_state = COALESCE(?, rep_state),
-          rep_cep = COALESCE(?, rep_cep),
-          rep_complement = COALESCE(?, rep_complement),
-          updated_at = ?
-        WHERE id = ?
-      `).run(
-        type,
-        full_name.trim(),
-        cpf || null,
-        rg || null,
-        cnpj || null,
-        cleanEmail,
-        phone.trim(),
-        hash,
-        salt,
-        street || null,
-        number || null,
-        neighborhood || null,
-        city || null,
-        state || null,
-        cep || null,
-        complement || null,
-        filiation_father || null,
-        filiation_mother || null,
-        nationality || 'brasileiro(a)',
-        marital_status || 'solteiro(a)',
-        profession || null,
-        rep_name || null,
-        rep_cpf || null,
-        rep_rg || null,
-        rep_street || null,
-        rep_number || null,
-        rep_neighborhood || null,
-        rep_city || null,
-        rep_state || null,
-        rep_cep || null,
-        rep_complement || null,
-        now,
-        clientId
-      );
-    } else {
-      // Novo cadastro do cliente
-      clientId = generateNextClientFullId();
-      db.prepare(`
-        INSERT INTO clients (
-          id, client_type, full_name, cpf, rg, cnpj, email, phone, password_hash, salt,
-          street, number, neighborhood, city, state, cep, complement,
-          filiation_father, filiation_mother, nationality, marital_status, profession,
-          rep_name, rep_cpf, rep_rg, rep_street, rep_number, rep_neighborhood, rep_city, rep_state, rep_cep, rep_complement,
-          email_notifications, created_at, updated_at
-        ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-          ?, ?, ?, ?, ?, ?, ?,
-          ?, ?, ?, ?, ?,
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-          1, ?, ?
-        )
-      `).run(
-        clientId,
-        type,
-        full_name.trim(),
-        cpf || null,
-        rg || null,
-        cnpj || null,
-        cleanEmail,
-        phone.trim(),
-        hash,
-        salt,
-        street || null,
-        number || null,
-        neighborhood || null,
-        city || null,
-        state || null,
-        cep || null,
-        complement || null,
-        filiation_father || null,
-        filiation_mother || null,
-        nationality || 'brasileiro(a)',
-        marital_status || 'solteiro(a)',
-        profession || null,
-        rep_name || null,
-        rep_cpf || null,
-        rep_rg || null,
-        rep_street || null,
-        rep_number || null,
-        rep_neighborhood || null,
-        rep_city || null,
-        rep_state || null,
-        rep_cep || null,
-        rep_complement || null,
-        now,
-        now
-      );
-
-      // Enviar mensagem de boas-vindas do escritório
-      db.prepare(`
-        INSERT INTO client_messages (client_id, sender, sender_name, subject, message, created_at)
-        VALUES (?, 'office', 'Dr. Jorge Alvim Advocacia', 'Boas-vindas ao Portal do Cliente', 'Seja bem-vindo(a) ao seu Portal de Atendimento e Acompanhamento Processual! Por aqui você pode acompanhar todas as movimentações dos seus processos, consultar seu contrato e nos enviar mensagens.', ?)
-      `).run(clientId, now);
+      return res.status(409).json({
+        error: 'Já existe um cadastro com este CPF/CNPJ ou e-mail. Use "Esqueci minha senha" para receber seu código de acesso pelo escritório.',
+        code: 'ALREADY_REGISTERED'
+      });
     }
+
+    // Novo cadastro do cliente
+    const clientId = generateNextClientFullId();
+    db.prepare(`
+      INSERT INTO clients (
+        id, client_type, full_name, cpf, rg, cnpj, email, phone, password_hash, salt,
+        street, number, neighborhood, city, state, cep, complement,
+        filiation_father, filiation_mother, nationality, marital_status, profession,
+        rep_name, rep_cpf, rep_rg, rep_street, rep_number, rep_neighborhood, rep_city, rep_state, rep_cep, rep_complement,
+        email_notifications, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        1, ?, ?
+      )
+    `).run(
+      clientId,
+      type,
+      full_name.trim(),
+      cpf || null,
+      rg || null,
+      cnpj || null,
+      cleanEmail,
+      phone.trim(),
+      hash,
+      salt,
+      street || null,
+      number || null,
+      neighborhood || null,
+      city || null,
+      state || null,
+      cep || null,
+      complement || null,
+      filiation_father || null,
+      filiation_mother || null,
+      nationality || 'brasileiro(a)',
+      marital_status || 'solteiro(a)',
+      profession || null,
+      rep_name || null,
+      rep_cpf || null,
+      rep_rg || null,
+      rep_street || null,
+      rep_number || null,
+      rep_neighborhood || null,
+      rep_city || null,
+      rep_state || null,
+      rep_cep || null,
+      rep_complement || null,
+      now,
+      now
+    );
+
+    // Enviar mensagem de boas-vindas do escritório
+    db.prepare(`
+      INSERT INTO client_messages (client_id, sender, sender_name, subject, message, created_at)
+      VALUES (?, 'office', 'Dr. Jorge Alvim Advocacia', 'Boas-vindas ao Portal do Cliente', 'Seja bem-vindo(a) ao seu Portal de Atendimento e Acompanhamento Processual! Por aqui você pode acompanhar todas as movimentações dos seus processos, consultar seu contrato e nos enviar mensagens.', ?)
+    `).run(clientId, now);
 
     const clientRow = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(clientId);
     const token = createClientSession(clientRow);
@@ -408,20 +350,10 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
       });
     }
 
-    // Se o cliente ainda não tem senha cadastrada, define a senha digitada se cumprir
-    // a política (4–12 caracteres); caso contrário aplica a senha padrão de 1º acesso.
-    if (!client.password_hash || !client.salt) {
-      if (password && validatePassword(password).ok) {
-        const newPass = hashPassword(password);
-        db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(newPass.hash, newPass.salt, new Date().toISOString(), client.id);
-        client.password_hash = newPass.hash;
-        client.salt = newPass.salt;
-      } else {
-        const defPass = hashPassword('123456');
-        db.prepare(`UPDATE clients SET password_hash = ?, salt = ?, updated_at = ? WHERE id = ?`).run(defPass.hash, defPass.salt, new Date().toISOString(), client.id);
-        client.password_hash = defPass.hash;
-        client.salt = defPass.salt;
-      }
+    // SEGURANÇA: cliente sem senha NÃO adota a senha digitada (quem soubesse o CPF
+    // tomaria a conta). O 1º acesso é feito pelo código enviado via escritório.
+    if ((!client.password_hash || !client.salt) && client.id !== 'CLI-MASTER-01') {
+      return res.status(403).json(FIRST_ACCESS_RESPONSE);
     }
 
     const isMasterClient = client && (client.id === 'CLI-MASTER-01' || isMasterPortalLogin);
@@ -858,7 +790,7 @@ clientPortalRouter.post('/api/client-portal/change-password', requireClientAuth,
 });
 
 // 6. Solicitar Recuperação de Senha (Gera Código de Recuperação)
-clientPortalRouter.post('/api/client-portal/forgot-password', (req, res) => {
+clientPortalRouter.post('/api/client-portal/forgot-password', loginRateLimit, async (req, res) => {
   try {
     const { login } = req.body;
     if (!login) {
@@ -882,19 +814,34 @@ clientPortalRouter.post('/api/client-portal/forgot-password', (req, res) => {
       client = db.prepare(`SELECT id, email, full_name, cpf, cnpj FROM clients WHERE LOWER(TRIM(email)) = ?`).get(cleanEmail);
     }
 
-    if (!client) {
-      return res.status(404).json({ error: 'Não encontramos nenhum cadastro com este CPF/CNPJ ou E-mail.' });
-    }
+    // Resposta idêntica exista ou não o cadastro (não revela quem é cliente).
+    const genericResponse = {
+      success: true,
+      message: 'Se houver cadastro com estes dados, o escritório enviará seu código pelo WhatsApp em instantes.'
+    };
+    if (!client) return res.json(genericResponse);
 
-    // Código de 6 dígitos
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // Código de 6 dígitos (CSPRNG)
+    const resetCode = String(crypto.randomInt(100000, 1000000));
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
 
     db.prepare(`
       UPDATE clients SET reset_token = ?, reset_token_expires = ? WHERE id = ?
     `).run(resetCode, expiresAt, client.id);
 
-    console.log(`🔐 [RESET SENHA] Código gerado para cliente ${client.full_name} (${client.id}): ${resetCode}`);
+    resetCodeFailures.delete(client.id);
+    await sendLawyerWhatsAppNotification(
+      `🔐 *CÓDIGO DE ACESSO - PORTAL DO CLIENTE*
+
+` +
+      `Cliente: *${client.full_name}* (${client.cpf || client.cnpj || client.email || client.id})
+` +
+      `Código (válido por 1 hora): *${resetCode}*
+
+` +
+      `Repasse o código ao cliente somente após confirmar a identidade dele.`,
+      { action: 'client_password_reset', clientId: client.id }
+    );
 
     logAudit(req, {
       event_type: 'AUTENTICACAO',
@@ -907,11 +854,7 @@ clientPortalRouter.post('/api/client-portal/forgot-password', (req, res) => {
       description: `Código de recuperação de senha gerado para o cliente ${client.full_name}.`
     });
 
-    res.json({
-      success: true,
-      message: `Código de redefinição enviado com sucesso! Utilize o código ${resetCode} para definir sua nova senha.`,
-      reset_code_demo: resetCode
-    });
+    res.json(genericResponse);
 
   } catch (err) {
     console.error('Erro na solicitação de recuperação de senha:', err);
@@ -920,7 +863,7 @@ clientPortalRouter.post('/api/client-portal/forgot-password', (req, res) => {
 });
 
 // 7. Redefinir Senha com Código
-clientPortalRouter.post('/api/client-portal/reset-password', (req, res) => {
+clientPortalRouter.post('/api/client-portal/reset-password', loginRateLimit, (req, res) => {
   try {
     const { login, reset_code, new_password } = req.body;
     if (!login || !reset_code || !new_password) {
@@ -949,13 +892,21 @@ clientPortalRouter.post('/api/client-portal/reset-password', (req, res) => {
       client = db.prepare(`SELECT * FROM clients WHERE LOWER(TRIM(email)) = ?`).get(cleanEmail);
     }
 
-    if (!client) {
-      return res.status(404).json({ error: 'Cadastro não encontrado.' });
-    }
-
-    if (!client.reset_token || client.reset_token !== reset_code.trim()) {
+    if (!client || !client.reset_token) {
       return res.status(400).json({ error: 'Código de recuperação inválido ou incorreto.' });
     }
+
+    if (client.reset_token !== String(reset_code).trim()) {
+      const fails = (resetCodeFailures.get(client.id) || 0) + 1;
+      resetCodeFailures.set(client.id, fails);
+      if (fails >= MAX_RESET_CODE_FAILURES) {
+        db.prepare(`UPDATE clients SET reset_token = NULL, reset_token_expires = NULL WHERE id = ?`).run(client.id);
+        resetCodeFailures.delete(client.id);
+        return res.status(400).json({ error: 'Muitas tentativas com código incorreto. Solicite um novo código.' });
+      }
+      return res.status(400).json({ error: 'Código de recuperação inválido ou incorreto.' });
+    }
+    resetCodeFailures.delete(client.id);
 
     if (new Date(client.reset_token_expires) < new Date()) {
       return res.status(400).json({ error: 'Código de recuperação expirado. Solicite um novo código.' });

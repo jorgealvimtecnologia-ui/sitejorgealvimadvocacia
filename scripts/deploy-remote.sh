@@ -20,8 +20,8 @@ GIT_SHA="${4:-desconhecido}"
 U=$(systemctl cat "$SERVICE" 2>/dev/null | sed -n 's/^User=//p'); U="${U:-www-data}"
 
 fix_perms() {
-  chown -R "$U:$U" "$REMOTE/src" "$REMOTE/public" 2>/dev/null || true
-  chmod -R a+rX "$REMOTE/src" "$REMOTE/public" 2>/dev/null || true
+  chown -R "$U:$U" "$REMOTE/src" "$REMOTE/public" "$REMOTE/docs" 2>/dev/null || true
+  chmod -R a+rX "$REMOTE/src" "$REMOTE/public" "$REMOTE/docs" 2>/dev/null || true
   chmod a+r "$REMOTE/server.js" "$REMOTE"/*.html 2>/dev/null || true
 }
 

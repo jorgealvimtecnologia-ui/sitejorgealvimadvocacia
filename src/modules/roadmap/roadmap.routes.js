@@ -124,7 +124,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       scorecard: [
         { pilar: '1. Persistência & CRUD', estado: `SQLite WAL com ${indexCount} índices em leads.db`, risco: 'MÉDIO', veredito: 'Ultra-rápido (<5ms), isolado e sem sobrecarga TCP.', acao: 'Backup local VACUUM INTO ativo; exportação DRP externa planejada.' },
         { pilar: '2. Rede Internacional', estado: 'VPS Contabo Frankfurt atrás do Cloudflare (proxy + SSL)', risco: 'BAIXO', veredito: 'Cloudflare ativo: estáticos servidos pelo edge no Brasil.', acao: 'Concluído (DNS apontado para o Cloudflare).' },
-        { pilar: '3. Segredos & Auth', estado: 'Variáveis .env + PBKDF2-SHA512 210k + tokens de sessão em memória', risco: 'MÉDIO', veredito: 'Senha universal do mestre removida e /storage protegido; falta publicar no servidor.', acao: 'Publicar a correção no Contabo.' },
+        { pilar: '3. Segredos & Auth', estado: 'Variáveis .env + PBKDF2-SHA512 210k + tokens de sessão em memória', risco: 'MÉDIO', veredito: 'Senha universal removida, /storage protegido e fluxos do portal do cliente corrigidos; falta publicar no servidor.', acao: 'Publicar a correção no Contabo.' },
         { pilar: '4. LGPD vs Estatuto OAB', estado: 'Soft Delete com Trava Ética (Art. 16, I da LGPD)', risco: 'BLINDADO', veredito: 'Bloqueio legal com barreira 409 se houver processos judiciais ativos.', acao: '100% Homologado e ativo no Portal do Cliente com testes unitários.' },
         { pilar: '5. Retenção de Arquivos', estado: 'Storage local com caçador de arquivos órfãos', risco: 'BAIXO', veredito: 'Expurgo automatizado de rascunhos e temporários > 7 dias.', acao: 'Módulo de manutenção operacional ativo em /api/admin/maintenance.' }
       ],
@@ -172,7 +172,8 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         items: [
           { task: 'Deploy do Hardening S1–S8 (PBKDF2 210k, RBAC fail-closed)', done: true, priority: 'P0' },
           { task: 'Remoção da senha universal do mestre no código (login e portais)', done: true, priority: 'P0' },
-          { task: 'Primeiro acesso do cliente sem senha: exigir validação (hoje a 1ª senha digitada vira a senha)', done: false, priority: 'P0' },
+          { task: 'Portal do cliente: 1º acesso por código do escritório, cadastro não assume cliente existente e código de recuperação fora da resposta', done: true, priority: 'P0' },
+          { task: 'Tela de bloqueio do painel conferindo a senha real no servidor (sem PIN fixo)', done: true, priority: 'P1' },
           { task: 'Proteção de /storage/* com autenticação e verificação de proprietário (Ownership)', done: hasStorageGuard, priority: 'P0' },
           { task: 'Relatórios internos fora de /public (download só com login)', done: reportsArePrivate, priority: 'P0' },
           { task: 'Ativação do Cloudflare Edge no Brasil para atenuar latência da Contabo', done: true, priority: 'P0' },
@@ -321,7 +322,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
             badge: hasSoftDelete ? '🟢 No Ar (100%)' : '🟡 Parcial (85%)', 
             details: 'Gestão de consentimentos, protocolo 15 dias e soft delete' 
           },
-          { name: 'RBAC Fail-Closed & Auditoria de Fluxo', status: 'partial', badge: '🟡 Parcial (85%)', details: 'Matriz estrita de papéis, /storage protegido e login sem busca parcial por nome; pendente: 1º acesso do cliente' },
+          { name: 'RBAC Fail-Closed & Auditoria de Fluxo', status: 'delivered', badge: '🟢 No Ar (95%)', details: 'Matriz estrita de papéis, /storage protegido, login sem busca parcial e recuperação sem vazamento de código' },
           { name: 'Criptografia TLS 1.3 + PBKDF2 210k', status: 'partial', badge: '🟡 Parcial (75%)', details: 'TLS 1.3 e HSTS no ar; SQLCipher em repouso planejado' },
           { name: 'Biometria Facial Liveness (DocuSign/Ironclad)', status: 'partial', badge: '🟡 Q2/2027', details: 'Prova de vida ativa no E-Sign para grandes contratos' },
           { 

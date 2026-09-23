@@ -3,6 +3,9 @@
  * 1. Senha universal do mestre removida (login, portal do cliente, portal do colaborador)
  * 2. /storage/clients e /storage/office_drive exigem sessão (cliente só vê a própria pasta)
  * 3. Relatórios internos só com login de operador
+ * 4. Portal do cliente: 1º acesso por código, cadastro não assume cliente existente,
+ *    código de recuperação nunca volta na resposta e expira após 5 erros
+ * 5. Tela de bloqueio do painel confere a senha real no servidor
  */
 import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -112,5 +115,82 @@ describe('Relatórios internos', () => {
     const token = await masterToken();
     const r = await request(app).get(`/api/admin/relatorios/..%2F..%2Fserver.js?token=${token}`);
     assert.notEqual(r.status, 200);
+  });
+});
+
+describe('Portal do cliente: primeiro acesso, cadastro e recuperação', () => {
+  const CPF = '529.982.247-25';
+  const now = new Date().toISOString();
+  db.prepare(`INSERT INTO clients (id, client_type, full_name, cpf, email, phone, created_at, updated_at)
+              VALUES ('CLI-TEST-NOPASS', 'PF', 'Cliente Sem Senha', ?, 'semsenha@teste.com', '(32) 90000-0000', ?, ?)`)
+    .run(CPF, now, now);
+
+  it('login de cliente sem senha NÃO adota a senha digitada (403 FIRST_ACCESS_REQUIRED)', async () => {
+    const r = await request(app).post('/api/client-portal/login').send({ login: CPF, password: 'SenhaDoAtacante1' });
+    assert.equal(r.status, 403);
+    assert.equal(r.body.code, 'FIRST_ACCESS_REQUIRED');
+    const row = db.prepare(`SELECT password_hash FROM clients WHERE id = 'CLI-TEST-NOPASS'`).get();
+    assert.ok(!row.password_hash);
+  });
+
+  it('login unificado também exige o 1º acesso pelo código', async () => {
+    const r = await request(app).post('/api/auth/login').send({ identifier: CPF, password: 'SenhaDoAtacante1' });
+    assert.equal(r.status, 403);
+    assert.equal(r.body.code, 'FIRST_ACCESS_REQUIRED');
+  });
+
+  it('cadastro com CPF já existente é recusado (não sobrescreve o cliente)', async () => {
+    const r = await request(app).post('/api/client-portal/register').send({
+      client_type: 'PF', full_name: 'Atacante', cpf: CPF, email: 'atacante@teste.com',
+      phone: '(32) 91111-1111', password: 'SenhaDoAtacante1'
+    });
+    assert.equal(r.status, 409);
+    const row = db.prepare(`SELECT email, password_hash FROM clients WHERE id = 'CLI-TEST-NOPASS'`).get();
+    assert.equal(row.email, 'semsenha@teste.com');
+    assert.ok(!row.password_hash);
+  });
+
+  it('esqueci a senha NÃO devolve o código e responde igual para cadastro inexistente', async () => {
+    const r = await request(app).post('/api/client-portal/forgot-password').send({ login: CPF });
+    assert.equal(r.status, 200);
+    assert.ok(!('reset_code_demo' in r.body));
+    const code = db.prepare(`SELECT reset_token FROM clients WHERE id = 'CLI-TEST-NOPASS'`).get().reset_token;
+    assert.ok(code);
+    assert.ok(!JSON.stringify(r.body).includes(code));
+    const ghost = await request(app).post('/api/client-portal/forgot-password').send({ login: '111.111.111-11' });
+    assert.deepEqual(ghost.body, r.body);
+  });
+
+  it('código errado 5 vezes invalida o código', async () => {
+    for (let i = 0; i < 5; i++) {
+      await request(app).post('/api/client-portal/reset-password').send({ login: CPF, reset_code: '000000', new_password: 'NovaSenha#123' });
+    }
+    const row = db.prepare(`SELECT reset_token FROM clients WHERE id = 'CLI-TEST-NOPASS'`).get();
+    assert.ok(!row.reset_token);
+  });
+
+  it('com o código correto, o cliente ativa o acesso e entra', async () => {
+    await request(app).post('/api/client-portal/forgot-password').send({ login: CPF });
+    const code = db.prepare(`SELECT reset_token FROM clients WHERE id = 'CLI-TEST-NOPASS'`).get().reset_token;
+    const r = await request(app).post('/api/client-portal/reset-password').send({ login: CPF, reset_code: code, new_password: 'NovaSenha#123' });
+    assert.equal(r.status, 200);
+    const login = await request(app).post('/api/client-portal/login').send({ login: CPF, password: 'NovaSenha#123' });
+    assert.equal(login.status, 200);
+  });
+});
+
+describe('Tela de bloqueio do painel', () => {
+  it('não desbloqueia com PIN 1234 nem com senha errada', async () => {
+    const token = await masterToken();
+    for (const password of ['1234', 'qualquercoisa']) {
+      const r = await request(app).post('/api/auth/unlock').set('Authorization', `Bearer ${token}`).send({ password });
+      assert.equal(r.status, 401);
+    }
+  });
+
+  it('desbloqueia com a senha real', async () => {
+    const token = await masterToken();
+    const r = await request(app).post('/api/auth/unlock').set('Authorization', `Bearer ${token}`).send({ password: 'SenhaRealDoMestre#2026' });
+    assert.equal(r.status, 200);
   });
 });
