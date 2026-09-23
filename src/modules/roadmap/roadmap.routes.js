@@ -124,7 +124,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       scorecard: [
         { pilar: '1. Persistência & CRUD', estado: `SQLite WAL com ${indexCount} índices em leads.db`, risco: 'MÉDIO', veredito: 'Ultra-rápido (<5ms), isolado e sem sobrecarga TCP.', acao: 'Backup local VACUUM INTO ativo; exportação DRP externa planejada.' },
         { pilar: '2. Rede Internacional', estado: 'VPS Contabo Frankfurt atrás do Cloudflare (proxy + SSL)', risco: 'BAIXO', veredito: 'Cloudflare ativo: estáticos servidos pelo edge no Brasil.', acao: 'Concluído (DNS apontado para o Cloudflare).' },
-        { pilar: '3. Segredos & Auth', estado: 'Variáveis .env + PBKDF2-SHA512 210k + tokens de sessão em memória', risco: 'MÉDIO', veredito: 'Senha universal removida, /storage protegido e fluxos do portal do cliente corrigidos; falta publicar no servidor.', acao: 'Publicar a correção no Contabo.' },
+        { pilar: '3. Segredos & Auth', estado: 'Variáveis .env + PBKDF2-SHA512 210k + tokens de sessão em memória', risco: 'MÉDIO', veredito: 'Correções publicadas (versão 50b8b73); a senha do mestre ficou igual à antiga senha fixa.', acao: 'Trocar a senha do mestre no servidor.' },
         { pilar: '4. LGPD vs Estatuto OAB', estado: 'Soft Delete com Trava Ética (Art. 16, I da LGPD)', risco: 'BLINDADO', veredito: 'Bloqueio legal com barreira 409 se houver processos judiciais ativos.', acao: '100% Homologado e ativo no Portal do Cliente com testes unitários.' },
         { pilar: '5. Retenção de Arquivos', estado: 'Storage local com caçador de arquivos órfãos', risco: 'BAIXO', veredito: 'Expurgo automatizado de rascunhos e temporários > 7 dias.', acao: 'Módulo de manutenção operacional ativo em /api/admin/maintenance.' }
       ],
@@ -157,7 +157,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       { id: '3', title: 'Fomentar 3 Primeiras Vendas na Vitrine Amazon', type: 'DIVULGAR', origin: 'Amazon Associates', impact: 'Destrava chave oficial da Amazon Product Advertising API (PA-API v5)', badge: '! AÇÃO RECOMENDADA' },
       { id: '4', title: 'Decisão de UX: Modal de Boas-Vindas para Toast', type: 'DECIDIR', origin: 'Design System', impact: 'Converte modal de 1.2s em aviso flutuante discreto no canto inferior', badge: '! DECISÃO DE UX' },
       { id: '5', title: 'Ativação Direta de Cobrança Meta Ads API', type: 'SEGURANÇA', origin: 'Meta Marketing API', impact: 'Campanhas criadas como PAUSED para controle rigoroso de verba', badge: '# TRAVA DE SEGURANÇA' },
-      { id: '6', title: 'Publicar no Contabo as correções de segurança (senha universal e /storage)', type: 'SEGURANÇA', origin: 'Servidor Contabo', impact: 'O código em produção ainda aceita uma senha fixa para o mestre, além da senha real', badge: '! AÇÃO URGENTE' }
+      { id: '6', title: 'Trocar a senha do mestre no Contabo (redefinir-senha-mestre.bat)', type: 'SEGURANÇA', origin: 'Servidor Contabo', impact: 'O código antigo regravava a senha do mestre como a senha fixa a cada login com ela — a senha atual é pública', badge: '! AÇÃO URGENTE' }
     ];
 
     // 3.4 Cronograma Estruturado por Ondas de Entrega (Ondas 0 a 4)
@@ -172,6 +172,7 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         items: [
           { task: 'Deploy do Hardening S1–S8 (PBKDF2 210k, RBAC fail-closed)', done: true, priority: 'P0' },
           { task: 'Remoção da senha universal do mestre no código (login e portais)', done: true, priority: 'P0' },
+          { task: 'Trocar a senha do mestre em produção (a atual é a antiga senha fixa)', done: false, priority: 'P0' },
           { task: 'Portal do cliente: 1º acesso por código do escritório, cadastro não assume cliente existente e código de recuperação fora da resposta', done: true, priority: 'P0' },
           { task: 'Tela de bloqueio do painel conferindo a senha real no servidor (sem PIN fixo)', done: true, priority: 'P1' },
           { task: 'Proteção de /storage/* com autenticação e verificação de proprietário (Ownership)', done: hasStorageGuard, priority: 'P0' },
