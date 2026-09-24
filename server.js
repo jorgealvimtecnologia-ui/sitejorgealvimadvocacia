@@ -14,6 +14,7 @@ import {
   destroySession
 } from './src/middleware/auth.js';
 import { requireStorageAccess } from './src/middleware/storage-guard.js';
+import { rbacGuard } from './src/middleware/rbac.js';
 import { versionAssets, readVersionedHtml } from './src/shared/asset-version.js';
 import { logAudit } from './src/middleware/audit.js';
 import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
@@ -1551,48 +1552,10 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 // Health check (monitoramento externo / uptime)
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString(), uptime_s: Math.round(process.uptime()) }));
 
-// -------- RBAC no backend: gate por perfil (defesa em profundidade) ----------
-// O MESTRE sempre passa (produção só tem o mestre → sem impacto). Perfis restritos
-// com matriz de acesso são barrados nas rotas dos módulos que não têm afinidade.
-const PATH_PERMS = [
-  [/^\/api\/clients/, 'tab_clients'], [/^\/api\/leads/, 'tab_leads'],
-  [/^\/api\/lawsuits/, 'tab_lawsuits'], [/^\/api\/court/, 'tab_publications'],
-  [/^\/api\/calendar/, 'tab_calendar'], [/^\/api\/financial/, 'tab_financial'],
-  [/^\/api\/nfse/, 'tab_financial'], [/^\/api\/esign/, 'tab_financial'],
-  [/^\/api\/hr\/employee\//, null],
-  [/^\/api\/hr\/portal\//, null],
-  [/^\/api\/hr\/reports\/annual-financial\/employee\//, null],
-  [/^\/api\/hr/, 'tab_hr'],
-  [/^\/api\/drive/, 'tab_drive'], [/^\/api\/offices/, 'tab_offices'],
-  [/^\/api\/users/, 'tab_users'], [/^\/api\/judicial/, 'tab_radar'],
-  [/^\/api\/lgpd/, 'tab_settings'], [/^\/api\/admin-requests/, 'tab_lawsuits'],
-  [/^\/api\/explorer/, 'tab_settings']
-];
-app.use((req, res, next) => {
-  try {
-    if (!req.path.startsWith('/api/')) return next();
-    if (/^\/api\/(auth|access-control|client-portal|visits|blog|dashboard|notifications|kanban)/.test(req.path)) return next();
-    const rule = PATH_PERMS.find(p => p[0].test(req.path));
-    if (!rule || rule[1] === null) return next();
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || req.headers['x-access-token']);
-    const s = validateToken(token);
-    if (!s) return next(); // sem sessão: o requireAuth da rota devolve 401
-    const isMaster = s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master';
-    if (isMaster) return next();
-    let perm = null; try { perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(s.userId); } catch (e) {}
-    // FAIL-CLOSED: perfil restrito sem matriz de permissões NÃO passa (antes era
-    // permissivo — um usuário sem matriz acessava tudo). O mestre já retornou acima.
-    if (!perm) return res.status(403).json({ error: 'Acesso negado: perfil sem matriz de permissões definida.' });
-    if (perm[rule[1]]) return next();
-    return res.status(403).json({ error: 'Acesso negado: seu perfil não tem permissão para este módulo.' });
-  } catch (e) {
-    // FAIL-CLOSED: qualquer falha na verificação de permissão nega o acesso (antes
-    // um erro liberava a rota). Não expõe detalhes internos.
-    console.error('[RBAC] Falha na verificação de permissão:', e.message);
-    return res.status(500).json({ error: 'Falha ao verificar permissões de acesso.' });
-  }
-});
+// -------- RBAC no backend: FECHADO POR PADRÃO (src/middleware/rbac.js) ----------
+// Toda rota /api é negada, exceto o que estiver explicitamente liberado por perfil.
+// Corrige a brecha em que a sessão do portal do colaborador alcançava rotas do painel.
+app.use(rbacGuard);
 
 // Arquivos de clientes e Drive do escritório: exigem sessão (ver src/middleware/storage-guard.js)
 app.use('/storage/clients', requireStorageAccess('clients'), express.static(STORAGE_DIR));

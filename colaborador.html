@@ -1049,7 +1049,9 @@
       btn.innerHTML = `<span>Autenticando...</span>`;
 
       try {
-        const res = await fetch('/api/hr/employee/login', {
+        // Login ÚNICO: a mesma senha vale para colaborador, cliente e equipe. O servidor
+        // reconhece o perfil e informa o destino (redirectTo).
+        const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier, password })
@@ -1057,6 +1059,9 @@
 
         const data = await res.json();
         if (!res.ok || !data.success) {
+          if (data.code === 'FIRST_ACCESS_REQUIRED') {
+            throw new Error(data.error || 'Primeiro acesso: solicite seu código ao escritório.');
+          }
           throw new Error(data.error || 'Erro ao realizar login.');
         }
 
@@ -1064,7 +1069,21 @@
         const form = document.getElementById('form-employee-login');
         if (form) form.reset();
 
-        employeeToken = data.token;
+        // Cliente que usou esta tela por engano: vai para o portal do cliente
+        if (data.authType === 'client' || data.redirectTo === '/cliente') {
+          localStorage.setItem('jorgealvim_client_token', data.token);
+          window.location.href = '/cliente';
+          return;
+        }
+        // Equipe/mestre sem vínculo de colaborador: vai para o painel
+        if (data.authType === 'admin' && data.redirectTo === '/painel') {
+          localStorage.setItem('ja_admin_token', data.token);
+          localStorage.setItem('ja_token', data.token);
+          window.location.href = '/painel';
+          return;
+        }
+
+        employeeToken = data.employeeToken || data.token;
         localStorage.setItem('ja_employee_token', employeeToken);
         if (data.adminToken) {
           localStorage.setItem('ja_token', data.adminToken);

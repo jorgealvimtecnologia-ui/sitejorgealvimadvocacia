@@ -1443,10 +1443,13 @@
       submitBtn.innerHTML = '<span>Verificando credenciais...</span>';
 
       try {
-        const res = await fetch('/api/client-portal/login', {
+        // Login ÚNICO: a mesma senha vale para cliente, colaborador e equipe. O servidor
+        // reconhece quem é e diz para onde ir (redirectTo). Aqui, se for cliente abre o
+        // portal; se for outro perfil, encaminha para a área correta.
+        const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ login, password })
+          body: JSON.stringify({ identifier: login, password })
         });
         const data = await res.json();
 
@@ -1454,8 +1457,19 @@
           if (loginInput) loginInput.value = '';
           const form = document.getElementById('client-login-form');
           if (form) form.reset();
-          localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
-          await loadClientPortal();
+          if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
+            await loadClientPortal();
+          } else {
+            // Mestre/equipe/colaborador que usou esta tela: guarda os tokens e vai para a área certa
+            if (data.authType === 'employee') {
+              localStorage.setItem('ja_employee_token', data.employeeToken || data.token);
+            } else {
+              localStorage.setItem('ja_admin_token', data.token);
+              localStorage.setItem('ja_token', data.token);
+            }
+            window.location.href = data.redirectTo || '/painel';
+          }
         } else if (data.code === 'FIRST_ACCESS_REQUIRED') {
           // 1º acesso: abre a recuperação já com o identificador preenchido
           errorMsg.textContent = data.error;

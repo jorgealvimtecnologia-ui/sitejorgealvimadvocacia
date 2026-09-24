@@ -108,14 +108,16 @@ describe('Códigos de acesso e visibilidade das notificações', () => {
     const mine = await request(app).get('/api/notifications?limit=200').set('Authorization', `Bearer ${t}`);
     assert.ok(mine.body.notifications.some(n => n.resource_type === 'client_access_code' && n.message.includes(code)));
 
+    // Colaborador não acessa as notificações do painel (RBAC fecha a rota) e não vê o código
     const emp = createEmployeeSession({ id: 'EMP-GUARD-1', name: 'Colaborador Guard', cpf: '000' });
     const theirs = await request(app).get('/api/notifications?limit=200').set('Authorization', `Bearer ${emp}`);
-    assert.ok(!theirs.body.notifications.some(n => n.resource_type === 'client_access_code'));
+    assert.equal(theirs.status, 403);
     assert.ok(!JSON.stringify(theirs.body).includes(code));
 
     // e não consegue apagar a notificação do mestre
     const target = db.prepare(`SELECT id FROM notifications WHERE resource_type = 'client_access_code' LIMIT 1`).get();
-    await request(app).delete(`/api/notifications/${target.id}`).set('Authorization', `Bearer ${emp}`);
+    const del = await request(app).delete(`/api/notifications/${target.id}`).set('Authorization', `Bearer ${emp}`);
+    assert.equal(del.status, 403);
     assert.ok(db.prepare(`SELECT id FROM notifications WHERE id = ?`).get(target.id));
   });
 });

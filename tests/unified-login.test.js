@@ -467,7 +467,7 @@ describe('Entrada Unificada (Identity-First Login)', () => {
       .get('/api/users')
       .set('Authorization', `Bearer ${loginRes.body.token}`);
 
-    assert.equal(adminCheck.status, 401, 'Token de cliente não autentica na API de gestão');
+    assert.ok([401, 403].includes(adminCheck.status), `Token de cliente bloqueado na API de gestão (recebeu ${adminCheck.status})`);
   });
 
 });
