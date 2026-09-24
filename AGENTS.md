@@ -87,5 +87,10 @@ ROADMAP_AGENT_NAME=claude        # ou antigravity
 **Ordens de outro banco local** (ex.: criadas antes desta integração): `npm run roadmap:import-local`
 envia ao site as ordens do `leads.db` local, preservando id, data e histórico, sem sobrescrever nada.
 
+**Testes físicos (aba "🧪 Testes Físicos" do Roadmap):** o checklist de cada página e botão fica em
+`src/modules/qa/qa-checklist.json`. Sempre que criar, remover ou renomear páginas/botões, rode
+`npm run qa:checklist` e faça commit do JSON (os testes já feitos continuam registrados). Falhas que o
+Dr. Jorge registrar aparecem em `npm run roadmap:pending -- --json` (campo `qa`) — ofereça corrigi-las.
+
 **Segurança:** a chave do agente só acessa as ordens do roadmap (sem clientes, processos ou financeiro).
 Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva ordens.

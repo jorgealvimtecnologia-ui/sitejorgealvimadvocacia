@@ -13,6 +13,7 @@ import {
   validateOrderInput, cleanActor, isValidOrderId, getOrder, listOrders, listHistory,
   getOrdersSummary, createOrder, updateOrder, importOrders, OPEN_STATUSES
 } from './roadmap.orders.js';
+import { getQaSummaryForAgents } from '../qa/qa.service.js';
 
 export const roadmapAgentRouter = express.Router();
 
@@ -67,7 +68,9 @@ roadmapAgentRouter.get('/api/agent/roadmap', requireAgentKey, (req, res) => {
     summary: getOrdersSummary(),
     pending: orders.filter(o => OPEN_STATUSES.includes(o.status)),
     orders,
-    history: listHistory(Number(req.query.history) || 50)
+    history: listHistory(Number(req.query.history) || 50),
+    // Testes físicos: andamento e falhas registradas pelo Dr. Jorge (para propor correções)
+    qa: (() => { try { return getQaSummaryForAgents(); } catch (e) { return null; } })()
   });
 });
 

@@ -402,6 +402,9 @@
                 <button type="button" onclick="window.switchRoadmapView('history')" class="px-3 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'history' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
                   📜 Histórico Completo
                 </button>
+                <button type="button" onclick="window.switchRoadmapView('qa')" class="px-3 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'qa' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  🧪 Testes Físicos
+                </button>
               </div>
 
               ${_viewMode === 'years' ? `
@@ -440,6 +443,7 @@
             ${_viewMode === 'years' ? renderYearChecklist(_selectedYear) :
               _viewMode === 'waves' ? renderWavesChecklist() :
               _viewMode === 'functions' ? renderFunctionsCatalog() :
+              _viewMode === 'qa' ? '<div id="qa-view-root" class="p-6 text-center text-xs text-slate-400">Carregando testes físicos…</div>' :
               renderHistory()}
           </div>
         </div>
@@ -514,6 +518,8 @@
     `;
 
     container.innerHTML = html;
+    // Aba de testes físicos: conteúdo carregado à parte (public/js/tabs/tab-qa.js)
+    if (_viewMode === 'qa' && window.QA) window.QA.mount(document.getElementById('qa-view-root'), _searchQuery);
   }
 
   var STATUS_META = {
@@ -1195,7 +1201,16 @@
       else if (_viewMode === 'waves') container.innerHTML = renderWavesChecklist();
       else if (_viewMode === 'functions') container.innerHTML = renderFunctionsCatalog();
       else if (_viewMode === 'history') container.innerHTML = renderHistory();
+      else if (_viewMode === 'qa' && window.QA) window.QA.filter(_searchQuery);
     }
+  };
+
+  // Abre o Roadmap já numa visão (ex.: 'qa' a partir da pergunta do teste do dia)
+  window.openRoadmapView = function (mode) {
+    _viewMode = mode;
+    if (typeof window.switchTab === 'function') window.switchTab('roadmap');
+    var container = document.getElementById('roadmap-live-container');
+    if (container && _roadmapData) renderRoadmap(container);
   };
 
   window.switchRoadmapView = function (mode) {

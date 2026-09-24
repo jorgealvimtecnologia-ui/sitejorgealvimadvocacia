@@ -57,6 +57,7 @@ import { siteContentRouter } from './src/modules/site/site-content.routes.js';
 import { faqRouter } from './src/modules/faq/faq.routes.js';
 import { roadmapRouter } from './src/modules/roadmap/roadmap.routes.js';
 import { roadmapAgentRouter } from './src/modules/roadmap/roadmap.agent.js';
+import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 
 
@@ -1637,6 +1638,7 @@ app.use(siteContentRouter);
 app.use(faqRouter);
 app.use(roadmapRouter);
 app.use(roadmapAgentRouter);
+app.use(qaRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console

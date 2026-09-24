@@ -97,6 +97,17 @@ function printSummary(s) {
   console.log('');
 }
 
+function printQa(qa) {
+  if (!qa || !qa.summary) return;
+  const s = qa.summary;
+  console.log(`${BOLD}🧪 Testes físicos:${RESET} ${s.done}/${s.total} feitos (${s.progress_percentage}%) • hoje ${s.today_done}/${s.today_total} • atrasados ${s.overdue} • falhas ${s.failed}`);
+  for (const f of (qa.failed_items || []).slice(0, 20)) {
+    console.log(`   ${RED}❌ [${f.id}]${RESET} ${f.page} › ${f.section} — ${f.label}${f.note ? ` → "${f.note}"` : ''}`);
+  }
+  if ((qa.failed_items || []).length) console.log(`   ${MAGENTA}➜ Agente: ofereça ao Dr. Jorge corrigir as falhas acima.${RESET}`);
+  console.log('');
+}
+
 function printOrder(o, idx) {
   const pColor = o.priority === 'P0' ? RED : o.priority === 'P1' ? YELLOW : CYAN;
   const n = idx !== undefined ? `${idx + 1}. ` : '';
@@ -112,9 +123,10 @@ async function main() {
   if (command === 'pending' || command === 'list') {
     const data = await api('GET', '/api/agent/roadmap' + (command === 'list' ? '?all=true' : ''));
     const items = command === 'list' ? data.orders : data.pending;
-    if (JSON_OUT) return console.log(JSON.stringify({ summary: data.summary, orders: items }, null, 2));
+    if (JSON_OUT) return console.log(JSON.stringify({ summary: data.summary, orders: items, qa: data.qa }, null, 2));
     console.log(`\n${BOLD}${CYAN}📋 ROADMAP VIVO — ${command === 'list' ? 'TODAS AS ORDENS' : 'ORDENS PENDENTES'} (${BASE_URL})${RESET}\n`);
     printSummary(data.summary);
+    printQa(data.qa);
     if (!items.length) {
       console.log(`  ${GREEN}✓ Nenhuma ordem ${command === 'list' ? 'registrada' : 'pendente'}.${RESET}\n`);
       return;
