@@ -1,214 +1,205 @@
 #!/usr/bin/env node
 /**
  * ==============================================================================
- * PONTE DE INTEGRAÇÃO DO ROADMAP VIVO COM AGENTES (CLAUDE & ANTIGRAVITY)
+ * PONTE DO ROADMAP VIVO COM OS AGENTES (CLAUDE & ANTIGRAVITY)
  * ==============================================================================
- * Permite que agentes autônomos (Claude Code, Antigravity) e desenvolvedores
- * consultem e gerenciem ordens e o ciclo de vida do Roadmap Vivo diretamente via CLI.
+ * Lê e atualiza as Ordens do Construtor DIRETO NO SITE (fonte única), para que
+ * Claude, Antigravity e o painel do Dr. Jorge vejam sempre a mesma lista.
+ *
+ * Configuração (arquivo .env na raiz do projeto — nunca versionado):
+ *   ROADMAP_AGENT_KEY=<chave do agente>        (obrigatória)
+ *   ROADMAP_AGENT_NAME=claude | antigravity    (quem está executando)
+ *   ROADMAP_URL=https://jorgealvimadvocacia.com.br   (opcional)
  *
  * Uso:
- *   node scripts/roadmap-agent.js pending          # Lista ordens P0/P1 na fila
- *   node scripts/roadmap-agent.js list             # Lista todas as ordens
- *   node scripts/roadmap-agent.js status <ID> <STATUS> [NOTA] # Atualiza status
- *   node scripts/roadmap-agent.js add --title="..." --wave="..." --priority=P1
- *   node scripts/roadmap-agent.js history          # Histórico com data e hora
- *   node scripts/roadmap-agent.js functions        # Catálogo de funções do sistema
+ *   npm run roadmap:pending                       # fila de ordens abertas + resumo
+ *   npm run roadmap:list                          # todas as ordens (inclui concluídas)
+ *   npm run roadmap:status -- <ID> <status> "nota" # planejado|em_curso|bloqueado|conforme
+ *   npm run roadmap:note -- <ID> "nota"           # registra andamento sem mudar status
+ *   npm run roadmap:register -- "Título" [--prioridade=P1] [--criterios="..."]
+ *   npm run roadmap:history                       # histórico com data e hora
+ *   npm run roadmap:functions                     # catálogo de funções (local)
+ *   npm run roadmap:import-local                  # envia ao site ordens de um leads.db local
+ *   Acrescente --json para saída em JSON.
  * ==============================================================================
  */
-
-import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..');
-const DB_PATH = path.join(ROOT_DIR, 'leads.db');
+const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// Cores ANSI para saída no terminal
-const BOLD = '\x1b[1m';
-const RESET = '\x1b[0m';
-const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
-const RED = '\x1b[31m';
-const CYAN = '\x1b[36m';
-const MAGENTA = '\x1b[35m';
+// Cores ANSI
+const BOLD = '\x1b[1m', RESET = '\x1b[0m', GREEN = '\x1b[32m', YELLOW = '\x1b[33m';
+const RED = '\x1b[31m', CYAN = '\x1b[36m', MAGENTA = '\x1b[35m', DIM = '\x1b[2m';
 
-function getDb() {
-  if (!fs.existsSync(DB_PATH)) {
-    console.error(`[ROADMAP-AGENT] Banco de dados não encontrado em: ${DB_PATH}`);
-    process.exit(1);
+function loadDotEnv() {
+  const file = path.join(ROOT_DIR, '.env');
+  if (!fs.existsSync(file)) return;
+  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
-  const db = new DatabaseSync(DB_PATH);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS roadmap_builder_orders (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      description TEXT,
-      layer TEXT DEFAULT 'Core Jurídico',
-      wave TEXT DEFAULT 'Onda 1 — Core Jurídico & Experiência',
-      priority TEXT DEFAULT 'P1',
-      status TEXT DEFAULT 'planejado',
-      acceptance_criteria TEXT,
-      created_by TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
+}
+loadDotEnv();
 
-    CREATE TABLE IF NOT EXISTS roadmap_order_history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      order_id TEXT NOT NULL,
-      action TEXT NOT NULL,
-      title TEXT NOT NULL,
-      previous_status TEXT,
-      new_status TEXT,
-      details TEXT,
-      performed_by TEXT,
-      created_at TEXT NOT NULL
-    );
-  `);
+const args = process.argv.slice(2);
+const flags = Object.fromEntries(args.filter(a => a.startsWith('--')).map(a => {
+  const [k, ...v] = a.slice(2).split('=');
+  return [k, v.length ? v.join('=') : true];
+}));
+const positional = args.filter(a => !a.startsWith('--'));
+const command = positional[0] || 'pending';
+const JSON_OUT = !!flags.json;
 
-  const histCount = db.prepare("SELECT count(*) as c FROM roadmap_order_history").get()?.c || 0;
-  if (histCount === 0) {
-    const existingOrders = db.prepare("SELECT * FROM roadmap_builder_orders").all();
-    for (const ord of existingOrders) {
-      db.prepare(`
-        INSERT INTO roadmap_order_history (order_id, action, title, previous_status, new_status, details, performed_by, created_at)
-        VALUES (?, 'CRIADA', ?, NULL, ?, ?, ?, ?)
-      `).run(ord.id, ord.title, ord.status || 'planejado', ord.acceptance_criteria || '', ord.created_by || 'construtor', ord.created_at);
-    }
-  }
+const BASE_URL = (process.env.ROADMAP_URL || 'https://jorgealvimadvocacia.com.br').replace(/\/+$/, '');
+const AGENT_KEY = process.env.ROADMAP_AGENT_KEY || '';
+const AGENT_NAME = String(flags.agente || process.env.ROADMAP_AGENT_NAME || 'agente-ia');
 
-  return db;
+function fail(msg) {
+  console.error(`${RED}✖ ${msg}${RESET}`);
+  process.exit(1);
 }
 
-function formatDate(isoStr) {
-  if (!isoStr) return 'N/A';
-  const d = new Date(isoStr);
-  const dia = String(d.getDate()).padStart(2, '0');
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const ano = d.getFullYear();
-  const hora = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  const seg = String(d.getSeconds()).padStart(2, '0');
-  return {
-    date: `${dia}/${mes}/${ano}`,
-    time: `${hora}:${min}:${seg}`,
-    full: `${dia}/${mes}/${ano} às ${hora}:${min}:${seg}`
-  };
+async function api(method, route, body) {
+  if (!AGENT_KEY) {
+    fail('ROADMAP_AGENT_KEY não configurada no .env da raiz do projeto. Peça a chave ao Dr. Jorge.');
+  }
+  const res = await fetch(BASE_URL + route, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Roadmap-Agent-Key': AGENT_KEY,
+      'X-Roadmap-Agent': AGENT_NAME
+    },
+    body: body ? JSON.stringify(body) : undefined
+  }).catch(e => fail(`Sem conexão com ${BASE_URL}: ${e.message}`));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) fail(data.error || `HTTP ${res.status}`);
+  return data;
 }
 
-const command = process.argv[2] || 'pending';
+function fmt(iso) {
+  if (!iso) return 'N/A';
+  return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+}
 
-const db = getDb();
+const STATUS_LABEL = {
+  planejado: '⚪ PLANEJADO', em_curso: '🟡 EM CURSO', bloqueado: '🔴 BLOQUEADO',
+  conforme: '🟢 CONCLUÍDO', cancelada: '⚫ ARQUIVADA'
+};
 
-if (command === 'pending') {
-  console.log(`\n${BOLD}${CYAN}📋 [ROADMAP VIVO] ORDENS PENDENTES DO CONSTRUTOR (FILA DE PRIORIDADES)${RESET}\n`);
-  const orders = db.prepare(`
-    SELECT * FROM roadmap_builder_orders 
-    WHERE status IN ('planejado', 'em_curso', 'bloqueado')
-    ORDER BY 
-      CASE priority WHEN 'P0' THEN 1 WHEN 'P1' THEN 2 WHEN 'P2' THEN 3 ELSE 4 END,
-      created_at ASC
-  `).all();
-
-  if (orders.length === 0) {
-    console.log(`  ${GREEN}✓ Nenhuma ordem pendente na fila. Todas as diretrizes estão conformes!${RESET}\n`);
-    process.exit(0);
-  }
-
-  orders.forEach((ord, idx) => {
-    const pColor = ord.priority === 'P0' ? RED : ord.priority === 'P1' ? YELLOW : CYAN;
-    const sBadge = ord.status === 'em_curso' ? '🟡 EM CURSO' : ord.status === 'bloqueado' ? '🔴 BLOQUEADO' : '⚪ PLANEJADO';
-    const dt = formatDate(ord.created_at);
-
-    console.log(`${BOLD}${idx + 1}. [${ord.id}] ${pColor}[${ord.priority}]${RESET} ${BOLD}${ord.title}${RESET}`);
-    console.log(`   Status: ${sBadge} | Onda: ${ord.wave} | Camada: ${ord.layer}`);
-    console.log(`   Criado em: ${dt.full} por: ${ord.created_by || 'construtor'}`);
-    if (ord.acceptance_criteria) {
-      console.log(`   ${BOLD}Critérios de Aceite:${RESET} ${ord.acceptance_criteria}`);
-    }
-    console.log('');
-  });
-} else if (command === 'list') {
-  console.log(`\n${BOLD}${CYAN}📋 [ROADMAP VIVO] TODAS AS ORDENS DO CONSTRUTOR${RESET}\n`);
-  const orders = db.prepare(`
-    SELECT * FROM roadmap_builder_orders 
-    ORDER BY created_at DESC
-  `).all();
-
-  orders.forEach((ord) => {
-    const sBadge = ord.status === 'conforme' ? '🟢 CONFORME' : ord.status === 'em_curso' ? '🟡 EM CURSO' : ord.status === 'bloqueado' ? '🔴 BLOQUEADO' : '⚪ PLANEJADO';
-    const dt = formatDate(ord.created_at);
-    console.log(`[${ord.id}] ${ord.priority} | ${sBadge} | ${ord.title} (${dt.full})`);
-  });
+function printSummary(s) {
+  const c = s.counts;
+  console.log(`${BOLD}Resumo:${RESET} ${c.planejado} planejada(s) • ${c.em_curso} em curso • ${c.bloqueado} bloqueada(s) • ${c.conforme} concluída(s) — ${s.progress_percentage}% do programado`);
+  if (s.all_done) console.log(`${GREEN}${BOLD}✅ Todas as ordens programadas foram concluídas.${RESET}`);
+  if (s.last_activity) console.log(`${DIM}Última atividade: ${s.last_activity.action} em ${s.last_activity.order_id} por ${s.last_activity.performed_by} (${fmt(s.last_activity.created_at)})${RESET}`);
   console.log('');
-} else if (command === 'status') {
-  const orderId = process.argv[3];
-  const newStatus = process.argv[4];
-  const note = process.argv.slice(5).join(' ') || '';
-
-  if (!orderId || !newStatus) {
-    console.error(`Uso: node scripts/roadmap-agent.js status <ORD-ID> <planejado|em_curso|conforme|bloqueado> [nota]`);
-    process.exit(1);
-  }
-
-  const validStatuses = ['planejado', 'em_curso', 'conforme', 'bloqueado'];
-  if (!validStatuses.includes(newStatus)) {
-    console.error(`Status inválido: ${newStatus}. Opções: ${validStatuses.join(', ')}`);
-    process.exit(1);
-  }
-
-  const existing = db.prepare("SELECT * FROM roadmap_builder_orders WHERE id = ?").get(orderId);
-  if (!existing) {
-    console.error(`Ordem não encontrada: ${orderId}`);
-    process.exit(1);
-  }
-
-  const now = new Date().toISOString();
-  db.prepare(`UPDATE roadmap_builder_orders SET status = ?, updated_at = ? WHERE id = ?`).run(newStatus, now, orderId);
-
-  // Registrar histórico
-  const actor = process.env.USER || 'agent-ai';
-  const detail = note || `Transição de [${existing.status}] para [${newStatus}] via agente`;
-  db.prepare(`
-    INSERT INTO roadmap_order_history (order_id, action, title, previous_status, new_status, details, performed_by, created_at)
-    VALUES (?, 'STATUS_ALTERADO', ?, ?, ?, ?, ?, ?)
-  `).run(orderId, existing.title, existing.status, newStatus, detail, actor, now);
-
-  console.log(`\n${GREEN}✓ Ordem ${orderId} atualizada com sucesso para '${newStatus}'.${RESET}`);
-  console.log(`  Registrado no Histórico de Auditoria: ${formatDate(now).full}\n`);
-} else if (command === 'history') {
-  console.log(`\n${BOLD}${CYAN}📜 [ROADMAP VIVO] HISTÓRICO COMPLETO DE ORDENS E TRANSIÇÕES${RESET}\n`);
-  const history = db.prepare(`SELECT * FROM roadmap_order_history ORDER BY id DESC LIMIT 50`).all();
-
-  if (history.length === 0) {
-    console.log(`  Nenhum registro no histórico.\n`);
-    process.exit(0);
-  }
-
-  history.forEach(h => {
-    const dt = formatDate(h.created_at);
-    const badge = h.action === 'CRIADA' ? '🆕 CRIADA' : h.action === 'STATUS_ALTERADO' ? '🔄 STATUS' : '⚠️ AÇÃO';
-    console.log(`${BOLD}[${dt.date} ${dt.time}]${RESET} ${MAGENTA}${badge}${RESET} [${h.order_id}] ${BOLD}${h.title}${RESET}`);
-    console.log(`   De: ${h.previous_status || 'Início'} ➔ Para: ${BOLD}${h.new_status}${RESET} | Por: ${h.performed_by || 'sistema'}`);
-    if (h.details) console.log(`   Detalhes: ${h.details}`);
-    console.log('');
-  });
-} else if (command === 'functions') {
-  console.log(`\n${BOLD}${CYAN}⚡ [ROADMAP VIVO] CATÁLOGO DINÂMICO DE FUNÇÕES DO SISTEMA${RESET}\n`);
-  import('../src/modules/roadmap/roadmap.catalog.js').then(({ getSystemFunctionsWithMetadata }) => {
-    const fns = getSystemFunctionsWithMetadata();
-    fns.forEach(f => {
-      const markerColor = f.marker.includes('⚡') ? GREEN : f.marker.includes('🆕') ? CYAN : f.marker.includes('🔄') ? YELLOW : RED;
-      const dt = formatDate(f.lastModified);
-      console.log(`${markerColor}${BOLD}${f.marker}${RESET} ${BOLD}${f.name}${RESET} (${f.category} - ${f.layer})`);
-      console.log(`   ID: ${f.id} | Arquivo: ${f.file} (${f.fileExists ? 'Presente' : 'Ausente'})`);
-      console.log(`   Última modificação: ${dt.full}`);
-      console.log(`   Descrição: ${f.description}\n`);
-    });
-  });
-} else {
-  console.log(`Comando desconhecido: ${command}. Comandos disponíveis: pending, list, status, history, functions.`);
 }
+
+function printOrder(o, idx) {
+  const pColor = o.priority === 'P0' ? RED : o.priority === 'P1' ? YELLOW : CYAN;
+  const n = idx !== undefined ? `${idx + 1}. ` : '';
+  console.log(`${BOLD}${n}[${o.id}] ${pColor}[${o.priority}]${RESET} ${BOLD}${o.title}${RESET}`);
+  console.log(`   ${STATUS_LABEL[o.status] || o.status} | ${o.wave} | ${o.layer}${o.assigned_to ? ` | com: ${o.assigned_to}` : ''}`);
+  console.log(`   Lançada em ${fmt(o.created_at)} por ${o.created_by || 'construtor'}`);
+  if (o.description) console.log(`   ${BOLD}Descrição:${RESET} ${o.description}`);
+  if (o.acceptance_criteria) console.log(`   ${BOLD}Critérios de aceite:${RESET} ${o.acceptance_criteria}`);
+  console.log('');
+}
+
+async function main() {
+  if (command === 'pending' || command === 'list') {
+    const data = await api('GET', '/api/agent/roadmap' + (command === 'list' ? '?all=true' : ''));
+    const items = command === 'list' ? data.orders : data.pending;
+    if (JSON_OUT) return console.log(JSON.stringify({ summary: data.summary, orders: items }, null, 2));
+    console.log(`\n${BOLD}${CYAN}📋 ROADMAP VIVO — ${command === 'list' ? 'TODAS AS ORDENS' : 'ORDENS PENDENTES'} (${BASE_URL})${RESET}\n`);
+    printSummary(data.summary);
+    if (!items.length) {
+      console.log(`  ${GREEN}✓ Nenhuma ordem ${command === 'list' ? 'registrada' : 'pendente'}.${RESET}\n`);
+      return;
+    }
+    items.forEach(printOrder);
+    if (command === 'pending') {
+      console.log(`${MAGENTA}${BOLD}➜ Agente: apresente esta lista ao Dr. Jorge e PERGUNTE qual ordem executar antes de começar.${RESET}\n`);
+    }
+    return;
+  }
+
+  if (command === 'status' || command === 'note') {
+    const id = positional[1];
+    const status = command === 'status' ? positional[2] : undefined;
+    const note = positional.slice(command === 'status' ? 3 : 2).join(' ');
+    if (!id || (command === 'status' && !status) || (command === 'note' && !note)) {
+      fail(command === 'status'
+        ? 'Uso: npm run roadmap:status -- <ORD-ID> <planejado|em_curso|bloqueado|conforme> "nota"'
+        : 'Uso: npm run roadmap:note -- <ORD-ID> "nota"');
+    }
+    const data = await api('PATCH', `/api/agent/roadmap/orders/${encodeURIComponent(id)}`, { status, note });
+    if (JSON_OUT) return console.log(JSON.stringify(data.order, null, 2));
+    console.log(`\n${GREEN}✓ Ordem ${id}: ${STATUS_LABEL[data.order.status] || data.order.status}${note ? ` — "${note}"` : ''}${RESET}`);
+    console.log(`  Registrado no histórico do site por ${AGENT_NAME}.\n`);
+    return;
+  }
+
+  if (command === 'register') {
+    const title = positional.slice(1).join(' ');
+    if (!title) fail('Uso: npm run roadmap:register -- "Título" [--prioridade=P1] [--criterios="..."] [--descricao="..."]');
+    const data = await api('POST', '/api/agent/roadmap/orders', {
+      title,
+      priority: flags.prioridade || 'P1',
+      acceptance_criteria: flags.criterios || '',
+      description: flags.descricao || ''
+    });
+    if (JSON_OUT) return console.log(JSON.stringify(data.order, null, 2));
+    console.log(`\n${GREEN}✓ Pendência registrada no Roadmap Vivo: [${data.order.id}] ${data.order.title}${RESET}\n`);
+    return;
+  }
+
+  if (command === 'history') {
+    const data = await api('GET', '/api/agent/roadmap?history=100');
+    if (JSON_OUT) return console.log(JSON.stringify(data.history, null, 2));
+    console.log(`\n${BOLD}${CYAN}📜 ROADMAP VIVO — HISTÓRICO${RESET}\n`);
+    if (!data.history.length) return console.log('  Nenhum registro no histórico.\n');
+    for (const h of data.history) {
+      console.log(`${BOLD}[${fmt(h.created_at)}]${RESET} ${MAGENTA}${h.action}${RESET} [${h.order_id}] ${BOLD}${h.title}${RESET}`);
+      console.log(`   ${h.previous_status || 'início'} ➔ ${BOLD}${h.new_status || '-'}${RESET} | por ${h.performed_by || 'sistema'}`);
+      if (h.details) console.log(`   ${h.details}`);
+      console.log('');
+    }
+    return;
+  }
+
+  if (command === 'import-local') {
+    const dbPath = path.join(ROOT_DIR, 'leads.db');
+    if (!fs.existsSync(dbPath)) fail(`Banco local não encontrado: ${dbPath}`);
+    const { DatabaseSync } = await import('node:sqlite');
+    const db = new DatabaseSync(dbPath, { readOnly: true });
+    let orders = [], history = [];
+    try { orders = db.prepare('SELECT * FROM roadmap_builder_orders').all(); } catch (e) { /* tabela ausente */ }
+    try { history = db.prepare('SELECT * FROM roadmap_order_history ORDER BY id ASC').all(); } catch (e) { /* tabela ausente */ }
+    if (!orders.length) return console.log(`\n${GREEN}✓ Nenhuma ordem local para enviar.${RESET}\n`);
+    const data = await api('POST', '/api/agent/roadmap/import', { orders, history });
+    console.log(`\n${GREEN}✓ ${data.imported} ordem(ns) enviada(s) ao site; ${data.skipped} já existia(m).${RESET}`);
+    if (data.errors?.length) console.log(`${YELLOW}Avisos:\n  - ${data.errors.join('\n  - ')}${RESET}`);
+    console.log('');
+    return;
+  }
+
+  if (command === 'functions') {
+    const { getSystemFunctionsWithMetadata } = await import('../src/modules/roadmap/roadmap.catalog.js');
+    const fns = getSystemFunctionsWithMetadata();
+    if (JSON_OUT) return console.log(JSON.stringify(fns, null, 2));
+    console.log(`\n${BOLD}${CYAN}⚡ CATÁLOGO DE FUNÇÕES DO SISTEMA (código local)${RESET}\n`);
+    for (const f of fns) {
+      console.log(`${BOLD}${f.marker} ${f.name}${RESET} (${f.category} - ${f.layer})`);
+      console.log(`   ${f.file} (${f.fileExists ? 'presente' : 'ausente'}) — modificado em ${fmt(f.lastModified)}`);
+      console.log(`   ${f.description}\n`);
+    }
+    return;
+  }
+
+  fail(`Comando desconhecido: ${command}. Use: pending, list, status, note, register, history, functions, import-local.`);
+}
+
+main();

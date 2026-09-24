@@ -371,17 +371,18 @@ async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' })
       const isOabSearch = queryType === 'oab' || cleanTerm.toLowerCase().includes('oab') || cleanTerm.includes('222943') || cleanTerm.includes('222.943');
 
       if (queryType === 'number') {
-        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number LIKE ? OR cnj_number LIKE ?`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
+        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE (cnj_number LIKE ? OR cnj_number LIKE ?) AND deleted_at IS NULL`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
       } else if (isOabSearch) {
-        localProcesses = db.prepare(`SELECT * FROM lawsuits ORDER BY created_at DESC`).all();
+        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC`).all();
       } else {
         localProcesses = db.prepare(`
           SELECT l.* FROM lawsuits l
           LEFT JOIN clients c ON l.client_id = c.id
-          WHERE c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ? 
+          WHERE (c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ? 
              OR REPLACE(REPLACE(REPLACE(c.cpf, '.', ''), '-', ''), ' ', '') LIKE ?
              OR REPLACE(REPLACE(REPLACE(REPLACE(c.cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
-             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?
+             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?)
+            AND l.deleted_at IS NULL
         `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
 
         if (localProcesses.length === 0) {
@@ -559,7 +560,7 @@ async function syncActiveLawsuitMovements() {
   let checked = 0, newMovements = 0;
   let lawsuits = [];
   try {
-    lawsuits = db.prepare(`SELECT id, cnj_number, client_id FROM lawsuits WHERE status = 'Em Andamento' OR status IS NULL LIMIT 100`).all();
+    lawsuits = db.prepare(`SELECT id, cnj_number, client_id FROM lawsuits WHERE (status = 'Em Andamento' OR status IS NULL) AND deleted_at IS NULL LIMIT 100`).all();
   } catch (e) { return { lawsuitsChecked: 0, newMovements: 0 }; }
 
   for (const ls of lawsuits) {

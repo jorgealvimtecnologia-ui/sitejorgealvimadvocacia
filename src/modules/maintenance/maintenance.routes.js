@@ -117,7 +117,7 @@ maintenanceRouter.get('/api/admin/maintenance/health', requireMaster, (req, res)
       const tables = db.prepare("SELECT COUNT(*) as c FROM sqlite_master WHERE type='table'").get();
       tableCount = tables ? tables.c : 0;
       clientCount = db.prepare("SELECT COUNT(*) as c FROM clients").get()?.c || 0;
-      lawsuitCount = db.prepare("SELECT COUNT(*) as c FROM lawsuits").get()?.c || 0;
+      lawsuitCount = db.prepare("SELECT COUNT(*) as c FROM lawsuits WHERE deleted_at IS NULL").get()?.c || 0;
       leadCount = db.prepare("SELECT COUNT(*) as c FROM leads").get()?.c || 0;
       auditLogCount = db.prepare("SELECT COUNT(*) as c FROM audit_logs").get()?.c || 0;
     } catch (_e) {}

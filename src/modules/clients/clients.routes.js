@@ -588,6 +588,7 @@ clientsRouter.delete('/api/clients/:id', requireAuth, (req, res) => {
       SELECT id, cnj_number, action_type, status 
       FROM lawsuits 
       WHERE client_id = ? 
+        AND deleted_at IS NULL
         AND LOWER(TRIM(status)) NOT IN ('arquivado', 'encerrado', 'baixado', 'finalizado')
     `).all(id);
 

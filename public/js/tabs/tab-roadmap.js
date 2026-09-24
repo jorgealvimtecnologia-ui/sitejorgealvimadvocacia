@@ -516,47 +516,142 @@
     container.innerHTML = html;
   }
 
+  var STATUS_META = {
+    planejado: { label: '⚪ Planejada', cls: 'bg-slate-700/40 text-slate-300 border-slate-600' },
+    em_curso: { label: '🟡 Em execução', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+    bloqueado: { label: '🔴 Bloqueada', cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+    conforme: { label: '🟢 Concluída', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+    cancelada: { label: '⚫ Arquivada', cls: 'bg-slate-800 text-slate-500 border-slate-700' }
+  };
+
+  function activeOrders() {
+    return ((_roadmapData && _roadmapData.builderOrders) || []).filter(function (o) { return o.status !== 'cancelada'; });
+  }
+
+  function renderOrdersControlPanel(summary) {
+    var c = summary.counts || {};
+    var last = summary.last_activity;
+    var cards = [
+      { label: 'Planejadas', value: c.planejado || 0, color: '#cbd5e1' },
+      { label: 'Em execução', value: c.em_curso || 0, color: '#fbbf24' },
+      { label: 'Bloqueadas', value: c.bloqueado || 0, color: '#fb7185' },
+      { label: 'Concluídas', value: c.conforme || 0, color: '#34d399' }
+    ];
+    var banner = summary.total === 0
+      ? '<div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700 text-xs text-slate-300">Nenhuma ordem lançada ainda. Use o formulário abaixo para programar a primeira.</div>'
+      : summary.all_done
+        ? '<div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-sm font-black text-emerald-300">✅ Todas as ordens programadas foram concluídas.</div>'
+        : '<div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-200">⏳ Faltam ' + summary.open + ' de ' + summary.total + ' ordem(ns) — ' + summary.progress_percentage + '% do programado concluído.</div>';
+    return `
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          ${cards.map(function (k) {
+            return '<div class="rounded-xl p-3 bg-slate-900/80 border border-slate-800"><div class="text-[10px] font-semibold uppercase text-slate-400">' + k.label + '</div><div class="text-2xl font-black mt-0.5" style="color:' + k.color + '">' + k.value + '</div></div>';
+          }).join('')}
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div class="h-2 rounded-full bg-emerald-400 transition-all" style="width:${summary.progress_percentage || 0}%"></div>
+          </div>
+          <span class="text-[11px] font-bold text-slate-300 shrink-0">${c.conforme || 0}/${summary.total || 0} (${summary.progress_percentage || 0}%)</span>
+        </div>
+        ${banner}
+        ${last ? '<div class="text-[11px] text-slate-400">Última atividade: <strong class="text-slate-200">' + escapeHtml(last.action) + '</strong> em ' + escapeHtml(last.order_id) + ' por <strong class="text-slate-200">' + escapeHtml(last.performed_by || '') + '</strong> — ' + formatDateTime(last.created_at).full + '</div>' : ''}
+      </div>
+    `;
+  }
+
+  function renderOrderCard(ord) {
+    var meta = STATUS_META[ord.status] || STATUS_META.planejado;
+    var id = escapeHtml(ord.id);
+    var archived = ord.status === 'cancelada';
+    return `
+      <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/90 shadow-sm flex flex-col justify-between space-y-3 ${archived ? 'opacity-60' : ''}">
+        <div>
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">${id}</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${escapeHtml(ord.priority || 'P1')}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${archived ? `
+                <button onclick="window.updateOrderStatus('${id}', 'planejado')" class="text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-600 text-slate-300 hover:bg-slate-800" title="Reabrir ordem">↺ Reabrir</button>
+              ` : `
+                <select onchange="window.updateOrderStatus('${id}', this.value)" class="text-[10px] font-black px-2 py-0.5 rounded-full border cursor-pointer ${meta.cls} bg-slate-900 focus:outline-none">
+                  ${['planejado', 'em_curso', 'bloqueado', 'conforme'].map(function (st) {
+                    return '<option value="' + st + '"' + (ord.status === st ? ' selected' : '') + '>' + STATUS_META[st].label + '</option>';
+                  }).join('')}
+                </select>
+                <button onclick="window.deleteBuilderOrder('${id}')" class="text-slate-500 hover:text-rose-400 text-xs px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors" title="Arquivar ordem (fica no histórico)">🗄</button>
+              `}
+            </div>
+          </div>
+
+          <div class="text-xs font-bold text-white mt-2 leading-snug">${escapeHtml(ord.title)}</div>
+          <div class="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-slate-400">
+            <span>${escapeHtml(ord.layer || '')}</span><span>•</span><span>${escapeHtml(ord.wave || '')}</span>
+          </div>
+
+          ${ord.description ? '<div class="mt-2 text-[11px] text-slate-300 leading-relaxed whitespace-pre-line">' + escapeHtml(ord.description) + '</div>' : ''}
+          ${ord.acceptance_criteria ? `
+            <div class="mt-2.5 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+              <div class="text-[9px] font-bold uppercase tracking-wider text-indigo-400">Critérios de aceite:</div>
+              <div class="leading-relaxed whitespace-pre-line">${escapeHtml(ord.acceptance_criteria)}</div>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-500">
+          <span>Lançada por ${escapeHtml(ord.created_by || 'construtor')} em ${formatDateTime(ord.created_at).date}</span>
+          ${ord.status === 'em_curso' && ord.assigned_to ? '<span class="text-amber-300">Em execução com: ' + escapeHtml(ord.assigned_to) + '</span>' : ''}
+          ${ord.status === 'conforme' && ord.completed_at ? '<span class="text-emerald-300">Concluída em ' + formatDateTime(ord.completed_at).date + '</span>' : ''}
+        </div>
+      </div>
+    `;
+  }
+
   function renderBuilderOrdersSection() {
-    var orders = (_roadmapData && _roadmapData.builderOrders) || [];
+    var all = (_roadmapData && _roadmapData.builderOrders) || [];
+    var summary = (_roadmapData && _roadmapData.ordersSummary) || { counts: {}, open: 0, total: 0, progress_percentage: 0, all_done: false };
+    var active = all.filter(function (o) { return o.status !== 'cancelada'; });
+    var archived = all.filter(function (o) { return o.status === 'cancelada'; });
 
     return `
-      <!-- 4.4 Centro de Comando & Ordens do Construtor do Site -->
+      <!-- Centro de Comando: painel de controle das Ordens do Construtor -->
       <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 rounded-3xl border border-indigo-900/60 shadow-xl p-6 sm:p-7 text-white space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-900/80 pb-4">
           <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Engenharia de Software</span>
-              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">Tríade Unificada (3 em 1)</span>
-            </div>
             <h2 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-              <span>🛠️</span> Centro de Comando: Ordens & Diretrizes do Construtor
+              <span>🛠️</span> Centro de Comando: Minhas Ordens
             </h2>
             <p class="text-xs text-slate-300">
-              Espaço reservado para o construtor/arquiteto manifestar diretrizes, novos requisitos e critérios de aceite diretamente no Roadmap Vivo.
+              Lance aqui o que deve ser construído. Claude e Antigravity leem esta lista, perguntam qual ordem executar e atualizam o andamento — tudo fica no histórico.
             </p>
           </div>
           <span class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-600/30 text-indigo-200 border border-indigo-500/50 self-start sm:self-auto">
-            ${orders.length} ${orders.length === 1 ? 'Ordem Ativa' : 'Ordens Ativas'}
+            ${summary.open} em aberto
           </span>
         </div>
 
-        <!-- Formulário para Manifestar Nova Ordem -->
+        ${renderOrdersControlPanel(summary)}
+
+        <!-- Formulário para lançar nova ordem -->
         <form id="builder-order-form" onsubmit="window.submitBuilderOrder(event)" class="bg-slate-900/80 border border-indigo-900/50 rounded-2xl p-4 sm:p-5 space-y-4">
           <div class="flex items-center justify-between">
             <div class="text-xs font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
-              <span>✍️</span> Manifestar Nova Diretriz de Construção
+              <span>✍️</span> Lançar nova ordem
             </div>
-            <span class="text-[10px] text-slate-400">Persistência local imediata em SQLite leads.db</span>
+            <span class="text-[10px] text-slate-400">Gravada no servidor do site</span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="lg:col-span-2">
-              <label class="block text-[11px] font-bold text-slate-300 mb-1">Título da Ordem / Requisito *</label>
-              <input type="text" id="order-title" required placeholder="Ex.: Implementar OCR Tesseract para extração de RG/CNH" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">O que deve ser feito *</label>
+              <input type="text" id="order-title" required maxlength="200" placeholder="Ex.: Implementar OCR para extrair dados de RG/CNH" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-300 mb-1">Camada Arquitetural</label>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Camada</label>
               <select id="order-layer" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors">
                 <option value="Core Jurídico">⚙️ Core Jurídico</option>
                 <option value="Inteligência Artificial">🤖 Inteligência Artificial</option>
@@ -566,7 +661,7 @@
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-300 mb-1">Onda de Destino & Prioridade</label>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Onda & prioridade</label>
               <div class="grid grid-cols-2 gap-1.5">
                 <select id="order-wave" class="w-full px-2 py-2 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-white focus:outline-none focus:border-indigo-500">
                   <option value="Onda 0 — Blindagem Imediata">Onda 0 (P0)</option>
@@ -576,88 +671,46 @@
                   <option value="Onda 4 — Escala SaaS B2B">Onda 4 (SaaS)</option>
                 </select>
                 <select id="order-priority" class="w-full px-2 py-2 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-white focus:outline-none focus:border-indigo-500">
-                  <option value="P0" class="text-rose-400 font-bold">P0 (Crítico)</option>
-                  <option value="P1" selected class="text-amber-400 font-bold">P1 (Alta)</option>
-                  <option value="P2" class="text-blue-400">P2 (Normal)</option>
+                  <option value="P0">P0 (Crítico)</option>
+                  <option value="P1" selected>P1 (Alta)</option>
+                  <option value="P2">P2 (Normal)</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <div>
-            <label class="block text-[11px] font-bold text-slate-300 mb-1">Critérios de Aceite (DoD) & Instruções Técnicas</label>
-            <textarea id="order-ac" rows="2" placeholder="Ex.: AC01: Endpoint /api/ocr ativo; AC02: Suporte a PDF/JPG; AC03: Teste e2e aprovado sem falhas." class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"></textarea>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Descrição / contexto</label>
+              <textarea id="order-description" rows="2" maxlength="4000" placeholder="Explique com suas palavras o que você quer e por quê." class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"></textarea>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Como saber que ficou pronto (critérios de aceite)</label>
+              <textarea id="order-ac" rows="2" maxlength="4000" placeholder="Ex.: Enviar foto do RG preenche nome e CPF; funciona no celular." class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"></textarea>
+            </div>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-1">
             <button type="submit" id="btn-submit-order" class="px-4 py-2 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white">
-              <span>🚀</span> Manifestar Ordem no Roadmap Vivo
+              <span>🚀</span> Lançar ordem
             </button>
           </div>
         </form>
 
-        <!-- Lista de Ordens Registradas pelo Construtor -->
+        <!-- Ordens em aberto e concluídas -->
         <div class="space-y-3">
-          <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
-            <span>📋 Ordens Ativas no Roadmap Vivo</span>
-            <span class="text-[11px] text-slate-400">Alterne o status para refletir a evolução</span>
-          </div>
-
-          ${orders.length === 0 ? `
-            <div class="p-6 text-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 text-slate-400 text-xs">
-              Nenhuma ordem manifestada ainda. Preencha o formulário acima para registrar sua primeira diretriz de construção.
-            </div>
-          ` : `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              ${orders.map(function(ord){
-                var statusBg = ord.status === 'conforme' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
-                               ord.status === 'em_curso' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                               ord.status === 'bloqueado' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-700/40 text-slate-300 border-slate-600';
-
-                return `
-                  <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/90 shadow-sm flex flex-col justify-between space-y-3">
-                    <div>
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">${escapeHtml(ord.id)}</span>
-                          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${escapeHtml(ord.priority || 'P1')}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                          <select onchange="window.updateOrderStatus('${ord.id}', this.value)" class="text-[10px] font-black px-2 py-0.5 rounded-full border cursor-pointer ${statusBg} bg-slate-900 focus:outline-none">
-                            <option value="planejado" ${ord.status === 'planejado' ? 'selected' : ''}>⚪ Planejado</option>
-                            <option value="em_curso" ${ord.status === 'em_curso' ? 'selected' : ''}>🟡 Em Curso</option>
-                            <option value="conforme" ${ord.status === 'conforme' ? 'selected' : ''}>🟢 Conforme</option>
-                            <option value="bloqueado" ${ord.status === 'bloqueado' ? 'selected' : ''}>🔴 Bloqueado</option>
-                          </select>
-                          <button onclick="window.deleteBuilderOrder('${ord.id}')" class="text-slate-500 hover:text-rose-400 text-xs px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors" title="Excluir ordem">✕</button>
-                        </div>
-                      </div>
-
-                      <div class="text-xs font-bold text-white mt-2 leading-snug">${escapeHtml(ord.title)}</div>
-                      <div class="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-slate-400">
-                        <span>${escapeHtml(ord.layer || 'Core Jurídico')}</span>
-                        <span>•</span>
-                        <span>${escapeHtml(ord.wave || '')}</span>
-                      </div>
-
-                      ${ord.acceptance_criteria ? `
-                        <div class="mt-2.5 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-300 space-y-1">
-                          <div class="text-[9px] font-bold uppercase tracking-wider text-indigo-400">Critérios de Aceite (DoD):</div>
-                          <div class="leading-relaxed whitespace-pre-line">${escapeHtml(ord.acceptance_criteria)}</div>
-                        </div>
-                      ` : ''}
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
-                      <span>Por: ${escapeHtml(ord.created_by || 'construtor')}</span>
-                      <span>${new Date(ord.created_at).toLocaleDateString('pt-BR')}</span>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          `}
+          <div class="text-xs font-bold text-slate-300">📋 Ordens (em aberto primeiro)</div>
+          ${active.length === 0
+            ? '<div class="p-6 text-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 text-slate-400 text-xs">Nenhuma ordem ativa.</div>'
+            : '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">' + active.map(renderOrderCard).join('') + '</div>'}
         </div>
+
+        ${archived.length ? `
+          <details class="rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+            <summary class="text-xs font-bold text-slate-400 cursor-pointer">🗄 Arquivadas (${archived.length}) — continuam no histórico</summary>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">${archived.map(renderOrderCard).join('')}</div>
+          </details>
+        ` : ''}
       </div>
     `;
   }
@@ -712,7 +765,7 @@
 
   function renderYearChecklist(year) {
     var items = (_roadmapData && _roadmapData.checklists && _roadmapData.checklists[year]) || [];
-    var builderOrders = (_roadmapData && _roadmapData.builderOrders) || [];
+    var builderOrders = activeOrders();
     var yearOrders = builderOrders.filter(function(o){
       var ordY = o.created_at ? new Date(o.created_at).getFullYear().toString() : '2026';
       return ordY === year;
@@ -769,7 +822,7 @@
                       </span>
                       <span class="text-[9px] font-mono font-bold text-slate-500">${escapeHtml(ord.id)}</span>
                     </div>
-                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${ord.priority || 'P1'}</span>
+                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${escapeHtml(ord.priority || 'P1')}</span>
                   </div>
                   <div class="text-xs font-bold text-slate-900 leading-snug">
                     ${escapeHtml(ord.title)}
@@ -814,7 +867,7 @@
 
   function renderWavesChecklist() {
     var waves = (_roadmapData && _roadmapData.waves) || [];
-    var builderOrders = (_roadmapData && _roadmapData.builderOrders) || [];
+    var builderOrders = activeOrders();
     if (!waves.length) return '<p class="text-xs text-slate-400 py-4">Nenhuma onda configurada na telemetria.</p>';
 
     return `
@@ -903,7 +956,7 @@
                               </span>
                               <span class="text-[9px] font-mono font-bold text-slate-500">${escapeHtml(ord.id)}</span>
                             </div>
-                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${ord.priority || 'P1'}</span>
+                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${escapeHtml(ord.priority || 'P1')}</span>
                           </div>
 
                           <div class="text-xs font-bold text-slate-900 leading-snug">
@@ -941,7 +994,7 @@
                             ${escapeHtml(it.task)}
                           </div>
                           <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${it.priority || 'P1'}</span>
+                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${escapeHtml(it.priority || 'P1')}</span>
                             <span class="text-[10px] ${isDone ? 'text-emerald-700 font-semibold' : 'text-slate-500'}">
                               ${isDone ? '🟢 Entregue em produção' : '⚪ Programado'}
                             </span>
@@ -1154,6 +1207,7 @@
     var wave = document.getElementById('order-wave')?.value || 'Onda 1 — Confiabilidade & SRE';
     var priority = document.getElementById('order-priority')?.value || 'P1';
     var acceptance_criteria = (document.getElementById('order-ac')?.value || '').trim();
+    var description = (document.getElementById('order-description')?.value || '').trim();
 
     if (!title) {
       alert('Por favor, informe o título da ordem.');
@@ -1178,7 +1232,7 @@
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token
         },
-        body: JSON.stringify({ title, layer, wave, priority, acceptance_criteria })
+        body: JSON.stringify({ title, description, layer, wave, priority, acceptance_criteria })
       });
 
       var data = {};
@@ -1195,9 +1249,9 @@
       }
 
       if (typeof window.wmToast === 'function') {
-        window.wmToast('🚀 Ordem do construtor manifestada e integrada ao Roadmap Vivo!');
+        window.wmToast('🚀 Ordem lançada no Roadmap Vivo!');
       } else {
-        alert('Ordem manifestada com sucesso no Roadmap Vivo!');
+        alert('Ordem lançada no Roadmap Vivo!');
       }
 
       var form = document.getElementById('builder-order-form');
@@ -1209,7 +1263,7 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<span>🚀</span> Manifestar Ordem no Roadmap Vivo';
+        btn.innerHTML = '<span>🚀</span> Lançar ordem';
       }
     }
   };
@@ -1248,7 +1302,7 @@
   };
 
   window.deleteBuilderOrder = async function (orderId) {
-    if (!confirm('Deseja realmente remover esta ordem do Roadmap Vivo?')) return;
+    if (!confirm('Arquivar esta ordem? Ela sai da lista ativa, mas continua no histórico e pode ser reaberta.')) return;
     try {
       var token = getToken();
       if (!token) throw new Error('Sessão expirada. Faça login novamente.');
@@ -1267,9 +1321,9 @@
         throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 100));
       }
 
-      if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao remover');
+      if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao arquivar');
       if (typeof window.wmToast === 'function') {
-        window.wmToast('Ordem removida do Roadmap Vivo.');
+        window.wmToast('Ordem arquivada (continua no histórico).');
       }
       await loadRoadmapTab();
     } catch (err) {

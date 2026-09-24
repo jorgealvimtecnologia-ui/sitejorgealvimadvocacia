@@ -60,8 +60,8 @@ dashboardRouter.get('/api/dashboard/overview', requireAuth, (req, res) => {
     // ---- JURÍDICO ----
     const clientesTotal = safe(() => db.prepare(`SELECT COUNT(*) c FROM clients WHERE deleted_at IS NULL`).get().c, 0);
     const clientesAtivos = safe(() => db.prepare(`SELECT COUNT(*) c FROM clients WHERE deleted_at IS NULL AND contract_status='Ativo'`).get().c, 0);
-    const processosTotal = safe(() => db.prepare(`SELECT COUNT(*) c FROM lawsuits`).get().c, 0);
-    const processosAndamento = safe(() => db.prepare(`SELECT COUNT(*) c FROM lawsuits WHERE status='Em Andamento'`).get().c, 0);
+    const processosTotal = safe(() => db.prepare(`SELECT COUNT(*) c FROM lawsuits WHERE deleted_at IS NULL`).get().c, 0);
+    const processosAndamento = safe(() => db.prepare(`SELECT COUNT(*) c FROM lawsuits WHERE status='Em Andamento' AND deleted_at IS NULL`).get().c, 0);
 
     // ---- PRAZOS (próximos 15 dias) ----
     const prazosAgenda = safe(() => db.prepare(

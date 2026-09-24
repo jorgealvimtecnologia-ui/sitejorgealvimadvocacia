@@ -583,11 +583,11 @@ clientPortalRouter.get('/api/client-portal/me', requireClientAuth, (req, res) =>
 
     // Processos Judiciais e Andamentos
     let lawsuits = db.prepare(`
-      SELECT * FROM lawsuits WHERE client_id = ? ORDER BY created_at DESC
+      SELECT * FROM lawsuits WHERE client_id = ? AND deleted_at IS NULL ORDER BY created_at DESC
     `).all(client.id);
 
     if (lawsuits.length === 0 && (clientId === 'CLI-MASTER-01' || req.client?.isMasterTest)) {
-      lawsuits = db.prepare(`SELECT * FROM lawsuits ORDER BY created_at DESC LIMIT 5`).all();
+      lawsuits = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 5`).all();
     }
 
     const lawsuitsWithMovements = lawsuits.map(lawsuit => {
@@ -964,6 +964,7 @@ clientPortalRouter.delete('/api/client-portal/account', requireClientAuth, (req,
       SELECT id, cnj_number, action_type, status 
       FROM lawsuits 
       WHERE client_id = ? 
+        AND deleted_at IS NULL
         AND LOWER(TRIM(status)) NOT IN ('arquivado', 'encerrado', 'baixado', 'finalizado')
     `).all(clientId);
 
