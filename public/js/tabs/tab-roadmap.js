@@ -519,7 +519,21 @@
 
     container.innerHTML = html;
     // Aba de testes físicos: conteúdo carregado à parte (public/js/tabs/tab-qa.js)
-    if (_viewMode === 'qa' && window.QA) window.QA.mount(document.getElementById('qa-view-root'), _searchQuery);
+    if (_viewMode === 'qa') mountQaWhenReady(0);
+  }
+
+  // Monta a aba de Testes Físicos assim que o módulo window.QA (tab-qa.js) estiver
+  // disponível. Evita ficar preso em "Carregando…" se o script ainda não carregou.
+  function mountQaWhenReady(tries) {
+    var el = document.getElementById('qa-view-root');
+    if (!el) return;
+    if (window.QA && typeof window.QA.mount === 'function') {
+      window.QA.mount(el, _searchQuery);
+    } else if (tries < 40) {
+      setTimeout(function () { mountQaWhenReady(tries + 1); }, 150);
+    } else {
+      el.innerHTML = '<div class="p-6 text-center text-xs text-rose-600">Não foi possível carregar o módulo de Testes Físicos. Recarregue a página (Ctrl+F5).</div>';
+    }
   }
 
   var STATUS_META = {
