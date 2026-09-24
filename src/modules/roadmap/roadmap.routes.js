@@ -5,11 +5,57 @@ import { fileURLToPath } from 'node:url';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
+import { getSystemFunctionsWithMetadata } from './roadmap.catalog.js';
 
 export const roadmapRouter = express.Router();
 
 // Raiz do projeto a partir deste arquivo (independe da pasta de onde o Node foi iniciado)
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+
+// Tabelas persistentes de Ordens, Diretrizes e Histórico Completo do Roadmap Vivo
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS roadmap_builder_orders (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      layer TEXT DEFAULT 'Core Jurídico',
+      wave TEXT DEFAULT 'Onda 1 — Core Jurídico & Experiência',
+      priority TEXT DEFAULT 'P1',
+      status TEXT DEFAULT 'planejado',
+      acceptance_criteria TEXT,
+      created_by TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS roadmap_order_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      title TEXT NOT NULL,
+      previous_status TEXT,
+      new_status TEXT,
+      details TEXT,
+      performed_by TEXT,
+      created_at TEXT NOT NULL
+    );
+  `);
+
+  // Se o histórico estiver vazio, popula retrospectivamente com as ordens existentes
+  const histCount = db.prepare("SELECT count(*) as c FROM roadmap_order_history").get()?.c || 0;
+  if (histCount === 0) {
+    const existingOrders = db.prepare("SELECT * FROM roadmap_builder_orders").all();
+    for (const ord of existingOrders) {
+      db.prepare(`
+        INSERT INTO roadmap_order_history (order_id, action, title, previous_status, new_status, details, performed_by, created_at)
+        VALUES (?, 'CRIADA', ?, NULL, ?, ?, ?, ?)
+      `).run(ord.id, ord.title, ord.status || 'planejado', ord.acceptance_criteria || '', ord.created_by || 'construtor', ord.created_at);
+    }
+  }
+} catch (e) {
+  console.error('[ROADMAP] Erro ao inicializar tabelas do roadmap vivo:', e);
+}
 
 /**
  * Funções de Auto-Auditoria e Introspecção Dinâmica em Tempo Real
@@ -429,6 +475,21 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
       ]
     };
 
+    // 7. Ordens e Diretrizes Manifestadas pelo Construtor do Site
+    let builderOrders = [];
+    try {
+      builderOrders = db.prepare(`SELECT * FROM roadmap_builder_orders ORDER BY created_at DESC`).all();
+    } catch (e) {}
+
+    // 8. Histórico Completo de Auditoria do Roadmap Vivo (Data completa, hora, ordem, autor)
+    let builderHistory = [];
+    try {
+      builderHistory = db.prepare(`SELECT * FROM roadmap_order_history ORDER BY id DESC LIMIT 200`).all();
+    } catch (e) {}
+
+    // 9. Catálogo de Funções e Módulos do Sistema com Marcação Dinâmica
+    const systemFunctions = getSystemFunctionsWithMetadata();
+
     return res.json({
       success: true,
       overall,
@@ -449,11 +510,147 @@ roadmapRouter.get('/api/admin/roadmap', requireAuth, (req, res) => {
         rbac_mode: 'Fail-Closed Rigoroso',
         flow_audit: '90/100 (Ouro)'
       },
-      checklists
+      checklists,
+      builderOrders,
+      builderHistory,
+      systemFunctions
     });
   } catch (error) {
     console.error('[ROADMAP] Erro ao obter dados do roadmap vivo:', error);
     return res.status(500).json({ error: 'Erro ao carregar telemetria do roadmap vivo.' });
+  }
+});
+
+/**
+ * POST /api/admin/roadmap/orders - Manifestar nova diretriz ou ordem do construtor no Roadmap Vivo
+ */
+roadmapRouter.post('/api/admin/roadmap/orders', requireAuth, (req, res) => {
+  try {
+    const { title, description, layer, wave, priority, acceptance_criteria } = req.body || {};
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'O título da ordem do construtor é obrigatório.' });
+    }
+    const id = 'ORD-' + Date.now().toString(36).toUpperCase();
+    const now = new Date().toISOString();
+    const createdBy = req.user?.username || req.user?.name || 'construtor';
+
+    db.prepare(`
+      INSERT INTO roadmap_builder_orders (id, title, description, layer, wave, priority, status, acceptance_criteria, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'planejado', ?, ?, ?, ?)
+    `).run(
+      id,
+      title.trim(),
+      (description || '').trim(),
+      layer || 'Core Jurídico',
+      wave || 'Onda 1 — Confiabilidade & SRE',
+      priority || 'P1',
+      (acceptance_criteria || '').trim(),
+      createdBy,
+      now,
+      now
+    );
+
+    // Registro na Trilha de Auditoria do Histórico
+    try {
+      db.prepare(`
+        INSERT INTO roadmap_order_history (order_id, action, title, previous_status, new_status, details, performed_by, created_at)
+        VALUES (?, 'CRIADA', ?, NULL, 'planejado', ?, ?, ?)
+      `).run(id, title.trim(), (acceptance_criteria || '').trim(), createdBy, now);
+    } catch (eh) {}
+
+    logAudit(req, 'CREATE_BUILDER_ORDER', `Ordem do construtor inserida no Roadmap Vivo: ${id} - ${title.trim()}`);
+    return res.json({
+      success: true,
+      order: {
+        id,
+        title: title.trim(),
+        description: (description || '').trim(),
+        layer: layer || 'Core Jurídico',
+        wave: wave || 'Onda 1 — Confiabilidade & SRE',
+        priority: priority || 'P1',
+        status: 'planejado',
+        acceptance_criteria: (acceptance_criteria || '').trim(),
+        created_by: createdBy,
+        created_at: now
+      }
+    });
+  } catch (err) {
+    console.error('[ROADMAP] Erro ao registrar ordem do construtor:', err);
+    return res.status(500).json({ error: 'Erro ao salvar ordem no roadmap vivo.' });
+  }
+});
+
+/**
+ * PATCH /api/admin/roadmap/orders/:id - Atualizar status ou diretrizes da ordem do construtor
+ */
+roadmapRouter.patch('/api/admin/roadmap/orders/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, title, description, acceptance_criteria, priority } = req.body || {};
+    const existing = db.prepare("SELECT * FROM roadmap_builder_orders WHERE id = ?").get(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Ordem do construtor não encontrada.' });
+    }
+
+    const newStatus = status || existing.status;
+    const newTitle = title ? title.trim() : existing.title;
+    const newDesc = description !== undefined ? description.trim() : existing.description;
+    const newAc = acceptance_criteria !== undefined ? acceptance_criteria.trim() : existing.acceptance_criteria;
+    const newPrio = priority || existing.priority;
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE roadmap_builder_orders 
+      SET status = ?, title = ?, description = ?, acceptance_criteria = ?, priority = ?, updated_at = ?
+      WHERE id = ?
+    `).run(newStatus, newTitle, newDesc, newAc, newPrio, now, id);
+
+    // Registro na Trilha de Auditoria do Histórico
+    try {
+      const actionName = newStatus !== existing.status ? 'STATUS_ALTERADO' : 'DIRETRIZ_MODIFICADA';
+      const actor = req.user?.username || req.user?.name || 'construtor';
+      const changeDetail = newStatus !== existing.status ? `Status alterado de [${existing.status}] para [${newStatus}]` : `Critérios ou prioridade atualizados`;
+      db.prepare(`
+        INSERT INTO roadmap_order_history (order_id, action, title, previous_status, new_status, details, performed_by, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(id, actionName, newTitle, existing.status, newStatus, changeDetail, actor, now);
+    } catch (eh) {}
+
+    logAudit(req, 'UPDATE_BUILDER_ORDER', `Ordem ${id} atualizada para status ${newStatus}`);
+    return res.json({ success: true, id, status: newStatus });
+  } catch (err) {
+    console.error('[ROADMAP] Erro ao atualizar ordem do construtor:', err);
+    return res.status(500).json({ error: 'Erro ao atualizar ordem no roadmap.' });
+  }
+});
+
+/**
+ * DELETE /api/admin/roadmap/orders/:id - Excluir ordem do construtor
+ */
+roadmapRouter.delete('/api/admin/roadmap/orders/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare("SELECT * FROM roadmap_builder_orders WHERE id = ?").get(id);
+
+    db.prepare("DELETE FROM roadmap_builder_orders WHERE id = ?").run(id);
+
+    // Registro na Trilha de Auditoria do Histórico
+    if (existing) {
+      try {
+        const actor = req.user?.username || req.user?.name || 'construtor';
+        const now = new Date().toISOString();
+        db.prepare(`
+          INSERT INTO roadmap_order_history (order_id, action, title, previous_status, new_status, details, performed_by, created_at)
+          VALUES (?, 'EXCLUIDA', ?, ?, 'excluida', 'Ordem arquivada/excluída pelo construtor', ?, ?)
+        `).run(id, existing.title, existing.status, actor, now);
+      } catch (eh) {}
+    }
+
+    logAudit(req, 'DELETE_BUILDER_ORDER', `Ordem do construtor removida: ${id}`);
+    return res.json({ success: true, id });
+  } catch (err) {
+    console.error('[ROADMAP] Erro ao excluir ordem do construtor:', err);
+    return res.status(500).json({ error: 'Erro ao remover ordem do roadmap.' });
   }
 });
 

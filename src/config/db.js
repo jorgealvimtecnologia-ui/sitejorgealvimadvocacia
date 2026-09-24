@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword, isStrongHash } from '../shared/password-c
 export const db = new DatabaseSync(DB_PATH);
 try {
   db.exec(`PRAGMA journal_mode = WAL;`);
+  db.exec(`PRAGMA foreign_keys = ON;`);
 } catch (e) {}
 
 // Criptografia de senha: fonte ÚNICA e forte (PBKDF2-SHA512 210k, OWASP), em
@@ -52,6 +53,10 @@ try { db.exec(`ALTER TABLE clients ADD COLUMN google_id TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE hr_employees ADD COLUMN email TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE hr_employees ADD COLUMN google_id TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE lawsuits ADD COLUMN deleted_at TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE lawsuits ADD COLUMN deletion_reason TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE financial_transactions ADD COLUMN deleted_at TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE financial_transactions ADD COLUMN deletion_reason TEXT;`); } catch (e) {}
 
 // Documentos de Clientes (tabela própria deste módulo)
 db.exec(`

@@ -56,3 +56,24 @@ npm run test:checklist
 ```
 
 Se qualquer teste falhar ou o guardião acusar teto excedido, o código deve ser refatorado em submódulos antes de prosseguir.
+
+---
+
+### 🗺️ INTEGRAÇÃO OBRIGATÓRIA COM O ROADMAP VIVO (CLAUDE & ANTIGRAVITY)
+Todo agente de IA atuando no repositório opera guiado pela Tríade Unificada do Roadmap Vivo:
+1. **Consulta Prévia de Diretrizes:** Antes de propor ou implementar alterações, execute:
+   ```bash
+   npm run roadmap:pending
+   ```
+2. **Início da Tarefa:** Ao assumir uma ordem do construtor, marque-a como `em_curso`:
+   ```bash
+   npm run roadmap:status <ORD-ID> em_curso "Iniciando implementação do módulo"
+   ```
+3. **Conclusão com Telemetria:** Após concluir a codificação em submódulos e aprovar a suíte completa de testes (`npm test`), marque como `conforme`:
+   ```bash
+   npm run roadmap:status <ORD-ID> conforme "Implementação validada com 100% de testes aprovados"
+   ```
+4. **Inspeção de Funções e Histórico:**
+   * Para inspecionar as funções ativas e modificadas: `npm run roadmap:functions`
+   * Para consultar a trilha de auditoria: `npm run roadmap:history`
+

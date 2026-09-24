@@ -394,7 +394,8 @@ financialRouter.get('/api/financial/dashboard', requireAuth, (req, res) => {
 // 4. Lançamentos de Receitas e Despesas (Fluxo de Caixa)
 financialRouter.get('/api/financial/transactions', requireAuth, (req, res) => {
   try {
-    const { type, status, category } = req.query;
+    const { type, status, category, include_deleted } = req.query;
+    const includeDeleted = include_deleted === 'true' || req.query.all === 'true';
     let query = `
       SELECT t.*, c.full_name as client_name 
       FROM financial_transactions t
@@ -402,6 +403,10 @@ financialRouter.get('/api/financial/transactions', requireAuth, (req, res) => {
       WHERE 1=1
     `;
     const params = [];
+
+    if (!includeDeleted) {
+      query += ` AND t.deleted_at IS NULL`;
+    }
 
     if (type && type !== 'ALL') {
       query += ` AND t.type = ?`;
@@ -622,17 +627,39 @@ financialRouter.delete('/api/financial/transactions/:id', requireAuth, (req, res
   try {
     const { id } = req.params;
     const existing = db.prepare(`SELECT * FROM financial_transactions WHERE id = ?`).get(id);
-    db.prepare(`DELETE FROM financial_transactions WHERE id = ?`).run(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Lançamento financeiro não encontrado.' });
+    }
+
+    const force = req.query.force === 'true' || req.body?.force === true;
+    const now = new Date().toISOString();
+    const reason = req.body?.reason || (force ? 'EXCLUSAO_DEFINITIVA_FORCADA' : 'INATIVACAO_ADMINISTRATIVA');
+
+    if (force) {
+      // Exclusão definitiva atômica
+      db.prepare(`DELETE FROM financial_transactions WHERE id = ?`).run(id);
+    } else {
+      // Soft Delete padrão: preserva rastreabilidade contábil e conciliação
+      db.prepare(`
+        UPDATE financial_transactions 
+        SET deleted_at = ?, deletion_reason = ?, status = 'Cancelado', updated_at = ?
+        WHERE id = ?
+      `).run(now, reason, now, id);
+    }
 
     logAudit(req, {
       event_type: 'EXCLUSAO',
-      event_name: 'EXCLUIR_TRANSACAO',
+      event_name: force ? 'EXCLUIR_TRANSACAO_DEFINITIVA' : 'INATIVAR_TRANSACAO_SOFT_DELETE',
       module: 'FINANCEIRO',
       resource_id: id,
-      description: `Exclusão do lançamento financeiro #${id} (${existing ? existing.description + ' - R$ ' + existing.amount : 'Lançamento'}).`
+      description: `${force ? 'Exclusão definitiva' : 'Inativação (Soft Delete)'} do lançamento financeiro #${id} (${existing ? existing.description + ' - R$ ' + existing.amount : 'Lançamento'}).`
     });
 
-    return res.json({ success: true, message: 'Lançamento excluído com sucesso!' });
+    return res.json({
+      success: true,
+      message: force ? 'Lançamento financeiro excluído definitivamente!' : 'Lançamento inativado com sucesso (Soft Delete com retenção contábil)!',
+      is_deleted: true
+    });
   } catch (error) {
     console.error('[FINANCEIRO] Erro ao excluir lançamento:', error);
     return res.status(500).json({ error: 'Erro ao excluir lançamento.' });

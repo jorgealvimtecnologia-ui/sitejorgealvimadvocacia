@@ -17,6 +17,7 @@ export const lawsuitsRouter = express.Router();
 lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
   try {
     const { clientId } = req.query;
+    const includeDeleted = req.query.include_deleted === 'true' || req.query.all === 'true';
     let lawsuits;
 
     if (clientId) {
@@ -24,7 +25,7 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
         SELECT l.*, c.full_name as client_name, c.phone as client_phone
         FROM lawsuits l
         JOIN clients c ON c.id = l.client_id
-        WHERE l.client_id = ?
+        WHERE l.client_id = ? ${includeDeleted ? '' : 'AND l.deleted_at IS NULL'}
         ORDER BY l.created_at DESC
       `).all(clientId);
     } else {
@@ -32,6 +33,7 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
         SELECT l.*, c.full_name as client_name, c.phone as client_phone
         FROM lawsuits l
         JOIN clients c ON c.id = l.client_id
+        ${includeDeleted ? '' : 'WHERE l.deleted_at IS NULL'}
         ORDER BY l.updated_at DESC
       `).all();
     }
@@ -203,19 +205,47 @@ lawsuitsRouter.delete('/api/lawsuits/:id', requireAuth, (req, res) => {
   try {
     const { id } = req.params;
     const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(id);
+    if (!law) {
+      return res.status(404).json({ error: 'Processo judicial não encontrado.' });
+    }
 
-    db.prepare(`DELETE FROM lawsuit_movements WHERE lawsuit_id = ?`).run(id);
-    db.prepare(`DELETE FROM lawsuits WHERE id = ?`).run(id);
+    const force = req.query.force === 'true' || req.body?.force === true;
+    const now = new Date().toISOString();
+    const reason = req.body?.reason || (force ? 'EXCLUSAO_DEFINITIVA_FORCADA' : 'INATIVACAO_ADMINISTRATIVA');
+
+    if (force) {
+      // Exclusão definitiva atômica protegida por transação (Garantia ACID)
+      db.exec('BEGIN');
+      try {
+        db.prepare(`DELETE FROM lawsuit_movements WHERE lawsuit_id = ?`).run(id);
+        db.prepare(`DELETE FROM lawsuits WHERE id = ?`).run(id);
+        db.exec('COMMIT');
+      } catch (errTx) {
+        try { db.exec('ROLLBACK'); } catch (_) {}
+        throw errTx;
+      }
+    } else {
+      // Soft Delete padrão: preserva o histórico e dados probatórios com retenção legal
+      db.prepare(`
+        UPDATE lawsuits 
+        SET deleted_at = ?, deletion_reason = ?, status = 'Arquivado / Inativo', updated_at = ?
+        WHERE id = ?
+      `).run(now, reason, now, id);
+    }
 
     logAudit(req, {
       event_type: 'EXCLUSAO',
-      event_name: 'EXCLUIR_PROCESSO',
+      event_name: force ? 'EXCLUIR_PROCESSO_DEFINITIVO' : 'INATIVAR_PROCESSO_SOFT_DELETE',
       module: 'PROCESSOS',
       resource_id: id,
-      description: `Exclusão do processo judicial CNJ ${law ? law.cnj_number : id} e todos os seus andamentos.`
+      description: `${force ? 'Exclusão definitiva' : 'Inativação (Soft Delete)'} do processo judicial CNJ ${law ? law.cnj_number : id}.`
     });
 
-    return res.json({ success: true, message: 'Processo judicial e andamentos excluídos com sucesso!' });
+    return res.json({
+      success: true,
+      message: force ? 'Processo judicial excluído definitivamente!' : 'Processo judicial inativado com sucesso (Soft Delete com retenção LGPD)!',
+      is_deleted: true
+    });
   } catch (error) {
     console.error('[ERRO] Falha ao excluir processo judicial:', error);
     return res.status(500).json({ error: 'Erro ao excluir processo judicial.' });

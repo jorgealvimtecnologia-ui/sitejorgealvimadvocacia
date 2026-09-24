@@ -390,6 +390,8 @@ db.exec(`
     distribution_date TEXT,
     status TEXT DEFAULT 'Em Andamento',
     notes TEXT,
+    deleted_at TEXT,
+    deletion_reason TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
@@ -427,6 +429,8 @@ db.exec(`
     installment_id INTEGER,
     payment_method TEXT DEFAULT 'PIX',
     notes TEXT,
+    deleted_at TEXT,
+    deletion_reason TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -979,8 +983,16 @@ try {
   if (!hrCols.includes('google_id')) {
     db.exec(`ALTER TABLE hr_employees ADD COLUMN google_id TEXT DEFAULT NULL`);
   }
+
+  const lawCols = db.prepare(`PRAGMA table_info(lawsuits)`).all().map(c => c.name);
+  if (!lawCols.includes('deleted_at')) db.exec(`ALTER TABLE lawsuits ADD COLUMN deleted_at TEXT DEFAULT NULL`);
+  if (!lawCols.includes('deletion_reason')) db.exec(`ALTER TABLE lawsuits ADD COLUMN deletion_reason TEXT DEFAULT NULL`);
+
+  const finCols = db.prepare(`PRAGMA table_info(financial_transactions)`).all().map(c => c.name);
+  if (!finCols.includes('deleted_at')) db.exec(`ALTER TABLE financial_transactions ADD COLUMN deleted_at TEXT DEFAULT NULL`);
+  if (!finCols.includes('deletion_reason')) db.exec(`ALTER TABLE financial_transactions ADD COLUMN deletion_reason TEXT DEFAULT NULL`);
 } catch (e) {
-  console.warn('Verificação de migração de colunas sociais/sites/nfse/blog/hr:', e);
+  console.warn('Verificação de migração de colunas sociais/sites/nfse/blog/hr/soft-delete:', e);
 }
 
 // Inicialização / Seeder de Artigos do Blog Jurídico para SEO em Juiz de Fora e Região

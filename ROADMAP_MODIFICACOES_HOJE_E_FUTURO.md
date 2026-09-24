@@ -190,3 +190,38 @@ Itens mapeados que dependem de ação direta do Dr. Jorge Eduardo da Silva Alvim
 - **Arquitetura Modular:** 34 submódulos backend em `src/modules/` e 18 submódulos de abas desacoplados em `public/js/tabs/`.
 - **Bateria de Testes Automatizados:** **180 testes aprovados (100% de sucesso)** cobrindo todas as 36 suítes unitárias, de integração e regras RBAC, sem regressões.
 - **Auditoria Contínua:** `npm run audit:flow` (Score 90/100 Ouro) e `npm run check:architecture` (100% aprovado).
+
+---
+
+## 🛠️ 10. Tríade Unificada (3 em 1) & Centro de Comando do Construtor do Site
+
+A partir de 24 de Setembro de 2026, o **Roadmap Vivo** unifica formalmente **Requisitos**, **Checklists** e **Linha do Tempo** em uma única entidade viva de engenharia, eliminando documentos estáticos e garantindo rastreabilidade contínua.
+
+### 10.1 A Tríade da Entidade Viva
+Cada entrega do sistema passa a ser composta simultaneamente por 3 dimensões indissociáveis:
+1. **📋 Requisito (O Quê & Por Quê):** Identificador padronizado (`REQ-ID`), história de usuário, regras de negócio e referências normativas (iManage, Clio, LGPD Art. 18, Provimento CFOAB 205/2021).
+2. **✅ Checklist & Sonda Ativa (Como Auditar):** Sondas automáticas no SQLite (`checkTableExists`), arquivos (`checkFileExists`) e baterias de teste (`tests/*.test.js`), com semáforo quádruplo (`🟢 Conforme`, `🟡 Em Curso`, `⚪ Planejado`, `🔴 Bloqueado`).
+3. **🗺️ Roadmap (Quando & Dependências):** Enquadramento nas 5 Ondas de Entrega (Ondas 0 a 4) e anos de evolução (2026–2029).
+
+### 10.2 Centro de Comando & Ordens do Construtor
+Para permitir ao arquiteto/construtor do site manifestar suas diretrizes diretamente na plataforma sem risco de apagar os registros existentes, foi implementado o console interativo:
+- **Tabela Dedicada:** `roadmap_builder_orders` no SQLite local (`leads.db`), com campos: `id`, `title`, `description`, `layer`, `wave`, `priority`, `status`, `acceptance_criteria`, `created_by`, `created_at`, `updated_at`.
+- **Endpoints de Controle:**
+  - `POST /api/admin/roadmap/orders` — Registra nova diretriz/ordem do construtor no banco e no feed do roadmap.
+  - `PATCH /api/admin/roadmap/orders/:id` — Altera o status (`planejado` $\rightarrow$ `em_curso` $\rightarrow$ `conforme` $\rightarrow$ `bloqueado`) ou critérios de aceite.
+  - `DELETE /api/admin/roadmap/orders/:id` — Remove ou arquiva ordens concluídas/canceladas.
+- **Interface Integrada no Painel:** O formulário de emissão de ordens e a listagem com alternância de status em 1 clique estão operacionais na aba **Radar & Roadmap Vivo** (`public/js/tabs/tab-roadmap.js`).
+
+### 10.3 Fluxo de Prioridades & Roteamento das Ordens no Roadmap Vivo
+Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado para a ordem de prioridades visual e operacional do Roadmap:
+1. **Injeção Direta na Onda Correspondente (Ondas 0 a 4):**
+   - A ordem é categorizada na Onda escolhida (ex.: *Onda 1 — Confiabilidade & SRE*) e ganha o badge de destaque `[🛠️ Diretriz do Construtor]`.
+   - O contador de progresso da Onda (`doneCount / totalCount`) e a barra percentual recalculam dinamicamente a meta de conformidade daquela fase.
+2. **Injeção no Cronograma Anual (Visão 2026–2029):**
+   - Fica visível com destaque no Checklist Anual do ano correspondente, com prioridade visual (`P0` Vermelho Urgente, `P1` Âmbar Alto, `P2` Azul Normal).
+3. **Fila de Execução dos Agentes & Construtor:**
+   - O item entra inicialmente com status `⚪ Na Fila de Prioridades (Planejado)`.
+   - Ao iniciar os trabalhos, o status avança para `🟡 Em Curso`.
+   - Se houver impedimento externo (ex.: falta de chave de API ou credencial), vai para `🔴 Bloqueado`.
+   - Após validação e aprovação nos testes, avança para `🟢 Conforme / Entregue`, computando 100% de conclusão na telemetria.
+

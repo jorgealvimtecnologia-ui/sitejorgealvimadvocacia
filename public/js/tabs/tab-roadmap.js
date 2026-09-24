@@ -10,7 +10,24 @@
 
   var _roadmapData = null;
   var _selectedYear = '2026';
-  var _viewMode = 'years'; // 'years' | 'waves'
+  var _viewMode = 'years'; // 'years' | 'waves' | 'functions' | 'history'
+  var _searchQuery = '';
+
+  function formatDateTime(isoStr) {
+    if (!isoStr) return { date: 'N/A', time: 'N/A', full: 'N/A' };
+    var d = new Date(isoStr);
+    var dia = String(d.getDate()).padStart(2, '0');
+    var mes = String(d.getMonth() + 1).padStart(2, '0');
+    var ano = d.getFullYear();
+    var hora = String(d.getHours()).padStart(2, '0');
+    var min = String(d.getMinutes()).padStart(2, '0');
+    var seg = String(d.getSeconds()).padStart(2, '0');
+    return {
+      date: dia + '/' + mes + '/' + ano,
+      time: hora + ':' + min + ':' + seg,
+      full: dia + '/' + mes + '/' + ano + ' às ' + hora + ':' + min + ':' + seg
+    };
+  }
 
   function getToken() {
     if (typeof window.getToken === 'function') {
@@ -357,6 +374,9 @@
           </div>
         </div>
 
+        <!-- 4.4 Centro de Comando & Ordens do Construtor do Site (Directives Console) -->
+        ${renderBuilderOrdersSection()}
+
         <!-- 5. Checklists Ano a Ano & Ondas de Entrega -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-7 space-y-5">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -367,14 +387,20 @@
               <p class="text-xs text-slate-500 mt-0.5">Navegue pelas entregas por ano civil ou pela metodologia ágil de 5 Ondas de Entrega</p>
             </div>
 
-            <!-- Seletor de Modo de Visualização (Anos vs Ondas) -->
+            <!-- Seletor de Modo de Visualização (Anos vs Ondas vs Funções vs Histórico) -->
             <div class="flex flex-wrap items-center gap-2">
               <div class="inline-flex p-1 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-bold">
-                <button type="button" onclick="window.switchRoadmapView('years')" class="px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'years' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                  📅 Por Ano (2026–2029)
+                <button type="button" onclick="window.switchRoadmapView('years')" class="px-3 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'years' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  📅 Por Ano
                 </button>
-                <button type="button" onclick="window.switchRoadmapView('waves')" class="px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'waves' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                  🌊 Por Ondas (0 a 4)
+                <button type="button" onclick="window.switchRoadmapView('waves')" class="px-3 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'waves' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  🌊 Por Ondas
+                </button>
+                <button type="button" onclick="window.switchRoadmapView('functions')" class="px-3 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'functions' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  ⚡ Funções do Sistema
+                </button>
+                <button type="button" onclick="window.switchRoadmapView('history')" class="px-3 py-1.5 rounded-xl transition-all cursor-pointer ${_viewMode === 'history' ? 'bg-navy-950 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  📜 Histórico Completo
                 </button>
               </div>
 
@@ -393,9 +419,28 @@
             </div>
           </div>
 
-          <!-- Conteúdo Dinâmico (Anos ou Ondas) -->
+          <!-- Barra de Pesquisa em Tempo Real do Roadmap Vivo -->
+          <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 shadow-2xs">
+            <span class="text-slate-400 text-sm">🔍</span>
+            <input 
+              type="text" 
+              id="roadmap-search-input" 
+              value="${escapeHtml(_searchQuery)}" 
+              placeholder="Pesquisar ordens, histórico por data/hora, critérios ou funções do sistema..." 
+              oninput="window.setRoadmapSearch(this.value)" 
+              class="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
+            />
+            ${_searchQuery ? `
+              <button onclick="window.setRoadmapSearch('')" class="text-xs text-slate-400 hover:text-slate-700 font-bold px-1.5 py-0.5 rounded cursor-pointer">✕ Limpar</button>
+            ` : ''}
+          </div>
+
+          <!-- Conteúdo Dinâmico (Anos, Ondas, Funções ou Histórico) -->
           <div id="roadmap-plan-content">
-            ${_viewMode === 'years' ? renderYearChecklist(_selectedYear) : renderWavesChecklist()}
+            ${_viewMode === 'years' ? renderYearChecklist(_selectedYear) :
+              _viewMode === 'waves' ? renderWavesChecklist() :
+              _viewMode === 'functions' ? renderFunctionsCatalog() :
+              renderHistory()}
           </div>
         </div>
 
@@ -471,6 +516,152 @@
     container.innerHTML = html;
   }
 
+  function renderBuilderOrdersSection() {
+    var orders = (_roadmapData && _roadmapData.builderOrders) || [];
+
+    return `
+      <!-- 4.4 Centro de Comando & Ordens do Construtor do Site -->
+      <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 rounded-3xl border border-indigo-900/60 shadow-xl p-6 sm:p-7 text-white space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-900/80 pb-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Engenharia de Software</span>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">Tríade Unificada (3 em 1)</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+              <span>🛠️</span> Centro de Comando: Ordens & Diretrizes do Construtor
+            </h2>
+            <p class="text-xs text-slate-300">
+              Espaço reservado para o construtor/arquiteto manifestar diretrizes, novos requisitos e critérios de aceite diretamente no Roadmap Vivo.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-600/30 text-indigo-200 border border-indigo-500/50 self-start sm:self-auto">
+            ${orders.length} ${orders.length === 1 ? 'Ordem Ativa' : 'Ordens Ativas'}
+          </span>
+        </div>
+
+        <!-- Formulário para Manifestar Nova Ordem -->
+        <form id="builder-order-form" onsubmit="window.submitBuilderOrder(event)" class="bg-slate-900/80 border border-indigo-900/50 rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-black uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+              <span>✍️</span> Manifestar Nova Diretriz de Construção
+            </div>
+            <span class="text-[10px] text-slate-400">Persistência local imediata em SQLite leads.db</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="lg:col-span-2">
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Título da Ordem / Requisito *</label>
+              <input type="text" id="order-title" required placeholder="Ex.: Implementar OCR Tesseract para extração de RG/CNH" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Camada Arquitetural</label>
+              <select id="order-layer" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors">
+                <option value="Core Jurídico">⚙️ Core Jurídico</option>
+                <option value="Inteligência Artificial">🤖 Inteligência Artificial</option>
+                <option value="Conectividade & Integrações">🔗 Conectividade & Integrações</option>
+                <option value="Segurança, Compliance & SaaS">🔒 Segurança & Compliance</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Onda de Destino & Prioridade</label>
+              <div class="grid grid-cols-2 gap-1.5">
+                <select id="order-wave" class="w-full px-2 py-2 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-white focus:outline-none focus:border-indigo-500">
+                  <option value="Onda 0 — Blindagem Imediata">Onda 0 (P0)</option>
+                  <option value="Onda 1 — Confiabilidade & SRE" selected>Onda 1 (SRE)</option>
+                  <option value="Onda 2 — Governança & CI/CD">Onda 2 (CI/CD)</option>
+                  <option value="Onda 3 — Produto & Captação">Onda 3 (Produto)</option>
+                  <option value="Onda 4 — Escala SaaS B2B">Onda 4 (SaaS)</option>
+                </select>
+                <select id="order-priority" class="w-full px-2 py-2 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-white focus:outline-none focus:border-indigo-500">
+                  <option value="P0" class="text-rose-400 font-bold">P0 (Crítico)</option>
+                  <option value="P1" selected class="text-amber-400 font-bold">P1 (Alta)</option>
+                  <option value="P2" class="text-blue-400">P2 (Normal)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Critérios de Aceite (DoD) & Instruções Técnicas</label>
+            <textarea id="order-ac" rows="2" placeholder="Ex.: AC01: Endpoint /api/ocr ativo; AC02: Suporte a PDF/JPG; AC03: Teste e2e aprovado sem falhas." class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"></textarea>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button type="submit" id="btn-submit-order" class="px-4 py-2 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white">
+              <span>🚀</span> Manifestar Ordem no Roadmap Vivo
+            </button>
+          </div>
+        </form>
+
+        <!-- Lista de Ordens Registradas pelo Construtor -->
+        <div class="space-y-3">
+          <div class="text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span>📋 Ordens Ativas no Roadmap Vivo</span>
+            <span class="text-[11px] text-slate-400">Alterne o status para refletir a evolução</span>
+          </div>
+
+          ${orders.length === 0 ? `
+            <div class="p-6 text-center rounded-2xl border border-dashed border-slate-700 bg-slate-950/40 text-slate-400 text-xs">
+              Nenhuma ordem manifestada ainda. Preencha o formulário acima para registrar sua primeira diretriz de construção.
+            </div>
+          ` : `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              ${orders.map(function(ord){
+                var statusBg = ord.status === 'conforme' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                               ord.status === 'em_curso' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                               ord.status === 'bloqueado' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-slate-700/40 text-slate-300 border-slate-600';
+
+                return `
+                  <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/90 shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">${escapeHtml(ord.id)}</span>
+                          <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${escapeHtml(ord.priority || 'P1')}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <select onchange="window.updateOrderStatus('${ord.id}', this.value)" class="text-[10px] font-black px-2 py-0.5 rounded-full border cursor-pointer ${statusBg} bg-slate-900 focus:outline-none">
+                            <option value="planejado" ${ord.status === 'planejado' ? 'selected' : ''}>⚪ Planejado</option>
+                            <option value="em_curso" ${ord.status === 'em_curso' ? 'selected' : ''}>🟡 Em Curso</option>
+                            <option value="conforme" ${ord.status === 'conforme' ? 'selected' : ''}>🟢 Conforme</option>
+                            <option value="bloqueado" ${ord.status === 'bloqueado' ? 'selected' : ''}>🔴 Bloqueado</option>
+                          </select>
+                          <button onclick="window.deleteBuilderOrder('${ord.id}')" class="text-slate-500 hover:text-rose-400 text-xs px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors" title="Excluir ordem">✕</button>
+                        </div>
+                      </div>
+
+                      <div class="text-xs font-bold text-white mt-2 leading-snug">${escapeHtml(ord.title)}</div>
+                      <div class="flex flex-wrap items-center gap-2 mt-1 text-[10px] text-slate-400">
+                        <span>${escapeHtml(ord.layer || 'Core Jurídico')}</span>
+                        <span>•</span>
+                        <span>${escapeHtml(ord.wave || '')}</span>
+                      </div>
+
+                      ${ord.acceptance_criteria ? `
+                        <div class="mt-2.5 p-2 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                          <div class="text-[9px] font-bold uppercase tracking-wider text-indigo-400">Critérios de Aceite (DoD):</div>
+                          <div class="leading-relaxed whitespace-pre-line">${escapeHtml(ord.acceptance_criteria)}</div>
+                        </div>
+                      ` : ''}
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+                      <span>Por: ${escapeHtml(ord.created_by || 'construtor')}</span>
+                      <span>${new Date(ord.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
   function renderLayerCard(layer) {
     return `
       <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition-shadow">
@@ -508,9 +699,42 @@
     `;
   }
 
+  function orderBelongsToWave(ord, wave) {
+    if (!ord || !ord.wave || !wave || !wave.name) return false;
+    var ordW = String(ord.wave).toLowerCase();
+    var wavN = String(wave.name).toLowerCase();
+    if (ordW === wavN) return true;
+    var ordM = ordW.match(/onda\s*(\d)/);
+    var wavM = wavN.match(/onda\s*(\d)/);
+    if (ordM && wavM && ordM[1] === wavM[1]) return true;
+    return false;
+  }
+
   function renderYearChecklist(year) {
     var items = (_roadmapData && _roadmapData.checklists && _roadmapData.checklists[year]) || [];
-    if (!items.length) return '<p class="text-xs text-slate-400 py-4">Nenhum item programado para este período.</p>';
+    var builderOrders = (_roadmapData && _roadmapData.builderOrders) || [];
+    var yearOrders = builderOrders.filter(function(o){
+      var ordY = o.created_at ? new Date(o.created_at).getFullYear().toString() : '2026';
+      return ordY === year;
+    });
+
+    var q = (_searchQuery || '').toLowerCase().trim();
+    if (q) {
+      items = items.filter(function(it){
+        return (it.task || '').toLowerCase().includes(q) || (it.priority || '').toLowerCase().includes(q);
+      });
+      yearOrders = yearOrders.filter(function(ord){
+        return (ord.title || '').toLowerCase().includes(q) ||
+               (ord.id || '').toLowerCase().includes(q) ||
+               (ord.acceptance_criteria || '').toLowerCase().includes(q) ||
+               (ord.status || '').toLowerCase().includes(q) ||
+               (ord.priority || '').toLowerCase().includes(q);
+      });
+    }
+
+    if (!items.length && !yearOrders.length) {
+      return '<div class="p-8 text-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 text-xs">Nenhum item encontrado ' + (q ? 'para a busca "' + escapeHtml(q) + '"' : 'para este período.') + '</div>';
+    }
 
     var descriptions = {
       '2026': '🎯 Foco Estratégico: Consolidação do Core Jurídico, DMS Matter-Centric com anexo direto, Zero Digitação (OCR Tesseract), WhatsApp Cloud API e RAG Local.',
@@ -526,6 +750,47 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          ${yearOrders.map(function(ord){
+            var isDone = ord.status === 'conforme';
+            var isCurrent = ord.status === 'em_curso';
+            var isBlocked = ord.status === 'bloqueado';
+            var priColor = ord.priority === 'P0' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                           ord.priority === 'P1' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300';
+            var cardBg = isDone ? 'bg-emerald-50/60 border-emerald-300' : isCurrent ? 'bg-amber-50/60 border-amber-300' : isBlocked ? 'bg-rose-50/60 border-rose-300' : 'bg-indigo-50/40 border-indigo-200';
+            var statusBadge = isDone ? '🟢 Conforme' : isCurrent ? '🟡 Em Curso' : isBlocked ? '🔴 Bloqueado' : '⚪ Na Fila de Prioridades';
+
+            return `
+              <div class="p-3.5 rounded-2xl border transition-all flex flex-col justify-between ${cardBg}">
+                <div>
+                  <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-600 text-white">
+                        🛠️ Diretriz do Construtor
+                      </span>
+                      <span class="text-[9px] font-mono font-bold text-slate-500">${escapeHtml(ord.id)}</span>
+                    </div>
+                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${ord.priority || 'P1'}</span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-900 leading-snug">
+                    ${escapeHtml(ord.title)}
+                  </div>
+                  ${ord.acceptance_criteria ? `
+                    <div class="mt-2 text-[11px] text-slate-600 bg-white/80 rounded-xl p-2 border border-slate-200/80 leading-snug whitespace-pre-line">
+                      <strong class="text-indigo-950 font-bold">Critérios de Aceite:</strong>
+                      ${escapeHtml(ord.acceptance_criteria)}
+                    </div>
+                  ` : ''}
+                </div>
+                <div class="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                  <span class="font-bold ${isDone ? 'text-emerald-700' : isCurrent ? 'text-amber-700' : isBlocked ? 'text-rose-700' : 'text-indigo-700'}">
+                    ${statusBadge}
+                  </span>
+                  <span class="text-slate-400">${escapeHtml(ord.wave || '')}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+
           ${items.map(function(it){
             var isDone = it.done;
             return `
@@ -549,17 +814,39 @@
 
   function renderWavesChecklist() {
     var waves = (_roadmapData && _roadmapData.waves) || [];
+    var builderOrders = (_roadmapData && _roadmapData.builderOrders) || [];
     if (!waves.length) return '<p class="text-xs text-slate-400 py-4">Nenhuma onda configurada na telemetria.</p>';
 
     return `
       <div class="space-y-4">
         <div class="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/60 text-xs font-semibold text-sky-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <span>🌊 <strong>Metodologia por Ondas de Entrega</strong>: Priorização orientada a risco, separando correções críticas imediatas (P0 em 48h) de confiabilidade, governança e expansão SaaS B2B.</span>
+          <span>🌊 <strong>Metodologia por Ondas de Entrega</strong>: Priorização orientada a risco, integrando as diretrizes técnicas manifestadas pelo construtor com a esteira nativa da plataforma.</span>
           <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-sky-200 text-sky-900 shrink-0 self-start sm:self-auto">5 Ondas Estratégicas</span>
         </div>
 
         <div class="grid grid-cols-1 gap-4">
           ${waves.map(function(wave){
+            var waveOrders = builderOrders.filter(function(o){ return orderBelongsToWave(o, wave); });
+            var waveItems = wave.items || [];
+            if (q) {
+              waveItems = waveItems.filter(function(it){
+                return (it.task || '').toLowerCase().includes(q) || (it.priority || '').toLowerCase().includes(q);
+              });
+              waveOrders = waveOrders.filter(function(ord){
+                return (ord.title || '').toLowerCase().includes(q) ||
+                       (ord.id || '').toLowerCase().includes(q) ||
+                       (ord.acceptance_criteria || '').toLowerCase().includes(q) ||
+                       (ord.status || '').toLowerCase().includes(q) ||
+                       (ord.priority || '').toLowerCase().includes(q);
+              });
+            }
+
+            var totalCount = (wave.items ? wave.items.length : 0) + waveOrders.length;
+            var doneSys = (wave.items ? wave.items.filter(function(it){ return it.done; }).length : 0);
+            var doneOrd = waveOrders.filter(function(o){ return o.status === 'conforme'; }).length;
+            var doneCount = doneSys + doneOrd;
+            var pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+
             return `
               <div class="p-5 rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -569,19 +856,80 @@
                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:${wave.color}15; color:${wave.color}; border: 1px solid ${wave.color}40;">
                       ${escapeHtml(wave.badge)}
                     </span>
+                    ${waveOrders.length ? `
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        +${waveOrders.length} ${waveOrders.length === 1 ? 'Diretriz do Construtor' : 'Diretrizes do Construtor'}
+                      </span>
+                    ` : ''}
                   </div>
-                  <div class="flex items-center gap-1.5 text-xs">
+                  <div class="flex items-center gap-2 text-xs">
                     <span class="text-slate-500 font-medium">Janela estimada:</span>
                     <span class="font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">${escapeHtml(wave.window)}</span>
                   </div>
                 </div>
 
-                <div class="text-xs text-slate-600 font-medium mt-2.5">
+                <!-- Barra de Progresso da Onda -->
+                <div class="flex items-center gap-2.5 mt-2.5">
+                  <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div class="h-2 rounded-full transition-all" style="width: ${pct}%; background: ${wave.color};"></div>
+                  </div>
+                  <span class="text-[11px] font-bold text-slate-600 shrink-0">${doneCount}/${totalCount} (${pct}%)</span>
+                </div>
+
+                <div class="text-xs text-slate-600 font-medium mt-2">
                   <strong class="text-slate-800">Foco Principal:</strong> ${escapeHtml(wave.focus)}
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mt-3.5">
-                  ${wave.items.map(function(it){
+                  <!-- Ordens do Construtor nesta Onda -->
+                  ${waveOrders.map(function(ord){
+                    var isDone = ord.status === 'conforme';
+                    var isCurrent = ord.status === 'em_curso';
+                    var isBlocked = ord.status === 'bloqueado';
+                    var priColor = ord.priority === 'P0' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                                   ord.priority === 'P1' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300';
+                    var statusBadge = isDone ? '🟢 Conforme' : isCurrent ? '🟡 Em Curso' : isBlocked ? '🔴 Bloqueado' : '⚪ Na Fila de Prioridades';
+                    var cardBorder = isDone ? 'bg-emerald-50/60 border-emerald-300' :
+                                     isCurrent ? 'bg-amber-50/60 border-amber-300' :
+                                     isBlocked ? 'bg-rose-50/60 border-rose-300' : 'bg-indigo-50/40 border-indigo-200';
+
+                    return `
+                      <div class="p-3.5 rounded-2xl border transition-all flex flex-col justify-between ${cardBorder} shadow-xs">
+                        <div>
+                          <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                            <div class="flex items-center gap-1.5">
+                              <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-600 text-white shadow-xs">
+                                🛠️ Diretriz do Construtor
+                              </span>
+                              <span class="text-[9px] font-mono font-bold text-slate-500">${escapeHtml(ord.id)}</span>
+                            </div>
+                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded border ${priColor}">${ord.priority || 'P1'}</span>
+                          </div>
+
+                          <div class="text-xs font-bold text-slate-900 leading-snug">
+                            ${escapeHtml(ord.title)}
+                          </div>
+
+                          ${ord.acceptance_criteria ? `
+                            <div class="mt-2 text-[11px] text-slate-600 bg-white/80 rounded-xl p-2 border border-slate-200/80 leading-snug whitespace-pre-line">
+                              <strong class="text-indigo-950 font-bold">Critérios de Aceite:</strong>
+                              ${escapeHtml(ord.acceptance_criteria)}
+                            </div>
+                          ` : ''}
+                        </div>
+
+                        <div class="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                          <span class="font-bold ${isDone ? 'text-emerald-700' : isCurrent ? 'text-amber-700' : isBlocked ? 'text-rose-700' : 'text-indigo-700'}">
+                            ${statusBadge}
+                          </span>
+                          <span class="text-slate-400">Por ${escapeHtml(ord.created_by || 'construtor')}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+
+                  <!-- Itens Nativos da Onda -->
+                  ${waveItems.map(function(it){
                     var isDone = it.done;
                     var priColor = it.priority === 'P0' ? 'bg-rose-100 text-rose-800 border-rose-300' :
                                    it.priority === 'P1' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300';
@@ -611,6 +959,182 @@
     `;
   }
 
+  function renderFunctionsCatalog() {
+    var functions = (_roadmapData && _roadmapData.systemFunctions) || [];
+    var q = (_searchQuery || '').toLowerCase().trim();
+
+    if (q) {
+      functions = functions.filter(function(fn){
+        return (fn.name || '').toLowerCase().includes(q) ||
+               (fn.module || '').toLowerCase().includes(q) ||
+               (fn.layer || '').toLowerCase().includes(q) ||
+               (fn.description || '').toLowerCase().includes(q) ||
+               (fn.marker || '').toLowerCase().includes(q) ||
+               (fn.file || '').toLowerCase().includes(q);
+      });
+    }
+
+    if (!functions.length) {
+      return `
+        <div class="p-8 text-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 text-xs">
+          Nenhuma função encontrada ${q ? 'para a busca "' + escapeHtml(q) + '"' : ''}.
+        </div>
+      `;
+    }
+
+    return `
+      <div class="space-y-4">
+        <div class="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/70 text-xs text-indigo-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <strong>Catálogo Ativo de Funções & Módulos</strong>: ${functions.length} capacidades mapeadas com inspeção em tempo real no disco.
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">⚡ Ativa</span>
+            <span class="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300">🆕 Criada</span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">🔄 Modificada</span>
+            <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">❌ Excluída</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          ${functions.map(function(fn){
+            var isAtiva = fn.marker.includes('⚡');
+            var isCriada = fn.marker.includes('🆕');
+            var isMod = fn.marker.includes('🔄');
+            var isExc = fn.marker.includes('❌');
+
+            var badgeClass = isAtiva ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                             isCriada ? 'bg-sky-100 text-sky-800 border-sky-300' :
+                             isMod ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-rose-100 text-rose-800 border-rose-300';
+
+            var cardBorder = isExc ? 'bg-rose-50/40 border-rose-200' :
+                             isCriada ? 'bg-sky-50/40 border-sky-200' :
+                             isMod ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-slate-200';
+
+            var dt = formatDateTime(fn.lastModified);
+
+            return `
+              <div class="p-4 rounded-2xl border transition-all flex flex-col justify-between ${cardBorder} shadow-xs hover:shadow-sm">
+                <div>
+                  <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                    <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badgeClass}">
+                      ${escapeHtml(fn.marker)}
+                    </span>
+                    <span class="text-[9px] font-mono font-bold text-slate-400">${escapeHtml(fn.id)}</span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-900 leading-snug">
+                    ${escapeHtml(fn.name)}
+                  </div>
+                  <div class="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
+                    ${escapeHtml(fn.description)}
+                  </div>
+                </div>
+
+                <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400">
+                  <span class="font-mono text-slate-500">${escapeHtml(fn.file)}</span>
+                  <span>Modificado em: <strong class="text-slate-700">${dt.full}</strong></span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderHistory() {
+    var history = (_roadmapData && _roadmapData.builderHistory) || [];
+    var q = (_searchQuery || '').toLowerCase().trim();
+
+    if (q) {
+      history = history.filter(function(h){
+        var dt = formatDateTime(h.created_at);
+        return (h.title || '').toLowerCase().includes(q) ||
+               (h.order_id || '').toLowerCase().includes(q) ||
+               (h.action || '').toLowerCase().includes(q) ||
+               (h.performed_by || '').toLowerCase().includes(q) ||
+               (h.new_status || '').toLowerCase().includes(q) ||
+               (h.previous_status || '').toLowerCase().includes(q) ||
+               (h.details || '').toLowerCase().includes(q) ||
+               dt.full.toLowerCase().includes(q);
+      });
+    }
+
+    if (!history.length) {
+      return `
+        <div class="p-8 text-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 text-xs">
+          Nenhum registro de auditoria encontrado ${q ? 'para a busca "' + escapeHtml(q) + '"' : ''}.
+        </div>
+      `;
+    }
+
+    return `
+      <div class="space-y-4">
+        <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/70 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <strong>Trilha de Auditoria & Histórico de Ordens</strong>: Registros cronológicos completos com data completa, hora, autor e transições.
+          </div>
+          <span class="text-[11px] font-bold text-amber-900 bg-amber-200/60 px-2.5 py-0.5 rounded-full shrink-0">${history.length} evento(s)</span>
+        </div>
+
+        <div class="divide-y divide-slate-100 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          ${history.map(function(h){
+            var dt = formatDateTime(h.created_at);
+            var isDone = h.new_status === 'conforme';
+            var isCurrent = h.new_status === 'em_curso';
+            var isBlocked = h.new_status === 'bloqueado';
+            var isCreated = h.action === 'CRIADA';
+
+            var actionBadge = isCreated ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+                              isDone ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                              isCurrent ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                              isBlocked ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-slate-100 text-slate-800 border-slate-200';
+
+            return `
+              <div class="p-4 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="space-y-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${actionBadge}">
+                      ${escapeHtml(h.action)}
+                    </span>
+                    <span class="text-[10px] font-mono font-bold text-slate-500">${escapeHtml(h.order_id)}</span>
+                    <span class="text-xs font-bold text-slate-900">${escapeHtml(h.title)}</span>
+                  </div>
+                  ${h.details ? `
+                    <div class="text-[11px] text-slate-600 pl-1 leading-snug">${escapeHtml(h.details)}</div>
+                  ` : ''}
+                  <div class="text-[10px] text-slate-400 pl-1 flex flex-wrap items-center gap-2">
+                    <span>Autor: <strong class="text-slate-600">${escapeHtml(h.performed_by || 'construtor')}</strong></span>
+                    ${h.previous_status ? `
+                      <span>•</span>
+                      <span>De: <code>${escapeHtml(h.previous_status)}</code> ➔ Para: <code>${escapeHtml(h.new_status)}</code></span>
+                    ` : ''}
+                  </div>
+                </div>
+
+                <div class="text-left sm:text-right shrink-0 bg-slate-50 sm:bg-transparent p-2 sm:p-0 rounded-xl">
+                  <div class="text-xs font-bold text-slate-800 font-mono">📅 ${dt.date}</div>
+                  <div class="text-[11px] text-slate-500 font-mono">⏰ ${dt.time}</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  window.setRoadmapSearch = function (val) {
+    _searchQuery = val || '';
+    var container = document.getElementById('roadmap-plan-content');
+    if (container) {
+      if (_viewMode === 'years') container.innerHTML = renderYearChecklist(_selectedYear);
+      else if (_viewMode === 'waves') container.innerHTML = renderWavesChecklist();
+      else if (_viewMode === 'functions') container.innerHTML = renderFunctionsCatalog();
+      else if (_viewMode === 'history') container.innerHTML = renderHistory();
+    }
+  };
+
   window.switchRoadmapView = function (mode) {
     _viewMode = mode;
     var container = document.getElementById('roadmap-live-container');
@@ -621,6 +1145,136 @@
     _selectedYear = y;
     var container = document.getElementById('roadmap-live-container');
     if (container) renderRoadmap(container);
+  };
+
+  window.submitBuilderOrder = async function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var title = (document.getElementById('order-title')?.value || '').trim();
+    var layer = document.getElementById('order-layer')?.value || 'Core Jurídico';
+    var wave = document.getElementById('order-wave')?.value || 'Onda 1 — Confiabilidade & SRE';
+    var priority = document.getElementById('order-priority')?.value || 'P1';
+    var acceptance_criteria = (document.getElementById('order-ac')?.value || '').trim();
+
+    if (!title) {
+      alert('Por favor, informe o título da ordem.');
+      return;
+    }
+
+    var btn = document.getElementById('btn-submit-order');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = 'Gravando...';
+    }
+
+    try {
+      var token = getToken();
+      if (!token) {
+        throw new Error('Sessão não identificada. Por favor, refaça o login no painel.');
+      }
+
+      var res = await fetch('/api/admin/roadmap/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ title, layer, wave, priority, acceptance_criteria })
+      });
+
+      var data = {};
+      var ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json();
+      } else {
+        var txt = await res.text();
+        throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 100));
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Erro ao registrar ordem');
+      }
+
+      if (typeof window.wmToast === 'function') {
+        window.wmToast('🚀 Ordem do construtor manifestada e integrada ao Roadmap Vivo!');
+      } else {
+        alert('Ordem manifestada com sucesso no Roadmap Vivo!');
+      }
+
+      var form = document.getElementById('builder-order-form');
+      if (form) form.reset();
+
+      await loadRoadmapTab();
+    } catch (err) {
+      alert('Aviso: ' + err.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀</span> Manifestar Ordem no Roadmap Vivo';
+      }
+    }
+  };
+
+  window.updateOrderStatus = async function (orderId, newStatus) {
+    try {
+      var token = getToken();
+      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+
+      var res = await fetch('/api/admin/roadmap/orders/' + encodeURIComponent(orderId), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      var data = {};
+      var ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json();
+      } else {
+        var txt = await res.text();
+        throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 100));
+      }
+
+      if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao atualizar');
+      if (typeof window.wmToast === 'function') {
+        window.wmToast('Status da ordem atualizado para: ' + newStatus);
+      }
+      await loadRoadmapTab();
+    } catch (err) {
+      alert('Aviso: ' + err.message);
+    }
+  };
+
+  window.deleteBuilderOrder = async function (orderId) {
+    if (!confirm('Deseja realmente remover esta ordem do Roadmap Vivo?')) return;
+    try {
+      var token = getToken();
+      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+
+      var res = await fetch('/api/admin/roadmap/orders/' + encodeURIComponent(orderId), {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      var data = {};
+      var ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json();
+      } else {
+        var txt = await res.text();
+        throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 100));
+      }
+
+      if (!res.ok || !data.success) throw new Error(data.error || 'Falha ao remover');
+      if (typeof window.wmToast === 'function') {
+        window.wmToast('Ordem removida do Roadmap Vivo.');
+      }
+      await loadRoadmapTab();
+    } catch (err) {
+      alert('Aviso: ' + err.message);
+    }
   };
 
   window.loadRoadmapTab = loadRoadmapTab;
