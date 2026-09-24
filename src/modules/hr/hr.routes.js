@@ -859,6 +859,14 @@ hrRouter.post('/api/hr/employee/login', loginRateLimit, (req, res) => {
     }
 
     if (!employee) {
+      logAudit(req, {
+        event_type: 'AUTENTICACAO',
+        event_name: 'FALHA_LOGIN_COLABORADOR',
+        module: 'RH',
+        user_name: String(identifier || '').slice(0, 80),
+        user_role: 'colaborador',
+        description: `Tentativa de login no portal do colaborador com identificador não encontrado: '${String(identifier || '').slice(0, 80)}'.`
+      });
       if (guardLoginFailure(req, res, identifier)) return;
       return res.status(401).json({ error: 'Colaborador não localizado com o identificador informado.' });
     }
@@ -884,6 +892,15 @@ hrRouter.post('/api/hr/employee/login', loginRateLimit, (req, res) => {
     const isCpfAuth = !authUser && cleanNumbers.length > 0 && (compactPassword === cleanNumbers || rawPassword === cleanNumbers);
 
     if (!isUserAuth && !isCpfAuth) {
+      logAudit(req, {
+        event_type: 'AUTENTICACAO',
+        event_name: 'FALHA_LOGIN_COLABORADOR',
+        module: 'RH',
+        resource_id: employee.id,
+        user_name: employee.name,
+        user_role: 'colaborador',
+        description: `Tentativa de login com senha incorreta para o colaborador ${employee.name}.`
+      });
       if (guardLoginFailure(req, res, identifier)) return;
       return res.status(401).json({ error: 'Senha incorreta. Use sua senha cadastrada ou, no primeiro acesso, seu CPF (somente números).' });
     }

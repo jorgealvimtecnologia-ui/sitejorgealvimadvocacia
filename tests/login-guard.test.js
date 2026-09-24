@@ -75,6 +75,13 @@ describe('Portal do colaborador', () => {
     }
     assert.equal(last.status, 429);
   });
+
+  it('registra a tentativa errada na Auditoria (aparece na aba Auditoria)', async () => {
+    await fromIp(request(app).post('/api/hr/employee/login'), '10.3.9.9').send({ identifier: 'colab.inexistente.audit', password: 'x' });
+    const row = db.prepare(`SELECT * FROM audit_logs WHERE event_name = 'FALHA_LOGIN_COLABORADOR' ORDER BY id DESC LIMIT 1`).get();
+    assert.ok(row, 'falha do colaborador deve ser gravada em audit_logs');
+    assert.equal(row.event_type, 'AUTENTICACAO');
+  });
 });
 
 describe('Bloqueio por conta (ataque vindo de vários IPs)', () => {
