@@ -382,7 +382,9 @@
                 type="text" 
                 id="reg-cnpj" 
                 placeholder="00.000.000/0001-00" 
-                oninput="maskCNPJ(this)" 
+                inputmode="numeric"
+                oninput="maskCNPJ(this); if (this.value.replace(/\D/g, '').length === 14) buscarCNPJ(this.value);" 
+                onblur="buscarCNPJ(this.value)" 
                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
               />
             </div>
@@ -455,7 +457,8 @@
                     type="text" 
                     id="reg-cep" 
                     placeholder="CEP: 00000-000" 
-                    oninput="maskCEP(this)" 
+                    inputmode="numeric"
+                    oninput="maskCEP(this); if (this.value.replace(/\D/g, '').length === 8) buscarCEP(this.value);" 
                     onblur="buscarCEP(this.value)" 
                     class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs font-mono"
                   />
@@ -1195,19 +1198,58 @@
       i.value = v;
     }
 
+    // Preenche só campos vazios, para não apagar o que a pessoa já digitou
+    function fillIfEmpty(id, value) {
+      const el = document.getElementById(id);
+      if (el && value && !el.value.trim()) el.value = value;
+    }
+
+    // CEP → endereço (pelo servidor: ViaCEP com BrasilAPI de reserva)
+    let lastCepLookup = '';
     async function buscarCEP(val) {
-      const cep = val.replace(/\D/g, '');
-      if (cep.length !== 8) return;
+      const cep = String(val || '').replace(/\D/g, '');
+      if (cep.length !== 8 || cep === lastCepLookup) return;
+      lastCepLookup = cep;
       try {
-        const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          document.getElementById('reg-street').value = data.logradouro || '';
-          document.getElementById('reg-neighborhood').value = data.bairro || '';
-          document.getElementById('reg-city').value = `${data.localidade} - ${data.uf}`;
+        const data = await fetch(`/api/lookup/cep/${cep}`).then(r => r.json());
+        if (data.success) {
+          const a = data.address || data;
+          document.getElementById('reg-street').value = a.street || '';
+          document.getElementById('reg-neighborhood').value = a.neighborhood || '';
+          document.getElementById('reg-city').value = a.city ? `${a.city} - ${a.state || ''}`.replace(/ - $/, '') : '';
+          document.getElementById('reg-number')?.focus();
         }
       } catch (e) {
-        console.warn('Erro ao consultar ViaCEP:', e);
+        console.warn('Erro ao consultar CEP:', e);
+      }
+    }
+
+    // CNPJ → razão social, contatos, endereço e representante (Receita Federal via servidor)
+    let lastCnpjLookup = '';
+    async function buscarCNPJ(val) {
+      const cnpj = String(val || '').replace(/\D/g, '');
+      if (cnpj.length !== 14 || cnpj === lastCnpjLookup) return;
+      lastCnpjLookup = cnpj;
+      try {
+        const data = await fetch(`/api/lookup/cnpj/${cnpj}`).then(r => r.json());
+        if (!data.success || !(data.company || data.corporate_name)) return;
+        const c = data.company || data; // a API devolve os campos no nível raiz
+        fillIfEmpty('reg-fullname', c.corporate_name);
+        fillIfEmpty('reg-email', c.email);
+        fillIfEmpty('reg-phone', c.phone);
+        fillIfEmpty('reg-rep-name', c.representative_name || c.rep_name);
+        // Endereço vem em bloco (evita misturar rua de uma cidade com a cidade padrão do formulário)
+        if (c.street || c.cep) {
+          const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+          set('reg-cep', c.cep);
+          set('reg-street', c.street);
+          set('reg-number', c.number);
+          set('reg-neighborhood', c.neighborhood);
+          set('reg-city', c.city ? `${c.city}${c.state ? ' - ' + c.state : ''}` : '');
+          lastCepLookup = String(c.cep || '').replace(/[^0-9]/g, '');
+        }
+      } catch (e) {
+        console.warn('Erro ao consultar CNPJ:', e);
       }
     }
 

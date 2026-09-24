@@ -228,11 +228,15 @@ notificationsRouter.get('/api/notifications', requireAuth, (req, res) => {
   try {
     const { box = 'all', limit = 50 } = req.query;
     const lim = Math.min(parseInt(limit, 10) || 50, 200);
-    let where = `1=1`;
+    // Notificações direcionadas (target_user_id) só aparecem para o destinatário
+    // (ex.: códigos de acesso de clientes vão só para o mestre).
+    const me = req.user?.userId || '';
+    const visible = `(target_user_id IS NULL OR target_user_id = ?)`;
+    let where = visible;
     if (box === 'unread') where += ` AND is_read = 0`;
-    const rows = db.prepare(`SELECT * FROM notifications WHERE ${where} ORDER BY created_at DESC LIMIT ?`).all(lim);
-    const unread = db.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0`).get().c;
-    const critical = db.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0 AND level = 'critical'`).get().c;
+    const rows = db.prepare(`SELECT * FROM notifications WHERE ${where} ORDER BY created_at DESC LIMIT ?`).all(me, lim);
+    const unread = db.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0 AND ${visible}`).get(me).c;
+    const critical = db.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0 AND level = 'critical' AND ${visible}`).get(me).c;
     return res.json({ success: true, unread, critical, count: rows.length, notifications: rows });
   } catch (err) {
     console.error('[NOTIFICAÇÕES] Falha ao listar:', err);
@@ -244,7 +248,7 @@ notificationsRouter.get('/api/notifications', requireAuth, (req, res) => {
 notificationsRouter.post('/api/notifications/scan', requireAuth, (req, res) => {
   try {
     const created = scanDeadlines();
-    const unread = db.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0`).get().c;
+    const unread = db.prepare(`SELECT COUNT(*) AS c FROM notifications WHERE is_read = 0 AND (target_user_id IS NULL OR target_user_id = ?)`).get(req.user?.userId || '').c;
     return res.json({ success: true, created, unread, message: created > 0 ? `${created} novo(s) alerta(s).` : 'Nenhum prazo novo na janela de alerta.' });
   } catch (err) {
     console.error('[NOTIFICAÇÕES] Falha na varredura manual:', err);
@@ -257,7 +261,7 @@ notificationsRouter.patch('/api/notifications/:id/read', requireAuth, (req, res)
   try {
     const { id } = req.params;
     const isRead = req.body?.is_read === false ? 0 : 1;
-    const row = db.prepare(`SELECT * FROM notifications WHERE id = ?`).get(id);
+    const row = db.prepare(`SELECT * FROM notifications WHERE id = ? AND (target_user_id IS NULL OR target_user_id = ?)`).get(id, req.user?.userId || '');
     if (!row) return res.status(404).json({ error: 'Notificação não encontrada.' });
     db.prepare(`UPDATE notifications SET is_read = ?, read_at = ? WHERE id = ?`)
       .run(isRead, isRead ? new Date().toISOString() : null, id);
@@ -271,7 +275,7 @@ notificationsRouter.patch('/api/notifications/:id/read', requireAuth, (req, res)
 notificationsRouter.post('/api/notifications/read-all', requireAuth, (req, res) => {
   try {
     const now = new Date().toISOString();
-    const info = db.prepare(`UPDATE notifications SET is_read = 1, read_at = ? WHERE is_read = 0`).run(now);
+    const info = db.prepare(`UPDATE notifications SET is_read = 1, read_at = ? WHERE is_read = 0 AND (target_user_id IS NULL OR target_user_id = ?)`).run(now, req.user?.userId || '');
     return res.json({ success: true, updated: info.changes });
   } catch (err) {
     return res.status(500).json({ error: 'Erro ao marcar notificações.' });
@@ -281,7 +285,7 @@ notificationsRouter.post('/api/notifications/read-all', requireAuth, (req, res) 
 /** DELETE /api/notifications/:id — remove uma notificação. */
 notificationsRouter.delete('/api/notifications/:id', requireAuth, (req, res) => {
   try {
-    db.prepare(`DELETE FROM notifications WHERE id = ?`).run(req.params.id);
+    db.prepare(`DELETE FROM notifications WHERE id = ? AND (target_user_id IS NULL OR target_user_id = ?)`).run(req.params.id, req.user?.userId || '');
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: 'Erro ao remover notificação.' });

@@ -126,6 +126,35 @@
     .article-content li {
       margin-bottom: 0.4rem;
     }
+    /* Cabeçalho do blog no celular (classes fora do CSS compilado do Tailwind) */
+    .hdr-brand { margin-right: .5rem; }
+    .hdr-home, .hdr-wa-long, .hdr-amz { display: none; }
+    @media (min-width: 400px) {
+      .hdr-amz { display: inline; }
+    }
+    @media (min-width: 640px) {
+      .hdr-home { display: inline-block; }
+      .hdr-wa-long { display: inline; }
+      .hdr-wa-short { display: none; }
+      .hdr-wa-btn { padding-top: .625rem; padding-bottom: .625rem; }
+      .hdr-brand-sub { letter-spacing: .1em; }
+    }
+
+    /* Responsividade do conteúdo dos artigos (sem alterar o texto): tabelas largas rolam
+       dentro do próprio quadro no celular e mídias nunca passam da largura da tela. */
+    .article-content table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .article-content img, .article-content video, .article-content iframe {
+      max-width: 100%;
+      height: auto;
+    }
+    .article-content pre {
+      overflow-x: auto;
+    }
     .article-content blockquote {
       background: #FFFDF7;
       border-left: 4px solid #B8860B;
@@ -166,27 +195,27 @@
       <div class="flex items-center justify-between h-20 sm:h-24">
         
         <!-- Logo e Título -->
-        <a href="/" class="flex items-center space-x-3 sm:space-x-4 group">
+        <a href="/" class="flex items-center space-x-2 sm:space-x-4 group min-w-0 hdr-brand">
           <div class="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-amber-50 to-gold-100 border-2 border-gold-400 flex items-center justify-center text-gold-700 shadow-sm group-hover:border-gold-500 transition-all flex-shrink-0">
             <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l9-4 9 4m-9-4v20m-7-9l7 4 7-4m-14 0l7-4 7 4M5 19h14"/>
             </svg>
           </div>
-          <div>
-            <span class="font-serif text-lg sm:text-2xl font-extrabold text-navy-950 block">JORGE ALVIM</span>
-            <span class="text-[9px] sm:text-xs uppercase tracking-widest text-gold-700 font-bold block -mt-0.5">Informativo Jurídico • OAB/MG 222.943</span>
+          <div class="min-w-0 overflow-hidden">
+            <span class="font-serif text-base sm:text-2xl font-extrabold text-navy-950 block truncate">JORGE ALVIM</span>
+            <span class="text-[9px] sm:text-xs uppercase tracking-wider hdr-brand-sub text-gold-700 font-bold block -mt-0.5 truncate">Informativo Jurídico • OAB/MG 222.943</span>
           </div>
         </a>
 
         <!-- Navegação Topo -->
-        <div class="flex items-center space-x-2 sm:space-x-4">
-          <a href="/" class="text-xs sm:text-sm font-semibold text-slate-700 hover:text-gold-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-colors">
+        <div class="flex items-center space-x-1.5 sm:space-x-4 flex-shrink-0">
+          <a href="/" class="hdr-home text-xs sm:text-sm font-semibold text-slate-700 hover:text-gold-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-colors">
             Início
           </a>
-          <a href="/amazon" class="text-xs font-bold text-slate-800 hover:text-amber-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-300 transition-all inline-flex items-center space-x-1 shadow-2xs">
+          <a href="/amazon" title="Vitrine Amazon (parceiro)" aria-label="Vitrine Amazon" class="text-xs font-bold text-slate-800 hover:text-amber-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-50/80 hover:bg-amber-100 border border-amber-300 transition-all inline-flex items-center space-x-1 shadow-2xs">
             <span class="text-amber-600">📦</span>
-            <span class="hidden sm:inline">Vitrine </span><span>Amazon</span>
-            <span class="text-[9px] font-black uppercase bg-[#FF9900] text-slate-950 px-1 py-0.5 rounded tracking-tighter">Parceiro</span>
+            <span class="hidden sm:inline">Vitrine </span><span class="hdr-amz">Amazon</span>
+            <span class="hidden sm:inline text-[9px] font-black uppercase bg-[#FF9900] text-slate-950 px-1 py-0.5 rounded tracking-tighter">Parceiro</span>
           </a>
           <a href="/cliente" class="text-xs font-bold text-emerald-950 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors hidden md:inline-flex items-center space-x-1">
             <span>👤</span>
@@ -195,11 +224,11 @@
           <a 
             href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Gostaria%20de%20tirar%20uma%20d%C3%BAvida%20jur%C3%ADdica." 
             target="_blank" 
-            class="px-4 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center space-x-1.5 border border-emerald-500/40"
+            class="hdr-wa-btn px-3 sm:px-4 py-2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center space-x-1.5 border border-emerald-500/40 whitespace-nowrap"
           >
             <span>💬</span>
-            <span class="hidden xs:inline">Falar com o Advogado</span>
-            <span class="xs:hidden">WhatsApp</span>
+            <span class="hdr-wa-long">Falar com o Advogado</span>
+            <span class="hdr-wa-short">WhatsApp</span>
           </a>
         </div>
 

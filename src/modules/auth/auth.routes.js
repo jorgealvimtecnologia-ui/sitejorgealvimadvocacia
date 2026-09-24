@@ -8,10 +8,11 @@ import { db } from '../../config/db.js';
 import { requireAuth, createSession, createClientSession, createEmployeeSession, validateToken, destroySession, sessions } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
-import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures } from '../../shared/login-guard.js';
+import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures, normalizeLoginId } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
 import { validatePassword } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
+import { deliverAccessCode } from '../../shared/access-codes.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
 
 export const authRouter = express.Router();
@@ -32,12 +33,15 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     const cleanUsername = rawUsername.toLowerCase();
     const compactUsername = cleanUsername.replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
 
+    // Chave dos contadores de tentativas (mesma normalização dos portais: CPF → só dígitos)
+    const lockId = normalizeLoginId(rawIdentifier);
+
     const rawPassword = String(password).trim();
     const compactPassword = rawPassword.toLowerCase().replace(/\s+/g, '');
 
     // Bloqueio progressivo: se este (IP + usuário) está em cooldown por falhas, recusa.
     const reqIp = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
-    const lockLeft = loginLockRemaining(reqIp, cleanUsername);
+    const lockLeft = loginLockRemaining(reqIp, lockId);
     if (lockLeft > 0) {
       res.setHeader('Retry-After', String(lockLeft));
       return res.status(429).json({ error: `Muitas tentativas. Aguarde ${lockLeft}s e tente novamente.` });
@@ -74,7 +78,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     );
 
     if (user && isPasswordValid) {
-      clearLoginFailures(reqIp, cleanUsername);
+      clearLoginFailures(reqIp, lockId);
 
       // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
       try {
@@ -171,7 +175,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
       const isClientPasswordValid = verifyPassword(rawPassword, client.password_hash, client.salt);
       if (isClientPasswordValid) {
-        clearLoginFailures(reqIp, cleanUsername);
+        clearLoginFailures(reqIp, lockId);
         try {
           if (!isStrongHash(rawPassword, client.password_hash, client.salt)) {
             const up = hashPassword(rawPassword);
@@ -236,7 +240,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       const isCpfAuth = !linkedUser && cleanDigits.length > 0 && (compactPassword === cleanDigits || rawPassword === cleanDigits);
 
       if (isUserAuth || isCpfAuth) {
-        clearLoginFailures(reqIp, cleanUsername);
+        clearLoginFailures(reqIp, lockId);
         const token = createEmployeeSession(employee);
         logAudit(req, {
           event_type: 'AUTENTICACAO',
@@ -285,7 +289,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     }
 
     // Se nenhum perfil bateu ou a senha fornecida foi inválida
-    const fail = registerLoginFailure(reqIp, cleanUsername);
+    const fail = registerLoginFailure(reqIp, lockId);
     logAudit(req, {
       event_type: 'AUTENTICACAO',
       event_name: 'FALHA_LOGIN_ADMIN',
@@ -295,7 +299,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       description: `Tentativa de login com credenciais inválidas para '${cleanUsername}' (falha #${fail.fails}).`
     });
     // Se esta falha disparou/renovou um cooldown, informa o tempo de espera.
-    const left = loginLockRemaining(reqIp, cleanUsername);
+    const left = loginLockRemaining(reqIp, lockId);
     if (left > 0) {
       res.setHeader('Retry-After', String(left));
       return res.status(429).json({ error: `Muitas tentativas. Aguarde ${left}s e tente novamente.` });
@@ -674,15 +678,15 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
     db.prepare(`UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?`)
       .run(resetCode, expiresAt, user.id);
 
-    const messageText = `🔐 *RECUPERAÇÃO DE SENHA - PAINEL ADMINISTRATIVO*\n\n` +
-      `Olá Dr. Jorge Alvim / Administrador,\n\n` +
-      `Foi solicitada a redefinição de senha para o usuário: *${user.username}* (${user.name}).\n` +
-      `Seu código de segurança temporário (válido por 1 hora) é:\n\n` +
-      `👉 *${resetCode}*\n\n` +
-      `Digite este código no formulário de redefinição de senha para definir sua nova credencial.\n\n` +
-      `_Caso não tenha solicitado este código, ignore esta mensagem._`;
-
-    await sendLawyerWhatsAppNotification(messageText, { action: 'admin_password_reset', userId: user.id });
+    // Código nunca volta na resposta: WhatsApp do escritório (se houver gateway) + notificação só para o mestre
+    await deliverAccessCode({
+      audience: 'painel',
+      name: user.name,
+      identifier: user.username,
+      code: resetCode,
+      expiresAt,
+      resourceId: user.id
+    });
 
     logAudit(req, {
       event_type: 'SEGURANCA',
@@ -753,7 +757,7 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
       .run(hp.hash, hp.salt, user.id);
 
     const reqIp = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
-    clearLoginFailures(reqIp, cleanUsername);
+    clearLoginFailures(reqIp, normalizeLoginId(rawUsername));
 
     logAudit(req, {
       event_type: 'SEGURANCA',

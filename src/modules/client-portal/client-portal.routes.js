@@ -14,10 +14,13 @@ import { hashPassword, verifyPassword, isStrongHash } from '../../shared/passwor
 import { validatePassword } from '../../shared/password-policy.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
-import { loginRateLimit } from '../../shared/login-guard.js';
+import { deliverAccessCode } from '../../shared/access-codes.js';
+import { loginRateLimit, guardLoginStart, guardLoginFailure, guardLoginSuccess } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
 
 export const clientPortalRouter = express.Router();
+
+const CLIENT_LOGIN_FAILED = 'CPF/CNPJ/e-mail ou senha incorretos. Verifique os dados ou use "Esqueci minha senha".';
 
 export const FIRST_ACCESS_RESPONSE = {
   error: 'Primeiro acesso: clique em "Esqueci minha senha" para receber seu código de ativação pelo escritório.',
@@ -60,7 +63,7 @@ const uploadMagic = multer({
   limits: { fileSize: 30 * 1024 * 1024 }
 });
 
-clientPortalRouter.post('/api/client-portal/register', (req, res) => {
+clientPortalRouter.post('/api/client-portal/register', loginRateLimit, (req, res) => {
   try {
     const {
       client_type,
@@ -260,6 +263,8 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
     if (!login || !password) {
       return res.status(400).json({ error: 'Informe seu CPF, CNPJ ou E-mail e a senha cadastrada.' });
     }
+    // Controle de tentativas (IP, IP+conta e conta) — ver shared/login-guard.js
+    if (guardLoginStart(req, res, login)) return;
 
     const cleanInput = login.trim();
     const cleanDigits = cleanInput.replace(/\D/g, '');
@@ -329,7 +334,9 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
         user_role: 'client',
         description: `Tentativa de login no portal com identificador não encontrado: '${cleanInput}'.`
       });
-      return res.status(401).json({ error: 'Cadastro não encontrado com este CPF, CNPJ, Telefone ou E-mail.' });
+      if (guardLoginFailure(req, res, login)) return;
+      // Mesma mensagem da senha errada: não revela quem é cliente do escritório
+      return res.status(401).json({ error: CLIENT_LOGIN_FAILED });
     }
 
     // Verificação de Soft Delete / Conta Desativada
@@ -372,7 +379,8 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
         user_role: 'client',
         description: `Tentativa de login com senha incorreta para o cliente ${client.full_name}.`
       });
-      return res.status(401).json({ error: 'Senha incorreta. Verifique suas credenciais.' });
+      if (guardLoginFailure(req, res, login)) return;
+      return res.status(401).json({ error: CLIENT_LOGIN_FAILED });
     }
 
     // Upgrade transparente do hash para o formato forte, se necessário.
@@ -383,6 +391,7 @@ clientPortalRouter.post('/api/client-portal/login', loginRateLimit, (req, res) =
       }
     } catch (e) { /* best-effort */ }
 
+    guardLoginSuccess(req, login);
     const token = createClientSession(client);
 
     logAudit(req, {
@@ -817,7 +826,7 @@ clientPortalRouter.post('/api/client-portal/forgot-password', loginRateLimit, as
     // Resposta idêntica exista ou não o cadastro (não revela quem é cliente).
     const genericResponse = {
       success: true,
-      message: 'Se houver cadastro com estes dados, o escritório enviará seu código pelo WhatsApp em instantes.'
+      message: 'Se houver cadastro com estes dados, o escritório recebeu seu pedido e enviará o código de acesso. Se preferir, fale com o escritório pelo WhatsApp.'
     };
     if (!client) return res.json(genericResponse);
 
@@ -830,18 +839,14 @@ clientPortalRouter.post('/api/client-portal/forgot-password', loginRateLimit, as
     `).run(resetCode, expiresAt, client.id);
 
     resetCodeFailures.delete(client.id);
-    await sendLawyerWhatsAppNotification(
-      `🔐 *CÓDIGO DE ACESSO - PORTAL DO CLIENTE*
-
-` +
-      `Cliente: *${client.full_name}* (${client.cpf || client.cnpj || client.email || client.id})
-` +
-      `Código (válido por 1 hora): *${resetCode}*
-
-` +
-      `Repasse o código ao cliente somente após confirmar a identidade dele.`,
-      { action: 'client_password_reset', clientId: client.id }
-    );
+    await deliverAccessCode({
+      audience: 'cliente',
+      name: client.full_name,
+      identifier: client.cpf || client.cnpj || client.email || client.id,
+      code: resetCode,
+      expiresAt,
+      resourceId: client.id
+    });
 
     logAudit(req, {
       event_type: 'AUTENTICACAO',

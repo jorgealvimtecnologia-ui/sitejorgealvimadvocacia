@@ -9,7 +9,7 @@ import { getClientIp } from '../../shared/net.js';
 import { hashPassword, verifyPassword, isStrongHash } from '../../shared/password-crypto.js';
 import { calculateINSSProgressivo, calculateIRRF, calculateVTDeduction, calculateFGTS } from '../../shared/labor.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
-import { loginRateLimit } from '../../shared/login-guard.js';
+import { loginRateLimit, guardLoginStart, guardLoginFailure, guardLoginSuccess } from '../../shared/login-guard.js';
 
 export const hrRouter = express.Router();
 
@@ -810,12 +810,14 @@ hrRouter.get('/api/hr/benefits', requireAuth, (req, res) => {
 /**
  * 16. POST /api/hr/employee/login - Login do Trabalhador / Colaborador
  */
-hrRouter.post('/api/hr/employee/login', (req, res) => {
+hrRouter.post('/api/hr/employee/login', loginRateLimit, (req, res) => {
   try {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
       return res.status(400).json({ error: 'Informe o CPF ou Nome de Usuário e sua Senha de acesso.' });
     }
+    // Controle de tentativas (IP, IP+conta e conta) — ver shared/login-guard.js
+    if (guardLoginStart(req, res, identifier)) return;
 
     const rawId = String(identifier).trim();
     const cleanId = rawId.toLowerCase();
@@ -857,6 +859,7 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
     }
 
     if (!employee) {
+      if (guardLoginFailure(req, res, identifier)) return;
       return res.status(401).json({ error: 'Colaborador não localizado com o identificador informado.' });
     }
 
@@ -881,6 +884,7 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
     const isCpfAuth = !authUser && cleanNumbers.length > 0 && (compactPassword === cleanNumbers || rawPassword === cleanNumbers);
 
     if (!isUserAuth && !isCpfAuth) {
+      if (guardLoginFailure(req, res, identifier)) return;
       return res.status(401).json({ error: 'Senha incorreta. Use sua senha cadastrada ou, no primeiro acesso, seu CPF (somente números).' });
     }
 
@@ -895,6 +899,7 @@ hrRouter.post('/api/hr/employee/login', (req, res) => {
       }
     } catch (e) { /* best-effort */ }
 
+    guardLoginSuccess(req, identifier);
     const token = createEmployeeSession(employee);
 
     let adminToken = null;

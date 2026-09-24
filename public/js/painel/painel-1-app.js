@@ -156,6 +156,10 @@
       lookupAndFillCep(document.getElementById('cli-cep')?.value, 'cli-street', 'cli-neighborhood', 'cli-city', 'cli-state', 'cli-number');
     }
 
+    function autoLookupRepCep() {
+      lookupAndFillCep(document.getElementById('cli-rep-cep')?.value, 'cli-rep-street', 'cli-rep-neighborhood', 'cli-rep-city', 'cli-rep-state', 'cli-rep-number');
+    }
+
     function autoLookupOfficeCep() {
       lookupAndFillCep(document.getElementById('off-modal-cep')?.value, 'off-modal-street', 'off-modal-neighborhood', 'off-modal-city', 'off-modal-state', 'off-modal-number');
     }
@@ -178,8 +182,10 @@
       try {
         const res = await fetch(`/api/lookup/cnpj/${clean}`);
         const data = await res.json();
-        if (data.success && data.company) {
-          const c = data.company;
+        // A API /api/lookup/cnpj devolve os campos no nível raiz (corporate_name, street,
+        // rep_name...). Aceitamos também o formato aninhado data.company por robustez.
+        if (data.success && (data.company || data.corporate_name)) {
+          const c = data.company || data;
           if (document.getElementById('cli-fullname') && c.corporate_name) {
             document.getElementById('cli-fullname').value = c.corporate_name;
           }
@@ -210,8 +216,8 @@
           if (document.getElementById('cli-cep') && c.cep) {
             document.getElementById('cli-cep').value = c.cep;
           }
-          if (c.representative_name && document.getElementById('cli-rep-name')) {
-            document.getElementById('cli-rep-name').value = c.representative_name;
+          if ((c.representative_name || c.rep_name) && document.getElementById('cli-rep-name')) {
+            document.getElementById('cli-rep-name').value = (c.representative_name || c.rep_name);
           }
           if (c.representative_cpf && document.getElementById('cli-rep-cpf')) {
             document.getElementById('cli-rep-cpf').value = c.representative_cpf;
