@@ -773,20 +773,30 @@
 
     var q = (_searchQuery || '').toLowerCase().trim();
     if (q) {
-      items = items.filter(function(it){
+      // Com busca, procura em TODOS os anos (antes só no ano selecionado, e a ordem
+      // de outro ano parecia "não registrada").
+      var allChecklists = (_roadmapData && _roadmapData.checklists) || {};
+      items = Object.keys(allChecklists).reduce(function (acc, y) {
+        return acc.concat((allChecklists[y] || []).map(function (it) {
+          return Object.assign({}, it, { horizon: it.horizon || y });
+        }));
+      }, []).filter(function(it){
         return (it.task || '').toLowerCase().includes(q) || (it.priority || '').toLowerCase().includes(q);
       });
-      yearOrders = yearOrders.filter(function(ord){
-        return (ord.title || '').toLowerCase().includes(q) ||
-               (ord.id || '').toLowerCase().includes(q) ||
-               (ord.acceptance_criteria || '').toLowerCase().includes(q) ||
-               (ord.status || '').toLowerCase().includes(q) ||
-               (ord.priority || '').toLowerCase().includes(q);
+      yearOrders = builderOrders.filter(function(ord){
+        return [ord.title, ord.id, ord.description, ord.acceptance_criteria, ord.status, ord.priority, ord.created_by, ord.assigned_to]
+          .some(function (v) { return String(v || '').toLowerCase().includes(q); });
       });
     }
 
     if (!items.length && !yearOrders.length) {
-      return '<div class="p-8 text-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 text-xs">Nenhum item encontrado ' + (q ? 'para a busca "' + escapeHtml(q) + '"' : 'para este período.') + '</div>';
+      var histHits = q ? ((_roadmapData && _roadmapData.builderHistory) || []).filter(function (h) {
+        return [h.title, h.order_id, h.details, h.performed_by, h.action].some(function (v) { return String(v || '').toLowerCase().includes(q); });
+      }).length : 0;
+      return '<div class="p-8 text-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 text-xs">Nenhum item encontrado ' +
+        (q ? 'para a busca "' + escapeHtml(q) + '" em nenhum ano.' : 'para este período.') +
+        (histHits ? ' <button type="button" onclick="window.switchRoadmapView(\'history\')" class="ml-1 font-bold text-indigo-700 underline cursor-pointer">Ver ' + histHits + ' registro(s) no Histórico</button>' : '') +
+        '</div>';
     }
 
     var descriptions = {
@@ -799,7 +809,7 @@
     return `
       <div class="space-y-4">
         <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/60 text-xs font-semibold text-amber-900">
-          ${descriptions[year] || ''}
+          ${q ? '🔍 Resultados da busca "' + escapeHtml(q) + '" em todos os anos' : (descriptions[year] || '')}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -14,6 +14,7 @@ import {
   destroySession
 } from './src/middleware/auth.js';
 import { requireStorageAccess } from './src/middleware/storage-guard.js';
+import { versionAssets, readVersionedHtml } from './src/shared/asset-version.js';
 import { logAudit } from './src/middleware/audit.js';
 import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
 import { notificationsRouter, startDeadlineScanner } from './src/modules/notifications/notifications.routes.js';
@@ -1682,7 +1683,8 @@ function sendFreshFile(res, fileName) {
     'Expires': '0',
     'Surrogate-Control': 'no-store'
   });
-  return res.sendFile(path.join(__dirname, fileName));
+  // Scripts/estilos com ?v=<versão do deploy>: o navegador não reaproveita versão antiga
+  return res.type('html').send(readVersionedHtml(path.join(__dirname, fileName)));
 }
 
 // ---------------------------------------------------------------------------
@@ -1735,6 +1737,7 @@ function renderIndexHtml() {
     html = html.replace('</head>', gaSnippet);
   }
 
+  html = versionAssets(html);
   __indexHtmlCache = { mtimeMs: stat.mtimeMs, envSig, html };
   return html;
 }
