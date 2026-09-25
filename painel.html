@@ -6220,6 +6220,8 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   <option value="FACEBOOK_PAGE_POST">📘 Post Orgânico no Facebook (Jorgealvimadvocacia-anuncios)</option>
                   <option value="LOCAL_DRAFT">📁 Salvar apenas Rascunho Local no Sistema</option>
                 </select>
+                <!-- Capa do artigo importada do blog (URL pública usada como imagem no IG/FB quando não há upload) -->
+                <input type="hidden" id="meta-ad-media-url" name="media_url" value="">
               </div>
 
               <!-- Upload de Mídia -->
@@ -7778,6 +7780,21 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </button>
           </div>
           
+          <!-- OCR Zero-Digitação: lê RG/CNH e preenche nome, CPF, RG e filiação -->
+          <div class="mb-3 p-3 rounded-2xl border border-dashed border-gold-400 bg-gold-50/60">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p class="text-xs font-bold text-navy-950">📷 Preenchimento automático por foto (RG / CNH)</p>
+                <p class="text-[11px] text-slate-600">Envie uma foto do documento e o sistema preenche os campos sozinho.</p>
+              </div>
+              <label class="shrink-0 cursor-pointer px-3.5 py-2 bg-navy-950 text-gold-300 rounded-xl text-xs font-bold hover:bg-navy-900 transition-all inline-flex items-center gap-1.5">
+                <span>📄 Ler documento</span>
+                <input type="file" accept="image/*" capture="environment" class="hidden" onchange="ocrLerDocumento(this)" />
+              </label>
+            </div>
+            <p id="cli-ocr-status" class="text-[11px] font-semibold mt-1 text-slate-500"></p>
+          </div>
+
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <div class="sm:col-span-2">
               <label class="block text-xs font-bold text-slate-700 mb-1" id="label-fullname">Nome Completo *</label>
@@ -11457,6 +11474,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/modules/cockpit.js?v=20260907-v4"></script>
   <script src="/js/modules/legal-docs.js?v=20260907-v4"></script>
   <script src="/js/modules/meta-ads.js?v=20260907-v6"></script>
+  <script src="/js/modules/ocr-cadastro.js?v=20260925-v1"></script>
   <script src="/js/painel/painel-1-app.js?v=20260921-v3"></script>
 
   <!-- ================= SUBMÓDULOS DESACOPLADOS DE ABAS (public/js/tabs/) ================= -->

@@ -4,6 +4,7 @@ export default {
     "./*.html",
     "./server.js",
     "./public/**/*.js",
+    "./public/**/*.html",
     "./src/**/*.{js,ts,jsx,tsx,html}"
   ],
   theme: {

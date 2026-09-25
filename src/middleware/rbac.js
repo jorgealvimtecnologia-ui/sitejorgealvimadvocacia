@@ -68,6 +68,7 @@ const RULES = [
 
   // ---- Módulos do painel controlados pela matriz de permissões (mestre sempre) ----
   [/^\/api\/clients(\/|$)/, tab('tab_clients')],
+  [/^\/api\/ocr(\/|$)/, tab('tab_clients')],   // OCR zero-digitação alimenta o cadastro de clientes
   [/^\/api\/leads(\/|$)/, tab('tab_leads')],
   [/^\/api\/lawsuits(\/|$)/, tab('tab_lawsuits')],
   [/^\/api\/(court|publications)(\/|$)/, tab('tab_publications')],

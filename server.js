@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
+import { createRequire } from 'node:module';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'node:crypto';
@@ -60,6 +61,7 @@ import { faqRouter } from './src/modules/faq/faq.routes.js';
 import { roadmapRouter } from './src/modules/roadmap/roadmap.routes.js';
 import { roadmapAgentRouter } from './src/modules/roadmap/roadmap.agent.js';
 import { qaRouter } from './src/modules/qa/qa.routes.js';
+import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 
 
@@ -1502,6 +1504,19 @@ const upload = multer({
 app.set('trust proxy', 1);
 
 // Middlewares de Segurança HTTP (HTTPS / Headers)
+// Compressão HTTP (gzip/deflate) na origem. Em produção o Cloudflare já entrega
+// Brotli no edge; este middleware garante respostas comprimidas mesmo em acesso
+// DIRETO à origem (health checks, bypass do CDN, ambiente local). Import OPCIONAL:
+// se o pacote 'compression' não estiver instalado no servidor, o sistema segue
+// normalmente (Cloudflare cobre com Brotli) — nunca quebra o boot por causa disso.
+try {
+  const compression = createRequire(import.meta.url)('compression');
+  app.use(compression({ threshold: 1024 }));
+  console.log('🗜️  Compressão HTTP (gzip) ativa na origem.');
+} catch (e) {
+  console.warn('ℹ️  Pacote "compression" ausente — origem sem gzip (Cloudflare entrega Brotli). Rode "npm install" para ativar.');
+}
+
 app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -1511,9 +1526,10 @@ app.use((req, res, next) => {
   // câmera e microfone seguem bloqueados.
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
   // Content-Security-Policy: permite exatamente os recursos externos usados hoje
-  // (Tailwind CDN, Google Fonts, jsDelivr, Facebook, Unsplash, QR, APIs .gov/CEP…)
-  // e bloqueia o restante. 'unsafe-inline'/'unsafe-eval' são necessários enquanto o
-  // Tailwind roda via CDN e há scripts inline nas páginas.
+  // (Google Fonts, jsDelivr/Chart.js, Facebook, Unsplash, QR, APIs .gov/CEP…) e
+  // bloqueia o restante. O Tailwind agora é servido localmente (public/css/app.tailwind.css),
+  // então 'unsafe-eval' e o CDN cdn.tailwindcss.com foram REMOVIDOS — nenhum script do
+  // sistema usa eval/new Function. 'unsafe-inline' segue necessário pelos scripts inline.
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "base-uri 'self'",
@@ -1521,8 +1537,8 @@ app.use((req, res, next) => {
     "frame-ancestors 'self'",
     "img-src 'self' data: blob: https: https://lh3.googleusercontent.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com https://accounts.google.com",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com",
     "connect-src 'self' https: https://accounts.google.com https://oauth2.googleapis.com",
     "frame-src 'self' https: https://accounts.google.com"
   ].join('; '));
@@ -1603,6 +1619,7 @@ app.use(faqRouter);
 app.use(roadmapRouter);
 app.use(roadmapAgentRouter);
 app.use(qaRouter);
+app.use(ocrRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
