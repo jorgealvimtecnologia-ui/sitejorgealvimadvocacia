@@ -2441,7 +2441,10 @@ app.post('/api/documents/generate-template', requireAuth, (req, res) => {
 // Inicialização / Seeder do Módulo de Gestão de Pessoal (RH)
 try {
   const empCount = db.prepare(`SELECT count(*) as count FROM hr_employees`).get().count;
-  if (empCount === 0) {
+  // SEGURANÇA: só semeia colaboradores FICTÍCIOS de demonstração quando explicitamente
+  // pedido (SEED_DEMO_RH=true). Antes rodava sempre que a tabela ficava vazia — o que
+  // RECRIAVA os 8 colaboradores de demo em produção a cada restart, desfazendo a limpeza.
+  if (empCount === 0 && process.env.SEED_DEMO_RH === 'true') {
     console.log('🌱 [SEEDER RH] Populando quadro de pessoal com dados da equipe do escritório...');
     
     // Obter integrantes existentes do office_members

@@ -37,8 +37,13 @@ const upload = multer({
   }),
   limits: { fileSize: 15 * 1024 * 1024 }, // 15MB — foto de celular cabe folgado
   fileFilter: (req, file, cb) => {
-    if (/^image\//.test(file.mimetype)) return cb(null, true);
-    cb(new Error('Envie uma imagem (JPG/PNG) do documento.'));
+    // Celulares às vezes enviam a foto como application/octet-stream ou HEIC — aceita
+    // por mimetype de imagem OU por extensão de arquivo. A validação real fica no Python.
+    const mime = String(file.mimetype || '');
+    const okMime = /^image\//i.test(mime) || mime === 'application/octet-stream';
+    const okExt = /\.(jpe?g|png|webp|heic|heif|bmp|gif|tiff?)$/i.test(file.originalname || '');
+    if (okMime || okExt) return cb(null, true);
+    cb(new Error('Envie uma imagem (JPG/PNG/HEIC) do documento.'));
   }
 });
 
@@ -74,37 +79,40 @@ function runOcr(filePath, tipo) {
  * Body opcional: type = rg | cnh | auto
  * Resposta: { ok, tipo, campos:{nome,cpf,rg,data_nascimento,nome_mae}, confianca }
  */
-ocrRouter.post('/api/ocr/documento', requireAuth, upload.single('documento'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ ok: false, erro: 'Nenhuma imagem enviada (campo "documento").' });
-  }
-  const filePath = req.file.path;
-  const tipo = ['rg', 'cnh'].includes(String(req.body.type || '').toLowerCase())
-    ? req.body.type.toLowerCase()
-    : 'auto';
-  try {
-    const resultado = await runOcr(filePath, tipo);
-
-    if (!resultado || !resultado.ok) {
-      const semAmbiente = resultado && ['SEM_PYTHON', 'SEM_TESSERACT'].includes(resultado.codigo);
-      return res.status(semAmbiente ? 503 : 422).json(
-        resultado || { ok: false, erro: 'Não foi possível ler o documento.' }
-      );
+ocrRouter.post('/api/ocr/documento', requireAuth, (req, res) => {
+  // Multer chamado manualmente para tratar o erro de upload SEM virar 500 (que o
+  // proxy/Cloudflare mascara). A rota SEMPRE responde 200 com JSON — o resultado real
+  // vai no campo `ok`, para o frontend conseguir ler a mensagem em qualquer caso.
+  upload.single('documento')(req, res, async (upErr) => {
+    if (upErr) {
+      return res.json({ ok: false, codigo: 'UPLOAD', erro: upErr.message || 'Falha ao enviar a imagem.' });
     }
-
+    if (!req.file) {
+      return res.json({ ok: false, codigo: 'SEM_ARQUIVO', erro: 'Nenhuma imagem enviada (campo "documento").' });
+    }
+    const filePath = req.file.path;
+    const tipo = ['rg', 'cnh'].includes(String(req.body.type || '').toLowerCase())
+      ? req.body.type.toLowerCase()
+      : 'auto';
     try {
-      logAudit(req, {
-        event_type: 'LEITURA',
-        event_name: 'OCR_DOCUMENTO',
-        module: 'clients',
-        description: `Leitura OCR de documento (${resultado.tipo}) — confiança ${resultado.confianca}`,
-        details: { tipo: resultado.tipo, confianca: resultado.confianca }
-      });
-    } catch (e) {}
-
-    return res.json(resultado);
-  } finally {
-    // Nunca deixa a foto do documento (dado pessoal/LGPD) parada em disco.
-    fs.unlink(filePath, () => {});
-  }
+      const resultado = await runOcr(filePath, tipo);
+      if (resultado && resultado.ok) {
+        try {
+          logAudit(req, {
+            event_type: 'LEITURA',
+            event_name: 'OCR_DOCUMENTO',
+            module: 'clients',
+            description: `Leitura OCR de documento (${resultado.tipo}) — confiança ${resultado.confianca}`,
+            details: { tipo: resultado.tipo, confianca: resultado.confianca }
+          });
+        } catch (e) {}
+      }
+      return res.json(resultado || { ok: false, codigo: 'DESCONHECIDO', erro: 'Não foi possível ler o documento.' });
+    } catch (e) {
+      return res.json({ ok: false, codigo: 'EXCECAO', erro: 'Falha interna ao processar o documento.' });
+    } finally {
+      // Nunca deixa a foto do documento (dado pessoal/LGPD) parada em disco.
+      fs.unlink(filePath, () => {});
+    }
+  });
 });

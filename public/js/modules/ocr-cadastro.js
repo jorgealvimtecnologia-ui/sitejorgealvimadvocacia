@@ -61,13 +61,17 @@
       });
       var data = await res.json().catch(function () { return null; });
 
-      if (res.status === 503) {
-        setStatus('⚠️ OCR indisponível no servidor (Tesseract não instalado). Preencha manualmente.', 'text-amber-600');
+      if (!data) {
+        setStatus('⚠️ Resposta inválida do servidor. Tente novamente.', 'text-amber-600');
         return;
       }
-      if (!res.ok || !data || !data.ok) {
-        var msg = (data && data.erro) ? data.erro : 'Não foi possível ler o documento. Tente uma foto mais nítida.';
-        setStatus('⚠️ ' + msg, 'text-amber-600');
+      if (!data.ok) {
+        if (data.codigo === 'SEM_PYTHON' || data.codigo === 'SEM_TESSERACT') {
+          setStatus('⚠️ OCR indisponível no servidor (Tesseract não instalado). Preencha manualmente.', 'text-amber-600');
+        } else {
+          var msg = data.erro || 'Não foi possível ler o documento. Tente uma foto mais nítida.';
+          setStatus('⚠️ ' + msg, 'text-amber-600');
+        }
         return;
       }
 
