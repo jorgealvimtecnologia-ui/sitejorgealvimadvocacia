@@ -35,16 +35,10 @@ const upload = multer({
       cb(null, `ocr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`);
     }
   }),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB — foto de celular cabe folgado
-  fileFilter: (req, file, cb) => {
-    // Celulares às vezes enviam a foto como application/octet-stream ou HEIC — aceita
-    // por mimetype de imagem OU por extensão de arquivo. A validação real fica no Python.
-    const mime = String(file.mimetype || '');
-    const okMime = /^image\//i.test(mime) || mime === 'application/octet-stream';
-    const okExt = /\.(jpe?g|png|webp|heic|heif|bmp|gif|tiff?)$/i.test(file.originalname || '');
-    if (okMime || okExt) return cb(null, true);
-    cb(new Error('Envie uma imagem (JPG/PNG/HEIC) do documento.'));
-  }
+  limits: { fileSize: 15 * 1024 * 1024 } // 15MB — foto de celular cabe folgado
+  // Sem fileFilter: aceitamos qualquer arquivo e deixamos o Python/Pillow validar
+  // (ele abre a imagem e retorna "IMAGEM_INVALIDA" com mensagem clara se não for uma
+  // foto legível). Evita falso-negativo com mimetypes/extensões atípicas de celular.
 });
 
 function runOcr(filePath, tipo) {
