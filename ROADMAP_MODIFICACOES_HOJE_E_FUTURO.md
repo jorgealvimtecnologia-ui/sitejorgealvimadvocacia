@@ -72,6 +72,7 @@ Alinhamento aos padrões adotados pelas maiores bancas mundiais (*Global 100 / M
 - [ ] **Leitor OCR Automático (Zero Digitação):** Extração de dados de RG/CNH via Tesseract.js para auto-preenchimento cadastral. *(Q4/2026 • P1)*
 - [ ] **WhatsApp Business Cloud API Oficial:** Disparo automatizado no WhatsApp a cada movimentação ou audiência. *(Q4/2026 • P1)*
 - [ ] **Minutas Inteligentes com RAG Local:** Peças geradas por IA contextualizadas nas teses e peças procedentes do Dr. Jorge Alvim. *(Q4/2026 • P1)*
+- [ ] **[ORD-MUGAU9ST-CSP] Distribuição Omnichannel com IA (Google, YouTube, Meta):** Atomização de artigos do blog em roteiros de Shorts/Reels, carrosséis Instagram e posts com UTM e validação ética (Provimento 205/2021). *(Q4/2026 • P1 • Onda 3)*
 - [ ] **Deploy de Hardening de Segurança:** Ativação do PBKDF2 210k e rotação da senha mestre no servidor Contabo. *(Q4/2026 • P0)*
 
 ### 🗓️ 2027 — Automação Financeira, Controladoria e Escala SaaS (Médio Prazo)
@@ -106,7 +107,7 @@ A estratégia de engenharia da plataforma divide as entregas em 5 Ondas prioriza
 | **Onda 0 — Blindagem Imediata** | **~48 horas** | Fechar vulnerabilidades críticas (P0), latência transatlântica e DRP. | • Deploy do hardening S1–S8 e rotação da senha mestre (`set-master-password.js`)<br/>• Proteção de `/storage/*` com autenticação e verificação de ownership<br/>• Cloudflare Edge Brasil (<15ms) e DRP 3-2-1 off-site<br/>• Sessão em cookies HttpOnly + Secure + SameSite e sanitização de innerHTML | 🔴 **P0 (Em Andamento)** |
 | **Onda 1 — Confiabilidade & SRE** | **~7 dias** | Resiliência de banco, proteção do event loop e transações. | • Migração para `better-sqlite3` (WAL + `synchronous=NORMAL`)<br/>• Deep Healthchecks corporativos (`/health/live` e `/health/ready`)<br/>• Graceful Shutdown (`SIGTERM`/`SIGINT`) com término limpo de transações<br/>• Tabela de Idempotência `processed_webhooks` para Asaas/PIX<br/>• Circuit Breaker com backoff exponencial em APIs de Tribunais | 🟠 **P1 (Planejado)** |
 | **Onda 2 — Governança & CI/CD** | **~15 dias** | Observabilidade, limpeza de dados e automação de testes. | • Cron diário de expurgo de temporários em `/storage/temp` (>7d)<br/>• Rotina periódica de anonimização e retenção da LGPD<br/>• Logs estruturados em formato JSON com Pino<br/>• Esteira de CI/CD no GitHub Actions com Playwright noturno<br/>• Consolidação do módulo JawSupport 100% ativo | 🟡 **P2 (Planejado)** |
-| **Onda 3 — Produto & Captação** | **Contínuo** | Expansão de conversão de leads, UX forense e segurança de acesso. | • FAQ Inteligente na Home com busca local (Juiz de Fora - SEO)<br/>• Simuladores rescisórios/previdenciários via WhatsApp com protocolo<br/>• 2FA / TOTP (Google Authenticator) para o advogado mestre<br/>• Toast discreto de atendimento substituindo modal bloqueante<br/>• Confirmação e arquivamento de assinatura digital em tempo real<br/>• Recibo de prestação de contas de alvará/RPV timbrado em 1 clique<br/>• Lock Colaborativo Anti-Sobrescrita na mesma ficha<br/>• PWA Offline-First para consultas em fóruns e audiências sem sinal | 🔵 **P1/P2 (Planejado)** |
+| **Onda 3 — Produto & Captação** | **Contínuo** | Expansão de conversão de leads, UX forense e segurança de acesso. | • FAQ Inteligente na Home com busca local (Juiz de Fora - SEO)<br/>• Simuladores rescisórios/previdenciários via WhatsApp com protocolo<br/>• 2FA / TOTP (Google Authenticator) para o advogado mestre<br/>• Toast discreto de atendimento substituindo modal bloqueante<br/>• Confirmação e arquivamento de assinatura digital em tempo real<br/>• Recibo de prestação de contas de alvará/RPV timbrado em 1 clique<br/>• Lock Colaborativo Anti-Sobrescrita na mesma ficha<br/>• PWA Offline-First para consultas em fóruns e audiências sem sinal<br/>• [ORD-MUGAU9ST-CSP] Distribuição Omnichannel com IA (Blog $\rightarrow$ YouTube Shorts, Reels, Carrosséis e Google/Facebook com UTM) | 🔵 **P1/P2 (Planejado)** |
 | **Onda 4 — Escala SaaS B2B** | **Q2/2027** | Transformação em produto recorrente multi-escritório. | • Lapidação das abas (empty states, máscaras, debounce 300ms)<br/>• Desacoplamento modular do `painel-1-app.js` em submódulos<br/>• Virada Multi-Tenant com `tenant_id` e Super Admin de planos<br/>• Faturamento recorrente automatizado (Asaas/cartão/PIX)<br/>• Conteinerização Docker completa com SSL nativo e rollout | 🟣 **P0/P1 (Estratégico)** |
 
 ---
@@ -224,4 +225,11 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
    - Ao iniciar os trabalhos, o status avança para `🟡 Em Curso`.
    - Se houver impedimento externo (ex.: falta de chave de API ou credencial), vai para `🔴 Bloqueado`.
    - Após validação e aprovação nos testes, avança para `🟢 Conforme / Entregue`, computando 100% de conclusão na telemetria.
+
+### 10.4 Ordens Vigentes no Banco de Dados (`leads.db`)
+
+| ID da Ordem | Título | Camada | Onda | Prioridade | Status | Autor |
+| :--- | :--- | :--- | :--- | :---: | :---: | :--- |
+| `ORD-MUESODZ8` | Teste geral do sistema e monitoração de acessos | Core Jurídico | Onda 1 — Confiabilidade & SRE | P1 | ⚪ Planejado | `jorgealvimtecnologia` |
+| `ORD-MUGAU9ST-CSP` | Integração Omnichannel: Distribuição de Artigos com IA para Google, YouTube, Instagram e Facebook | Inteligência Artificial | Onda 3 — Produto & Captação | P1 | ⚪ Planejado | `Dr. Jorge Alvim (via Antigravity)` |
 

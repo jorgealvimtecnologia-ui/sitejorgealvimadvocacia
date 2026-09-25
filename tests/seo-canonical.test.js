@@ -3,10 +3,24 @@
  * Garante que o Google Search Console e o Googlebot recebam a tag canônica única
  * e os dados estruturados Schema.org (LegalService, Attorney, FAQPage, Blog, BlogPosting, BreadcrumbList).
  */
-import { describe, it } from 'node:test';
+import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import { app } from '../server.js';
+import path from 'node:path';
+import os from 'node:os';
+import fs from 'node:fs';
+
+const TMP_DB = path.join(os.tmpdir(), `jaw-seo-test-${Date.now()}.db`);
+process.env.NODE_ENV = 'test';
+process.env.DB_PATH = TMP_DB;
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
+
+const { app, db } = await import('../server.js');
+
+after(() => {
+  try { db?.close?.(); } catch {}
+  try { fs.unlinkSync(TMP_DB); } catch {}
+});
 
 describe('SEO & Tags Canônicas para Google Search Console', () => {
   it('GET / retorna página inicial com link canônico e Schema.org LegalService', async () => {
