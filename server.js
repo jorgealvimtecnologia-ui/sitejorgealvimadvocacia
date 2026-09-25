@@ -31,6 +31,7 @@ import { validatePassword, PASSWORD_MIN, PASSWORD_MAX } from './src/shared/passw
 import { getClientIp } from './src/shared/net.js';
 import { generateNextClientId, generateNextLawsuitId } from './src/shared/ids.js';
 import { blogRouter } from './src/modules/blog/blog.routes.js';
+import { renderBlogHtml } from './src/modules/blog/blog.render.js';
 import { lawsuitsRouter } from './src/modules/lawsuits/lawsuits.routes.js';
 import { explorerRouter } from './src/modules/explorer/explorer.routes.js';
 import { officesRouter } from './src/modules/offices/offices.routes.js';
@@ -1822,15 +1823,27 @@ app.get('/funcionario', (req, res) => {
 });
 
 app.get('/blog', (req, res) => {
-  sendFreshFile(res, 'blog.html');
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  res.type('html').send(renderBlogHtml());
 });
 
 app.get('/blog/:slug', (req, res) => {
-  sendFreshFile(res, 'blog.html');
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  res.type('html').send(renderBlogHtml(req.params.slug));
 });
 
 app.get('/artigos', (req, res) => {
-  res.redirect('/blog');
+  res.redirect(301, '/blog');
 });
 
 // Vitrine do Advogado • Parceiro & Colaborador Amazon
