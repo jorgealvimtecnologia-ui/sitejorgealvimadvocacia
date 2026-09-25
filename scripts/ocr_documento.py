@@ -71,18 +71,51 @@ def _fmt_cpf(cpf):
     return f"{c[0:3]}.{c[3:6]}.{c[6:9]}-{c[9:11]}" if len(c) == 11 else cpf
 
 
+# Palavras que aparecem em RÓTULOS/template de RG/CNH (trilíngue), nunca em nomes de
+# pessoas. Uma linha que contenha qualquer uma delas é rótulo, não o valor do nome.
+_ROTULOS = {
+    "SOBRENOME", "NAME", "SURNAME", "NOMBRE", "APELLIDOS", "FILIACAO", "FILIACION",
+    "HABILITACAO", "LICENSE", "LICENCIA", "LICENCA", "CONDUCIR", "CONDUCII", "DRIVER",
+    "IDENTIDADE", "IDENTITY", "REGISTRO", "VALIDADE", "VALIDITY", "NASCIMENTO", "BIRTH",
+    "NACIMIENTO", "EXPEDICAO", "CATEGORIA", "PERMISSAO", "ORGAO", "EMISSOR", "PRIMEIRA",
+    "PRIMERA", "FIRST", "ASSINATURA", "SIGNATURE", "PORTADOR", "LOCAL", "MUNICIPIO",
+}
+
+
+def _parece_nome(trecho):
+    """True/valor quando o trecho parece um nome de pessoa (letras, 2–6 palavras,
+    sem palavras de rótulo)."""
+    txt = re.sub(r"[^A-Za-zÀ-ÿ ]", " ", trecho or "")
+    txt = re.sub(r"\s+", " ", txt).strip()
+    palavras = [w for w in txt.split() if len(w) >= 2]
+    if not (2 <= len(palavras) <= 6):
+        return ""
+    if any(w.upper() in _ROTULOS for w in palavras):
+        return ""
+    nome = " ".join(palavras)
+    if not (6 <= len(nome) <= 60):
+        return ""
+    return nome.upper()
+
+
 def _pega_nome(linhas, rotulos):
-    """Nome costuma vir na linha logo após o rótulo (NOME / FILIAÇÃO)."""
+    """Acha o VALOR do nome: localiza o rótulo e pega a 1ª linha seguinte que pareça
+    um nome de pessoa, PULANDO as linhas de rótulo/template do documento."""
     for i, ln in enumerate(linhas):
         up = ln.upper()
-        for rot in rotulos:
-            if rot in up:
-                # tenta o resto da própria linha; senão, a linha seguinte
-                resto = ln[up.find(rot) + len(rot):].strip(" :.-")
-                cand = resto if len(resto) >= 4 else (linhas[i + 1].strip() if i + 1 < len(linhas) else "")
-                cand = re.sub(r"[^A-Za-zÀ-ÿ ']", "", cand).strip()
-                if len(cand) >= 4:
-                    return cand.upper()
+        achou = [rot for rot in rotulos if rot in up]
+        if not achou:
+            continue
+        # 1) texto depois do rótulo, na mesma linha
+        pos = max(up.find(rot) + len(rot) for rot in achou)
+        cand = _parece_nome(ln[pos:])
+        if cand:
+            return cand
+        # 2) varre as próximas linhas até achar algo que pareça nome
+        for j in range(i + 1, min(i + 5, len(linhas))):
+            cand = _parece_nome(linhas[j])
+            if cand:
+                return cand
     return ""
 
 
@@ -131,6 +164,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", required=True)
     ap.add_argument("--type", default="auto", choices=["rg", "cnh", "auto"])
+    ap.add_argument("--debug", action="store_true", help="inclui o texto bruto do OCR na saída (calibração)")
     args = ap.parse_args()
 
     pytesseract, Image, ImageOps, ImageFilter = _load_deps()
@@ -196,12 +230,15 @@ def main():
     preenchidos = sum(1 for v in campos.values() if v)
     confianca = round(preenchidos / len(campos), 2)
 
-    print(json.dumps({
+    saida = {
         "ok": True,
         "tipo": tipo,
         "campos": campos,
         "confianca": confianca,
-    }, ensure_ascii=False))
+    }
+    if args.debug:
+        saida["raw_text"] = texto  # apenas para calibração local; NUNCA usado pela rota web
+    print(json.dumps(saida, ensure_ascii=False))
 
 
 if __name__ == "__main__":
