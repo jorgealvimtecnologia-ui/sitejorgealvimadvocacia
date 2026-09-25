@@ -516,6 +516,12 @@
     formData.append('call_to_action', ctaSelect ? ctaSelect.value : 'LEARN_MORE');
     formData.append('destination_type', destSelect ? destSelect.value : 'AD_DRAFT_PAUSED');
 
+    // Capa do artigo (URL pública) usada como imagem quando não há upload de mídia — essencial para o feed do Instagram.
+    const mediaUrlInput = document.getElementById('meta-ad-media-url');
+    if (mediaUrlInput && mediaUrlInput.value.trim()) {
+      formData.append('media_url', mediaUrlInput.value.trim());
+    }
+
     // Configuração Ampla de Segmentação e Orçamento
     formData.append('daily_budget', budgetInput ? budgetInput.value : '20');
     formData.append('campaign_goal', goalSelect ? goalSelect.value : 'OUTCOME_LEADS');
@@ -567,7 +573,8 @@
         if (typeof window.clearUnsavedChanges === 'function') {
           window.clearUnsavedChanges('tab-content-meta-ads');
         }
-        toast(data.message || 'Material enviado com sucesso!', 'success');
+        // Verde só quando de fato publicou/enviou à Meta; laranja quando ficou apenas em rascunho.
+        toast(data.message || 'Material enviado com sucesso!', data.published ? 'success' : 'warning');
         resetMetaForm();
         await fetchMetaPosts();
       } else {
@@ -1261,6 +1268,7 @@
     const linkInput = document.getElementById('meta-ad-link');
     const destSelect = document.getElementById('meta-ad-destination');
     const ctaSelect = document.getElementById('meta-ad-cta');
+    const mediaUrlInput = document.getElementById('meta-ad-media-url');
 
     const origin = window.location.origin || 'https://jorgealvimadvocacia.com.br';
     const articleUrl = `${origin}/blog/${post.slug}`;
@@ -1269,6 +1277,8 @@
     if (linkInput) linkInput.value = articleUrl;
     if (destSelect) destSelect.value = 'INSTAGRAM_FEED';
     if (ctaSelect) ctaSelect.value = 'LEARN_MORE';
+    // Guarda a capa do artigo para ser enviada como imagem da publicação (IG exige imagem).
+    if (mediaUrlInput) mediaUrlInput.value = post.cover_image || '';
 
     const cleanSummary = (post.summary || post.title || '').trim();
     const copy = `📢 NOVO ARTIGO JURÍDICO:\n\n${cleanSummary}\n\n👉 Acesse o artigo completo em nosso blog oficial:\n${articleUrl}\n\n⚖️ Jorge Alvim Advocacia & Consultoria Jurídica\n📍 Benfica — Juiz de Fora - MG\n#direito #advocacia #juizdefora #jorgealvim #noticiasjuridicas`;

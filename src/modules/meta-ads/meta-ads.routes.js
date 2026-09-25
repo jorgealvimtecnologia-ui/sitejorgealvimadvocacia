@@ -328,6 +328,23 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       mediaType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
     }
 
+    // URL pública da imagem para publicação orgânica.
+    // O Instagram (Content Publishing API) EXIGE uma URL direta de imagem acessível;
+    // o Facebook /photos também aceita `url`. Prioriza o arquivo enviado; senão usa a
+    // capa do artigo (media_url) vinda do handoff do blog.
+    const PUBLIC_BASE = (process.env.PROD_URL || 'https://jorgealvimadvocacia.com.br').replace(/\/+$/, '');
+    let publicImageUrl = null;
+    if (req.file && mediaType === 'image') {
+      publicImageUrl = `${PUBLIC_BASE}/storage/marketing/${req.file.filename}`;
+    } else if (req.body.media_url) {
+      const rawUrl = String(req.body.media_url).trim();
+      if (rawUrl) {
+        publicImageUrl = rawUrl.startsWith('http')
+          ? rawUrl
+          : `${PUBLIC_BASE}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+      }
+    }
+
     let status = 'DRAFT_LOCAL';
     let metaAdId = null;
     let metaCreativeId = null;
@@ -409,73 +426,101 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
             metaResponseObj = creativeData;
           }
 
-        } else if (destination_type === 'FACEBOOK_PAGE_POST' && config.pageId) {
+        } else if (destination_type === 'FACEBOOK_PAGE_POST') {
           // =========================================================================
           // MODO 2: PUBLICAÇÃO ORGÂNICA NA PÁGINA DO FACEBOOK
           // =========================================================================
-          let fbEndpoint = `https://graph.facebook.com/v21.0/${config.pageId}/feed`;
-          let fbBody;
-          let fbHeaders = {};
-
-          if (req.file && mediaType === 'image') {
-            fbEndpoint = `https://graph.facebook.com/v21.0/${config.pageId}/photos`;
-            const fileBuffer = fs.readFileSync(req.file.path);
-            const blob = new Blob([fileBuffer], { type: req.file.mimetype });
-            const form = new FormData();
-            form.append('source', blob, req.file.originalname);
-            form.append('caption', `${title}\n\n${message}${link_url ? `\n\nSaiba mais: ${link_url}` : ''}`);
-            form.append('access_token', config.systemUserToken);
-            fbBody = form;
+          if (!config.pageId) {
+            status = 'DRAFT_LOCAL';
+            metaResponseObj = { error: 'Página do Facebook não configurada: informe o ID da Página (pageId) em Configurações da Meta API.' };
           } else {
-            fbHeaders = { 'Content-Type': 'application/json' };
-            fbBody = JSON.stringify({
-              access_token: config.systemUserToken,
-              message: `${title}\n\n${message}`,
-              link: link_url || undefined
-            });
+            const captionText = `${title}\n\n${message}${link_url ? `\n\nSaiba mais: ${link_url}` : ''}`;
+            let fbEndpoint = `https://graph.facebook.com/v21.0/${config.pageId}/feed`;
+            let fbBody;
+            let fbHeaders = {};
+
+            if (req.file && mediaType === 'image') {
+              // Imagem enviada no formulário — sobe o arquivo direto (source)
+              fbEndpoint = `https://graph.facebook.com/v21.0/${config.pageId}/photos`;
+              const fileBuffer = fs.readFileSync(req.file.path);
+              const blob = new Blob([fileBuffer], { type: req.file.mimetype });
+              const form = new FormData();
+              form.append('source', blob, req.file.originalname);
+              form.append('caption', captionText);
+              form.append('access_token', config.systemUserToken);
+              fbBody = form;
+            } else if (publicImageUrl) {
+              // Capa do artigo (URL pública) — publica como foto via `url`
+              fbEndpoint = `https://graph.facebook.com/v21.0/${config.pageId}/photos`;
+              fbHeaders = { 'Content-Type': 'application/json' };
+              fbBody = JSON.stringify({
+                access_token: config.systemUserToken,
+                url: publicImageUrl,
+                caption: captionText
+              });
+            } else {
+              // Sem imagem — post de texto + link no feed
+              fbHeaders = { 'Content-Type': 'application/json' };
+              fbBody = JSON.stringify({
+                access_token: config.systemUserToken,
+                message: `${title}\n\n${message}`,
+                link: link_url || undefined
+              });
+            }
+
+            const fbRes = await fetch(fbEndpoint, { method: 'POST', headers: fbHeaders, body: fbBody });
+            const fbData = await fbRes.json();
+            metaAdId = fbData.id || fbData.post_id || null;
+            metaResponseObj = fbData;
+            status = metaAdId ? 'PUBLISHED_ORGANIC' : 'SIMULATED_DRAFT';
           }
 
-          const fbRes = await fetch(fbEndpoint, { method: 'POST', headers: fbHeaders, body: fbBody });
-          const fbData = await fbRes.json();
-          metaAdId = fbData.id || fbData.post_id || null;
-          metaResponseObj = fbData;
-          status = metaAdId ? 'PUBLISHED_ORGANIC' : 'SIMULATED_DRAFT';
-
-        } else if (destination_type === 'INSTAGRAM_FEED' && config.instagramAccountId) {
+        } else if (destination_type === 'INSTAGRAM_FEED') {
           // =========================================================================
           // MODO 3: PUBLICAÇÃO ORGÂNICA NO INSTAGRAM (Content Publishing API)
           // =========================================================================
-          const igEndpoint = `https://graph.facebook.com/v21.0/${config.instagramAccountId}/media`;
-          // O Instagram requer URL pública acessível para download da mídia
-          const publicMediaUrl = link_url && link_url.startsWith('http') ? link_url : 'https://jorgealvimadvocacia.com.br';
-          
-          const igRes = await fetch(igEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              access_token: config.systemUserToken,
-              caption: `${title}\n\n${message}`,
-              image_url: publicMediaUrl
-            })
-          });
-          const igData = await igRes.json();
-          if (igData.id) {
-            // Publicar o container criado
-            const pubRes = await fetch(`https://graph.facebook.com/v21.0/${config.instagramAccountId}/media_publish`, {
+          if (!config.instagramAccountId) {
+            status = 'DRAFT_LOCAL';
+            metaResponseObj = { error: 'Instagram não configurado: informe o ID da conta comercial (instagramAccountId) em Configurações da Meta API.' };
+          } else if (!publicImageUrl) {
+            // O feed do Instagram NÃO aceita post sem mídia — precisa de uma imagem pública.
+            status = 'DRAFT_LOCAL';
+            metaResponseObj = { error: 'O feed do Instagram exige uma imagem. Envie uma imagem do criativo ou defina a capa do artigo antes de publicar.' };
+          } else {
+            const igEndpoint = `https://graph.facebook.com/v21.0/${config.instagramAccountId}/media`;
+            const igRes = await fetch(igEndpoint, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 access_token: config.systemUserToken,
-                creation_id: igData.id
+                caption: `${title}\n\n${message}${link_url ? `\n\n${link_url}` : ''}`,
+                image_url: publicImageUrl
               })
             });
-            const pubData = await pubRes.json();
-            metaAdId = pubData.id || igData.id;
-            metaResponseObj = pubData;
-            status = 'PUBLISHED_ORGANIC';
-          } else {
-            metaResponseObj = igData;
-            status = 'SIMULATED_DRAFT';
+            const igData = await igRes.json();
+            if (igData.id) {
+              // Publicar o container criado
+              const pubRes = await fetch(`https://graph.facebook.com/v21.0/${config.instagramAccountId}/media_publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  access_token: config.systemUserToken,
+                  creation_id: igData.id
+                })
+              });
+              const pubData = await pubRes.json();
+              if (pubData.id) {
+                metaAdId = pubData.id;
+                metaResponseObj = pubData;
+                status = 'PUBLISHED_ORGANIC';
+              } else {
+                metaResponseObj = { error: 'Falha ao publicar o container no Instagram.', detail: pubData };
+                status = 'SIMULATED_DRAFT';
+              }
+            } else {
+              metaResponseObj = { error: 'Falha ao criar a mídia no Instagram (verifique se a URL da imagem é pública e se o token tem permissão instagram_content_publish).', detail: igData };
+              status = 'SIMULATED_DRAFT';
+            }
           }
         } else {
           status = 'DRAFT_LOCAL';
@@ -553,17 +598,25 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       description: `Material de marketing criado: "${title}" (${destination_type}) status=${desiredStatus} término=${end_date || 'contínuo'} com orçamento de R$ ${(dailyBudgetCents/100).toFixed(2)}/dia em ${target_city} (+${radiusKm}km).`
     });
 
-    const responseMsg = status === 'ACTIVE'
-      ? 'Campanha ativada com sucesso no Meta Ads Manager!'
-      : (status === 'SENT_TO_META_PAUSED'
-          ? 'Rascunho salvo no Meta Ads Manager (status: PAUSED)!'
-          : (desiredStatus === 'ACTIVE'
-              ? 'Material homologado como ATIVO! Clique em "Publicar" para veicular.'
-              : 'Material salvo com sucesso no histórico como Rascunho Pausado!'));
+    const metaErrorMsg = metaResponseObj && (metaResponseObj.error?.message || (typeof metaResponseObj.error === 'string' ? metaResponseObj.error : null));
+    const statusMessages = {
+      ACTIVE: 'Campanha ativada com sucesso no Meta Ads Manager!',
+      SENT_TO_META_PAUSED: 'Rascunho salvo no Meta Ads Manager (status: PAUSED)!',
+      PUBLISHED_ORGANIC: destination_type === 'INSTAGRAM_FEED'
+        ? 'Publicado no feed do Instagram com sucesso! 📸'
+        : 'Publicado no feed da Página do Facebook com sucesso! 📘',
+      SIMULATED_DRAFT: `Não foi possível publicar agora${metaErrorMsg ? `: ${metaErrorMsg}` : '.'} O material ficou salvo como rascunho.`,
+      DRAFT_LOCAL: metaErrorMsg
+        ? `Salvo como rascunho — ${metaErrorMsg}`
+        : (desiredStatus === 'ACTIVE'
+            ? 'Material homologado como ATIVO! Clique em "Publicar" para veicular.'
+            : 'Material salvo com sucesso no histórico como Rascunho Pausado!')
+    };
 
     res.status(201).json({
       success: true,
-      message: responseMsg,
+      published: ['ACTIVE', 'PUBLISHED_ORGANIC', 'SENT_TO_META_PAUSED'].includes(status),
+      message: statusMessages[status] || 'Material salvo no painel.',
       post: {
         id: postId,
         title,
