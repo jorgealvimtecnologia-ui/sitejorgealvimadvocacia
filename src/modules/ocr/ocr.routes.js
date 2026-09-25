@@ -59,11 +59,23 @@ function runOcr(filePath, tipo) {
             : ('Falha ao executar o OCR: ' + error.message)
         });
       }
+      // Parse robusto: o stdout pode vir com ruído de bibliotecas (ex.: avisos do
+      // MuPDF/Tesseract) antes/depois do JSON. Tenta o texto todo; se falhar, pega a
+      // última linha que seja um objeto JSON válido.
+      const out = String(stdout).trim();
+      let parsed = null;
       try {
-        resolve(JSON.parse(String(stdout).trim()));
+        parsed = JSON.parse(out);
       } catch (e) {
-        resolve({ ok: false, codigo: 'PARSE', erro: 'Resposta do OCR ilegível.' });
+        const lines = out.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        for (let i = lines.length - 1; i >= 0; i--) {
+          if (lines[i].startsWith('{') && lines[i].endsWith('}')) {
+            try { parsed = JSON.parse(lines[i]); break; } catch (_) {}
+          }
+        }
       }
+      if (parsed) return resolve(parsed);
+      resolve({ ok: false, codigo: 'PARSE', erro: 'Resposta do OCR ilegível.' });
     });
   });
 }

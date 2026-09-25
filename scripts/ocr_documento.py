@@ -168,6 +168,11 @@ def main():
         except Exception as e:
             _fail("Para ler PDF, instale o PyMuPDF no servidor (pip install pymupdf) — "
                   "ou envie uma FOTO (JPG/PNG) do documento. Detalhe: " + str(e), "SEM_PDF")
+        # Silencia avisos/erros do MuPDF para não poluir o stdout (que carrega só o JSON).
+        try:
+            fitz.TOOLS.mupdf_display_errors(False)
+        except Exception:
+            pass
         try:
             doc = fitz.open(args.file)
         except Exception as e:
