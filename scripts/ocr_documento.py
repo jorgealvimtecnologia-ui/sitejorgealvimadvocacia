@@ -135,27 +135,56 @@ def main():
 
     pytesseract, Image, ImageOps, ImageFilter = _load_deps()
 
-    try:
-        img = Image.open(args.file)
-    except Exception as e:
-        _fail("Nao foi possivel abrir a imagem: " + str(e), "IMAGEM_INVALIDA")
-
-    # Pré-processamento simples (sem OpenCV): tons de cinza, autocontraste, nitidez.
-    try:
-        proc = ImageOps.grayscale(img)
-        proc = ImageOps.autocontrast(proc)
-        proc = proc.filter(ImageFilter.SHARPEN)
-    except Exception:
-        proc = img
-
-    try:
-        texto = pytesseract.image_to_string(proc, lang="por")
-    except Exception:
-        # fallback sem o pacote de idioma português instalado
+    # Pré-processa uma imagem (tons de cinza, autocontraste, nitidez) e roda o Tesseract.
+    def ocr_image(im):
         try:
-            texto = pytesseract.image_to_string(proc)
+            p = ImageOps.grayscale(im)
+            p = ImageOps.autocontrast(p)
+            p = p.filter(ImageFilter.SHARPEN)
+        except Exception:
+            p = im
+        try:
+            return pytesseract.image_to_string(p, lang="por")
+        except Exception:
+            # fallback sem o pacote de idioma português instalado
+            try:
+                return pytesseract.image_to_string(p)
+            except Exception as e:
+                _fail("Falha ao executar o Tesseract: " + str(e), "FALHA_TESSERACT")
+
+    # Detecta PDF (assinatura %PDF ou extensão). Muita gente escaneia RG/CNH em PDF.
+    is_pdf = args.file.lower().endswith(".pdf")
+    if not is_pdf:
+        try:
+            with open(args.file, "rb") as fh:
+                is_pdf = fh.read(5).startswith(b"%PDF-")
+        except Exception:
+            pass
+
+    textos = []
+    if is_pdf:
+        try:
+            import fitz  # PyMuPDF
         except Exception as e:
-            _fail("Falha ao executar o Tesseract: " + str(e), "FALHA_TESSERACT")
+            _fail("Para ler PDF, instale o PyMuPDF no servidor (pip install pymupdf) — "
+                  "ou envie uma FOTO (JPG/PNG) do documento. Detalhe: " + str(e), "SEM_PDF")
+        try:
+            doc = fitz.open(args.file)
+        except Exception as e:
+            _fail("Nao foi possivel abrir o PDF: " + str(e), "PDF_INVALIDO")
+        # RG/CNH costumam ter 1-2 lados; lê no máximo 3 páginas para não estourar o tempo.
+        for i in range(min(doc.page_count, 3)):
+            pix = doc[i].get_pixmap(matrix=fitz.Matrix(300 / 72, 300 / 72))  # ~300 DPI
+            textos.append(ocr_image(Image.frombytes("RGB", (pix.width, pix.height), pix.samples)))
+        doc.close()
+    else:
+        try:
+            img = Image.open(args.file)
+        except Exception as e:
+            _fail("Nao foi possivel abrir a imagem: " + str(e), "IMAGEM_INVALIDA")
+        textos.append(ocr_image(img))
+
+    texto = "\n".join(textos)
 
     campos = extrair_campos(texto)
     tipo = detecta_tipo(texto, args.type)
