@@ -376,6 +376,24 @@
               </div>
             </div>
 
+            <!-- Data de Nascimento + Filiação (Pessoa Física) -->
+            <div id="reg-pf-filiacao-grid" class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Data de Nascimento</label>
+                <input type="text" id="reg-birth" placeholder="dd/mm/aaaa" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500 font-mono" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Pai</label>
+                  <input type="text" id="reg-father" placeholder="Filiação — pai" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Nome da Mãe</label>
+                  <input type="text" id="reg-mother" placeholder="Filiação — mãe" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500" />
+                </div>
+              </div>
+            </div>
+
             <!-- CNPJ (se PJ) -->
             <div id="reg-pj-docs-grid" class="hidden">
               <label class="block text-xs font-bold text-slate-700 mb-1">CNPJ da Empresa *</label>
@@ -479,6 +497,7 @@
                   <input type="text" id="reg-city" placeholder="Cidade - UF" value="Juiz de Fora - MG" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
                 </div>
               </div>
+              <input type="text" id="reg-complement" placeholder="Complemento (apto, bloco, ponto de referência)" class="w-full px-2.5 py-2 rounded-lg bg-slate-50 border border-slate-300 text-xs" />
             </div>
 
             <!-- Criação de Senha -->
@@ -1279,6 +1298,7 @@
       const pfDocs = document.getElementById('reg-pf-docs-grid');
       const pjDocs = document.getElementById('reg-pj-docs-grid');
       const pfExtra = document.getElementById('reg-pf-extra-grid');
+      const pfFiliacao = document.getElementById('reg-pf-filiacao-grid');
       const pjRep = document.getElementById('reg-pj-rep-block');
       const nameLabel = document.getElementById('reg-name-label');
 
@@ -1286,12 +1306,14 @@
         pfDocs.classList.add('hidden');
         pjDocs.classList.remove('hidden');
         pfExtra.classList.add('hidden');
+        if (pfFiliacao) pfFiliacao.classList.add('hidden');
         pjRep.classList.remove('hidden');
         nameLabel.textContent = 'Razão Social da Empresa *';
       } else {
         pfDocs.classList.remove('hidden');
         pjDocs.classList.add('hidden');
         pfExtra.classList.remove('hidden');
+        if (pfFiliacao) pfFiliacao.classList.remove('hidden');
         pjRep.classList.add('hidden');
         nameLabel.textContent = 'Nome Completo *';
       }
@@ -1511,6 +1533,10 @@
       const neighborhood = document.getElementById('reg-neighborhood')?.value.trim();
       const city = document.getElementById('reg-city')?.value.trim();
       const cep = document.getElementById('reg-cep')?.value.trim();
+      const complement = document.getElementById('reg-complement')?.value.trim();
+      const birth_date = document.getElementById('reg-birth')?.value.trim();
+      const filiation_father = document.getElementById('reg-father')?.value.trim();
+      const filiation_mother = document.getElementById('reg-mother')?.value.trim();
       const rep_name = document.getElementById('reg-rep-name')?.value.trim();
       const rep_cpf = document.getElementById('reg-rep-cpf')?.value.trim();
 
@@ -1533,7 +1559,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             client_type, full_name, cpf, rg, cnpj, email, phone, password,
-            nationality, marital_status, profession, street, number, neighborhood, city, cep,
+            nationality, marital_status, profession, street, number, neighborhood, city, cep, complement,
+            birth_date, filiation_father, filiation_mother,
             rep_name, rep_cpf
           })
         });

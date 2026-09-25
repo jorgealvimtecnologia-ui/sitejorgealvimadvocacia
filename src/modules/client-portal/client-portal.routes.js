@@ -70,6 +70,7 @@ clientPortalRouter.post('/api/client-portal/register', loginRateLimit, (req, res
       full_name,
       cpf,
       rg,
+      birth_date,
       cnpj,
       email,
       phone,
@@ -148,13 +149,13 @@ clientPortalRouter.post('/api/client-portal/register', loginRateLimit, (req, res
     const clientId = generateNextClientFullId();
     db.prepare(`
       INSERT INTO clients (
-        id, client_type, full_name, cpf, rg, cnpj, email, phone, password_hash, salt,
+        id, client_type, full_name, cpf, rg, birth_date, cnpj, email, phone, password_hash, salt,
         street, number, neighborhood, city, state, cep, complement,
         filiation_father, filiation_mother, nationality, marital_status, profession,
         rep_name, rep_cpf, rep_rg, rep_street, rep_number, rep_neighborhood, rep_city, rep_state, rep_cep, rep_complement,
         email_notifications, created_at, updated_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
@@ -166,6 +167,7 @@ clientPortalRouter.post('/api/client-portal/register', loginRateLimit, (req, res
       full_name.trim(),
       cpf || null,
       rg || null,
+      birth_date || null,
       cnpj || null,
       cleanEmail,
       phone.trim(),
