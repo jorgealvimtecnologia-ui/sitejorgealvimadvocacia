@@ -119,6 +119,40 @@ def _pega_nome(linhas, rotulos):
     return ""
 
 
+def _nome_mrz(texto):
+    """Extrai o nome do titular da MRZ (rodapé da CNH-e / passaporte): a linha do nome
+    tem só letras A-Z e '<' (sem dígitos). Ex.: 'JORGE<<EDUARDO<DA<SILVA<ALVIM<' →
+    'JORGE EDUARDO DA SILVA ALVIM'. Fonte muito mais confiável que os rótulos visuais."""
+    for ln in texto.splitlines():
+        s = ln.strip().replace(" ", "")
+        if len(s) >= 12 and "<" in s and re.fullmatch(r"[A-Z<]+", s):
+            nome = re.sub(r"<+", " ", s).strip()
+            nome = re.sub(r"\s+", " ", nome)
+            if len(nome.split()) >= 2 and len(nome) >= 6:
+                return nome.upper()
+    return ""
+
+
+def _pega_filiacao_mae(linhas):
+    """Sob 'FILIAÇÃO' costuma vir pai e depois mãe. Coleta os nomes-de-pessoa após o
+    rótulo e devolve o 2º (mãe); se só houver um, devolve esse."""
+    encontrados = []
+    achou = False
+    for ln in linhas:
+        if not achou:
+            if "FILIA" in ln.upper():
+                achou = True
+            continue
+        cand = _parece_nome(ln)
+        if cand:
+            encontrados.append(cand)
+        if len(encontrados) >= 2:
+            break
+    if len(encontrados) >= 2:
+        return encontrados[1]
+    return encontrados[0] if encontrados else ""
+
+
 def extrair_campos(texto):
     linhas = [l.strip() for l in texto.splitlines() if l.strip()]
     campos = {"nome": "", "cpf": "", "rg": "", "data_nascimento": "", "nome_mae": ""}
@@ -142,9 +176,11 @@ def extrair_campos(texto):
     if mrg:
         campos["rg"] = mrg.group(1)
 
-    # Nome e filiação (mãe)
-    campos["nome"] = _pega_nome(linhas, ["NOME"])
-    campos["nome_mae"] = _pega_nome(linhas, ["FILIACAO", "FILIAÇÃO", "MAE", "MÃE"])
+    # Nome do titular: a MRZ (zona de leitura mecânica no rodapé da CNH) é a fonte mais
+    # confiável; se não houver, cai na heurística por rótulo.
+    campos["nome"] = _nome_mrz(texto) or _pega_nome(linhas, ["NOME"])
+    # Filiação: a mãe costuma ser o 2º nome sob "FILIAÇÃO" (o 1º é o pai).
+    campos["nome_mae"] = _pega_filiacao_mae(linhas)
 
     return campos
 
@@ -198,10 +234,13 @@ def main():
     textos = []
     if is_pdf:
         try:
-            import fitz  # PyMuPDF
-        except Exception as e:
-            _fail("Para ler PDF, instale o PyMuPDF no servidor (pip install pymupdf) — "
-                  "ou envie uma FOTO (JPG/PNG) do documento. Detalhe: " + str(e), "SEM_PDF")
+            import pymupdf as fitz  # nome novo (evita o aviso de deprecação do 'import fitz')
+        except Exception:
+            try:
+                import fitz  # PyMuPDF (compat. versões antigas)
+            except Exception as e:
+                _fail("Para ler PDF, instale o PyMuPDF no servidor (pip install pymupdf) — "
+                      "ou envie uma FOTO (JPG/PNG) do documento. Detalhe: " + str(e), "SEM_PDF")
         # Silencia avisos/erros do MuPDF para não poluir o stdout (que carrega só o JSON).
         try:
             fitz.TOOLS.mupdf_display_errors(False)
