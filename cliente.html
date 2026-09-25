@@ -2441,6 +2441,13 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadClientPortal();
       initGoogleAuth();
+      // Link "Não é cliente? Cadastre-se" (vindo da Central de Acesso) abre a aba de cadastro.
+      try {
+        const h = (window.location.hash || '').toLowerCase();
+        if (h === '#cadastro' || h === '#cadastrar' || h === '#register') {
+          setTimeout(() => { if (typeof switchAuthTab === 'function') switchAuthTab('register'); }, 100);
+        }
+      } catch (e) {}
     });
 
     // ── Toggle de visibilidade de senha seguro (reversão automática em 3.5s ou ao sair do campo) ──────────────────────────────────
