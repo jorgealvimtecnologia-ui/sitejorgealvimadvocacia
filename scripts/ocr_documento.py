@@ -133,9 +133,9 @@ def _nome_mrz(texto):
     return ""
 
 
-def _pega_filiacao_mae(linhas):
-    """Sob 'FILIAÇÃO' costuma vir pai e depois mãe. Coleta os nomes-de-pessoa após o
-    rótulo e devolve o 2º (mãe); se só houver um, devolve esse."""
+def _pega_filiacao(linhas):
+    """Sob 'FILIAÇÃO' vem pai (1º) e mãe (2º). Coleta os nomes-de-pessoa após o rótulo
+    e devolve a tupla (pai, mae). Se só houver um nome, assume que é a mãe."""
     encontrados = []
     achou = False
     for ln in linhas:
@@ -149,13 +149,15 @@ def _pega_filiacao_mae(linhas):
         if len(encontrados) >= 2:
             break
     if len(encontrados) >= 2:
-        return encontrados[1]
-    return encontrados[0] if encontrados else ""
+        return encontrados[0], encontrados[1]   # pai, mãe
+    if len(encontrados) == 1:
+        return "", encontrados[0]               # só um → mãe
+    return "", ""
 
 
 def extrair_campos(texto):
     linhas = [l.strip() for l in texto.splitlines() if l.strip()]
-    campos = {"nome": "", "cpf": "", "rg": "", "data_nascimento": "", "nome_mae": ""}
+    campos = {"nome": "", "cpf": "", "rg": "", "data_nascimento": "", "nome_pai": "", "nome_mae": ""}
 
     # CPF (valida dígitos verificadores; pega o primeiro válido)
     for m in CPF_RE.finditer(texto):
@@ -179,8 +181,10 @@ def extrair_campos(texto):
     # Nome do titular: a MRZ (zona de leitura mecânica no rodapé da CNH) é a fonte mais
     # confiável; se não houver, cai na heurística por rótulo.
     campos["nome"] = _nome_mrz(texto) or _pega_nome(linhas, ["NOME"])
-    # Filiação: a mãe costuma ser o 2º nome sob "FILIAÇÃO" (o 1º é o pai).
-    campos["nome_mae"] = _pega_filiacao_mae(linhas)
+    # Filiação: sob "FILIAÇÃO" vem pai (1º) e mãe (2º).
+    pai, mae = _pega_filiacao(linhas)
+    campos["nome_pai"] = pai
+    campos["nome_mae"] = mae
 
     return campos
 

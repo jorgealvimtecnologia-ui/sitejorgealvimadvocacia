@@ -847,6 +847,8 @@
       document.getElementById('cli-fullname').value = client.full_name || '';
       document.getElementById('cli-cpf').value = client.cpf || '';
       document.getElementById('cli-rg').value = client.rg || '';
+      var _birthEl = document.getElementById('cli-birth');
+      if (_birthEl) _birthEl.value = client.birth_date || '';
       document.getElementById('cli-nationality').value = client.nationality || 'brasileiro(a)';
       document.getElementById('cli-marital-status').value = client.marital_status || 'solteiro(a)';
       document.getElementById('cli-profession').value = client.profession || '';
@@ -941,6 +943,7 @@
       formData.append('full_name', fullName);
       formData.append('cpf', document.getElementById('cli-cpf').value);
       formData.append('rg', document.getElementById('cli-rg').value);
+      formData.append('birth_date', (document.getElementById('cli-birth') || {}).value || '');
       formData.append('nationality', document.getElementById('cli-nationality').value);
       formData.append('marital_status', document.getElementById('cli-marital-status').value);
       formData.append('profession', document.getElementById('cli-profession').value);

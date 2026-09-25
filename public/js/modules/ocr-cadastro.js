@@ -15,6 +15,8 @@
     nome: 'cli-fullname',
     cpf: 'cli-cpf',
     rg: 'cli-rg',
+    data_nascimento: 'cli-birth',
+    nome_pai: 'cli-father',
     nome_mae: 'cli-mother'
   };
 

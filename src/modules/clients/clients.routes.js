@@ -132,6 +132,7 @@ clientsRouter.post('/api/clients', requireAuth, (req, res, next) => {
       full_name,
       cpf,
       rg,
+      birth_date,
       cnpj,
       street,
       number,
@@ -198,7 +199,7 @@ clientsRouter.post('/api/clients', requireAuth, (req, res, next) => {
 
     const insertStmt = db.prepare(`
       INSERT INTO clients (
-        id, client_type, full_name, cpf, rg, cnpj,
+        id, client_type, full_name, cpf, rg, birth_date, cnpj,
         street, number, neighborhood, city, state, cep, complement,
         filiation_father, filiation_mother, email, phone, social_media, website, google_business,
         nationality, marital_status, profession,
@@ -206,7 +207,7 @@ clientsRouter.post('/api/clients', requireAuth, (req, res, next) => {
         contract_value, installments_count, installment_value, due_date, amount_paid, balance_due, invoice_number, contract_status,
         files, created_at, updated_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?,
@@ -222,6 +223,7 @@ clientsRouter.post('/api/clients', requireAuth, (req, res, next) => {
       full_name.trim(),
       cpf ? cpf.trim() : '',
       rg ? rg.trim() : '',
+      birth_date ? birth_date.trim() : '',
       cnpj ? cnpj.trim() : '',
       street ? street.trim() : '',
       number ? number.trim() : '',
@@ -372,6 +374,7 @@ clientsRouter.put('/api/clients/:id', requireAuth, uploadClientDoc.array('docume
       full_name,
       cpf,
       rg,
+      birth_date,
       cnpj,
       street,
       number,
@@ -439,7 +442,7 @@ clientsRouter.put('/api/clients/:id', requireAuth, uploadClientDoc.array('docume
 
     const updateStmt = db.prepare(`
       UPDATE clients SET
-        client_type = ?, full_name = ?, cpf = ?, rg = ?, cnpj = ?,
+        client_type = ?, full_name = ?, cpf = ?, rg = ?, birth_date = ?, cnpj = ?,
         street = ?, number = ?, neighborhood = ?, city = ?, state = ?, cep = ?, complement = ?,
         filiation_father = ?, filiation_mother = ?, email = ?, phone = ?, social_media = ?, website = ?, google_business = ?,
         nationality = ?, marital_status = ?, profession = ?,
@@ -454,6 +457,7 @@ clientsRouter.put('/api/clients/:id', requireAuth, uploadClientDoc.array('docume
       full_name !== undefined ? full_name.trim() : client.full_name,
       cpf !== undefined ? cpf.trim() : client.cpf,
       rg !== undefined ? rg.trim() : client.rg,
+      birth_date !== undefined ? birth_date.trim() : client.birth_date,
       cnpj !== undefined ? cnpj.trim() : client.cnpj,
       street !== undefined ? street.trim() : client.street,
       number !== undefined ? number.trim() : client.number,

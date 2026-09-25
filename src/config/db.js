@@ -51,6 +51,7 @@ try { db.exec(`ALTER TABLE users ADD COLUMN reset_token_expires TEXT;`); } catch
 try { db.exec(`ALTER TABLE access_permissions ADD COLUMN google_email TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE clients ADD COLUMN google_id TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT;`); } catch (e) {}
+try { db.exec(`ALTER TABLE clients ADD COLUMN birth_date TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE hr_employees ADD COLUMN email TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE hr_employees ADD COLUMN google_id TEXT;`); } catch (e) {}
 try { db.exec(`ALTER TABLE lawsuits ADD COLUMN deleted_at TEXT;`); } catch (e) {}
