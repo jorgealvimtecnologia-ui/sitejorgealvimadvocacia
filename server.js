@@ -262,6 +262,10 @@ try {
   addLeadCol('assigned_at', `assigned_at TEXT DEFAULT NULL`);
   addLeadCol('assigned_by', `assigned_by TEXT DEFAULT NULL`);
   addLeadCol('client_id', `client_id TEXT DEFAULT NULL`);
+  // Dados de contato guardados no lead para promover a cliente na conclusão do cadastro.
+  addLeadCol('email', `email TEXT DEFAULT NULL`);
+  addLeadCol('cpf', `cpf TEXT DEFAULT NULL`);
+  addLeadCol('city', `city TEXT DEFAULT NULL`);
 } catch (e) {
   console.warn('Verificação de migração de leads (gestão v2):', e);
 }

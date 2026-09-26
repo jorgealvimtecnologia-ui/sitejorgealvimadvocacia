@@ -86,7 +86,12 @@ describe('Gestão de Leads v2', () => {
     assert.equal(r.status, 403);
   });
 
-  it('mestre distribui → estágio "distribuido" e responsável no lead e no cliente', async () => {
+  it('Fase 3: na entrada o lead NÃO cria cliente pleno', async () => {
+    const cli = db.prepare(`SELECT id FROM clients WHERE id = ?`).get(leadId);
+    assert.equal(cli, undefined, 'cliente só nasce na conclusão do cadastro');
+  });
+
+  it('mestre distribui → estágio "distribuido" e responsável gravado no lead', async () => {
     const r = await auth(request(app).post(`/api/leads/${leadId}/distribute`), masterToken).send({
       responsible_lawyer_id: 'USR-ADV-TESTE', responsible_lawyer_name: 'Dra. Advogada Teste',
       assigned_secretary_id: 'USR-SEC', assigned_secretary_name: 'Secretária Teste'
@@ -99,8 +104,8 @@ describe('Gestão de Leads v2', () => {
     assert.equal(found.responsible_lawyer_name, 'Dra. Advogada Teste');
     assert.equal(found.assigned_secretary_name, 'Secretária Teste');
 
-    const cli = db.prepare(`SELECT responsible_lawyer_name FROM clients WHERE id = ?`).get(leadId);
-    assert.equal(cli.responsible_lawyer_name, 'Dra. Advogada Teste', 'cliente herda o responsável');
+    // Fase 3: ainda sem cliente pleno após distribuir (só na conclusão).
+    assert.equal(db.prepare(`SELECT id FROM clients WHERE id = ?`).get(leadId), undefined);
 
     // Distribuído deixa de contar como "novo lead".
     const sum = await auth(request(app).get('/api/leads/dashboard-summary'), masterToken);
@@ -112,20 +117,33 @@ describe('Gestão de Leads v2', () => {
     assert.equal(r.status, 400);
   });
 
-  it('estágio "falta_documento" reflete pendência no cadastro do cliente', async () => {
+  it('estágio "falta_documento" registra pendência sem ainda criar o cliente', async () => {
     const r = await auth(request(app).patch(`/api/leads/${leadId}/stage`), masterToken)
       .send({ stage: 'falta_documento', note: 'Falta procuração assinada' });
     assert.equal(r.status, 200);
-    const cli = db.prepare(`SELECT registration_status FROM clients WHERE id = ?`).get(leadId);
-    assert.equal(cli.registration_status, 'pendente');
+    assert.equal(db.prepare(`SELECT id FROM clients WHERE id = ?`).get(leadId), undefined);
     const ev = await auth(request(app).get(`/api/leads/${leadId}/events`), masterToken);
     assert.ok(ev.body.events.some(e => e.event_type === 'estagio'));
   });
 
-  it('estágio "concluido" marca o cadastro do cliente como concluído', async () => {
+  it('estágio "concluido" cria o cliente herdando o responsável e marca concluído', async () => {
     const r = await auth(request(app).patch(`/api/leads/${leadId}/stage`), masterToken).send({ stage: 'concluido' });
     assert.equal(r.status, 200);
-    const cli = db.prepare(`SELECT registration_status FROM clients WHERE id = ?`).get(leadId);
+    const cli = db.prepare(`SELECT registration_status, responsible_lawyer_name FROM clients WHERE id = ?`).get(leadId);
+    assert.ok(cli, 'cliente deve existir após conclusão');
+    assert.equal(cli.registration_status, 'concluido');
+    assert.equal(cli.responsible_lawyer_name, 'Dra. Advogada Teste', 'cliente herda o responsável definido na distribuição');
+  });
+
+  it('POST /api/leads/:id/complete conclui o cadastro (idempotente) de outro lead', async () => {
+    const novo = await request(app).post('/api/leads')
+      .field('name', 'Lead Concluir Direto').field('phone', '32977776666').field('area', 'Cível');
+    const nid = novo.body.clientId;
+    assert.equal(db.prepare(`SELECT id FROM clients WHERE id = ?`).get(nid), undefined);
+    const r = await auth(request(app).post(`/api/leads/${nid}/complete`), masterToken).send({});
+    assert.equal(r.status, 200);
+    assert.equal(r.body.clientId, nid);
+    const cli = db.prepare(`SELECT registration_status FROM clients WHERE id = ?`).get(nid);
     assert.equal(cli.registration_status, 'concluido');
   });
 });
