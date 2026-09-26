@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T12:24:57.009Z",
-  "total": 892,
+  "generated_at": "2026-09-26T16:27:39.739Z",
+  "total": 899,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -729,14 +729,91 @@
       "order": 0
     },
     {
-      "id": "QA-2A4CD9A2C0",
+      "id": "QA-0A860C5534",
       "page": "Site institucional (página inicial)",
       "url": "/",
       "section": "Jorge Alvim Advocacia",
       "kind": "Link",
-      "label": "Saiba mais →",
-      "action": "#areas",
-      "how": "Clique em “Saiba mais →”. Confira: a tela rola/abre a parte correta (#areas).",
+      "label": "💻 Notebook para Advogados Modelos potentes para petições, audiências online e o home offi",
+      "action": "https://www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+512GB&tag=sitejorgealvi-20",
+      "how": "Clique em “💻 Notebook para Advogados Modelos potentes para petições, audiências online e o home offi”. Confira: abre www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+ (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-445686C70D",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "📚 Livros de Direito (Saraiva) Doutrina, códigos comentados e obras jurídicas atualizadas ",
+      "action": "https://www.amazon.com.br/s?k=livros+de+direito+Saraiva&tag=sitejorgealvi-20",
+      "how": "Clique em “📚 Livros de Direito (Saraiva) Doutrina, códigos comentados e obras jurídicas atualizadas ”. Confira: abre www.amazon.com.br/s?k=livros+de+direito+Saraiva&tag=sitejorg (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-EDF14D26F0",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "📖 Kindle & Leitura Digital Leve toda a jurisprudência, acórdãos e códigos na pasta, sem p",
+      "action": "https://www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=sitejorgealvi-20",
+      "how": "Clique em “📖 Kindle & Leitura Digital Leve toda a jurisprudência, acórdãos e códigos na pasta, sem p”. Confira: abre www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=sitejorgeal (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-4734D00EAC",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "📱 Celulares Samsung Galaxy Smartphones para agenda, e-mail, assinatura digital e atendime",
+      "action": "https://www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G&tag=sitejorgealvi-20",
+      "how": "Clique em “📱 Celulares Samsung Galaxy Smartphones para agenda, e-mail, assinatura digital e atendime”. Confira: abre www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G&tag=sitejo (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-D94D97B903",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "🍎 iPhone (Apple) Modelos Apple com segurança e integração para a rotina do advogado. Ver ",
+      "action": "https://www.amazon.com.br/s?k=iPhone+15+Pro+256GB&tag=sitejorgealvi-20",
+      "how": "Clique em “🍎 iPhone (Apple) Modelos Apple com segurança e integração para a rotina do advogado. Ver ”. Confira: abre www.amazon.com.br/s?k=iPhone+15+Pro+256GB&tag=sitejorgealvi- (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-6D7C536B4D",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "🖊️ Acessórios para Advogados Canetas executivas, pastas de couro e itens que reforçam a i",
+      "action": "https://www.amazon.com.br/s?k=kit+caneta+executiva+pasta+couro+advogado&tag=sitejorgealvi-20",
+      "how": "Clique em “🖊️ Acessórios para Advogados Canetas executivas, pastas de couro e itens que reforçam a i”. Confira: abre www.amazon.com.br/s?k=kit+caneta+executiva+pasta+couro+advog (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-F59D98A9B0",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "🏛️ Enfeites para Escritório Estátuas da Justiça, quadros e decoração para um escritório d",
+      "action": "https://www.amazon.com.br/s?k=estatua+deusa+da+justica+decoracao+escritorio+advocacia&tag=sitejorgealvi-20",
+      "how": "Clique em “🏛️ Enfeites para Escritório Estátuas da Justiça, quadros e decoração para um escritório d”. Confira: abre www.amazon.com.br/s?k=estatua+deusa+da+justica+decoracao+esc (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-CE19A49CC2",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Jorge Alvim Advocacia",
+      "kind": "Link",
+      "label": "🖨️ Impressora Multifuncional Imprima, digitalize e copie petições e documentos com pratic",
+      "action": "https://www.amazon.com.br/s?k=impressora+multifuncional+wifi&tag=sitejorgealvi-20",
+      "how": "Clique em “🖨️ Impressora Multifuncional Imprima, digitalize e copie petições e documentos com pratic”. Confira: abre www.amazon.com.br/s?k=impressora+multifuncional+wifi&tag=sit (em nova aba) sem erro.",
       "order": 0
     },
     {
@@ -1301,18 +1378,18 @@
       "order": 1000
     },
     {
-      "id": "QA-6D8143B11D",
+      "id": "QA-E8ED025354",
       "page": "Blog (lista e artigo)",
       "url": "/blog",
       "section": "Produtos Recomendados pelo Escritório",
       "kind": "Link",
       "label": "Ver na Amazon ↗",
       "action": "https://www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=sitejorgealvi-20",
-      "how": "Clique em “Ver na Amazon ↗”. Confira: abre www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=jorgealvim- (em nova aba) sem erro.",
+      "how": "Clique em “Ver na Amazon ↗”. Confira: abre www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=sitejorgeal (em nova aba) sem erro.",
       "order": 1000
     },
     {
-      "id": "QA-910CB105CD",
+      "id": "QA-714C2F3801",
       "page": "Blog (lista e artigo)",
       "url": "/blog",
       "section": "Produtos Recomendados pelo Escritório",
@@ -1323,7 +1400,7 @@
       "order": 1000
     },
     {
-      "id": "QA-7C771961E9",
+      "id": "QA-1BF5FF0DC5",
       "page": "Blog (lista e artigo)",
       "url": "/blog",
       "section": "Produtos Recomendados pelo Escritório",
@@ -1334,7 +1411,7 @@
       "order": 1000
     },
     {
-      "id": "QA-B3AC69E16A",
+      "id": "QA-43DDC10250",
       "page": "Blog (lista e artigo)",
       "url": "/blog",
       "section": "Produtos Recomendados pelo Escritório",
@@ -2665,7 +2742,7 @@
       "order": 6000
     },
     {
-      "id": "QA-6189E69AF2",
+      "id": "QA-1D7DD1A82F",
       "page": "Vitrine Amazon",
       "url": "/amazon",
       "section": "Cabeçalho e menu",
