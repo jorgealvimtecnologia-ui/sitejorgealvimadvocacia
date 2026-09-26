@@ -516,6 +516,26 @@ db.exec(`
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
   );
 
+  -- Contratos adicionais por cliente (item ORD-MUHN47SR-I3Y): além do contrato
+  -- principal (embutido na ficha do cliente), permite registrar vários contratos.
+  CREATE TABLE IF NOT EXISTS client_contracts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    contract_value REAL DEFAULT 0,
+    installments_count INTEGER DEFAULT 1,
+    installment_value REAL DEFAULT 0,
+    due_date TEXT,
+    amount_paid REAL DEFAULT 0,
+    balance_due REAL DEFAULT 0,
+    invoice_number TEXT,
+    contract_status TEXT DEFAULT 'Ativo',
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+  );
+
   CREATE TABLE IF NOT EXISTS alvaras (
     id TEXT PRIMARY KEY,
     client_id TEXT NOT NULL,
