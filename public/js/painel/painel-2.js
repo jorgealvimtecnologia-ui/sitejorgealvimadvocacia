@@ -6,6 +6,9 @@
 
     // ---------------- DASHBOARD (PAINEL DE COMANDO EXECUTIVO) ----------------
     async function loadDashboardOverview(forceRefresh) {
+      // Gestão de Leads v2: popular as caixas de Novos Leads e Novos Contratos
+      // (independente do overview — se um falhar, o outro ainda carrega).
+      if (typeof window.loadLeadsBoxes === 'function') { try { window.loadLeadsBoxes(); } catch (e) {} }
       try {
         const url = forceRefresh ? '/api/dashboard/overview?refresh=1' : '/api/dashboard/overview';
         const d = await jget(url);
