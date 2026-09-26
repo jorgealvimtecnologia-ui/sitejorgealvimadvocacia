@@ -828,7 +828,7 @@ clientPortalRouter.post('/api/client-portal/forgot-password', loginRateLimit, as
     // Resposta idêntica exista ou não o cadastro (não revela quem é cliente).
     const genericResponse = {
       success: true,
-      message: 'Se houver cadastro com estes dados, o escritório recebeu seu pedido e enviará o código de acesso. Se preferir, fale com o escritório pelo WhatsApp.'
+      message: 'Se houver cadastro com estes dados, o código de recuperação será enviado ao e-mail cadastrado (confira também a caixa de spam). Se preferir, fale com o escritório pelo WhatsApp.'
     };
     if (!client) return res.json(genericResponse);
 
@@ -841,13 +841,17 @@ clientPortalRouter.post('/api/client-portal/forgot-password', loginRateLimit, as
     `).run(resetCode, expiresAt, client.id);
 
     resetCodeFailures.delete(client.id);
+    // Portal self-service: envia o código ao e-mail do próprio cliente (canal
+    // principal) e mantém o WhatsApp do escritório + a notificação no painel.
     await deliverAccessCode({
       audience: 'cliente',
       name: client.full_name,
       identifier: client.cpf || client.cnpj || client.email || client.id,
       code: resetCode,
       expiresAt,
-      resourceId: client.id
+      resourceId: client.id,
+      channel: 'both',
+      recipientEmail: client.email || ''
     });
 
     logAudit(req, {
