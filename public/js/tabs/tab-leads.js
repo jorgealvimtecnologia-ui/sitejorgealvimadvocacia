@@ -45,7 +45,7 @@
       if (leads.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" class="text-center py-12 text-slate-400">
+            <td colspan="8" class="text-center py-12 text-slate-400">
               Nenhum atendimento registrado no momento.
             </td>
           </tr>
@@ -106,7 +106,17 @@
                 <option value="Arquivado" ${lead.status === 'Arquivado' ? 'selected' : ''}>Arquivado</option>
               </select>
             </td>
+            <td class="px-4 sm:px-6 py-3 sm:py-4 min-w-[180px]">
+              <div class="text-xs font-bold text-navy-950">
+                ${lead.responsible_lawyer_name ? '⚖️ ' + lead.responsible_lawyer_name : '<span class="text-slate-400 font-normal">Sem responsável</span>'}
+              </div>
+              ${lead.assigned_secretary_name ? `<div class="text-[11px] text-slate-500">🗂️ ${lead.assigned_secretary_name}</div>` : ''}
+              ${leadStageSelectHtml(lead.id, lead.stage)}
+            </td>
             <td class="px-4 sm:px-6 py-3 sm:py-4 text-right space-x-1 sm:space-x-2 whitespace-nowrap">
+              <button onclick="toggleLeadTimeline('${lead.id}')" class="p-1.5 text-slate-500 hover:text-navy-950 hover:bg-slate-100 rounded-md" title="Ver histórico do lead">
+                🕑
+              </button>
               <button onclick="convertLeadToClient('${lead.id}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold shadow-xs inline-flex items-center space-x-1" title="Converter Atendimento em Cliente Cadastrado (Preenchimento Automático)">
                 <span>🚀</span>
                 <span>Converter</span>
@@ -119,6 +129,12 @@
               </button>
             </td>
           </tr>
+          <tr id="lead-timeline-${lead.id}" class="hidden bg-slate-50/60">
+            <td colspan="8" class="px-4 sm:px-6 py-3">
+              <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">🕑 Histórico do lead #${lead.id}</div>
+              <div id="lead-timeline-cell-${lead.id}" data-loaded="0"></div>
+            </td>
+          </tr>
         `;
       }).join('');
     }
@@ -129,6 +145,83 @@
       if (status === 'Concluído') return 'bg-blue-50 text-blue-700 border-blue-300';
       return 'bg-slate-100 text-slate-600 border-slate-300';
     }
+
+    // Gestão de Leads v2: vocabulário de estágios do cadastro (lead → cliente).
+    const LEAD_STAGE_OPTIONS = [
+      ['recebido', '📥 Recebido'],
+      ['distribuido', '📤 Distribuído'],
+      ['em_cadastro', '📝 Em cadastro'],
+      ['falta_documento', '🟠 Falta documento'],
+      ['falta_dados', '🟠 Falta dados'],
+      ['aguardando_assinatura', '✍️ Aguardando assinatura'],
+      ['concluido', '🟢 Cadastro concluído'],
+      ['desistiu', '⚫ Cliente desistiu'],
+      ['outros', '❔ Outros']
+    ];
+
+    function leadStageSelectHtml(leadId, stage) {
+      const cur = stage || 'recebido';
+      const opts = LEAD_STAGE_OPTIONS.map(function (o) {
+        return '<option value="' + o[0] + '"' + (o[0] === cur ? ' selected' : '') + '>' + o[1] + '</option>';
+      }).join('');
+      return '<select onchange="updateLeadStage(\'' + leadId + '\', this.value)" class="mt-1 w-full text-[11px] font-semibold px-2 py-1 rounded-lg border border-slate-200 bg-white focus:outline-none">' + opts + '</select>';
+    }
+
+    // Atualiza o estágio do cadastro do lead (advogado, secretária ou mestre).
+    async function updateLeadStage(id, stage) {
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(id) + '/stage', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('ja_admin_token') || '') },
+          body: JSON.stringify({ stage })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          alert(data.error || 'Falha ao atualizar o estágio.');
+          return;
+        }
+        if (typeof window.wmToast === 'function') window.wmToast('Estágio atualizado: ' + stage);
+      } catch (e) {
+        alert('Erro de conexão ao atualizar o estágio.');
+      }
+    }
+    window.updateLeadStage = updateLeadStage;
+
+    // Histórico expansível (linha do tempo) por lead.
+    async function toggleLeadTimeline(id) {
+      const row = document.getElementById('lead-timeline-' + id);
+      if (!row) return;
+      const cell = document.getElementById('lead-timeline-cell-' + id);
+      const willShow = row.classList.contains('hidden');
+      row.classList.toggle('hidden');
+      if (willShow && cell && cell.getAttribute('data-loaded') !== '1') {
+        cell.innerHTML = '<span class="text-xs text-slate-400">Carregando histórico…</span>';
+        try {
+          const res = await fetch('/api/leads/' + encodeURIComponent(id) + '/events', {
+            headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('ja_admin_token') || '') }
+          });
+          const data = await res.json();
+          const events = (data && data.events) || [];
+          cell.setAttribute('data-loaded', '1');
+          if (!events.length) {
+            cell.innerHTML = '<span class="text-xs text-slate-400">Sem eventos registrados ainda.</span>';
+            return;
+          }
+          cell.innerHTML = '<ol class="relative border-l-2 border-slate-200 ml-2 space-y-2 py-1">' +
+            events.map(function (ev) {
+              const when = ev.created_at ? new Date(ev.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+              const detail = (ev.detail || ev.event_type || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const who = (ev.performed_by || 'sistema').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              return '<li class="ml-3 text-xs"><span class="absolute -left-[7px] w-3 h-3 rounded-full bg-gold-400 border-2 border-white"></span>' +
+                '<span class="font-semibold text-navy-950">' + detail + '</span>' +
+                '<span class="text-slate-400"> — ' + when + ' · ' + who + '</span></li>';
+            }).join('') + '</ol>';
+        } catch (e) {
+          cell.innerHTML = '<span class="text-xs text-rose-500">Falha ao carregar o histórico.</span>';
+        }
+      }
+    }
+    window.toggleLeadTimeline = toggleLeadTimeline;
 
     function filterLeads() {
       const search = document.getElementById('search-input').value.toLowerCase().trim();
