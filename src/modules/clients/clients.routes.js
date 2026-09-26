@@ -679,3 +679,117 @@ clientsRouter.delete('/api/clients/:id', requireAuth, (req, res) => {
     return res.status(500).json({ error: 'Erro ao excluir cliente.' });
   }
 });
+
+// ============================================================================
+//  CONTRATOS ADICIONAIS POR CLIENTE (item ORD-MUHN47SR-I3Y)
+//  Além do contrato principal (embutido na ficha), permite registrar vários
+//  contratos por cliente, sem refazer a tela financeira.
+// ============================================================================
+
+function contractBalance(value, paid) {
+  return Math.max(0, (parseFloat(value) || 0) - (parseFloat(paid) || 0));
+}
+
+// Listar contratos adicionais de um cliente
+clientsRouter.get('/api/clients/:id/contracts', requireAuth, (req, res) => {
+  try {
+    const client = db.prepare('SELECT id FROM clients WHERE id = ?').get(req.params.id);
+    if (!client) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    const contracts = db.prepare(
+      'SELECT * FROM client_contracts WHERE client_id = ? ORDER BY created_at DESC'
+    ).all(req.params.id);
+    return res.json({ success: true, contracts });
+  } catch (error) {
+    console.error('[ERRO] Falha ao listar contratos do cliente:', error);
+    return res.status(500).json({ error: 'Erro ao listar contratos.' });
+  }
+});
+
+// Criar contrato adicional
+clientsRouter.post('/api/clients/:id/contracts', requireAuth, (req, res) => {
+  try {
+    const client = db.prepare('SELECT id, full_name FROM clients WHERE id = ?').get(req.params.id);
+    if (!client) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    const { title, contract_value, installments_count, installment_value, due_date, amount_paid, invoice_number, contract_status, notes } = req.body;
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ error: 'Informe uma descrição/assunto para o contrato.' });
+    }
+    const cValue = parseFloat(contract_value) || 0;
+    const aPaid = parseFloat(amount_paid) || 0;
+    const instCount = parseInt(installments_count, 10) || 1;
+    const instValue = parseFloat(installment_value) || (instCount > 0 ? cValue / instCount : 0);
+    const now = new Date().toISOString();
+    const result = db.prepare(`
+      INSERT INTO client_contracts
+        (client_id, title, contract_value, installments_count, installment_value, due_date, amount_paid, balance_due, invoice_number, contract_status, notes, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(client.id, String(title).trim(), cValue, instCount, instValue, due_date || null, aPaid, contractBalance(cValue, aPaid), invoice_number || null, contract_status || 'Ativo', notes || null, now, now);
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'CRIAR_CONTRATO_ADICIONAL',
+      module: 'CLIENTES',
+      resource_id: client.id,
+      description: `Contrato adicional "${String(title).trim()}" (R$ ${cValue.toFixed(2)}, ${instCount}x) cadastrado para o cliente ${client.full_name} (#${client.id}).`
+    });
+    const contract = db.prepare('SELECT * FROM client_contracts WHERE id = ?').get(result.lastInsertRowid);
+    return res.status(201).json({ success: true, contract });
+  } catch (error) {
+    console.error('[ERRO] Falha ao criar contrato adicional:', error);
+    return res.status(500).json({ error: 'Erro ao criar contrato.' });
+  }
+});
+
+// Atualizar contrato adicional
+clientsRouter.put('/api/clients/:id/contracts/:contractId', requireAuth, (req, res) => {
+  try {
+    const existing = db.prepare('SELECT * FROM client_contracts WHERE id = ? AND client_id = ?').get(req.params.contractId, req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Contrato não encontrado.' });
+    const { title, contract_value, installments_count, installment_value, due_date, amount_paid, invoice_number, contract_status, notes } = req.body;
+    const newTitle = (title !== undefined && String(title).trim()) ? String(title).trim() : existing.title;
+    const cValue = contract_value !== undefined ? (parseFloat(contract_value) || 0) : existing.contract_value;
+    const aPaid = amount_paid !== undefined ? (parseFloat(amount_paid) || 0) : existing.amount_paid;
+    const instCount = installments_count !== undefined ? (parseInt(installments_count, 10) || 1) : existing.installments_count;
+    const instValue = installment_value !== undefined ? (parseFloat(installment_value) || 0) : existing.installment_value;
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE client_contracts SET
+        title = ?, contract_value = ?, installments_count = ?, installment_value = ?,
+        due_date = ?, amount_paid = ?, balance_due = ?, invoice_number = ?,
+        contract_status = ?, notes = ?, updated_at = ?
+      WHERE id = ? AND client_id = ?
+    `).run(
+      newTitle, cValue, instCount, instValue,
+      due_date !== undefined ? (due_date || null) : existing.due_date,
+      aPaid, contractBalance(cValue, aPaid),
+      invoice_number !== undefined ? (invoice_number || null) : existing.invoice_number,
+      contract_status !== undefined ? (contract_status || 'Ativo') : existing.contract_status,
+      notes !== undefined ? (notes || null) : existing.notes,
+      now, req.params.contractId, req.params.id
+    );
+    const contract = db.prepare('SELECT * FROM client_contracts WHERE id = ?').get(req.params.contractId);
+    return res.json({ success: true, contract });
+  } catch (error) {
+    console.error('[ERRO] Falha ao atualizar contrato adicional:', error);
+    return res.status(500).json({ error: 'Erro ao atualizar contrato.' });
+  }
+});
+
+// Excluir contrato adicional
+clientsRouter.delete('/api/clients/:id/contracts/:contractId', requireAuth, (req, res) => {
+  try {
+    const existing = db.prepare('SELECT * FROM client_contracts WHERE id = ? AND client_id = ?').get(req.params.contractId, req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Contrato não encontrado.' });
+    db.prepare('DELETE FROM client_contracts WHERE id = ? AND client_id = ?').run(req.params.contractId, req.params.id);
+    logAudit(req, {
+      event_type: 'EXCLUSAO',
+      event_name: 'EXCLUIR_CONTRATO_ADICIONAL',
+      module: 'CLIENTES',
+      resource_id: req.params.id,
+      description: `Contrato adicional "${existing.title}" (#${existing.id}) excluído do cliente #${req.params.id}.`
+    });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[ERRO] Falha ao excluir contrato adicional:', error);
+    return res.status(500).json({ error: 'Erro ao excluir contrato.' });
+  }
+});

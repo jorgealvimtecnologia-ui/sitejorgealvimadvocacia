@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T16:27:39.739Z",
-  "total": 899,
+  "generated_at": "2026-09-26T18:36:42.862Z",
+  "total": 905,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -4535,6 +4535,50 @@
       "order": 7006
     },
     {
+      "id": "QA-8812EDF19F",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Botão",
+      "label": "+ Adicionar contrato",
+      "action": "toggleClientContractForm",
+      "how": "Clique em “+ Adicionar contrato”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7006
+    },
+    {
+      "id": "QA-EF9CC45229",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Formulário",
+      "label": "client contract form",
+      "action": "enviar",
+      "how": "Preencha os campos com dados de teste e envie. Confira: mensagem de sucesso, dados gravados e nenhum erro na tela.",
+      "order": 7006
+    },
+    {
+      "id": "QA-8DC5110569",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Botão",
+      "label": "Cancelar",
+      "action": "toggleClientContractForm",
+      "how": "Clique em “Cancelar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7006
+    },
+    {
+      "id": "QA-D684110342",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Botão",
+      "label": "💾 Salvar contrato",
+      "action": "enviar formulário",
+      "how": "Clique em “💾 Salvar contrato”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7006
+    },
+    {
       "id": "QA-64744BEE8B",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -4597,6 +4641,28 @@
       "kind": "Botão",
       "label": "🗑️",
       "action": "deleteTransaction",
+      "how": "Clique em “🗑️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7006
+    },
+    {
+      "id": "QA-9686E5253B",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Botão",
+      "label": "✏️ Editar",
+      "action": "editClientContract",
+      "how": "Clique em “✏️ Editar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7006
+    },
+    {
+      "id": "QA-C8DFB42790",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Botão",
+      "label": "🗑️",
+      "action": "deleteClientContract",
       "how": "Clique em “🗑️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7006
     },

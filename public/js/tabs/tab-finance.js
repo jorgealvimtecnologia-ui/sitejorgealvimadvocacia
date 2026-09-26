@@ -580,6 +580,128 @@
       }
 
       loadClientInstallments(clientId);
+      loadClientContracts(clientId);
+    }
+
+    // ===== Contratos adicionais por cliente (item ORD-MUHN47SR-I3Y) =====
+    let clientContractsCache = [];
+
+    async function loadClientContracts(clientId) {
+      const listEl = document.getElementById('client-contracts-list');
+      if (!clientId || !listEl) return;
+      toggleClientContractForm(false);
+      try {
+        const res = await fetch(`/api/clients/${clientId}/contracts`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          clientContractsCache = data.contracts || [];
+          renderClientContracts(clientContractsCache);
+        }
+      } catch (err) {
+        console.error('Erro ao consultar contratos adicionais:', err);
+      }
+    }
+
+    function renderClientContracts(contracts) {
+      const listEl = document.getElementById('client-contracts-list');
+      if (!listEl) return;
+      if (!contracts || contracts.length === 0) {
+        listEl.innerHTML = '<p class="text-slate-400 py-2">Nenhum contrato adicional. Use "+ Adicionar contrato" para registrar outros contratos deste cliente.</p>';
+        return;
+      }
+      listEl.innerHTML = contracts.map(c => `
+        <div class="flex flex-wrap items-center justify-between gap-2 border border-slate-200 rounded-xl px-3 py-2 mb-2">
+          <div class="min-w-0">
+            <div class="font-bold text-slate-800 text-sm truncate">${escapeHtmlFin(c.title)} <span class="ml-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">${escapeHtmlFin(c.contract_status || 'Ativo')}</span></div>
+            <div class="text-[11px] text-slate-500">Total ${formatMoney(c.contract_value)} · ${c.installments_count || 1}x · Pago ${formatMoney(c.amount_paid)} · Saldo ${formatMoney(c.balance_due)}${c.due_date ? ' · Venc. ' + formatDate(c.due_date) : ''}</div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="editClientContract(${c.id})" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">✏️ Editar</button>
+            <button type="button" onclick="deleteClientContract(${c.id})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtmlFin(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function toggleClientContractForm(show, contract) {
+      const form = document.getElementById('client-contract-form');
+      if (!form) return;
+      if (show) {
+        document.getElementById('cc-edit-id').value = contract ? contract.id : '';
+        document.getElementById('cc-title').value = contract ? (contract.title || '') : '';
+        document.getElementById('cc-value').value = contract ? (contract.contract_value || '') : '';
+        document.getElementById('cc-installments').value = contract ? (contract.installments_count || 1) : 1;
+        document.getElementById('cc-paid').value = contract ? (contract.amount_paid || 0) : 0;
+        document.getElementById('cc-due').value = contract && contract.due_date ? String(contract.due_date).slice(0, 10) : '';
+        document.getElementById('cc-status').value = contract ? (contract.contract_status || 'Ativo') : 'Ativo';
+        form.classList.remove('hidden');
+      } else {
+        form.reset();
+        document.getElementById('cc-edit-id').value = '';
+        form.classList.add('hidden');
+      }
+    }
+
+    function editClientContract(id) {
+      const c = clientContractsCache.find(x => String(x.id) === String(id));
+      if (c) toggleClientContractForm(true, c);
+    }
+
+    async function submitClientContract(e) {
+      e.preventDefault();
+      if (!currentSelectedFinClientId) { alert('Selecione um cliente primeiro.'); return; }
+      const editId = document.getElementById('cc-edit-id').value;
+      const payload = {
+        title: document.getElementById('cc-title').value.trim(),
+        contract_value: document.getElementById('cc-value').value,
+        installments_count: document.getElementById('cc-installments').value,
+        amount_paid: document.getElementById('cc-paid').value,
+        due_date: document.getElementById('cc-due').value,
+        contract_status: document.getElementById('cc-status').value
+      };
+      if (!payload.title) { alert('Informe a descrição/assunto do contrato.'); return; }
+      const url = editId
+        ? `/api/clients/${currentSelectedFinClientId}/contracts/${editId}`
+        : `/api/clients/${currentSelectedFinClientId}/contracts`;
+      try {
+        const res = await fetch(url, {
+          method: editId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          toggleClientContractForm(false);
+          loadClientContracts(currentSelectedFinClientId);
+        } else {
+          alert(data.error || 'Erro ao salvar contrato.');
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    async function deleteClientContract(id) {
+      if (!currentSelectedFinClientId) return;
+      if (!confirm('Excluir este contrato adicional? Esta ação não pode ser desfeita.')) return;
+      try {
+        const res = await fetch(`/api/clients/${currentSelectedFinClientId}/contracts/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          loadClientContracts(currentSelectedFinClientId);
+        } else {
+          alert(data.error || 'Erro ao excluir contrato.');
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
     }
 
     async function loadClientInstallments(clientId) {
@@ -1774,6 +1896,11 @@
   window.handleFinClientSelect = typeof handleFinClientSelect !== 'undefined' ? handleFinClientSelect : window.handleFinClientSelect;
   window.loadClientInstallments = typeof loadClientInstallments !== 'undefined' ? loadClientInstallments : window.loadClientInstallments;
   window.renderClientInstallments = typeof renderClientInstallments !== 'undefined' ? renderClientInstallments : window.renderClientInstallments;
+  window.loadClientContracts = typeof loadClientContracts !== 'undefined' ? loadClientContracts : window.loadClientContracts;
+  window.toggleClientContractForm = typeof toggleClientContractForm !== 'undefined' ? toggleClientContractForm : window.toggleClientContractForm;
+  window.submitClientContract = typeof submitClientContract !== 'undefined' ? submitClientContract : window.submitClientContract;
+  window.editClientContract = typeof editClientContract !== 'undefined' ? editClientContract : window.editClientContract;
+  window.deleteClientContract = typeof deleteClientContract !== 'undefined' ? deleteClientContract : window.deleteClientContract;
   window.generateInstallmentsForSelectedClient = typeof generateInstallmentsForSelectedClient !== 'undefined' ? generateInstallmentsForSelectedClient : window.generateInstallmentsForSelectedClient;
   window.generateAsaasCharge = typeof generateAsaasCharge !== 'undefined' ? generateAsaasCharge : window.generateAsaasCharge;
   window.showExistingAsaasChargeModal = typeof showExistingAsaasChargeModal !== 'undefined' ? showExistingAsaasChargeModal : window.showExistingAsaasChargeModal;
