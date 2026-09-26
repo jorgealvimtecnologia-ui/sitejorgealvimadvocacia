@@ -1631,9 +1631,10 @@
       const regForm = document.getElementById('client-register-form');
       if (regForm) regForm.reset();
       const pwdInputs = document.querySelectorAll('input[type="password"]');
-      pwdInputs.forEach(i => { 
-        i.value = ''; 
-        i.type = 'password'; 
+      pwdInputs.forEach(i => {
+        _ensurePwdUnlockListeners(i);
+        i.value = '';
+        i.type = 'password';
         i.setAttribute('readonly', 'readonly');
       });
       const loginId = document.getElementById('login-identifier');
@@ -2485,6 +2486,16 @@
       }
     }
 
+    // Religa a digitação: o `readonly` é apenas um truque anti-autofill do navegador.
+    // Ao focar ou clicar no campo, removemos o `readonly` para que o usuário possa
+    // digitar normalmente (letras, números e símbolos). Espelha o comportamento do painel.
+    function _ensurePwdUnlockListeners(input) {
+      if (!input || input._hasUnlockListener) return;
+      input._hasUnlockListener = true;
+      input.addEventListener('focus', function() { this.removeAttribute('readonly'); });
+      input.addEventListener('pointerdown', function() { this.removeAttribute('readonly'); });
+    }
+
     // Proteção contra retenção de senha e formulário ao voltar no histórico do navegador (bfcache) e autofill
     function _wipeClientAuthFields() {
       if (!localStorage.getItem(CLIENT_TOKEN_KEY)) {
@@ -2493,9 +2504,10 @@
         let isInteracting = (document.activeElement === loginId) || (loginId && loginId.value.trim().length > 0);
         pwdInputs.forEach(i => { if (document.activeElement === i || (i.value && i.value.length > 0)) isInteracting = true; });
         if (isInteracting) return;
-        pwdInputs.forEach(i => { 
-          i.value = ''; 
-          i.type = 'password'; 
+        pwdInputs.forEach(i => {
+          _ensurePwdUnlockListeners(i);
+          i.value = '';
+          i.type = 'password';
           i.setAttribute('readonly', 'readonly');
         });
         if (loginId) loginId.value = '';
