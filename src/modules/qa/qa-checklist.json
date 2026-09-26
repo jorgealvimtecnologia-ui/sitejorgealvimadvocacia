@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T11:14:22.860Z",
-  "total": 884,
+  "generated_at": "2026-09-26T12:24:57.009Z",
+  "total": 892,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -3391,69 +3391,47 @@
       "order": 7001
     },
     {
-      "id": "QA-3C051DC4C5",
+      "id": "QA-86F5DDE333",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Visão Geral / Cockpit",
       "kind": "Botão",
-      "label": "Ver Agenda Completa ➔",
-      "action": "openModule",
-      "how": "Clique em “Ver Agenda Completa ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "label": "↻ Atualizar",
+      "action": "if",
+      "how": "Clique em “↻ Atualizar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7001
     },
     {
-      "id": "QA-B8B18A3A89",
+      "id": "QA-48B777BEC0",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Visão Geral / Cockpit",
       "kind": "Botão",
-      "label": "Abrir Diário Oficial ➔",
-      "action": "openModule",
-      "how": "Clique em “Abrir Diário Oficial ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "label": "0 Hoje",
+      "action": "if",
+      "how": "Clique em “0 Hoje”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7001
     },
     {
-      "id": "QA-FADBFCF484",
+      "id": "QA-5C0E5F1918",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Visão Geral / Cockpit",
       "kind": "Botão",
-      "label": "Ver Diário ➔",
-      "action": "openModule",
-      "how": "Clique em “Ver Diário ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "label": "0 Mês",
+      "action": "if",
+      "how": "Clique em “0 Mês”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7001
     },
     {
-      "id": "QA-835F51681D",
+      "id": "QA-06204E6FB0",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Visão Geral / Cockpit",
       "kind": "Botão",
-      "label": "Meu Ponto",
-      "action": "openModule",
-      "how": "Clique em “Meu Ponto”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
-      "order": 7001
-    },
-    {
-      "id": "QA-C44EADC2BB",
-      "page": "Painel administrativo",
-      "url": "/painel",
-      "section": "Visão Geral / Cockpit",
-      "kind": "Botão",
-      "label": "Painel RH ➔",
-      "action": "openModule",
-      "how": "Clique em “Painel RH ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
-      "order": 7001
-    },
-    {
-      "id": "QA-789215A34E",
-      "page": "Painel administrativo",
-      "url": "/painel",
-      "section": "Visão Geral / Cockpit",
-      "kind": "Botão",
-      "label": "Ver Leads ➔",
-      "action": "openModule",
-      "how": "Clique em “Ver Leads ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "label": "0 Ano",
+      "action": "if",
+      "how": "Clique em “0 Ano”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7001
     },
     {
@@ -4907,6 +4885,17 @@
       "action": "createEsignRequest",
       "how": "Clique em “Gerar link de assinatura”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7009
+    },
+    {
+      "id": "QA-FAD680D032",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "🕑",
+      "action": "toggleLeadTimeline",
+      "how": "Clique em “🕑”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
     },
     {
       "id": "QA-88FEAC1D1A",
@@ -7447,6 +7436,105 @@
       "label": "← Cancelar e voltar ao login",
       "action": "closeAdminForgotPasswordModal",
       "how": "Clique em “← Cancelar e voltar ao login”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-577285948A",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: lead distribute modal",
+      "kind": "Botão",
+      "label": "✕",
+      "action": "document.getElementById",
+      "how": "Clique em “✕”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-B305B1DE81",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: lead distribute modal",
+      "kind": "Botão",
+      "label": "Confirmar Distribuição",
+      "action": "if",
+      "how": "Clique em “Confirmar Distribuição”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-29FAB52C58",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "✕",
+      "action": "document.getElementById",
+      "how": "Clique em “✕”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-5C5A22D653",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "Ver Agenda Completa ➔",
+      "action": "openModule",
+      "how": "Clique em “Ver Agenda Completa ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-97D83A8112",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "Abrir Diário Oficial ➔",
+      "action": "openModule",
+      "how": "Clique em “Abrir Diário Oficial ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-0A2A40481F",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "Ver Diário ➔",
+      "action": "openModule",
+      "how": "Clique em “Ver Diário ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-7A8DA3DB69",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "Meu Ponto",
+      "action": "openModule",
+      "how": "Clique em “Meu Ponto”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-F2B2C3FEE0",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "Painel RH ➔",
+      "action": "openModule",
+      "how": "Clique em “Painel RH ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-0E5F21177F",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: contracts table modal",
+      "kind": "Botão",
+      "label": "Ver Leads ➔",
+      "action": "openModule",
+      "how": "Clique em “Ver Leads ➔”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7090
     },
     {

@@ -311,20 +311,29 @@
     }
 
     // 5. Conversão Direta de Lead em Cliente em 1-Clique
-    function convertLeadToClient(leadId) {
-      const lead = allLeads.find(l => String(l.id) === String(leadId));
-      if (!lead) return;
-
-      // Abre o modal de cliente em modo novo
-      openNewClientModal();
-
-      // Preenche os campos vindos do lead
-      if (document.getElementById('cli-fullname')) document.getElementById('cli-fullname').value = lead.name || '';
-      if (document.getElementById('cli-phone')) document.getElementById('cli-phone').value = lead.phone || '';
-      if (document.getElementById('cli-email')) document.getElementById('cli-email').value = lead.email || '';
-      if (document.getElementById('cli-city')) document.getElementById('cli-city').value = lead.city || 'Juiz de Fora';
-      if (document.getElementById('cli-notes')) {
-        document.getElementById('cli-notes').value = `[Convertido do Atendimento #${lead.id} - Área: ${lead.area || 'Geral'}]\n${lead.message || ''}`;
+    // Gestão de Leads v2 (Fase 3): "Converter" agora CONCLUI o cadastro — cria o
+    // cliente com o MESMO id do lead (sem duplicar), herdando o advogado responsável,
+    // e leva o operador para a aba Clientes para completar os dados.
+    async function convertLeadToClient(leadId) {
+      if (!confirm('Concluir o cadastro deste atendimento e criar o cliente?\n\nO cliente será criado com os dados básicos do lead; você poderá completar os dados (CPF, endereço, contrato) na aba Clientes.')) {
+        return;
+      }
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(leadId) + '/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('ja_admin_token') || (typeof getToken === 'function' ? getToken() : '') || '') }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (typeof window.wmToast === 'function') window.wmToast('✅ Cadastro concluído! Cliente criado. Complete os dados na aba Clientes.');
+          if (typeof loadLeads === 'function') loadLeads();
+          if (typeof loadClients === 'function') loadClients();
+          if (typeof switchTab === 'function') switchTab('clients');
+        } else {
+          alert(data.error || 'Falha ao concluir o cadastro.');
+        }
+      } catch (e) {
+        alert('Erro de conexão ao concluir o cadastro.');
       }
     }
 

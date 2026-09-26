@@ -232,9 +232,57 @@ try {
   if (!cliCols.includes('deletion_reason')) {
     db.exec(`ALTER TABLE clients ADD COLUMN deletion_reason TEXT DEFAULT NULL`);
   }
+  // Gestão de Leads v2: advogado responsável pelo cliente e andamento do cadastro.
+  if (!cliCols.includes('responsible_lawyer_id')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN responsible_lawyer_id TEXT DEFAULT NULL`);
+  }
+  if (!cliCols.includes('responsible_lawyer_name')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN responsible_lawyer_name TEXT DEFAULT NULL`);
+  }
+  if (!cliCols.includes('registration_status')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN registration_status TEXT DEFAULT 'pendente'`);
+  }
 } catch (e) {
   console.warn('Verificação de migração de clients:', e);
 }
+
+// Gestão de Leads v2: distribuição (responsável/secretária), estágio do cadastro
+// e trilha de eventos (linha do tempo) de cada lead até virar cliente.
+try {
+  const leadCols = db.prepare(`PRAGMA table_info(leads)`).all().map(c => c.name);
+  const addLeadCol = (name, ddl) => { if (!leadCols.includes(name)) db.exec(`ALTER TABLE leads ADD COLUMN ${ddl}`); };
+  addLeadCol('responsible_lawyer_id', `responsible_lawyer_id TEXT DEFAULT NULL`);
+  addLeadCol('responsible_lawyer_name', `responsible_lawyer_name TEXT DEFAULT NULL`);
+  addLeadCol('assigned_secretary_id', `assigned_secretary_id TEXT DEFAULT NULL`);
+  addLeadCol('assigned_secretary_name', `assigned_secretary_name TEXT DEFAULT NULL`);
+  // stage: recebido | distribuido | em_cadastro | falta_documento | falta_dados |
+  //        aguardando_assinatura | concluido | desistiu | outros
+  addLeadCol('stage', `stage TEXT DEFAULT 'recebido'`);
+  addLeadCol('stage_note', `stage_note TEXT DEFAULT NULL`);
+  addLeadCol('assigned_at', `assigned_at TEXT DEFAULT NULL`);
+  addLeadCol('assigned_by', `assigned_by TEXT DEFAULT NULL`);
+  addLeadCol('client_id', `client_id TEXT DEFAULT NULL`);
+  // Dados de contato guardados no lead para promover a cliente na conclusão do cadastro.
+  addLeadCol('email', `email TEXT DEFAULT NULL`);
+  addLeadCol('cpf', `cpf TEXT DEFAULT NULL`);
+  addLeadCol('city', `city TEXT DEFAULT NULL`);
+} catch (e) {
+  console.warn('Verificação de migração de leads (gestão v2):', e);
+}
+
+// Trilha de eventos do lead (linha do tempo): recebido, distribuído, mudanças de
+// estágio, conclusão de cadastro, etc. Alimenta o histórico expansível na aba Leads.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS lead_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lead_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    detail TEXT,
+    performed_by TEXT,
+    created_at TEXT NOT NULL
+  );
+`);
+try { db.exec(`CREATE INDEX IF NOT EXISTS idx_lead_events_lead ON lead_events(lead_id)`); } catch (e) {}
 
 try {
   const usrCols = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
