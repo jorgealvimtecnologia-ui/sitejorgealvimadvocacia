@@ -1307,7 +1307,7 @@
       "section": "Produtos Recomendados pelo Escritório",
       "kind": "Link",
       "label": "Ver na Amazon ↗",
-      "action": "https://www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=jorgealvim-20",
+      "action": "https://www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=sitejorgealvi-20",
       "how": "Clique em “Ver na Amazon ↗”. Confira: abre www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=jorgealvim- (em nova aba) sem erro.",
       "order": 1000
     },
@@ -1318,7 +1318,7 @@
       "section": "Produtos Recomendados pelo Escritório",
       "kind": "Link",
       "label": "Ver na Amazon ↗",
-      "action": "https://www.amazon.com.br/s?k=Vade+Mecum+Saraiva+digital+ebook+Kindle&tag=jorgealvim-20",
+      "action": "https://www.amazon.com.br/s?k=Vade+Mecum+Saraiva+digital+ebook+Kindle&tag=sitejorgealvi-20",
       "how": "Clique em “Ver na Amazon ↗”. Confira: abre www.amazon.com.br/s?k=Vade+Mecum+Saraiva+digital+ebook+Kindl (em nova aba) sem erro.",
       "order": 1000
     },
@@ -1329,7 +1329,7 @@
       "section": "Produtos Recomendados pelo Escritório",
       "kind": "Link",
       "label": "Ver na Amazon ↗",
-      "action": "https://www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G+S-Pen&tag=jorgealvim-20",
+      "action": "https://www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G+S-Pen&tag=sitejorgealvi-20",
       "how": "Clique em “Ver na Amazon ↗”. Confira: abre www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G+S-Pen&tag= (em nova aba) sem erro.",
       "order": 1000
     },
@@ -1340,7 +1340,7 @@
       "section": "Produtos Recomendados pelo Escritório",
       "kind": "Link",
       "label": "Ver na Amazon ↗",
-      "action": "https://www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+512GB&tag=jorgealvim-20",
+      "action": "https://www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+512GB&tag=sitejorgealvi-20",
       "how": "Clique em “Ver na Amazon ↗”. Confira: abre www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+ (em nova aba) sem erro.",
       "order": 1000
     },
@@ -2671,8 +2671,8 @@
       "section": "Cabeçalho e menu",
       "kind": "Link",
       "label": "amazon Brasil ↗",
-      "action": "https://www.amazon.com.br/?tag=jorgealvim-20",
-      "how": "Clique em “amazon Brasil ↗”. Confira: abre www.amazon.com.br/?tag=jorgealvim-20 (em nova aba) sem erro.",
+      "action": "https://www.amazon.com.br/?tag=sitejorgealvi-20",
+      "how": "Clique em “amazon Brasil ↗”. Confira: abre www.amazon.com.br/?tag=sitejorgealvi-20 (em nova aba) sem erro.",
       "order": 6000
     },
     {
