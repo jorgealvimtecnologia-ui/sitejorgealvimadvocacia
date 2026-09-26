@@ -63,6 +63,16 @@
       };
     }
 
+    // Para envios multipart (FormData com arquivos): NÃO enviar 'Content-Type'.
+    // Se ele for enviado como application/json, o navegador não inclui o boundary
+    // do multipart e o servidor não consegue ler o corpo (erro "Unexpected token
+    // '-', "------geck..." is not valid JSON"). Sem Content-Type, o navegador
+    // define sozinho "multipart/form-data; boundary=...".
+    function getAuthHeadersMultipart() {
+      const token = getToken();
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
     function formatMoney(val) {
       const num = parseFloat(val) || 0;
       return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1602,6 +1612,7 @@
     window.allLawsuits = allLawsuits;
     window.getToken = getToken;
     window.getAuthHeaders = getAuthHeaders;
+    window.getAuthHeadersMultipart = getAuthHeadersMultipart;
     window.formatMoney = formatMoney;
     window.formatDate = formatDate;
     window.copyToClipboard = copyToClipboard;
