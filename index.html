@@ -1856,13 +1856,29 @@
                   <label for="lead-quick-message" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Sobre o que você precisa? <span class="text-slate-400 text-[11px] font-normal">(Breve resumo)</span>
                   </label>
-                  <textarea 
-                    id="lead-quick-message" 
-                    name="message" 
-                    rows="3" 
-                    placeholder="Descreva resumidamente sua dúvida ou situação jurídica..." 
+                  <textarea
+                    id="lead-quick-message"
+                    name="message"
+                    rows="3"
+                    placeholder="Descreva resumidamente sua dúvida ou situação jurídica..."
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:bg-white transition-all resize-none"
                   ></textarea>
+                </div>
+
+                <!-- Anexos: acompanham a mensagem enviada para a caixa de leads -->
+                <div>
+                  <label for="lead-quick-files" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Anexar Arquivos <span class="text-slate-400 text-[11px] font-normal">(opcional • até 10 arquivos, 50MB cada)</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="lead-quick-files"
+                    name="documents"
+                    multiple
+                    onchange="updateQuickLeadFileList()"
+                    class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-gold-300 file:bg-gold-50 file:text-gold-800 file:font-bold file:text-xs hover:file:bg-gold-100 file:cursor-pointer cursor-pointer rounded-xl border border-slate-300 bg-slate-50/50 py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  />
+                  <ul id="lead-quick-files-list" class="mt-1.5 space-y-0.5"></ul>
                 </div>
 
                 <p class="text-[11px] text-slate-500 flex items-center space-x-1.5 pt-1">
@@ -2669,12 +2685,17 @@
 
       let clientId = 'JA-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
 
+      const fileInput = document.getElementById('lead-quick-files');
+      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+
       try {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('phone', phone);
         formData.append('area', area);
         formData.append('message', message || 'Solicitação de Consulta Express via site principal.');
+        // Anexos: enviados junto com o lead (campo "documents", lido pelo backend).
+        files.forEach(file => formData.append('documents', file));
 
         const res = await fetch('/api/leads', {
           method: 'POST',
@@ -2700,6 +2721,9 @@
       if (message) {
         waText += `*Resumo do Caso:* ${message}\n`;
       }
+      if (files.length) {
+        waText += `*Anexos enviados ao escritório:* ${files.length} arquivo(s)\n`;
+      }
       waText += `\n_Juiz de Fora - MG | Atendimento Online em Todo o Brasil_`;
 
       const encoded = encodeURIComponent(waText);
@@ -2720,11 +2744,44 @@
       window.open(waUrl, '_blank');
     }
 
+    // Mostra os arquivos selecionados abaixo do campo de anexos (com validação leve).
+    function updateQuickLeadFileList() {
+      const input = document.getElementById('lead-quick-files');
+      const list = document.getElementById('lead-quick-files-list');
+      if (!input || !list) return;
+      const files = input.files ? Array.from(input.files) : [];
+      const MAX_FILES = 10;
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB por arquivo (igual ao backend)
+
+      if (files.length > MAX_FILES) {
+        alert(`Você pode anexar no máximo ${MAX_FILES} arquivos.`);
+        input.value = '';
+        list.innerHTML = '';
+        return;
+      }
+      const oversized = files.find(f => f.size > MAX_SIZE);
+      if (oversized) {
+        alert(`O arquivo "${oversized.name}" excede o limite de 50MB.`);
+        input.value = '';
+        list.innerHTML = '';
+        return;
+      }
+
+      list.innerHTML = files.map(f => {
+        const kb = f.size / 1024;
+        const sizeStr = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB';
+        const safeName = f.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<li class="text-[11px] text-slate-600 flex items-center gap-1.5"><span>📎</span><span class="truncate">${safeName}</span><span class="text-slate-400">(${sizeStr})</span></li>`;
+      }).join('');
+    }
+
     function resetQuickLeadForm() {
       const formContainer = document.getElementById('quick-lead-form-container');
       const successCard = document.getElementById('quick-lead-success');
       const form = document.getElementById('quick-lead-form');
       if (form) form.reset();
+      const list = document.getElementById('lead-quick-files-list');
+      if (list) list.innerHTML = '';
       if (successCard) successCard.classList.add('hidden');
       if (formContainer) formContainer.classList.remove('hidden');
     }

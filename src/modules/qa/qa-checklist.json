@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T17:22:24.121Z",
-  "total": 884,
+  "generated_at": "2026-09-26T11:10:17.702Z",
+  "total": 885,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -1092,6 +1092,17 @@
       "order": 0
     },
     {
+      "id": "QA-9BB97846B1",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Central Segura de Acesso",
+      "kind": "Link",
+      "label": "Clique aqui para cadastrar-se",
+      "action": "/cliente#cadastro",
+      "how": "Clique em “Clique aqui para cadastrar-se”. Confira: abre /cliente#cadastro sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
       "id": "QA-685908F275",
       "page": "Site institucional (página inicial)",
       "url": "/",
@@ -1100,6 +1111,17 @@
       "label": "Enviar Código via WhatsApp 📲",
       "action": "requestModalAdminResetCode",
       "how": "Clique em “Enviar Código via WhatsApp 📲”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 0
+    },
+    {
+      "id": "QA-9F87AF0C89",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Central Segura de Acesso",
+      "kind": "Botão",
+      "label": "Enviar Código por E-mail ✉️",
+      "action": "requestModalAdminResetCode",
+      "how": "Clique em “Enviar Código por E-mail ✉️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 0
     },
     {
@@ -2082,17 +2104,6 @@
       "order": 3000
     },
     {
-      "id": "QA-75E45B8019",
-      "page": "Portal do Colaborador",
-      "url": "/colaborador",
-      "section": "Cabeçalho e menu",
-      "kind": "Link",
-      "label": "🚀 Painel Geral & Foguetes",
-      "action": "/painel",
-      "how": "Clique em “🚀 Painel Geral & Foguetes”. Confira: abre /painel sem erro e com o conteúdo certo.",
-      "order": 3000
-    },
-    {
       "id": "QA-5D7433A51C",
       "page": "Portal do Colaborador",
       "url": "/colaborador",
@@ -2134,17 +2145,6 @@
       "label": "Continuar com a Conta Google",
       "action": "handleEmployeeGoogleLogin",
       "how": "Clique em “Continuar com a Conta Google”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
-      "order": 3000
-    },
-    {
-      "id": "QA-1E04EA392F",
-      "page": "Portal do Colaborador",
-      "url": "/colaborador",
-      "section": "Patricia Souza Silva",
-      "kind": "Link",
-      "label": "🚀 Painel & Foguetes",
-      "action": "/painel",
-      "how": "Clique em “🚀 Painel & Foguetes”. Confira: abre /painel sem erro e com o conteúdo certo.",
       "order": 3000
     },
     {
@@ -7337,6 +7337,17 @@
       "label": "📜 Histórico Completo",
       "action": "switchRoadmapView",
       "how": "Clique em “📜 Histórico Completo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7027
+    },
+    {
+      "id": "QA-8A9C3D7F4C",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Roadmap Vivo",
+      "kind": "Botão",
+      "label": "🧪 Testes Físicos",
+      "action": "switchRoadmapView",
+      "how": "Clique em “🧪 Testes Físicos”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7027
     },
     {
