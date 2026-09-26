@@ -220,6 +220,9 @@ try {
   if (!cliCols.includes('avatar_url')) {
     db.exec(`ALTER TABLE clients ADD COLUMN avatar_url TEXT DEFAULT NULL`);
   }
+  if (!cliCols.includes('birth_date')) {
+    db.exec(`ALTER TABLE clients ADD COLUMN birth_date TEXT DEFAULT NULL`);
+  }
   if (!cliCols.includes('status')) {
     db.exec(`ALTER TABLE clients ADD COLUMN status TEXT DEFAULT 'ativo'`);
   }
