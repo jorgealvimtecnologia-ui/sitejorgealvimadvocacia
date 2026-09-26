@@ -331,7 +331,7 @@
       try {
         const res = await fetch('/api/drive/upload', {
           method: 'POST',
-          headers: getAuthHeaders(),
+          headers: getAuthHeadersMultipart(),
           body: formData
         });
 
