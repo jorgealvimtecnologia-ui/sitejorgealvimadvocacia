@@ -644,10 +644,12 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
  */
 authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) => {
   try {
-    const { username } = req.body;
+    const { username, channel } = req.body;
     if (!username) {
       return res.status(400).json({ error: 'Informe o usuário ou e-mail cadastrado.' });
     }
+    // Canal de entrega escolhido pelo titular: 'email' ou 'whatsapp' (padrão).
+    const deliveryChannel = String(channel).toLowerCase() === 'email' ? 'email' : 'whatsapp';
 
     const rawUsername = String(username).trim();
     const cleanUsername = rawUsername.toLowerCase();
@@ -665,9 +667,13 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
     }
 
     // Resposta idêntica exista ou não o usuário (não revela contas do painel).
+    // A mensagem depende apenas do canal solicitado (mesma entrada para ambos os
+    // casos), preservando a resposta genérica contra enumeração de contas.
     const genericResponse = {
       success: true,
-      message: 'Se o usuário existir, o código de verificação foi enviado ao WhatsApp do Administrador.'
+      message: deliveryChannel === 'email'
+        ? 'Se o usuário existir, o código de verificação foi enviado ao e-mail cadastrado.'
+        : 'Se o usuário existir, o código de verificação foi enviado ao WhatsApp do Administrador.'
     };
     if (!user) return res.json(genericResponse);
 
@@ -678,14 +684,17 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
     db.prepare(`UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?`)
       .run(resetCode, expiresAt, user.id);
 
-    // Código nunca volta na resposta: WhatsApp do escritório (se houver gateway) + notificação só para o mestre
+    // Código nunca volta na resposta: canal escolhido (WhatsApp ou e-mail, se
+    // configurados) + notificação só para o mestre (canal sempre garantido).
     await deliverAccessCode({
       audience: 'painel',
       name: user.name,
       identifier: user.username,
       code: resetCode,
       expiresAt,
-      resourceId: user.id
+      resourceId: user.id,
+      channel: deliveryChannel,
+      recipientEmail: user.google_email || ''
     });
 
     logAudit(req, {

@@ -2856,31 +2856,42 @@
       alertBox.classList.remove('hidden');
     }
 
-    async function requestModalAdminResetCode() {
+    async function requestModalAdminResetCode(channel = 'whatsapp') {
       const userInput = document.getElementById('uauth-reset-username');
-      const sendBtn = document.getElementById('uauth-reset-send-btn');
+      const sendBtnWa = document.getElementById('uauth-reset-send-btn');
+      const sendBtnEmail = document.getElementById('uauth-reset-send-email-btn');
       const username = userInput ? userInput.value.trim() : '';
+      const isEmail = channel === 'email';
+      const activeBtn = isEmail ? sendBtnEmail : sendBtnWa;
 
       if (!username) {
         showUAuthResetAlert('Informe seu nome de usuário ou e-mail cadastrado.', 'error');
         return;
       }
 
-      if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.textContent = 'Enviando código...';
-      }
+      // Desabilita ambos os botões enquanto processa; sinaliza no botão acionado.
+      if (sendBtnWa) sendBtnWa.disabled = true;
+      if (sendBtnEmail) sendBtnEmail.disabled = true;
+      if (activeBtn) activeBtn.textContent = 'Enviando código...';
 
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, channel })
         });
         const data = await res.json();
 
         if (res.ok && data.success) {
-          showUAuthResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          showUAuthResetAlert(isEmail
+            ? 'Código enviado! Verifique o e-mail cadastrado (confira também a caixa de spam).'
+            : 'Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          const step2Hint = document.getElementById('uauth-reset-step2-hint');
+          if (step2Hint) {
+            step2Hint.textContent = isEmail
+              ? 'Código enviado para o e-mail cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).'
+              : 'Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).';
+          }
           document.getElementById('uauth-reset-step-1')?.classList.add('hidden');
           document.getElementById('uauth-reset-step-2')?.classList.remove('hidden');
           setTimeout(() => { document.getElementById('uauth-reset-code')?.focus(); }, 150);
@@ -2890,9 +2901,13 @@
       } catch (e) {
         showUAuthResetAlert('Erro ao conectar ao servidor.', 'error');
       } finally {
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          sendBtn.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        if (sendBtnWa) {
+          sendBtnWa.disabled = false;
+          sendBtnWa.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        }
+        if (sendBtnEmail) {
+          sendBtnEmail.disabled = false;
+          sendBtnEmail.innerHTML = '<span>Enviar Código por E-mail</span> <span>✉️</span>';
         }
       }
     }
@@ -3669,7 +3684,7 @@
               🔐 Recuperar Senha do Administrador
             </h4>
             <p class="text-xs text-slate-500 mt-1">
-              Informe seu usuário para receber um código temporário de verificação enviado diretamente ao WhatsApp do Dr. Jorge Alvim.
+              Informe seu usuário e escolha como receber o código temporário de verificação: pelo <strong>WhatsApp</strong> do Dr. Jorge Alvim ou pelo <strong>e-mail</strong> cadastrado.
             </p>
           </div>
 
@@ -3691,21 +3706,30 @@
                 class="uauth-input"
               />
             </div>
-            <button 
-              type="button" 
-              onclick="requestModalAdminResetCode()" 
-              id="uauth-reset-send-btn" 
+            <button
+              type="button"
+              onclick="requestModalAdminResetCode('whatsapp')"
+              id="uauth-reset-send-btn"
               class="uauth-btn-primary"
             >
               <span>Enviar Código via WhatsApp</span>
               <span>📲</span>
             </button>
+            <button
+              type="button"
+              onclick="requestModalAdminResetCode('email')"
+              id="uauth-reset-send-email-btn"
+              class="uauth-btn-google"
+            >
+              <span>Enviar Código por E-mail</span>
+              <span>✉️</span>
+            </button>
           </div>
 
           <!-- Etapa 2: Validar Código e Nova Senha -->
           <div id="uauth-reset-step-2" class="hidden space-y-3">
-            <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
-              Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
+            <div id="uauth-reset-step2-hint" class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
+              Código enviado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
             </div>
             <div>
               <label for="uauth-reset-code" class="block text-xs font-bold text-slate-700 mb-1">
