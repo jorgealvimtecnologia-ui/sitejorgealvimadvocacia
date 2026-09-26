@@ -180,6 +180,46 @@ clientsRouter.post('/api/clients', requireAuth, (req, res, next) => {
       return res.status(400).json({ error: 'Nome completo e telefone são obrigatórios.' });
     }
 
+    // Controle de duplicidade (item ORD-MUHN47SR-I3Y): evita cadastrar o mesmo
+    // cliente duas vezes. Compara por CPF/CNPJ e RG (só dígitos) e por nome
+    // completo (ignorando maiúsculas/minúsculas e espaços nas pontas).
+    const onlyDigits = (v) => String(v || '').replace(/\D/g, '');
+    const cpfDigits = onlyDigits(cpf);
+    const cnpjDigits = onlyDigits(cnpj);
+    // RG pode conter letras (ex.: "MG-12.345.678"), então normaliza tirando só
+    // pontuação/espaços e comparando em maiúsculas — sem remover as letras.
+    const rgNorm = String(rg || '').replace(/[.\-\s]/g, '').toUpperCase();
+    const nameNorm = String(full_name || '').trim().toLowerCase();
+    let duplicate = null;
+    if (cpfDigits) {
+      duplicate = db.prepare(
+        "SELECT id, full_name FROM clients WHERE cpf IS NOT NULL AND REPLACE(REPLACE(REPLACE(cpf,'.',''),'-',''),' ','') = ? LIMIT 1"
+      ).get(cpfDigits);
+    }
+    if (!duplicate && cnpjDigits) {
+      duplicate = db.prepare(
+        "SELECT id, full_name FROM clients WHERE cnpj IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE(cnpj,'.',''),'-',''),'/',''),' ','') = ? LIMIT 1"
+      ).get(cnpjDigits);
+    }
+    if (!duplicate && rgNorm) {
+      duplicate = db.prepare(
+        "SELECT id, full_name FROM clients WHERE rg IS NOT NULL AND UPPER(REPLACE(REPLACE(REPLACE(rg,'.',''),'-',''),' ','')) = ? LIMIT 1"
+      ).get(rgNorm);
+    }
+    if (!duplicate && nameNorm) {
+      duplicate = db.prepare(
+        'SELECT id, full_name FROM clients WHERE LOWER(TRIM(full_name)) = ? LIMIT 1'
+      ).get(nameNorm);
+    }
+    if (duplicate) {
+      return res.status(409).json({
+        error: `Cliente já possui cadastro: ${duplicate.full_name} (#${duplicate.id}). Verifique o CPF, o RG ou o nome — ou edite o cadastro existente.`,
+        duplicate: true,
+        existingClientId: duplicate.id,
+        existingClientName: duplicate.full_name
+      });
+    }
+
     const cValue = parseFloat(contract_value) || 0;
     const aPaid = parseFloat(amount_paid) || 0;
     const instCount = parseInt(installments_count, 10) || 1;

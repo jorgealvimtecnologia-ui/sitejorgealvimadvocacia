@@ -18,7 +18,6 @@
       'fin-kpi-upcoming':{t:'Parcelas a vencer',r:function(){return arr('allInstallments').filter(function(x){return (x.status||'')!=='Pago';});}},
       'fin-kpi-overdue':{t:'Parcelas vencidas',r:function(){return arr('allInstallments').filter(function(x){return (x.status||'')!=='Pago' && x.due_date && new Date(x.due_date+'T23:59:59')<new Date();});}},
       'fin-kpi-overdue-count':{t:'Parcelas vencidas',r:function(){return arr('allInstallments').filter(function(x){return (x.status||'')!=='Pago' && x.due_date && new Date(x.due_date+'T23:59:59')<new Date();});}},
-      'cli-installments-count':{t:'Parcelas do cliente',r:function(){return arr('allInstallments');}},
       // NFS-e
       'nfse-kpi-total-count':{t:'Notas & Recibos',r:function(){return arr('allNfseInvoices');}},
       'nfse-kpi-total-val':{t:'Notas & Recibos',r:function(){return arr('allNfseInvoices');}},
@@ -107,6 +106,9 @@
     function wire(){
       Object.keys(DRILLS).forEach(function(id){
         var el=document.getElementById(id); if(!el || el.dataset.drillWired) return;
+        // Proteção: nunca transformar campos de formulário (input/select/textarea) em
+        // "número clicável" de drill-down — senão o clique para digitar abriria o modal.
+        if(/^(INPUT|SELECT|TEXTAREA|OPTION)$/.test(el.tagName)) return;
         el.dataset.drillWired='1'; el.classList.add('kpi-drill'); el.title='Clique para ver os dados por trás deste número';
         el.addEventListener('click',function(ev){ ev.stopPropagation(); var cfg=DRILLS[id]; openDrill(cfg.t, cfg.r()); });
       });

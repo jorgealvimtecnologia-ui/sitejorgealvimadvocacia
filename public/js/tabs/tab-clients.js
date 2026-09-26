@@ -649,7 +649,7 @@
       try {
         const res = await fetch(`/api/clients/${id}`, {
           method: 'PUT',
-          headers: getAuthHeaders(),
+          headers: getAuthHeadersMultipart(),
           body: formData
         });
 
@@ -693,7 +693,7 @@
         try {
           const res = await fetch(`/api/clients/${clientId}/upload-document`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: getAuthHeadersMultipart(),
             body: formData
           });
           const data = await res.json();
@@ -1004,7 +1004,7 @@
 
         const res = await fetch(url, {
           method,
-          headers: getAuthHeaders(),
+          headers: getAuthHeadersMultipart(),
           body: formData
         });
 
