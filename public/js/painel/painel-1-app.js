@@ -1014,9 +1014,12 @@
         });
       }
 
-      // 3. Se a aba atual não for permitida ou não inicializada, ativa a aba apropriada
+      // 3. Abertura do painel: NÃO abrir nenhuma aba automaticamente — o usuário
+      // escolhe qual página abrir (ORD-MUHPGHTQ-3OD). Só redirecionamos quando o
+      // usuário JÁ está numa aba que perdeu a permissão (evita tela sem acesso).
+      // Um deep link (ex.: /painel#clients) continua abrindo a aba pedida via hash.
       const current = window._currentActiveTab;
-      if (!current || !TAB_RULES[current]) {
+      if (current && !TAB_RULES[current]) {
         let targetTab = null;
         if (TAB_RULES.clients) targetTab = 'clients';
         else if (TAB_RULES.calendar) targetTab = 'calendar';

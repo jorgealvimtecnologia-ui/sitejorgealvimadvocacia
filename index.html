@@ -1856,13 +1856,29 @@
                   <label for="lead-quick-message" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Sobre o que você precisa? <span class="text-slate-400 text-[11px] font-normal">(Breve resumo)</span>
                   </label>
-                  <textarea 
-                    id="lead-quick-message" 
-                    name="message" 
-                    rows="3" 
-                    placeholder="Descreva resumidamente sua dúvida ou situação jurídica..." 
+                  <textarea
+                    id="lead-quick-message"
+                    name="message"
+                    rows="3"
+                    placeholder="Descreva resumidamente sua dúvida ou situação jurídica..."
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:bg-white transition-all resize-none"
                   ></textarea>
+                </div>
+
+                <!-- Anexos: acompanham a mensagem enviada para a caixa de leads -->
+                <div>
+                  <label for="lead-quick-files" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Anexar Arquivos <span class="text-slate-400 text-[11px] font-normal">(opcional • até 10 arquivos, 50MB cada)</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="lead-quick-files"
+                    name="documents"
+                    multiple
+                    onchange="updateQuickLeadFileList()"
+                    class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-gold-300 file:bg-gold-50 file:text-gold-800 file:font-bold file:text-xs hover:file:bg-gold-100 file:cursor-pointer cursor-pointer rounded-xl border border-slate-300 bg-slate-50/50 py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  />
+                  <ul id="lead-quick-files-list" class="mt-1.5 space-y-0.5"></ul>
                 </div>
 
                 <p class="text-[11px] text-slate-500 flex items-center space-x-1.5 pt-1">
@@ -2178,10 +2194,7 @@
           <p class="text-xs text-slate-800 font-semibold mb-1">Rua Henrique Dias, nº 259, Loja 5</p>
           <p class="text-xs text-slate-600 mb-2">Bairro Benfica, Juiz de Fora - MG</p>
           <p class="text-xs text-slate-800 font-semibold mb-1">WhatsApp: (32) 99815-3429</p>
-          <p class="text-xs text-slate-600 mb-3">jorgealvimadvocacia@gmail.com</p>
-          <a href="#contato" class="inline-block text-xs text-gold-700 hover:text-gold-800 font-bold underline">
-            Enviar documentos para análise →
-          </a>
+          <p class="text-xs text-slate-600">jorgealvimadvocacia@gmail.com</p>
         </div>
 
       </div>
@@ -2669,12 +2682,17 @@
 
       let clientId = 'JA-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
 
+      const fileInput = document.getElementById('lead-quick-files');
+      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+
       try {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('phone', phone);
         formData.append('area', area);
         formData.append('message', message || 'Solicitação de Consulta Express via site principal.');
+        // Anexos: enviados junto com o lead (campo "documents", lido pelo backend).
+        files.forEach(file => formData.append('documents', file));
 
         const res = await fetch('/api/leads', {
           method: 'POST',
@@ -2700,6 +2718,9 @@
       if (message) {
         waText += `*Resumo do Caso:* ${message}\n`;
       }
+      if (files.length) {
+        waText += `*Anexos enviados ao escritório:* ${files.length} arquivo(s)\n`;
+      }
       waText += `\n_Juiz de Fora - MG | Atendimento Online em Todo o Brasil_`;
 
       const encoded = encodeURIComponent(waText);
@@ -2720,11 +2741,44 @@
       window.open(waUrl, '_blank');
     }
 
+    // Mostra os arquivos selecionados abaixo do campo de anexos (com validação leve).
+    function updateQuickLeadFileList() {
+      const input = document.getElementById('lead-quick-files');
+      const list = document.getElementById('lead-quick-files-list');
+      if (!input || !list) return;
+      const files = input.files ? Array.from(input.files) : [];
+      const MAX_FILES = 10;
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB por arquivo (igual ao backend)
+
+      if (files.length > MAX_FILES) {
+        alert(`Você pode anexar no máximo ${MAX_FILES} arquivos.`);
+        input.value = '';
+        list.innerHTML = '';
+        return;
+      }
+      const oversized = files.find(f => f.size > MAX_SIZE);
+      if (oversized) {
+        alert(`O arquivo "${oversized.name}" excede o limite de 50MB.`);
+        input.value = '';
+        list.innerHTML = '';
+        return;
+      }
+
+      list.innerHTML = files.map(f => {
+        const kb = f.size / 1024;
+        const sizeStr = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB';
+        const safeName = f.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<li class="text-[11px] text-slate-600 flex items-center gap-1.5"><span>📎</span><span class="truncate">${safeName}</span><span class="text-slate-400">(${sizeStr})</span></li>`;
+      }).join('');
+    }
+
     function resetQuickLeadForm() {
       const formContainer = document.getElementById('quick-lead-form-container');
       const successCard = document.getElementById('quick-lead-success');
       const form = document.getElementById('quick-lead-form');
       if (form) form.reset();
+      const list = document.getElementById('lead-quick-files-list');
+      if (list) list.innerHTML = '';
       if (successCard) successCard.classList.add('hidden');
       if (formContainer) formContainer.classList.remove('hidden');
     }
@@ -2856,31 +2910,42 @@
       alertBox.classList.remove('hidden');
     }
 
-    async function requestModalAdminResetCode() {
+    async function requestModalAdminResetCode(channel = 'whatsapp') {
       const userInput = document.getElementById('uauth-reset-username');
-      const sendBtn = document.getElementById('uauth-reset-send-btn');
+      const sendBtnWa = document.getElementById('uauth-reset-send-btn');
+      const sendBtnEmail = document.getElementById('uauth-reset-send-email-btn');
       const username = userInput ? userInput.value.trim() : '';
+      const isEmail = channel === 'email';
+      const activeBtn = isEmail ? sendBtnEmail : sendBtnWa;
 
       if (!username) {
         showUAuthResetAlert('Informe seu nome de usuário ou e-mail cadastrado.', 'error');
         return;
       }
 
-      if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.textContent = 'Enviando código...';
-      }
+      // Desabilita ambos os botões enquanto processa; sinaliza no botão acionado.
+      if (sendBtnWa) sendBtnWa.disabled = true;
+      if (sendBtnEmail) sendBtnEmail.disabled = true;
+      if (activeBtn) activeBtn.textContent = 'Enviando código...';
 
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, channel })
         });
         const data = await res.json();
 
         if (res.ok && data.success) {
-          showUAuthResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          showUAuthResetAlert(isEmail
+            ? 'Código enviado! Verifique o e-mail cadastrado (confira também a caixa de spam).'
+            : 'Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          const step2Hint = document.getElementById('uauth-reset-step2-hint');
+          if (step2Hint) {
+            step2Hint.textContent = isEmail
+              ? 'Código enviado para o e-mail cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).'
+              : 'Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).';
+          }
           document.getElementById('uauth-reset-step-1')?.classList.add('hidden');
           document.getElementById('uauth-reset-step-2')?.classList.remove('hidden');
           setTimeout(() => { document.getElementById('uauth-reset-code')?.focus(); }, 150);
@@ -2890,9 +2955,13 @@
       } catch (e) {
         showUAuthResetAlert('Erro ao conectar ao servidor.', 'error');
       } finally {
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          sendBtn.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        if (sendBtnWa) {
+          sendBtnWa.disabled = false;
+          sendBtnWa.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        }
+        if (sendBtnEmail) {
+          sendBtnEmail.disabled = false;
+          sendBtnEmail.innerHTML = '<span>Enviar Código por E-mail</span> <span>✉️</span>';
         }
       }
     }
@@ -3669,7 +3738,7 @@
               🔐 Recuperar Senha do Administrador
             </h4>
             <p class="text-xs text-slate-500 mt-1">
-              Informe seu usuário para receber um código temporário de verificação enviado diretamente ao WhatsApp do Dr. Jorge Alvim.
+              Informe seu usuário e escolha como receber o código temporário de verificação: pelo <strong>WhatsApp</strong> do Dr. Jorge Alvim ou pelo <strong>e-mail</strong> cadastrado.
             </p>
           </div>
 
@@ -3691,21 +3760,30 @@
                 class="uauth-input"
               />
             </div>
-            <button 
-              type="button" 
-              onclick="requestModalAdminResetCode()" 
-              id="uauth-reset-send-btn" 
+            <button
+              type="button"
+              onclick="requestModalAdminResetCode('whatsapp')"
+              id="uauth-reset-send-btn"
               class="uauth-btn-primary"
             >
               <span>Enviar Código via WhatsApp</span>
               <span>📲</span>
             </button>
+            <button
+              type="button"
+              onclick="requestModalAdminResetCode('email')"
+              id="uauth-reset-send-email-btn"
+              class="uauth-btn-google"
+            >
+              <span>Enviar Código por E-mail</span>
+              <span>✉️</span>
+            </button>
           </div>
 
           <!-- Etapa 2: Validar Código e Nova Senha -->
           <div id="uauth-reset-step-2" class="hidden space-y-3">
-            <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
-              Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
+            <div id="uauth-reset-step2-hint" class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
+              Código enviado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
             </div>
             <div>
               <label for="uauth-reset-code" class="block text-xs font-bold text-slate-700 mb-1">
