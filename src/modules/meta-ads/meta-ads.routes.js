@@ -546,6 +546,18 @@ metaAdsRouter.post('/api/meta-ads/posts', requireAuth, uploadMarketing.single('m
       };
     }
 
+    // Resiliência: se a integração real com a Meta completou mas NÃO retornou um id
+    // (ex.: token inválido, erro da API ou resposta sem `id`), o material NÃO é perdido —
+    // gravamos como rascunho simulado, o mesmo comportamento do catch e do modo não
+    // configurado. Assim o anúncio fica salvo para reenvio quando a Meta estiver ok.
+    if (!metaAdId) {
+      metaAdId = `meta_ad_sim_${Date.now()}`;
+      if (!metaCreativeId) metaCreativeId = `meta_cr_sim_${Date.now()}`;
+      if (!['ACTIVE', 'SENT_TO_META_PAUSED', 'PUBLISHED_ORGANIC'].includes(status)) {
+        status = 'SIMULATED_DRAFT';
+      }
+    }
+
     // Persistir no Banco de Dados com configuração ampla de público e orçamento
     const insertStmt = db.prepare(`
       INSERT INTO meta_marketing_posts (
