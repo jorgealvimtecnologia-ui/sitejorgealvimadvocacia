@@ -1754,7 +1754,7 @@ let __indexHtmlCache = { mtimeMs: 0, envSig: '', html: null };
 function renderIndexHtml() {
   const file = path.join(__dirname, 'index.html');
   const stat = fs.statSync(file);
-  const pixel = (process.env.META_PIXEL_ID || '').trim();
+  const pixel = (process.env.META_PIXEL_ID || '1773978237179877').trim();
   const ga = (process.env.GA_MEASUREMENT_ID || '').trim();
   const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '').trim();
   const gscVerify = (process.env.GSC_VERIFICATION || '').trim();

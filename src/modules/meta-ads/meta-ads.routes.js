@@ -107,7 +107,8 @@ const officialMetaDefaults = [
   ['meta_instagram_account_id', '17841460928822628'],
   ['meta_ad_account_id', '705653348893835'],
   ['meta_whatsapp_account_id', '114822078371308'],
-  ['meta_page_id', '696494846890195']
+  ['meta_page_id', '696494846890195'],
+  ['meta_pixel_id', '1773978237179877']
 ];
 for (const [k, v] of officialMetaDefaults) {
   try {
