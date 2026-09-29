@@ -1756,7 +1756,7 @@ function renderIndexHtml() {
   const stat = fs.statSync(file);
   const pixel = (process.env.META_PIXEL_ID || '1773978237179877').trim();
   const ga = (process.env.GA_MEASUREMENT_ID || '').trim();
-  const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '').trim();
+  const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '4muf0aevm7zirobf01gdphiva6op9z').trim();
   const gscVerify = (process.env.GSC_VERIFICATION || '').trim();
   const envSig = [pixel, ga, fbVerify, gscVerify].join('|');
 
