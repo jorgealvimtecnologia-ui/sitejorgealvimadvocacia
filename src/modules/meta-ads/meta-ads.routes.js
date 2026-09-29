@@ -104,7 +104,7 @@ for (const col of adPostColumns) {
 
 // Semeador seguro das contas oficiais da Meta (Instagram, Ads, WhatsApp, Página)
 const officialMetaDefaults = [
-  ['meta_instagram_account_id', '17841460928822628'],
+  ['meta_instagram_account_id', '17841460928822028'],
   ['meta_ad_account_id', '705653348893835'],
   ['meta_whatsapp_account_id', '114822078371308'],
   ['meta_page_id', '696494846890195'],

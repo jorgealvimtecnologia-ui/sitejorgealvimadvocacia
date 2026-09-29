@@ -784,7 +784,7 @@ blogRouter.post('/api/blog/posts/:id/share-social', requireAuth, async (req, res
 
     const metaToken = getSetting('meta_system_user_token', 'META_SYSTEM_USER_TOKEN');
     const pageId = getSetting('meta_page_id', 'META_PAGE_ID') || '696494846890195';
-    const igAccountId = getSetting('meta_instagram_account_id', 'META_INSTAGRAM_ACCOUNT_ID') || '17841460928822628';
+    const igAccountId = getSetting('meta_instagram_account_id', 'META_INSTAGRAM_ACCOUNT_ID') || '17841460928822028';
 
     if (!metaToken) {
       return res.json({
