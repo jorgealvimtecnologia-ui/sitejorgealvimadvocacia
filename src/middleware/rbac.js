@@ -40,6 +40,7 @@ const RULES = [
   [/^\/api\/analytics\/(event|consent)\b/, PUBLIC],
   [/^\/api\/lgpd\/request\b/, PUBLIC, ['POST']],
   [/^\/api\/leads\/?$/, PUBLIC, ['POST']],            // captação de leads pelo site (só POST)
+  [/^\/api\/recaptcha\//, PUBLIC],                    // configuração pública do reCAPTCHA
   [/^\/api\/agent\/roadmap/, PUBLIC],                 // API dos agentes: tem chave própria (X-Roadmap-Agent-Key)
 
   // ---- Portais (só o próprio titular logado) ----
