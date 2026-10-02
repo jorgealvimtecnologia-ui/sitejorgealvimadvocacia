@@ -62,6 +62,7 @@ import { roadmapRouter } from './src/modules/roadmap/roadmap.routes.js';
 import { roadmapAgentRouter } from './src/modules/roadmap/roadmap.agent.js';
 import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
+import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 
 
@@ -1609,9 +1610,9 @@ app.use((req, res, next) => {
     "img-src 'self' data: blob: https: https://lh3.googleusercontent.com https://www.googletagmanager.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
     "connect-src 'self' https: https://accounts.google.com https://oauth2.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net",
-    "frame-src 'self' https: https://accounts.google.com https://www.googletagmanager.com https://www.google.com https://maps.google.com"
+    "frame-src 'self' https: https://accounts.google.com https://www.googletagmanager.com https://www.google.com https://maps.google.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/"
   ].join('; '));
   next();
 });
@@ -1691,6 +1692,7 @@ app.use(roadmapRouter);
 app.use(roadmapAgentRouter);
 app.use(qaRouter);
 app.use(ocrRouter);
+app.use(recaptchaRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
@@ -1759,9 +1761,10 @@ function renderIndexHtml() {
   const gtm = (process.env.GTM_CONTAINER_ID || '').trim();
   const gads = (process.env.GOOGLE_ADS_ID || '').trim();
   const mapsKey = (process.env.GOOGLE_MAPS_API_KEY || '').trim();
+  const recaptchaKey = (process.env.RECAPTCHA_SITE_KEY || '').trim();
   const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '4muf0aevm7zirobf01gdphiva6op9z').trim();
   const gscVerify = (process.env.GSC_VERIFICATION || '').trim();
-  const envSig = [pixel, ga, gtm, gads, mapsKey, fbVerify, gscVerify].join('|');
+  const envSig = [pixel, ga, gtm, gads, mapsKey, recaptchaKey, fbVerify, gscVerify].join('|');
 
   if (__indexHtmlCache.html && __indexHtmlCache.mtimeMs === stat.mtimeMs && __indexHtmlCache.envSig === envSig) {
     return __indexHtmlCache.html;
@@ -1821,6 +1824,14 @@ function renderIndexHtml() {
   if (mapsKey) {
     const mapsEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=Rua+Henrique+Dias,+259+-+Benfica,+Juiz+de+Fora+-+MG,+36080-000`;
     html = html.replace(/src="https:\/\/maps\.google\.com\/maps\?q=[^"]*"/, `src="${mapsEmbedUrl}"`);
+  }
+
+  // Google reCAPTCHA v3 (Anti-Abuso Invisível)
+  if (recaptchaKey) {
+    const recaptchaSnippet = `  <!-- Google reCAPTCHA v3 -->\n` +
+      `  <script src="https://www.google.com/recaptcha/api.js?render=${recaptchaKey}" async defer></script>\n` +
+      `  <script>window.__RECAPTCHA_SITE_KEY='${recaptchaKey}';</script>\n</head>`;
+    html = html.replace('</head>', recaptchaSnippet);
   }
 
   html = versionAssets(html);

@@ -2618,9 +2618,24 @@
         }, false);
       }
 
-      // Previne que arrastar uma foto fora do dropzone substitua a página no navegador
-      window.addEventListener('dragover', (e) => e.preventDefault(), false);
-      window.addEventListener('drop', (e) => e.preventDefault(), false);
+      // Google reCAPTCHA v3 (obtenção de token transparente para proteção anti-robô)
+      window.getRecaptchaToken = async function(action = 'lead_submit') {
+        if (typeof window.grecaptcha === 'undefined' || !window.__RECAPTCHA_SITE_KEY) return null;
+        try {
+          return await new Promise((resolve) => {
+            window.grecaptcha.ready(async () => {
+              try {
+                const token = await window.grecaptcha.execute(window.__RECAPTCHA_SITE_KEY, { action });
+                resolve(token);
+              } catch (_) {
+                resolve(null);
+              }
+            });
+          });
+        } catch (_) {
+          return null;
+        }
+      };
 
       // 5. ENVIO DUPLO: Salva no Servidor (SQLite + Ficheiro) e Abre o WhatsApp
       const form = document.getElementById('contact-form');
@@ -2667,6 +2682,12 @@
             selectedFiles.forEach(file => {
               formData.append('documents', file);
             });
+
+            // Token Google reCAPTCHA v3 (se habilitado)
+            if (typeof window.getRecaptchaToken === 'function') {
+              const rcToken = await window.getRecaptchaToken('lead_submit');
+              if (rcToken) formData.append('recaptcha_token', rcToken);
+            }
 
             // Envia para o servidor local
             const response = await fetch('/api/leads', {
@@ -2764,6 +2785,12 @@
         formData.append('message', message || 'Solicitação de Consulta Express via site principal.');
         // Anexos: enviados junto com o lead (campo "documents", lido pelo backend).
         files.forEach(file => formData.append('documents', file));
+
+        // Token Google reCAPTCHA v3 (se habilitado)
+        if (typeof window.getRecaptchaToken === 'function') {
+          const rcToken = await window.getRecaptchaToken('lead_submit');
+          if (rcToken) formData.append('recaptcha_token', rcToken);
+        }
 
         const res = await fetch('/api/leads', {
           method: 'POST',

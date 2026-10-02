@@ -11,6 +11,7 @@ import { uploadClientDoc } from '../../middleware/upload.js';
 import { STORAGE_DIR } from '../../config/constants.js';
 import { generateNextClientId } from '../../shared/ids.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
+import { requireRecaptcha } from '../recaptcha/recaptcha.middleware.js';
 
 export const leadsRouter = express.Router();
 
@@ -108,7 +109,7 @@ function ensureClientFromLead(lead, performer) {
 leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
   req.clientId = generateNextClientId();
   next();
-}, uploadClientDoc.array('documents', 10), leadHoneypot, (req, res) => {
+}, uploadClientDoc.array('documents', 10), leadHoneypot, requireRecaptcha('lead_submit'), (req, res) => {
   try {
     const { name, phone, area, message, email, cpf, city, social_media, website, google_business } = req.body;
     const clientId = req.clientId;
