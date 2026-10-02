@@ -373,7 +373,7 @@
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGoogleGsiLoaded && window.__onGoogleGsiLoaded()"></script>
   <script src="./js/google-auth-client.js" defer></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BSqhiNrk.css">
+  <link rel="stylesheet" crossorigin href="./assets/index-B_lzEDTa.css">
 </head>
 
 <body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
@@ -579,9 +579,9 @@
         <div class="absolute inset-0 bg-gradient-to-t from-warm-50 via-transparent to-white/90"></div>
       </div>
 
-      <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full min-w-0">
         
-        <div class="inline-flex items-center space-x-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white border border-gold-400/60 text-navy-950 text-[11px] xs:text-xs sm:text-sm font-semibold mb-5 sm:mb-6 shadow-sm max-w-full">
+        <div class="inline-flex max-w-full items-center space-x-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white border border-gold-400/60 text-navy-950 text-[11px] xs:text-xs sm:text-sm font-semibold mb-5 sm:mb-6 shadow-sm max-w-full">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
           <span class="truncate font-medium text-slate-800">Juiz de Fora - MG • Benfica & Atendimento Online em Todo o Brasil</span>
         </div>
@@ -1860,13 +1860,29 @@
                   <label for="lead-quick-message" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Sobre o que você precisa? <span class="text-slate-400 text-[11px] font-normal">(Breve resumo)</span>
                   </label>
-                  <textarea 
-                    id="lead-quick-message" 
-                    name="message" 
-                    rows="3" 
-                    placeholder="Descreva resumidamente sua dúvida ou situação jurídica..." 
+                  <textarea
+                    id="lead-quick-message"
+                    name="message"
+                    rows="3"
+                    placeholder="Descreva resumidamente sua dúvida ou situação jurídica..."
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:bg-white transition-all resize-none"
                   ></textarea>
+                </div>
+
+                <!-- Anexos: acompanham a mensagem enviada para a caixa de leads -->
+                <div>
+                  <label for="lead-quick-files" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Anexar Arquivos <span class="text-slate-400 text-[11px] font-normal">(opcional • até 10 arquivos, 50MB cada)</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="lead-quick-files"
+                    name="documents"
+                    multiple
+                    onchange="updateQuickLeadFileList()"
+                    class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-gold-300 file:bg-gold-50 file:text-gold-800 file:font-bold file:text-xs hover:file:bg-gold-100 file:cursor-pointer cursor-pointer rounded-xl border border-slate-300 bg-slate-50/50 py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  />
+                  <ul id="lead-quick-files-list" class="mt-1.5 space-y-0.5"></ul>
                 </div>
 
                 <p class="text-[11px] text-slate-500 flex items-center space-x-1.5 pt-1">
@@ -2005,79 +2021,146 @@
 
         </div>
 
-        <!-- ================= QUATRO BOXES DE ANÚNCIOS ================= -->
+        <!-- ================= OITO BOXES DE PRODUTOS (AFILIADOS AMAZON) ================= -->
         <div class="border-t border-slate-200 pt-10 sm:pt-14">
-          <div class="text-center mb-8">
+          <div class="text-center mb-3">
             <span class="inline-block px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
-              Parceiros &amp; Informações Úteis
+              Indicações do Dr. Jorge &bull; Produtos Úteis
             </span>
           </div>
+          <p class="text-center text-slate-400 text-[11px] leading-relaxed max-w-2xl mx-auto mb-8">
+            Sugestões de produtos para advogados e escritórios. Como Associado Amazon, o escritório pode receber comissão por compras qualificadas &mdash; sem custo extra para você.
+          </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
 
-            <!-- Box Anúncio 1 -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+            <!-- Produto 1: Notebook -->
+            <a href="https://www.amazon.com.br/s?k=Notebook+Dell+Inspiron+15+i5+16GB+SSD+512GB&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
               <div class="h-2 bg-gradient-to-r from-amber-400 to-gold-500"></div>
               <div class="p-5 sm:p-6 space-y-3">
                 <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-xl">
-                  🚗
+                  💻
                 </div>
-                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Direito de Trânsito &amp; CNH</h4>
-                <p class="text-slate-500 text-xs leading-relaxed">Defesa de multas, suspensão de CNH, recursos administrativos e ações de reparação de danos.</p>
-                <a href="#areas" class="inline-flex items-center space-x-1 text-xs font-bold text-gold-700 hover:text-gold-800 transition-colors group-hover:underline">
-                  <span>Saiba mais</span>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Notebook para Advogados</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Modelos potentes para petições, audiências online e o home office jurídico.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-gold-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
                   <span>→</span>
-                </a>
+                </span>
               </div>
-            </div>
+            </a>
 
-            <!-- Box Anúncio 2 -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+            <!-- Produto 2: Livros de Direito Saraiva -->
+            <a href="https://www.amazon.com.br/s?k=livros+de+direito+Saraiva&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
               <div class="h-2 bg-gradient-to-r from-emerald-400 to-emerald-500"></div>
               <div class="p-5 sm:p-6 space-y-3">
                 <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-xl">
-                  👨‍👩‍👧
+                  📚
                 </div>
-                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Direito de Família</h4>
-                <p class="text-slate-500 text-xs leading-relaxed">Divórcio consensual e litigioso, guarda de filhos, pensão alimentícia e união estável.</p>
-                <a href="#areas" class="inline-flex items-center space-x-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors group-hover:underline">
-                  <span>Saiba mais</span>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Livros de Direito (Saraiva)</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Doutrina, códigos comentados e obras jurídicas atualizadas da editora Saraiva.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-emerald-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
                   <span>→</span>
-                </a>
+                </span>
               </div>
-            </div>
+            </a>
 
-            <!-- Box Anúncio 3 -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+            <!-- Produto 3: Kindle / Leitura Amazon -->
+            <a href="https://www.amazon.com.br/s?k=Kindle+Paperwhite+16GB&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
               <div class="h-2 bg-gradient-to-r from-blue-400 to-blue-500"></div>
               <div class="p-5 sm:p-6 space-y-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-xl">
-                  📋
+                  📖
                 </div>
-                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Direito Civil &amp; Contratos</h4>
-                <p class="text-slate-500 text-xs leading-relaxed">Revisão e elaboração de contratos, cobranças judiciais, indenizações e direito do consumidor.</p>
-                <a href="#areas" class="inline-flex items-center space-x-1 text-xs font-bold text-blue-700 hover:text-blue-800 transition-colors group-hover:underline">
-                  <span>Saiba mais</span>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Kindle &amp; Leitura Digital</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Leve toda a jurisprudência, acórdãos e códigos na pasta, sem peso.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-blue-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
                   <span>→</span>
-                </a>
+                </span>
               </div>
-            </div>
+            </a>
 
-            <!-- Box Anúncio 4 -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+            <!-- Produto 4: Celular Samsung -->
+            <a href="https://www.amazon.com.br/s?k=Samsung+Galaxy+S24+Ultra+5G&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
               <div class="h-2 bg-gradient-to-r from-violet-400 to-violet-500"></div>
               <div class="p-5 sm:p-6 space-y-3">
                 <div class="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center text-xl">
+                  📱
+                </div>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Celulares Samsung Galaxy</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Smartphones para agenda, e-mail, assinatura digital e atendimento ao cliente.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-violet-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
+                  <span>→</span>
+                </span>
+              </div>
+            </a>
+
+            <!-- Produto 5: iPhone -->
+            <a href="https://www.amazon.com.br/s?k=iPhone+15+Pro+256GB&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+              <div class="h-2 bg-gradient-to-r from-slate-400 to-slate-600"></div>
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-xl">
+                  🍎
+                </div>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">iPhone (Apple)</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Modelos Apple com segurança e integração para a rotina do advogado.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-slate-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
+                  <span>→</span>
+                </span>
+              </div>
+            </a>
+
+            <!-- Produto 6: Acessórios para Advogados -->
+            <a href="https://www.amazon.com.br/s?k=kit+caneta+executiva+pasta+couro+advogado&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+              <div class="h-2 bg-gradient-to-r from-rose-400 to-rose-500"></div>
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-xl">
+                  🖊️
+                </div>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Acessórios para Advogados</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Canetas executivas, pastas de couro e itens que reforçam a imagem profissional.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-rose-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
+                  <span>→</span>
+                </span>
+              </div>
+            </a>
+
+            <!-- Produto 7: Enfeites para Escritório -->
+            <a href="https://www.amazon.com.br/s?k=estatua+deusa+da+justica+decoracao+escritorio+advocacia&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+              <div class="h-2 bg-gradient-to-r from-cyan-400 to-cyan-500"></div>
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-xl">
                   🏛️
                 </div>
-                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Previdenciário &amp; Trabalhista</h4>
-                <p class="text-slate-500 text-xs leading-relaxed">Aposentadoria, benefícios INSS, rescisões, horas extras, assédio e direitos do trabalhador.</p>
-                <a href="#areas" class="inline-flex items-center space-x-1 text-xs font-bold text-violet-700 hover:text-violet-800 transition-colors group-hover:underline">
-                  <span>Saiba mais</span>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Enfeites para Escritório</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Estátuas da Justiça, quadros e decoração para um escritório de advocacia elegante.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-cyan-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
                   <span>→</span>
-                </a>
+                </span>
               </div>
-            </div>
+            </a>
+
+            <!-- Produto 8: Impressora Multifuncional -->
+            <a href="https://www.amazon.com.br/s?k=impressora+multifuncional+wifi&tag=sitejorgealvi-20" target="_blank" rel="noopener noreferrer sponsored" class="block bg-white rounded-2xl border border-slate-200 shadow-card-light hover:shadow-card-hover transition-all duration-300 overflow-hidden group">
+              <div class="h-2 bg-gradient-to-r from-indigo-400 to-indigo-500"></div>
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xl">
+                  🖨️
+                </div>
+                <h4 class="font-serif font-bold text-navy-950 text-base leading-snug">Impressora Multifuncional</h4>
+                <p class="text-slate-500 text-xs leading-relaxed">Imprima, digitalize e copie petições e documentos com praticidade no escritório.</p>
+                <span class="inline-flex items-center space-x-1 text-xs font-bold text-indigo-700 group-hover:underline">
+                  <span>Ver na Amazon</span>
+                  <span>→</span>
+                </span>
+              </div>
+            </a>
 
           </div>
         </div>
@@ -2182,10 +2265,7 @@
           <p class="text-xs text-slate-800 font-semibold mb-1">Rua Henrique Dias, nº 259, Loja 5</p>
           <p class="text-xs text-slate-600 mb-2">Bairro Benfica, Juiz de Fora - MG</p>
           <p class="text-xs text-slate-800 font-semibold mb-1">WhatsApp: (32) 99815-3429</p>
-          <p class="text-xs text-slate-600 mb-3">jorgealvimadvocacia@gmail.com</p>
-          <a href="#contato" class="inline-block text-xs text-gold-700 hover:text-gold-800 font-bold underline">
-            Enviar documentos para análise →
-          </a>
+          <p class="text-xs text-slate-600">jorgealvimadvocacia@gmail.com</p>
         </div>
 
       </div>
@@ -2673,12 +2753,17 @@
 
       let clientId = 'JA-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
 
+      const fileInput = document.getElementById('lead-quick-files');
+      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+
       try {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('phone', phone);
         formData.append('area', area);
         formData.append('message', message || 'Solicitação de Consulta Express via site principal.');
+        // Anexos: enviados junto com o lead (campo "documents", lido pelo backend).
+        files.forEach(file => formData.append('documents', file));
 
         const res = await fetch('/api/leads', {
           method: 'POST',
@@ -2704,6 +2789,9 @@
       if (message) {
         waText += `*Resumo do Caso:* ${message}\n`;
       }
+      if (files.length) {
+        waText += `*Anexos enviados ao escritório:* ${files.length} arquivo(s)\n`;
+      }
       waText += `\n_Juiz de Fora - MG | Atendimento Online em Todo o Brasil_`;
 
       const encoded = encodeURIComponent(waText);
@@ -2724,11 +2812,44 @@
       window.open(waUrl, '_blank');
     }
 
+    // Mostra os arquivos selecionados abaixo do campo de anexos (com validação leve).
+    function updateQuickLeadFileList() {
+      const input = document.getElementById('lead-quick-files');
+      const list = document.getElementById('lead-quick-files-list');
+      if (!input || !list) return;
+      const files = input.files ? Array.from(input.files) : [];
+      const MAX_FILES = 10;
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB por arquivo (igual ao backend)
+
+      if (files.length > MAX_FILES) {
+        alert(`Você pode anexar no máximo ${MAX_FILES} arquivos.`);
+        input.value = '';
+        list.innerHTML = '';
+        return;
+      }
+      const oversized = files.find(f => f.size > MAX_SIZE);
+      if (oversized) {
+        alert(`O arquivo "${oversized.name}" excede o limite de 50MB.`);
+        input.value = '';
+        list.innerHTML = '';
+        return;
+      }
+
+      list.innerHTML = files.map(f => {
+        const kb = f.size / 1024;
+        const sizeStr = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB';
+        const safeName = f.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<li class="text-[11px] text-slate-600 flex items-center gap-1.5"><span>📎</span><span class="truncate">${safeName}</span><span class="text-slate-400">(${sizeStr})</span></li>`;
+      }).join('');
+    }
+
     function resetQuickLeadForm() {
       const formContainer = document.getElementById('quick-lead-form-container');
       const successCard = document.getElementById('quick-lead-success');
       const form = document.getElementById('quick-lead-form');
       if (form) form.reset();
+      const list = document.getElementById('lead-quick-files-list');
+      if (list) list.innerHTML = '';
       if (successCard) successCard.classList.add('hidden');
       if (formContainer) formContainer.classList.remove('hidden');
     }
@@ -2860,31 +2981,42 @@
       alertBox.classList.remove('hidden');
     }
 
-    async function requestModalAdminResetCode() {
+    async function requestModalAdminResetCode(channel = 'whatsapp') {
       const userInput = document.getElementById('uauth-reset-username');
-      const sendBtn = document.getElementById('uauth-reset-send-btn');
+      const sendBtnWa = document.getElementById('uauth-reset-send-btn');
+      const sendBtnEmail = document.getElementById('uauth-reset-send-email-btn');
       const username = userInput ? userInput.value.trim() : '';
+      const isEmail = channel === 'email';
+      const activeBtn = isEmail ? sendBtnEmail : sendBtnWa;
 
       if (!username) {
         showUAuthResetAlert('Informe seu nome de usuário ou e-mail cadastrado.', 'error');
         return;
       }
 
-      if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.textContent = 'Enviando código...';
-      }
+      // Desabilita ambos os botões enquanto processa; sinaliza no botão acionado.
+      if (sendBtnWa) sendBtnWa.disabled = true;
+      if (sendBtnEmail) sendBtnEmail.disabled = true;
+      if (activeBtn) activeBtn.textContent = 'Enviando código...';
 
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, channel })
         });
         const data = await res.json();
 
         if (res.ok && data.success) {
-          showUAuthResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          showUAuthResetAlert(isEmail
+            ? 'Código enviado! Verifique o e-mail cadastrado (confira também a caixa de spam).'
+            : 'Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+          const step2Hint = document.getElementById('uauth-reset-step2-hint');
+          if (step2Hint) {
+            step2Hint.textContent = isEmail
+              ? 'Código enviado para o e-mail cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).'
+              : 'Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).';
+          }
           document.getElementById('uauth-reset-step-1')?.classList.add('hidden');
           document.getElementById('uauth-reset-step-2')?.classList.remove('hidden');
           setTimeout(() => { document.getElementById('uauth-reset-code')?.focus(); }, 150);
@@ -2894,9 +3026,13 @@
       } catch (e) {
         showUAuthResetAlert('Erro ao conectar ao servidor.', 'error');
       } finally {
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          sendBtn.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        if (sendBtnWa) {
+          sendBtnWa.disabled = false;
+          sendBtnWa.innerHTML = '<span>Enviar Código via WhatsApp</span> <span>📲</span>';
+        }
+        if (sendBtnEmail) {
+          sendBtnEmail.disabled = false;
+          sendBtnEmail.innerHTML = '<span>Enviar Código por E-mail</span> <span>✉️</span>';
         }
       }
     }
@@ -3658,6 +3794,12 @@
             </svg>
             <span id="uauth-google-btn-text">Entrar com a Conta Google</span>
           </button>
+
+          <!-- Cadastro de novo cliente -->
+          <p class="text-center text-xs text-slate-500 mt-4 pt-3 border-t border-slate-100">
+            Não é cliente ainda?
+            <a href="/cliente#cadastro" class="font-bold text-gold-700 hover:text-gold-900 hover:underline">Clique aqui para cadastrar-se</a>
+          </p>
         </div>
 
         <!-- CONTAINER DE RECUPERAÇÃO DE SENHA (ADMIN) -->
@@ -3667,7 +3809,7 @@
               🔐 Recuperar Senha do Administrador
             </h4>
             <p class="text-xs text-slate-500 mt-1">
-              Informe seu usuário para receber um código temporário de verificação enviado diretamente ao WhatsApp do Dr. Jorge Alvim.
+              Informe seu usuário e escolha como receber o código temporário de verificação: pelo <strong>WhatsApp</strong> do Dr. Jorge Alvim ou pelo <strong>e-mail</strong> cadastrado.
             </p>
           </div>
 
@@ -3689,21 +3831,30 @@
                 class="uauth-input"
               />
             </div>
-            <button 
-              type="button" 
-              onclick="requestModalAdminResetCode()" 
-              id="uauth-reset-send-btn" 
+            <button
+              type="button"
+              onclick="requestModalAdminResetCode('whatsapp')"
+              id="uauth-reset-send-btn"
               class="uauth-btn-primary"
             >
               <span>Enviar Código via WhatsApp</span>
               <span>📲</span>
             </button>
+            <button
+              type="button"
+              onclick="requestModalAdminResetCode('email')"
+              id="uauth-reset-send-email-btn"
+              class="uauth-btn-google"
+            >
+              <span>Enviar Código por E-mail</span>
+              <span>✉️</span>
+            </button>
           </div>
 
           <!-- Etapa 2: Validar Código e Nova Senha -->
           <div id="uauth-reset-step-2" class="hidden space-y-3">
-            <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
-              Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
+            <div id="uauth-reset-step2-hint" class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
+              Código enviado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
             </div>
             <div>
               <label for="uauth-reset-code" class="block text-xs font-bold text-slate-700 mb-1">

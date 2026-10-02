@@ -33,6 +33,27 @@
   function send(eventName, label) {
     if (!granted()) return;
     try {
+      // 1. Encaminhamento para Google Analytics 4 & Google Ads (gtag.js / GTM)
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', eventName, {
+          event_category: 'engagement',
+          event_label: label ? String(label).slice(0, 120) : null
+        });
+        if (eventName === 'click_whatsapp' || eventName === 'form_submit') {
+          window.gtag('event', 'generate_lead', {
+            event_category: 'conversion',
+            event_label: label || 'Lead WhatsApp / Contato'
+          });
+        }
+      }
+      if (window.dataLayer && Array.isArray(window.dataLayer)) {
+        window.dataLayer.push({
+          event: eventName,
+          eventLabel: label ? String(label).slice(0, 120) : null
+        });
+      }
+
+      // 2. Coleta anônima interna LGPD
       var payload = {
         session_key: sid(),
         event_name: eventName,
@@ -108,12 +129,28 @@
     grant: function () {
       try { sessionStorage.setItem(CONSENT_KEY, 'accepted'); } catch (e) {}
       recordConsent(true);
+      if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', {
+          analytics_storage: 'granted',
+          ad_storage: 'granted',
+          ad_user_data: 'granted',
+          ad_personalization: 'granted'
+        });
+      }
       attach();
     },
     // Chamada pelo botão "Apenas Essenciais".
     deny: function () {
       try { sessionStorage.setItem(CONSENT_KEY, 'essential'); } catch (e) {}
       recordConsent(false);
+      if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', {
+          analytics_storage: 'denied',
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied'
+        });
+      }
     }
   };
 

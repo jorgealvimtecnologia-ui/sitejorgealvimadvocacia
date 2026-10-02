@@ -1606,12 +1606,12 @@ app.use((req, res, next) => {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'self'",
-    "img-src 'self' data: blob: https: https://lh3.googleusercontent.com",
+    "img-src 'self' data: blob: https: https://lh3.googleusercontent.com https://www.googletagmanager.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com",
-    "connect-src 'self' https: https://accounts.google.com https://oauth2.googleapis.com",
-    "frame-src 'self' https: https://accounts.google.com"
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net",
+    "connect-src 'self' https: https://accounts.google.com https://oauth2.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net",
+    "frame-src 'self' https: https://accounts.google.com https://www.googletagmanager.com https://www.google.com https://maps.google.com"
   ].join('; '));
   next();
 });
@@ -1755,10 +1755,13 @@ function renderIndexHtml() {
   const file = path.join(__dirname, 'index.html');
   const stat = fs.statSync(file);
   const pixel = (process.env.META_PIXEL_ID || '1773978237179877').trim();
-  const ga = (process.env.GA_MEASUREMENT_ID || '').trim();
+  const ga = (process.env.GA_MEASUREMENT_ID || 'G-H4K6S068SW').trim();
+  const gtm = (process.env.GTM_CONTAINER_ID || '').trim();
+  const gads = (process.env.GOOGLE_ADS_ID || '').trim();
+  const mapsKey = (process.env.GOOGLE_MAPS_API_KEY || '').trim();
   const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '4muf0aevm7zirobf01gdphiva6op9z').trim();
   const gscVerify = (process.env.GSC_VERIFICATION || '').trim();
-  const envSig = [pixel, ga, fbVerify, gscVerify].join('|');
+  const envSig = [pixel, ga, gtm, gads, mapsKey, fbVerify, gscVerify].join('|');
 
   if (__indexHtmlCache.html && __indexHtmlCache.mtimeMs === stat.mtimeMs && __indexHtmlCache.envSig === envSig) {
     return __indexHtmlCache.html;
@@ -1783,12 +1786,41 @@ function renderIndexHtml() {
   if (gscVerify) html = html.split('GSC_VERIFICATION_KEY_HERE').join(gscVerify);
   else html = html.replace(/\s*<meta name="google-site-verification"[^>]*>/, '');
 
-  // Google Analytics 4 (injetado só quando GA_MEASUREMENT_ID for definido)
-  if (ga) {
-    const gaSnippet = `  <!-- Google Analytics 4 -->\n` +
-      `  <script async src="https://www.googletagmanager.com/gtag/js?id=${ga}"></script>\n` +
-      `  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga}');</script>\n</head>`;
+  // Google Tag Manager (GTM)
+  if (gtm) {
+    const gtmHead = `  <!-- Google Tag Manager -->\n` +
+      `  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\n` +
+      `  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\n` +
+      `  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=\n` +
+      `  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n` +
+      `  })(window,document,'script','dataLayer','${gtm}');</script>\n` +
+      `  <!-- End Google Tag Manager -->\n</head>`;
+    const gtmBody = `<body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">\n` +
+      `  <!-- Google Tag Manager (noscript) -->\n` +
+      `  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${gtm}"\n` +
+      `  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>\n` +
+      `  <!-- End Google Tag Manager (noscript) -->`;
+    html = html.replace('</head>', gtmHead);
+    html = html.replace(/<body class="[^"]*">/, gtmBody);
+  } else if (ga || gads) {
+    // Google Analytics 4 (GA4) & Google Ads (gtag.js) direto quando GTM não for usado
+    const primaryId = ga || gads;
+    const gaSnippet = `  <!-- Google tag (gtag.js) / GA4 & Google Ads -->\n` +
+      `  <script async src="https://www.googletagmanager.com/gtag/js?id=${primaryId}"></script>\n` +
+      `  <script>\n` +
+      `    window.dataLayer = window.dataLayer || [];\n` +
+      `    function gtag(){dataLayer.push(arguments);}\n` +
+      `    gtag('js', new Date());\n` +
+      (ga ? `    gtag('config', '${ga}', { send_page_view: true });\n` : '') +
+      (gads ? `    gtag('config', '${gads}');\n` : '') +
+      `  </script>\n</head>`;
     html = html.replace('</head>', gaSnippet);
+  }
+
+  // Google Maps Embed API Oficial
+  if (mapsKey) {
+    const mapsEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=Rua+Henrique+Dias,+259+-+Benfica,+Juiz+de+Fora+-+MG,+36080-000`;
+    html = html.replace(/src="https:\/\/maps\.google\.com\/maps\?q=[^"]*"/, `src="${mapsEmbedUrl}"`);
   }
 
   html = versionAssets(html);
