@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Golpes digitais: como identificar, interromper, provar e reaver seu dinheiro</title>
+<meta name="description" content="Guia prático 2026: como identificar e interromper golpes digitais (WhatsApp, redes sociais, sites falsos, links, QR Code, Pix, boleto, biometria e deepfake), registrar boletim de ocorrência, coletar e guardar provas, acionar o MED do Pix e recuperar valores — inclusive no Juizado Especial. Com modelos para download.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#2E4A62; --navy-deep:#22384B; --green:#1E7A5E; --green-deep:#166049;
+    --ink:#1C2733; --muted:#5A6875; --line:#DDE3E8; --panel:#EEF2F5; --panel-2:#F5F8FA;
+    --bg:#FCFDFE; --white:#FFFFFF; --alert:#B23A2E; --alert-bg:#FBEEEC;
+    --serif:'Spectral',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-size:17px; line-height:1.72;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 22px}
+
+  /* Hero */
+  header.hero{
+    background:linear-gradient(160deg,var(--navy-deep),var(--navy));
+    color:#EAF1F6; padding:64px 0 52px; margin-bottom:8px;
+  }
+  header.hero .eyebrow{
+    font-size:13.5px; letter-spacing:.02em; color:#9FC3B4; font-weight:600;
+    display:inline-block; margin-bottom:16px;
+    border-left:3px solid var(--green); padding-left:10px;
+  }
+  header.hero h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(30px,5.4vw,46px);
+    line-height:1.12; margin:0 0 18px; color:#fff; letter-spacing:-.01em;
+  }
+  header.hero p.lead{font-size:18px; line-height:1.6; margin:0; color:#C9DAE4}
+
+  main{padding:22px 0 10px}
+
+  h2{
+    font-family:var(--serif); font-weight:600; font-size:clamp(23px,3.6vw,29px);
+    color:var(--navy); line-height:1.2; margin:52px 0 8px; letter-spacing:-.01em;
+    scroll-margin-top:20px;
+  }
+  h2 .num{color:var(--green); font-weight:600; margin-right:.4em}
+  h2 + p{margin-top:10px}
+  h3{font-family:var(--sans); font-weight:600; font-size:19px; color:var(--navy-deep); margin:30px 0 6px}
+  p{margin:0 0 16px}
+  a{color:var(--green-deep); text-decoration-thickness:1px; text-underline-offset:2px}
+  strong{font-weight:600; color:var(--navy-deep)}
+  ul,ol{margin:0 0 18px; padding-left:22px}
+  li{margin:0 0 9px}
+  hr{border:none; border-top:1px solid var(--line); margin:44px 0}
+
+  code{font-family:var(--mono); font-size:.86em; background:var(--panel); padding:2px 6px; border-radius:4px; color:var(--navy-deep)}
+
+  /* Legal basis callout */
+  .lei{
+    background:var(--panel-2); border-left:4px solid var(--navy);
+    border-radius:0 10px 10px 0; padding:16px 20px; margin:0 0 20px;
+  }
+  .lei ul{margin:0; padding-left:20px}
+  .lei li{margin:0 0 7px; font-size:15.5px; line-height:1.6}
+
+  /* Urgent callout */
+  .urgente{
+    background:var(--alert-bg); border-left:4px solid var(--alert);
+    border-radius:0 10px 10px 0; padding:16px 20px; margin:22px 0;
+  }
+  .urgente b{color:var(--alert)}
+  .urgente p{margin:0 0 8px; font-size:15.5px; line-height:1.6}
+  .urgente p:last-child{margin:0}
+
+  /* Tables */
+  .tbl-scroll{overflow-x:auto; margin:0 0 12px; border:1px solid var(--line); border-radius:10px}
+  table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:560px}
+  thead th{background:var(--navy); color:#fff; font-weight:600; text-align:left; padding:11px 13px; font-size:14px}
+  tbody td{padding:10px 13px; border-top:1px solid var(--line); vertical-align:top; line-height:1.5}
+  tbody tr:nth-child(even){background:var(--panel-2)}
+  caption{caption-side:bottom; text-align:left; font-size:13px; color:var(--muted); padding:10px 2px 0}
+
+  /* Download card */
+  .dl{
+    display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
+    background:var(--white); border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; margin:22px 0; box-shadow:0 2px 10px rgba(46,74,98,.06);
+  }
+  .dl .doc-ic{flex:0 0 auto; width:42px; height:42px; color:var(--green)}
+  .dl .body{flex:1 1 240px; min-width:0}
+  .dl .body b{font-family:var(--sans); font-size:16.5px; color:var(--navy-deep); display:block; margin-bottom:3px}
+  .dl .body span{font-size:14.5px; color:var(--muted); line-height:1.5; display:block}
+  .dl a.btn{
+    flex:0 0 auto; align-self:center; text-decoration:none;
+    background:var(--green); color:#fff; font-weight:600; font-size:15px;
+    padding:11px 20px; border-radius:9px; white-space:nowrap; transition:background .15s;
+  }
+  .dl a.btn:hover{background:var(--green-deep)}
+
+  /* Checklist */
+  .check{list-style:none; padding:0; margin:0 0 18px}
+  .check li{position:relative; padding-left:34px; margin-bottom:11px}
+  .check li::before{
+    content:""; position:absolute; left:0; top:2px; width:20px; height:20px;
+    border:2px solid var(--green); border-radius:5px; background:var(--panel-2);
+  }
+
+  /* Steps (numbered cards) */
+  .steps{list-style:none; counter-reset:st; padding:0; margin:0 0 18px}
+  .steps li{position:relative; padding-left:44px; margin-bottom:14px; min-height:30px}
+  .steps li::before{
+    counter-increment:st; content:counter(st);
+    position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%;
+    background:var(--green); color:#fff; font-weight:600; font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Downloads section (bottom) */
+  .downloads{background:var(--panel-2); border-radius:16px; padding:28px 26px; margin:36px 0 0}
+  .downloads h2{margin-top:0}
+
+  /* Footer */
+  footer{border-top:1px solid var(--line); margin-top:48px; padding:28px 0 60px; color:var(--muted); font-size:14px; line-height:1.6}
+  footer .firm{color:var(--navy-deep); font-weight:600}
+
+  @media (max-width:640px){
+    body{font-size:16px}
+    header.hero{padding:48px 0 40px}
+    .dl a.btn{width:100%; text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Guia prático · atualizado em 2026</span>
+    <h1>Golpes digitais: como identificar, interromper, provar e reaver seu dinheiro</h1>
+    <p class="lead">O golpe chega por WhatsApp, rede social, um link, um QR Code ou um falso funcionário do banco. Entre o susto e o prejuízo há uma janela curta de tempo — e o que você faz nas primeiras horas decide se o dinheiro volta. Este guia mostra o passo a passo, do reconhecimento à ação judicial.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <p>Os golpes digitais quase nunca "invadem" um sistema: eles convencem <em>você</em> a agir — clicar, pagar, informar um código, aproximar o rosto da câmera ou ler uma digital. É a chamada <strong>engenharia social</strong>: o criminoso cria urgência, medo ou uma oportunidade boa demais para você pensar com calma. Entender esse mecanismo é o primeiro passo para não cair — e para reagir certo quando já caiu.</p>
+
+  <div class="urgente">
+    <p><b>Se o golpe acabou de acontecer, aja agora:</b></p>
+    <p>1) Ligue <b>imediatamente</b> para o seu banco e peça o bloqueio da conta/cartão e o acionamento do <b>MED (devolução do Pix)</b>. 2) Anote tudo (valores, horários, chaves Pix, links). 3) Registre o <b>boletim de ocorrência</b>. Cada minuto conta: dinheiro parado na conta do golpista pode ser bloqueado; dinheiro já sacado, dificilmente.</p>
+  </div>
+
+  <h2><span class="num">1.</span>Os golpes mais comuns (e como cada um funciona)</h2>
+  <p>Conhecer o "roteiro" do golpe é o que permite reconhecê-lo no meio da conversa. Os mais frequentes:</p>
+  <div class="tbl-scroll">
+  <table>
+    <thead><tr><th>Golpe</th><th>Como funciona</th><th>Sinal de alerta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>WhatsApp clonado / "novo número"</strong></td><td>O criminoso se passa por parente ou chefe, alega número novo e pede um Pix urgente.</td><td>Pedido de dinheiro por mensagem, com pressa e número desconhecido.</td></tr>
+      <tr><td><strong>Clonagem por código (SMS)</strong></td><td>Pedem o "código que chegou por SMS" — que é o código de ativação do seu WhatsApp.</td><td>Alguém pedindo um código de 6 dígitos que você recebeu.</td></tr>
+      <tr><td><strong>Perfil clonado nas redes</strong></td><td>Copiam foto e nome de um perfil real e pedem dinheiro aos amigos/seguidores.</td><td>Conta parecida, criada há pouco, com poucos seguidores.</td></tr>
+      <tr><td><strong>Site / loja falsa</strong></td><td>Loja com preços irreais, só Pix, sem CNPJ verificável; não entrega o produto.</td><td>Preço muito abaixo, pagamento só por Pix/boleto, endereço vago.</td></tr>
+      <tr><td><strong>Phishing (link malicioso)</strong></td><td>Link por e-mail/SMS/WhatsApp imitando banco, loja ou órgão, para roubar senha e dados.</td><td>Link encurtado, domínio estranho, urgência ("sua conta será bloqueada").</td></tr>
+      <tr><td><strong>Golpe do QR Code</strong></td><td>QR Code adulterado ou enviado pelo golpista direciona o Pix para a conta dele.</td><td>QR recebido de terceiros, valor/nome do recebedor diferente do esperado.</td></tr>
+      <tr><td><strong>Boleto falso / adulterado</strong></td><td>Boleto com código de barras trocado desvia o pagamento.</td><td>Beneficiário diferente, boleto recebido por e-mail/WhatsApp.</td></tr>
+      <tr><td><strong>Falso funcionário do banco</strong></td><td>Ligam alegando "movimentação suspeita" e induzem você a fazer Pix, instalar app ou informar senha.</td><td>Banco que liga pedindo senha, código ou transferência "de segurança".</td></tr>
+      <tr><td><strong>Falso investimento / cripto</strong></td><td>Promessa de lucro alto e garantido; pirâmides e falsas corretoras.</td><td>Rendimento fixo elevado, pressão para depositar mais.</td></tr>
+      <tr><td><strong>Deepfake / montagem</strong></td><td>Vídeo ou áudio manipulado por IA imitando alguém para enganar ou extorquir.</td><td>Áudio/vídeo "do parente" pedindo dinheiro; sextorsão com imagem montada.</td></tr>
+      <tr><td><strong>Coleta indevida de biometria</strong></td><td>Capturam foto do rosto e/ou digital para abrir contas, contrair empréstimos ou burlar o gov.br em seu nome.</td><td>App/site pedindo selfie e documento sem motivo claro; "prova de vida" fora do canal oficial.</td></tr>
+    </tbody>
+    <caption>Não é lista fechada — os golpes se reinventam. A lógica, porém, é sempre a mesma: criar urgência e desviar um pagamento ou seus dados.</caption>
+  </table>
+  </div>
+
+  <h2><span class="num">2.</span>Como identificar o golpe a tempo</h2>
+  <p>Antes de pagar ou informar qualquer coisa, desconfie diante de <strong>qualquer</strong> destes sinais:</p>
+  <ul>
+    <li><strong>Urgência e sigilo.</strong> "É agora ou perde", "não conte a ninguém", "resolva antes que bloqueiem". Pressa é a marca registrada do golpe.</li>
+    <li><strong>Mudança de canal ou de número.</strong> O "parente" ou o "banco" aparece por um número/perfil novo e já pede dinheiro ou dados.</li>
+    <li><strong>Pedido de código, senha ou selfie.</strong> Banco, WhatsApp e órgãos públicos <strong>nunca</strong> pedem senha, código de SMS ou selfie por telefone/mensagem.</li>
+    <li><strong>Pagamento só por Pix/boleto</strong> para pessoa física, com valor abaixo do normal.</li>
+    <li><strong>Link e domínio estranhos.</strong> Confira letra por letra o endereço; golpistas trocam caracteres (ex.: <code>bancoo.com</code>, <code>gov-br.net</code>).</li>
+    <li><strong>QR Code de terceiros.</strong> Antes de confirmar o Pix, cheque o <strong>nome do recebedor</strong> e o <strong>valor</strong> na tela do seu app.</li>
+  </ul>
+  <p><strong>Regra de ouro:</strong> desligue, respire e confirme pelo canal oficial que <em>você</em> procurou (o telefone do verso do cartão, o número do parente que você já tinha). Golpe não sobrevive a uma conferência feita com calma.</p>
+
+  <h2><span class="num">3.</span>Como interromper o golpe (as primeiras horas)</h2>
+  <p>Se você já pagou, informou dados ou clicou, o objetivo agora é <strong>estancar o dano</strong>. Ordem de prioridade:</p>
+  <ol class="steps">
+    <li><strong>Acione o banco e o MED do Pix.</strong> Ligue para o seu banco (app ou telefone oficial) e peça o <strong>Mecanismo Especial de Devolução (MED)</strong>: é o instrumento do Banco Central que permite bloquear e tentar devolver valores de Pix em caso de fundada suspeita de fraude. Quanto antes, maior a chance de o dinheiro ainda estar parado.</li>
+    <li><strong>Conteste boleto e cartão.</strong> Boleto pago indevidamente e compras no cartão podem ser contestados junto ao banco/operadora (inclusive <em>chargeback</em> no cartão).</li>
+    <li><strong>Troque senhas e ative a verificação em duas etapas</strong> das suas contas (e-mail, banco, redes, WhatsApp). Se o WhatsApp foi clonado, reative pelo próprio app para derrubar o invasor.</li>
+    <li><strong>Isole o aparelho comprometido.</strong> Se instalou algum app a pedido do golpista, desinstale, desconecte da internet e, na dúvida, faça backup e restauração de fábrica.</li>
+    <li><strong>Avise quem pode ser atingido.</strong> Se clonaram seu perfil, alerte parentes e contatos para não pagarem nada em seu nome.</li>
+    <li><strong>Registre tudo antes de apagar qualquer coisa</strong> (ver seção 5). Não delete conversas nem comprovantes: eles são a sua prova.</li>
+  </ol>
+
+  <h2><span class="num">4.</span>Como registrar o golpe na polícia</h2>
+  <p>O <strong>boletim de ocorrência (B.O.)</strong> é a base de tudo: abre a investigação criminal, ajuda no bloqueio de valores e é documento essencial na esfera cível. Você pode registrar:</p>
+  <ul>
+    <li><strong>Delegacia Eletrônica</strong> do seu estado (em Minas Gerais, pelo site da Polícia Civil de MG), sem sair de casa, para a maioria dos casos.</li>
+    <li><strong>Delegacia Especializada em Crimes Cibernéticos</strong>, quando houver, ou a delegacia comum mais próxima.</li>
+  </ul>
+  <p>No registro, informe de forma organizada: <strong>o que aconteceu</strong> (narrativa em ordem cronológica), <strong>quando</strong>, <strong>valores e chaves Pix/contas</strong> envolvidas, <strong>números e perfis</strong> do golpista, <strong>links</strong> e tudo que puder identificar o autor. Anexe os comprovantes e prints.</p>
+  <div class="lei">
+    <ul>
+      <li><strong>Importante — prazo de representação.</strong> O estelionato passou a exigir <strong>representação da vítima</strong> (CP, art. 171, § 5º). Em regra, você tem <strong>6 meses</strong>, a partir de quando descobre a autoria, para manifestar o interesse na persecução penal. Não deixe passar.</li>
+      <li>Peça sempre o <strong>número e a cópia do B.O.</strong></li>
+    </ul>
+  </div>
+
+  <h2><span class="num">5.</span>Como coletar as provas (sem estragá-las)</h2>
+  <p>A prova digital vale ouro — mas só se for preservada corretamente. O princípio é <strong>não alterar o original</strong> e documentar a origem. Colete:</p>
+  <ul>
+    <li><strong>Conversas completas</strong> (WhatsApp, Instagram, e-mail): não apague; se possível, exporte a conversa inteira (no WhatsApp, "Exportar conversa"), preservando datas, horários e o número/perfil do golpista.</li>
+    <li><strong>Comprovantes</strong> de Pix, boleto e cartão: guarde o comprovante nativo (PDF/print) com <strong>ID da transação, chave e nome do recebedor</strong>.</li>
+    <li><strong>Links e perfis</strong>: copie o endereço completo (URL) e tire prints da página, do perfil e do anúncio.</li>
+    <li><strong>Imagens e vídeos</strong>: guarde o <strong>arquivo original</strong>, na extensão nativa — não printe por cima, pois o print apaga os metadados.</li>
+    <li><strong>Dados do golpista</strong>: número de telefone, chave Pix, nome/CPF/CNPJ do recebedor, e-mail, @ do perfil, banco de destino.</li>
+  </ul>
+  <p>Para provas que podem sumir (um perfil, um anúncio, uma conversa), a forma mais robusta é a <strong>ata notarial</strong> em cartório, que "congela" o conteúdo com fé pública. E, sempre que puder, gere o <strong>hash SHA-256</strong> dos arquivos, para comprovar que não foram alterados.</p>
+  <p style="font-size:15px;color:var(--muted)">Veja o passo a passo detalhado de preservação, hash e ata notarial no nosso guia <em>“Provas digitais no processo”</em>.</p>
+
+  <h2><span class="num">6.</span>Como guardar as provas</h2>
+  <ol>
+    <li><strong>Uma pasta por caso.</strong> Reúna comprovantes, prints, exportações e o B.O. numa pasta identificada com data e nome do golpe.</li>
+    <li><strong>Preserve os originais.</strong> Guarde os arquivos nativos separados das cópias que você vai imprimir/anexar. Nunca edite o original.</li>
+    <li><strong>Backup em dois lugares.</strong> Uma cópia no computador e outra na nuvem ou em um pendrive — provas se perdem quando ficam só no celular.</li>
+    <li><strong>Anote a “linha do tempo”.</strong> Um resumo em ordem cronológica (o que, quando, quanto, com quem) facilita o B.O., a reclamação no banco e a ação judicial.</li>
+  </ol>
+
+  <h2><span class="num">7.</span>Golpe concretizado: como tentar reaver os valores</h2>
+  <p>Pagou e o dinheiro foi. Nem tudo está perdido — há caminhos administrativos (mais rápidos) e judiciais (quando os primeiros falham):</p>
+  <h3>a) Pelo banco (a via mais rápida)</h3>
+  <ul>
+    <li><strong>MED do Pix</strong>: peça o bloqueio/devolução. Se o valor ainda estiver na conta do golpista, pode ser devolvido.</li>
+    <li><strong>Contestação de cartão / chargeback</strong> e <strong>contestação de boleto</strong> junto ao banco e à bandeira.</li>
+    <li><strong>Reclamação formal</strong> ao banco, guardando o número de protocolo — ele é prova da sua diligência.</li>
+  </ul>
+  <h3>b) Órgãos de defesa</h3>
+  <ul>
+    <li><strong>Banco Central (BACEN)</strong> — registre reclamação contra a instituição.</li>
+    <li><strong><a href="https://www.consumidor.gov.br" target="_blank" rel="noopener">consumidor.gov.br</a></strong> e <strong>Procon</strong> — para pressionar a solução do problema.</li>
+  </ul>
+  <h3>c) Responsabilidade dos bancos</h3>
+  <p>Quando há falha na segurança do serviço bancário, a instituição pode ser responsabilizada. O STJ consolidou, na <strong>Súmula 479</strong>, que os bancos respondem por danos causados por fraudes de terceiros no âmbito de operações bancárias. Cada caso depende das circunstâncias (se houve ou não culpa exclusiva da vítima), mas essa é uma tese central para a recuperação.</p>
+
+  <h2><span class="num">8.</span>Ação judicial: o Juizado Especial</h2>
+  <p>Se as vias administrativas não resolverem, a Justiça é o caminho — e, para a maioria dos casos, no <strong>Juizado Especial Cível</strong> (Lei 9.099/95), que é mais rápido e informal.</p>
+  <div class="lei">
+    <ul>
+      <li><strong>Valor da causa</strong>: até <strong>40 salários mínimos</strong>.</li>
+      <li><strong>Advogado</strong>: dispensável até <strong>20 salários mínimos</strong>; obrigatório entre 20 e 40. Mesmo quando dispensável, a orientação de um advogado aumenta muito as chances.</li>
+      <li><strong>O que pedir</strong>: a <strong>restituição</strong> dos valores e, conforme o caso, <strong>indenização por danos morais</strong> (especialmente quando há falha do banco, negativação indevida ou exposição).</li>
+      <li><strong>Documentos</strong>: B.O., comprovantes, conversas, protocolos de reclamação e a linha do tempo do golpe.</li>
+    </ul>
+  </div>
+  <p>Contra o <strong>golpista identificado</strong>, cabe ação de restituição e reparação; contra o <strong>banco</strong>, ação fundada na falha do serviço. Em muitos casos as duas frentes caminham juntas.</p>
+
+  <h2><span class="num">9.</span>A base legal, em resumo</h2>
+  <div class="lei">
+    <ul>
+      <li><strong>CP, art. 171, § 2º-A</strong> — <em>fraude eletrônica</em>: estelionato praticado com uso de dispositivo eletrônico, com pena aumentada (Lei 14.155/2021).</li>
+      <li><strong>CP, art. 155, § 4º-B</strong> — <em>furto mediante fraude eletrônica</em> (ex.: transferências indevidas), também agravado pela Lei 14.155/2021.</li>
+      <li><strong>CP, art. 171, § 5º</strong> — o estelionato, em regra, depende de <strong>representação</strong> da vítima.</li>
+      <li><strong>CP, art. 154-A</strong> (Lei 12.737/2012) — invasão de dispositivo informático.</li>
+      <li><strong>Código de Defesa do Consumidor</strong> — responsabilidade por falha na prestação do serviço bancário; <strong>Súmula 479 do STJ</strong>.</li>
+      <li><strong>LGPD — Lei 13.709/2018</strong> — dados <strong>biométricos</strong> (digital e face) são dados <strong>sensíveis</strong>; a coleta indevida é ilícita e gera responsabilização.</li>
+      <li><strong>Marco Civil da Internet — Lei 12.965/2014</strong> — permite requisitar judicialmente registros e dados aos provedores para identificar o autor.</li>
+      <li><strong>Regras do Pix / Banco Central</strong> — disciplinam o <strong>MED</strong> e a devolução em casos de fraude.</li>
+    </ul>
+  </div>
+
+  <h2><span class="num">10.</span>Atenção especial: biometria (digital e foto do rosto)</h2>
+  <p>A captura indevida da sua <strong>digital</strong> ou de uma <strong>selfie</strong> é hoje uma das portas mais perigosas: com ela, criminosos abrem contas, contratam empréstimos e tentam burlar o <strong>gov.br</strong> em seu nome. Cuidados:</p>
+  <ul>
+    <li><strong>Nunca</strong> faça "prova de vida" ou envie selfie com documento fora do aplicativo/site oficial.</li>
+    <li>Desconfie de apps que pedem selfie e documento sem motivo claro para a função que oferecem.</li>
+    <li>Se sua biometria vazou ou foi usada, registre B.O., comunique o banco e o órgão (ex.: gov.br), e considere denúncia à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) e ação com base na LGPD.</li>
+    <li>Monitore seu CPF (consultas de crédito) para detectar contas ou empréstimos abertos em seu nome.</li>
+  </ul>
+
+  <h2><span class="num">11.</span>Checklist rápido da vítima</h2>
+  <ul class="check">
+    <li>Acionei o <strong>banco</strong> e pedi o <strong>MED / bloqueio</strong> imediatamente?</li>
+    <li>Troquei senhas e ativei a <strong>verificação em duas etapas</strong>?</li>
+    <li>Registrei o <strong>boletim de ocorrência</strong> e guardei o número/cópia?</li>
+    <li>Manifestei a <strong>representação</strong> (estelionato) dentro do prazo?</li>
+    <li>Preservei <strong>conversas, comprovantes, links e arquivos originais</strong> sem apagar nada?</li>
+    <li>Reuni tudo numa <strong>pasta com backup</strong> e montei a <strong>linha do tempo</strong>?</li>
+    <li>Reclamei no <strong>BACEN / consumidor.gov.br / Procon</strong> e guardei os protocolos?</li>
+    <li>Avaliei a <strong>ação no Juizado Especial</strong> (restituição + dano moral) contra o golpista e/ou o banco?</li>
+    <li>Em caso de biometria: monitorei o <strong>CPF</strong> e avaliei denúncia à <strong>ANPD</strong>?</li>
+  </ul>
+
+  <section class="downloads">
+    <h2>Modelos para download</h2>
+    <p>Dois documentos editáveis em Word, prontos para usar no calor da hora:</p>
+    <div class="dl">
+      <svg class="doc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>
+      <div class="body">
+        <b>Roteiro de Reação e Preservação de Provas do Golpe Digital</b>
+        <span>Formulário para registrar a linha do tempo, valores, dados do golpista e as provas coletadas — base para o B.O. e para a ação.</span>
+      </div>
+      <a class="btn" href="/img/blog/roteiro-golpe-digital.docx" download>Baixar (.docx)</a>
+    </div>
+    <div class="dl">
+      <svg class="doc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>
+      <div class="body">
+        <b>Notificação ao Banco — Contestação e Pedido de Devolução (MED/Pix)</b>
+        <span>Modelo de comunicação formal ao banco para contestar a transação fraudulenta e requerer o MED, com registro de protocolo.</span>
+      </div>
+      <a class="btn" href="/img/blog/notificacao-banco-med-pix.docx" download>Baixar (.docx)</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>Este conteúdo tem finalidade informativa e não substitui a análise de um advogado para o caso concreto. Prazos e procedimentos podem variar conforme a instituição e o estado.</p>
+    <p><span class="firm">Jorge Alvim Advocacia</span> — Rua Henrique Dias, 259, Loja 5, Benfica, Juiz de Fora/MG · (32) 99815-3429 · jorgealvimadvocacia@gmail.com</p>
+  </footer>
+
+</main>
+</body>
+</html>
