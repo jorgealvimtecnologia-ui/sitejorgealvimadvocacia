@@ -116,3 +116,6 @@ Rodar **antes de cada deploy de produção** (leva poucos minutos):
 - **Contas mestras (únicas):** `jorgealvimtecnologia@gmail.com`, `jorgealvim10@gmail.com`, `jorgealvimadvocacia@gmail.com` (`src/config/master-emails.js`). Variável de ambiente não cria mestre (`GOOGLE_ADMIN_EMAILS` foi aposentada).
 - `npm run check:rbac` (e `check:architecture`) reprova: mestre fora da lista, Google sem `aud`/e-mail verificado, token de teste sem portão, painel que abre módulo sem checar a aba, rota `/api` sem regra ou rota sensível pública.
 - Atenção: `jorgealvimadvocacia@gmail.com` é o e-mail público do escritório (alvo de phishing). Proteja as 3 contas Google com verificação em duas etapas **do próprio Google** (isso não é 2FA do sistema).
+
+- **API de administração por aba (corrigido):** `/api/admin/*` era liberada a qualquer operador logado; o menu escondia as abas, mas o servidor não barrava. Agora: manutenção/backups/sessões = só mestre; auditoria, blog, FAQ/site e WhatsApp = aba Config; tráfego e pré-clientes = aba Leads; `/api/admin/*` sem regra é negada.
+- **Painel fechado por padrão:** o gerenciador de janelas só libera módulos depois de receber as permissões do servidor (e fecha se a resposta falhar).

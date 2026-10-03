@@ -81,8 +81,15 @@ export const RULES = [
   [/^\/api\/(admin-requests|adminrequests)(\/|$)/, tab('tab_lawsuits')],
   [/^\/api\/(meta-ads|explorer)(\/|$)/, tab('tab_settings')],
 
+  // ---- Administração do site e do sistema: a MESMA aba que libera o menu libera a API ----
+  // (antes, /api/admin/* era "qualquer operador logado": o menu escondia a aba, mas o servidor deixava uma
+  // secretária ler a auditoria, editar o blog/FAQ, baixar backups ou colocar o sistema em manutenção)
+  [/^\/api\/admin\/maintenance(\/|$)/, MASTER],                       // manutenção, sessões, backups, VACUUM, modo manutenção
+  [/^\/api\/admin\/(audit-logs|blog|site|whatsapp)(\/|$)/, tab('tab_settings')],
+  [/^\/api\/admin\/(pre-clients|visits)(\/|$)/, tab('tab_leads')],      // aba "Tráfego & Acessos"
+
   // ---- Demais rotas do painel: qualquer operador logado ----
-  [/^\/api\/(dashboard|kanban|sync|admin|blog|site-content|maintenance|legaltech|legal-docs|ai|analytics|audit)(\/|$)/, PANEL]
+  [/^\/api\/(dashboard|kanban|sync|site-content|legaltech|legal-docs|ai|analytics|audit)(\/|$)/, PANEL]
 ];
 
 /** Regra de RBAC que decide um caminho/método (a primeira que casa), ou undefined se não houver (=> negado). */

@@ -101,3 +101,22 @@ describe('contas mestras e rota de documentos', () => {
     assert.ok(ruleFor('/api/documents/generate', 'POST'));
   });
 });
+
+describe('administração: a API segue a mesma aba do menu', () => {
+  const alvo = (p, m = 'GET') => ruleFor(p, m)?.[1];
+  it('manutenção (backups, sessões, VACUUM) é só do mestre', () => {
+    for (const p of ['/api/admin/maintenance/backups', '/api/admin/maintenance/backups/download/x', '/api/admin/maintenance/mode', '/api/admin/maintenance/sessions/disconnect-all'])
+      assert.equal(alvo(p), 'master', p);
+  });
+  it('auditoria, blog, FAQ/site e WhatsApp exigem a aba Config', () => {
+    for (const p of ['/api/admin/audit-logs', '/api/admin/blog/posts', '/api/admin/site/faqs', '/api/admin/whatsapp/test'])
+      assert.deepEqual(alvo(p), { panelTab: 'tab_settings' }, p);
+  });
+  it('tráfego e pré-clientes exigem a aba Leads', () => {
+    for (const p of ['/api/admin/visits/stats', '/api/admin/pre-clients/x/convert-to-lead'])
+      assert.deepEqual(alvo(p), { panelTab: 'tab_leads' }, p);
+  });
+  it('rota /api/admin nova sem regra é NEGADA (não vira "qualquer operador")', () => {
+    assert.equal(ruleFor('/api/admin/rota-nova-sem-regra', 'GET'), undefined);
+  });
+});
