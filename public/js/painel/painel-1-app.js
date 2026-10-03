@@ -1151,6 +1151,7 @@
       document.documentElement.classList.add('has-admin-session');
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
+      setTimeout(() => { if (typeof showPendingPasswordNotice === 'function') showPendingPasswordNotice(); }, 800);
 
       // Se for perfil operacional restrito (motorista / colaborador), esconde preventivamente a aba de clientes
       const role = user ? (user.role || '').toLowerCase() : '';
@@ -1214,6 +1215,7 @@
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem('ja_admin_token', data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+          try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
           if (data.employeeToken) {
             localStorage.setItem('ja_employee_token', data.employeeToken);
           }
@@ -1471,8 +1473,8 @@
         return;
       }
 
-      if (new_password.length < 4 || new_password.length > 12) {
-        showAdminResetAlert('A nova senha deve ter entre 4 e 12 caracteres.', 'error');
+      if (new_password.length < 10 || new_password.length > 64) {
+        showAdminResetAlert('A nova senha deve ter entre 10 e 64 caracteres.', 'error');
         return;
       }
 

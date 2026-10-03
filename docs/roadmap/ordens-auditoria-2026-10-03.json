@@ -5,8 +5,8 @@
       "ref": "AUD-01",
       "prioridade": "P0",
       "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
-      "descricao": "Hoje a política aceita 4 a 12 caracteres (src/shared/password-policy.js): o mínimo é muito fraco e o máximo impede frases longas. Manter a fonte única da política e o upgrade transparente no login.",
-      "criterios": "Mínimo de 10 a 12 e máximo de pelo menos 64 caracteres, aplicado em todos os pontos (painel, portais, scripts de reset); senhas antigas continuam entrando e são orientadas a trocar; testes de política atualizados e npm test verde."
+      "descricao": "O backend já exigia 8 a 64 caracteres, mas o front-end ainda limitava os campos a 4 a 12 (maxlength=\"12\" impedia digitar senha longa), os textos diziam \"4 a 12\", scripts/reset-master-pass.js tinha regra própria e docs/SECURITY.md estava desatualizado. Correção da premissa original desta ordem, que se baseou na documentação sem conferir o código.",
+      "criterios": "Mínimo de 10 e máximo de 64 caracteres em todos os pontos (backend, formulários, textos, scripts de reset); senhas antigas continuam entrando e o login avisa para trocar; teste que falha se o front divergir da política; npm test verde."
     },
     {
       "ref": "AUD-02",

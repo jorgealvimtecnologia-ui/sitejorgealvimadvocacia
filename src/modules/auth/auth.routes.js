@@ -10,7 +10,7 @@ import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures, normalizeLoginId } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
-import { validatePassword } from '../../shared/password-policy.js';
+import { validatePassword, outdatedPasswordNotice } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { deliverAccessCode } from '../../shared/access-codes.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
@@ -122,6 +122,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
       return res.json({
         success: true,
+        ...outdatedPasswordNotice(rawPassword),
         authType: isDriverOrColab ? 'employee' : 'admin',
         token,
         employeeToken,
@@ -197,6 +198,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
         return res.json({
           success: true,
+          ...outdatedPasswordNotice(rawPassword),
           authType: 'client',
           token,
           role: 'cliente',
@@ -261,6 +263,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
         return res.json({
           success: true,
+          ...outdatedPasswordNotice(rawPassword),
           authType: 'employee',
           token,
           employeeToken: token,
@@ -755,7 +758,7 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
       return res.status(400).json({ error: 'Código de segurança expirado. Solicite um novo código.' });
     }
 
-    // Validar nova senha conforme política de 4 a 12 caracteres
+    // Validar nova senha conforme a política única (src/shared/password-policy.js)
     const pol = validatePassword(new_password);
     if (!pol.ok) {
       return res.status(400).json({ error: pol.error });

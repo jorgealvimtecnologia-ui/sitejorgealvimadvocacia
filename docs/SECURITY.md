@@ -7,11 +7,17 @@ Camadas independentes de proteção, de forma que a falha de uma não derrube o 
 - **Hash PBKDF2-SHA512, 210k iterações** — senha nunca é gravada em texto puro
   (coluna `plain_password` é limpa no boot). Upgrade transparente de hashes legados
   no login (sem travar ninguém).
-- **Política de senha: 4 a 12 caracteres** — fonte única da verdade em
+- **Política de senha: 10 a 64 caracteres** (frases longas permitidas, sem regras de
+  composição — NIST 800-63B) — fonte única da verdade em
   [`src/shared/password-policy.js`](../src/shared/password-policy.js), aplicada em
   **todos** os pontos: criação/edição de usuário, redefinição, portal do cliente
-  (cadastro, troca e recuperação) e no script de reset do mestre. O front reforça
-  com `minlength`/`maxlength` (UX); o backend é a autoridade.
+  (cadastro, troca e recuperação) e nos scripts de reset/definição da senha do mestre.
+  O front reforça com `minlength`/`maxlength` (UX) e `tests/password-policy.test.js`
+  falha se algum formulário divergir da política; o backend é a autoridade.
+- **Senhas antigas não travam ninguém:** quem entra com uma senha criada antes da política
+  atual continua entrando, e o login devolve `password_policy_outdated` para o painel e o
+  portal do cliente avisarem que é hora de trocar. (A comparação só é possível no momento
+  do login, pois o banco guarda apenas o hash.)
 - **Sem senhas universais** — removidas dos portais e da assinatura de ponto.
 
 ## Anti força-bruta (duas camadas)
