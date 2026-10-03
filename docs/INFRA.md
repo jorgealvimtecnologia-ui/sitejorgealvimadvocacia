@@ -277,3 +277,13 @@ chown "$U:$U" /var/www/advocacia/.env /var/www/advocacia/.env.enc
 chown -R "$U:$U" /etc/advocacia && chmod 700 /etc/advocacia && chmod 600 /etc/advocacia/env.key
 systemctl restart advocacia
 ```
+
+### A chave do cofre vazou (apareceu em chat, captura de tela, e-mail…)? Troque-a
+
+```bash
+cd /var/www/advocacia
+node scripts/env-vault.js rotate-key
+chown www-data:www-data /var/www/advocacia/.env.enc /etc/advocacia/env.key   # só se rodou como root numa versão sem o chown automático
+systemctl restart advocacia && sleep 5 && curl -s http://localhost:3000/health; echo
+```
+O comando reencripta o `.env.enc` com uma chave nova, confere que o ambiente fica idêntico e que a chave antiga deixa de abrir, e guarda a chave e o cofre antigos em `/etc/advocacia/env.key.anterior` e `env.key.cofre.anterior` para desfazer. Com o site no ar: `shred -u /etc/advocacia/env.key.anterior /etc/advocacia/env.key.cofre.anterior`, guarde a chave NOVA no gerenciador de senhas e, se a chave antiga viajou junto com cópias do cofre (e-mails de aviso, backups), gire também os segredos que estão nele (ex.: nova senha de app do SMTP).

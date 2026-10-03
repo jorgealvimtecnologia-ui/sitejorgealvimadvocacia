@@ -8,6 +8,7 @@
  *   node scripts/env-vault.js migrate [--dir=.] [--gerar-chave]
  *   node scripts/env-vault.js set NOME [valor] [--dir=.]   (sem valor, lê da entrada padrão)
  *   node scripts/env-vault.js decrypt [--dir=.]            (imprime o conteúdo; cuidado com o terminal)
+ *   node scripts/env-vault.js rotate-key [--dir=.]         (troca a chave do cofre; use se a chave vazou)
  *
  * Como funciona: os SEGREDOS (chaves de API, senhas, tokens) ficam em .env.enc,
  * criptografados. O .env em texto puro guarda só configuração pública. A chave do
@@ -171,6 +172,52 @@ export function migrate({ dir = ROOT_DIR, env = process.env, key } = {}) {
   return { moved: Object.keys(mergedSecrets).sort(), kept: Object.keys(publicVars).sort() };
 }
 
+/**
+ * Troca a CHAVE do cofre (use quando a chave vazou: ex.: apareceu em chat, captura de tela ou e-mail).
+ * Reencripta o .env.enc com uma chave nova, confere que abre e que o ambiente efetivo é IDÊNTICO ao de antes,
+ * e só então troca os arquivos. A chave e o cofre antigos ficam ao lado da chave (…/env.key.anterior e
+ * …/env.key.cofre.anterior) para desfazer se algo falhar; apague-os (shred -u) depois de validar.
+ */
+export function rotateKey({ dir = ROOT_DIR, env = process.env } = {}) {
+  if (env.ENV_VAULT_KEY) {
+    throw new Error('A chave está na variável ENV_VAULT_KEY (não em arquivo): troque-a direto no ambiente; não dá para rotacionar por aqui.');
+  }
+  const keyFile = env.ENV_VAULT_KEY_FILE || DEFAULT_KEY_FILE;
+  const vaultFile = path.join(dir, VAULT_FILE);
+  if (!fs.existsSync(vaultFile)) throw new Error(`Não há ${VAULT_FILE} em ${dir}: nada para reencriptar.`);
+  const oldKey = requireKey(env);
+  const oldVaultText = fs.readFileSync(vaultFile, 'utf8');
+  const plainText = decryptEnv(oldVaultText, oldKey); // falha aqui = a chave atual não abre o cofre: nada é alterado
+  const before = {};
+  loadEnvironment({ dir, env: before, key: oldKey });
+
+  const newKey = crypto.randomBytes(48).toString('base64');
+  const encrypted = encryptEnv(plainText, newKey);
+  if (decryptEnv(encrypted, newKey) !== plainText) throw new Error('A conferência do cofre novo falhou (ida e volta diferente). Nada foi alterado.');
+  let opened = true;
+  try {
+    decryptEnv(encrypted, oldKey);
+  } catch {
+    opened = false;
+  }
+  if (opened) throw new Error('O cofre novo ainda abre com a chave antiga. Nada foi alterado.');
+
+  // Guarda a chave e o cofre antigos (fora do projeto) e troca. A ordem deixa a janela de risco mínima.
+  const keyAnterior = `${keyFile}.anterior`;
+  const vaultAnterior = `${keyFile}.cofre.anterior`;
+  writeAtomic(keyAnterior, `${oldKey}\n`);
+  writeAtomic(vaultAnterior, oldVaultText);
+  writeAtomic(keyFile, `${newKey}\n`);
+  writeAtomic(vaultFile, encrypted);
+
+  // Conferência final: com a chave NOVA lida do arquivo, o ambiente é igual ao de antes.
+  const after = {};
+  loadEnvironment({ dir, env: after, key: requireKey({ ENV_VAULT_KEY_FILE: keyFile }) });
+  const diff = Object.keys({ ...before, ...after }).filter((k) => before[k] !== after[k]);
+  if (diff.length) throw new Error(`Conferência final divergiu em: ${diff.join(', ')}. Para desfazer: copie ${keyAnterior} de volta para ${keyFile} e ${vaultAnterior} para ${vaultFile}.`);
+  return { keyFile, keyAnterior, vaultAnterior, names: Object.keys(parseEnvText(plainText)).sort() };
+}
+
 /** Define/atualiza uma variável: segredo vai para o cofre, o resto para o .env. */
 export function setVar(name, value, { dir = ROOT_DIR, env = process.env, key } = {}) {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(String(name))) throw new Error(`Nome de variável inválido: ${name}`);
@@ -281,13 +328,26 @@ async function main() {
     return;
   }
 
+  if (cmd === 'rotate-key') {
+    const r = rotateKey({ dir });
+    console.log(
+      `\n✅ Chave do cofre TROCADA. Segredos reencriptados (só nomes): ${r.names.join(', ') || '(nenhum)'}.\n` +
+        `   Nova chave: ${r.keyFile}  (guarde uma cópia no cofre de senhas: cat ${r.keyFile})\n` +
+        `   Chave e cofre ANTIGOS (a chave antiga vazou: apague depois de validar o site):\n` +
+        `     shred -u ${r.keyAnterior} ${r.vaultAnterior}\n` +
+        `\n➜ Reinicie o serviço para aplicar:  systemctl restart advocacia\n`
+    );
+    await notify(dir, 'troca da chave do cofre');
+    return;
+  }
+
   if (cmd === 'decrypt') {
     const key = requireKey(process.env);
     process.stdout.write(decryptEnv(fs.readFileSync(path.join(dir, VAULT_FILE), 'utf8'), key));
     return;
   }
 
-  console.log('Uso: node scripts/env-vault.js <status|gen-key|migrate|set|decrypt> [opções]  (veja o topo do arquivo)');
+  console.log('Uso: node scripts/env-vault.js <status|gen-key|migrate|set|decrypt|rotate-key> [opções]  (veja o topo do arquivo)');
   process.exit(cmd ? 1 : 0);
 }
 
