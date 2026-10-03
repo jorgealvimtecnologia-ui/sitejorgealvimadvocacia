@@ -13,7 +13,10 @@
  *  3. PAINEL (senha, Google, sessão restaurada): TODA entrada passa por
  *     applyPermissionsAndLoadModules(), que aplica as permissões da função/usuário e carrega
  *     SÓ os módulos autorizados. Nenhuma entrada abre módulos por conta própria.
- *  4. RBAC FECHADO POR PADRÃO: rota /api sem regra é negada; TODA rota /api existente tem uma
+ *  4. ABA NOVA/EXCLUÍDA => RBAC ATUALIZADO: todo módulo do painel (MODULES) está classificado no RBAC
+ *     (MODULE_PERM, ALWAYS_ALLOWED ou MASTER_ONLY), toda chave de permissão tem switch e coluna na matriz
+ *     "Usuários & Senhas", e nada no RBAC aponta para aba que não existe mais.
+ *  5. RBAC FECHADO POR PADRÃO: rota /api sem regra é negada; TODA rota /api existente tem uma
  *     regra; e nenhuma rota sensível (usuários, financeiro, clientes, processos, RH, admin,
  *     LGPD, alertas de prazo) é pública.
  * ==============================================================================
@@ -124,6 +127,44 @@ export function checkRbacStatic(root = ROOT_DIR) {
   const wm = read('public/js/painel/painel-3.js');
   if (wm === null) violations.push(`${TAG} public/js/painel/painel-3.js não existe.`);
   else if (!/var WM_MASTER=false,\s*WM_ALLOWED=\{\};/.test(wm)) violations.push(`${TAG} painel-3.js: o controle de módulos não começa FECHADO (WM_MASTER=false, WM_ALLOWED={}): enquanto as permissões não chegam, ou se falharem, o painel abriria tudo.`);
+
+  // 3c) Aba criada/excluída => o RBAC precisa acompanhar (matriz, menu, servidor)
+  if (wm !== null) {
+    const mBlock = wm.slice(wm.indexOf('var MODULES'));
+    const modules = new Set([...mBlock.slice(0, mBlock.indexOf('\n    };') > 0 ? mBlock.indexOf('\n    };') : 6000).matchAll(/(?:^|[\s,{])'?([a-z][a-z-]*)'?\s*:\s*\{\s*label:/g)].map((x) => x[1]));
+    const objKeys = (name) => {
+      const i = wm.indexOf(`var ${name}=`);
+      if (i < 0) return null;
+      const body = wm.slice(i, wm.indexOf('};', i));
+      return [...body.matchAll(/'?([a-z][a-z-]*)'?\s*:\s*(?:'tab_\w+'|1)/g)].map((x) => x[1]);
+    };
+    const perm = objKeys('MODULE_PERM'), always = objKeys('ALWAYS_ALLOWED'), masterOnly = objKeys('MASTER_ONLY');
+    if (modules.size < 20 || !perm || !always || !masterOnly) {
+      violations.push(`${TAG} painel-3.js: não consegui ler MODULES / MODULE_PERM / ALWAYS_ALLOWED / MASTER_ONLY. Mantenha esses quatro objetos (o guardião confere que toda aba tem regra de acesso).`);
+    } else {
+      const classified = new Set([...perm, ...always, ...masterOnly]);
+      for (const id of modules) if (!classified.has(id)) violations.push(`${TAG} ABA NOVA SEM REGRA DE ACESSO: "${id}" existe em MODULES (painel-3.js) mas não está em MODULE_PERM, ALWAYS_ALLOWED nem MASTER_ONLY. Atualize o RBAC: coluna na matriz (tab-users.js + painel.html), src/shared/permissions.js, regras da API (rbac-rules.js) e painel-1-app.js.`);
+      for (const id of classified) if (!modules.has(id)) violations.push(`${TAG} ABA EXCLUÍDA AINDA NO RBAC: "${id}" está em MODULE_PERM/ALWAYS_ALLOWED/MASTER_ONLY mas não existe mais em MODULES. Remova do RBAC (e a coluna da matriz, se ela só servia a essa aba).`);
+      const html = read('painel.html') || '';
+      for (const id of new Set([...html.matchAll(/id="tab-content-([a-z-]+)"/g)].map((x) => x[1]))) if (!modules.has(id)) violations.push(`${TAG} painel.html tem a aba "tab-content-${id}" que não está em MODULES (painel-3.js): ela ficaria fora do RBAC.`);
+
+      // chaves de permissão: as usadas existem, e cada uma tem switch e coluna na matriz
+      const permFile = path.join(root, 'src/shared/permissions.js');
+      if (!fs.existsSync(permFile)) violations.push(`${TAG} src/shared/permissions.js não existe.`);
+      else {
+        const known = new Set([...fs.readFileSync(permFile, 'utf8').matchAll(/'(tab_\w+)'/g)].map((x) => x[1]));
+        const used = new Set([...wm.matchAll(/:\s*'(tab_\w+)'/g)].map((x) => x[1]));
+        for (const k of used) if (!known.has(k)) violations.push(`${TAG} painel-3.js usa a permissão "${k}", que não existe em src/shared/permissions.js.`);
+        const users = read('public/js/tabs/tab-users.js') || '';
+        const switches = new Set([...users.matchAll(/\{ key: '(tab_\w+)'/g)].map((x) => x[1]));
+        for (const k of known) if (!switches.has(k)) violations.push(`${TAG} a permissão "${k}" não tem switch na matriz (TABS_CONFIG em public/js/tabs/tab-users.js).`);
+        for (const k of switches) if (!known.has(k)) violations.push(`${TAG} a matriz tem o switch "${k}", que não existe em src/shared/permissions.js (aba excluída?).`);
+        const th = html.slice(Math.max(0, html.indexOf('id="access-matrix-tbody"') - 4000), html.indexOf('id="access-matrix-tbody"'));
+        const cols = (th.match(/<th /g) || []).length;
+        if (cols !== switches.size + 4) violations.push(`${TAG} a tabela da matriz (painel.html) tem ${cols} colunas, mas deveria ter ${switches.size + 4} (${switches.size} switches + cadastrado, perfil, testar visão e status).`);
+      }
+    }
+  }
 
   // 4a) rbac.js continua negando por padrão
   const rbac = read('src/middleware/rbac.js');

@@ -1000,7 +1000,8 @@
       finance:'tab_financial', nfse:'tab_nfse', esign:'tab_esign', users:'tab_users',
       audit:'tab_audit', lgpd:'tab_audit', blog:'tab_blog', faq:'tab_blog', 'site-boxes':'tab_blog',
       notifications:'tab_alerts', explorer:'tab_settings', 'meta-ads':'tab_settings' };
-    // maintenance (backups, sessões, VACUUM) e roadmap: só o mestre (sem coluna na matriz)
+    // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM e Radar & Roadmap.
+    var MASTER_ONLY={maintenance:1,roadmap:1};
     var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){

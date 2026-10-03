@@ -168,6 +168,9 @@ describe('guardião completo (check-architecture.js)', () => {
         'src/modules/hr/hr.routes.js',
         'public/js/painel/painel-1-app.js',
         'public/js/painel/painel-3.js',
+        'src/shared/permissions.js',
+        'public/js/tabs/tab-users.js',
+        'painel.html',
       ]) {
         fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
         fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));

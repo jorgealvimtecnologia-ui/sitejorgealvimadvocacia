@@ -72,6 +72,12 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
    * **Contas mestras (únicas):** `jorgealvimtecnologia@gmail.com`, `jorgealvim10@gmail.com`, `jorgealvimadvocacia@gmail.com`
      (`src/config/master-emails.js`). Mudar essa lista exige decisão do Dr. Jorge e atualizar `scripts/check-rbac-guard.js`.
      Variável de ambiente nunca cria mestre. O token de teste do Google nunca vale em produção.
+   * **Criou, renomeou ou excluiu uma aba/módulo do painel? Atualize o RBAC NA MESMA ALTERAÇÃO** (o guardião reprova se faltar):
+     1. `public/js/painel/painel-3.js`: `MODULES` + classificar a aba em `MODULE_PERM` (com sua permissão), `ALWAYS_ALLOWED` ou `MASTER_ONLY`;
+     2. permissão nova? `src/shared/permissions.js` + migration em `src/db/migrations/` (coluna nova NULL = herda, para ninguém ganhar/perder acesso);
+     3. matriz "Usuários & Senhas": switch em `public/js/tabs/tab-users.js` (`TABS_CONFIG`) e coluna em `painel.html` (e os `colspan`);
+     4. servidor: regra da(s) rota(s) em `src/middleware/rbac-rules.js` com `tab('tab_x')`; menu em `painel-1-app.js` (`TAB_RULES`);
+     5. aba excluída: remover tudo isso (módulo, permissão, switch, coluna, regras) e rodar `npm run check:rbac`.
    * Verificação: `npm run check:rbac` (também roda dentro de `npm run check:architecture`).
 
 5. **Comandos de Verificação Mandatórios:**
