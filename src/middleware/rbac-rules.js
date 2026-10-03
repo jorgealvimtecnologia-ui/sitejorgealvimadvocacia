@@ -97,7 +97,18 @@ export const RULES = [
   // ---- Demais rotas do painel: qualquer operador logado ----
   [/^\/api\/dashboard(\/|$)/, tab('tab_dashboard')],
   [/^\/api\/kanban(\/|$)/, tab('tab_kanban')],
-  [/^\/api\/(sync|site-content|legaltech|legal-docs|ai|analytics|audit)(\/|$)/, PANEL]
+  // ---- Ferramentas que leem dados do escritório: a aba do dado manda (não "qualquer operador") ----
+  [/^\/api\/sync(\/|$)/, tab('tab_publications')],                     // sincronização DJEN/ComunicaAPI
+  [/^\/api\/legal-docs(\/|$)/, tab('tab_clients')],                    // kit de documentos do cliente
+  [/^\/api\/ai\/analyze-publication\b/, tab('tab_publications')],
+  [/^\/api\/ai\/qualify-lead\b/, tab('tab_leads')],
+  [/^\/api\/ai\/draft-document\b/, tab('tab_clients')],
+  [/^\/api\/analytics\/summary\b/, tab('tab_leads')],                  // tráfego do site
+  [/^\/api\/legaltech\/check-conflict\b/, tab('tab_clients')],        // conflito de interesses lê clientes/processos
+
+  // ---- Utilidades sem dado sensível: qualquer operador logado ----
+  [/^\/api\/legaltech\/(cep|cnpj|check-workday|calculate-deadline|field-requests)\b/, PANEL],
+  [/^\/api\/audit\/log-event\b/, PANEL]
 ];
 
 /** Regra de RBAC que decide um caminho/método (a primeira que casa), ou undefined se não houver (=> negado). */
