@@ -237,13 +237,13 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 (repositório x capacidades discutidas)
 
-Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia. **29 ordens**, das quais **7 já implementadas no PR #8** (aguardando publicação) e as demais planejadas.
+Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia. **30 ordens**, das quais **8 já implementadas no PR #8** (aguardando publicação) e as demais planejadas.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
 > **Status de registro:** neste repositório ✅. No Roadmap Vivo do site ⏳ **pendente**: exige a chave do agente (`ROADMAP_AGENT_KEY`) no `.env`/ambiente (sem `--aplicar` o comando só simula; rodar de novo não duplica).
 
-### P0 — Urgente (8)
+### P0 — Urgente (9)
 
 - **✅ AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
   - *Estado:* implementado no repositório (PR #8); falta publicar
@@ -278,6 +278,10 @@ Origem: auditoria do código, dos testes e da documentação contra as capacidad
   - *Estado:* corrigido no repositório (PR #8); URGENTE publicar e rodar a verificação no servidor
   - *Situação:* verifyGoogleToken aceitava 'mock-google-token:<id>:<e-mail>:<nome>' em qualquer ambiente desde 19/09/2026. Com o e-mail do mestre, qualquer pessoa entrava como mestre e abria clientes, financeiro e usuários (reproduzido localmente em modo produção). Também não conferia o aud (para quem o token foi emitido), o emissor nem o e-mail verificado, e tinha um caminho alternativo por /userinfo sem aud. Afeta os 4 logins Google.
   - *Pronto quando:* Token de teste recusado fora de teste (provado nos 4 logins em modo produção); aud, emissor e e-mail verificado conferidos; correção publicada; node scripts/check-google-forgery.js rodado no servidor sem google_id suspeito e logins Google por IP revisados pelo Dr. Jorge; se houver suspeita, trocar senhas e encerrar sessões.
+- **✅ AUD-30 — Guardião do RBAC: senha do painel e senha Google só entram nas abas da função; 3 contas mestras**
+  - *Estado:* feito no repositório (PR #8); publicar com o próximo deploy
+  - *Situação:* scripts/check-rbac-guard.js (regra 8 do check-architecture; npm run check:rbac) reprova entrada do painel sem applyPermissionsAndLoadModules, Google sem aud/e-mail verificado ou com token de teste sem trava, rota /api sem regra e rota sensível pública. Mestres únicos em src/config/master-emails.js: jorgealvimtecnologia@gmail.com, jorgealvim10@gmail.com, jorgealvimadvocacia@gmail.com (GOOGLE_ADMIN_EMAILS aposentada). Corrigido também /api/documents, que dava 403 até para o mestre.
+  - *Pronto quando:* npm run check:rbac verde; adulterações reprovadas (tests/rbac-guardian.test.js); 3 contas entram como mestre e outros e-mails não (tests/master-google-login.test.js).
 
 ### P1 — Alto (8)
 

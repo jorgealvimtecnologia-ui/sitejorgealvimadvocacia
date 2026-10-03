@@ -212,6 +212,14 @@
       "titulo": "URGENTE: login Google aceitava token de teste em produção (entrada como mestre sem conta Google)",
       "descricao": "verifyGoogleToken aceitava 'mock-google-token:<id>:<e-mail>:<nome>' em qualquer ambiente desde 19/09/2026. Com o e-mail do mestre, qualquer pessoa entrava como mestre e abria clientes, financeiro e usuários (reproduzido localmente em modo produção). Também não conferia o aud (para quem o token foi emitido), o emissor nem o e-mail verificado, e tinha um caminho alternativo por /userinfo sem aud. Afeta os 4 logins Google.",
       "criterios": "Token de teste recusado fora de teste (provado nos 4 logins em modo produção); aud, emissor e e-mail verificado conferidos; correção publicada; node scripts/check-google-forgery.js rodado no servidor sem google_id suspeito e logins Google por IP revisados pelo Dr. Jorge; se houver suspeita, trocar senhas e encerrar sessões."
+    },
+    {
+      "ref": "AUD-30",
+      "prioridade": "P0",
+      "estado": "feito no repositório (PR #8); publicar com o próximo deploy",
+      "titulo": "Guardião do RBAC: senha do painel e senha Google só entram nas abas da função; 3 contas mestras",
+      "descricao": "scripts/check-rbac-guard.js (regra 8 do check-architecture; npm run check:rbac) reprova entrada do painel sem applyPermissionsAndLoadModules, Google sem aud/e-mail verificado ou com token de teste sem trava, rota /api sem regra e rota sensível pública. Mestres únicos em src/config/master-emails.js: jorgealvimtecnologia@gmail.com, jorgealvim10@gmail.com, jorgealvimadvocacia@gmail.com (GOOGLE_ADMIN_EMAILS aposentada). Corrigido também /api/documents, que dava 403 até para o mestre.",
+      "criterios": "npm run check:rbac verde; adulterações reprovadas (tests/rbac-guardian.test.js); 3 contas entram como mestre e outros e-mails não (tests/master-google-login.test.js)."
     }
   ]
 }
