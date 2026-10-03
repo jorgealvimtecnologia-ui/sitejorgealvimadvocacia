@@ -238,5 +238,27 @@
       "descricao": "No cadastro de operadores, \"Administrador Geral\" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta \"mariana\" ou \"gabriela\" por pedaço do texto digitado (ainda exige a senha da pessoa).",
       "criterios": "Perfil do Administrador Geral definido pelo Dr. Jorge; login por senha só por usuário ou e-mail exatos; guardião reprova a volta dos apelidos."
     }
+  ],
+  "sincronizar": [
+    {
+      "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
+      "status": "conforme",
+      "nota": "Publicado em produção em 03/10/2026 (versão f158399): senha de 10 a 64 caracteres em backend, formulários e scripts."
+    },
+    {
+      "titulo": "Tirar o .env do backup (ou criptografar o conjunto)",
+      "status": "conforme",
+      "nota": "Publicado em produção em 03/10/2026: o backup não copia mais o .env nem chaves; o .env agora fica no cofre criptografado e o guardião reprova exposição."
+    },
+    {
+      "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",
+      "status": "em_curso",
+      "nota": "No ar em 03/10/2026. Falta ligar o cron semanal no servidor (setup-backup-cron.sh) e o Dr. Jorge confirmar RPO 24 h e RTO 4 h."
+    },
+    {
+      "titulo": "Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto",
+      "status": "em_curso",
+      "nota": "No ar em 03/10/2026, só para advogados. Falta definir o titular e os substitutos no painel e configurar o gateway de WhatsApp."
+    }
   ]
 }
