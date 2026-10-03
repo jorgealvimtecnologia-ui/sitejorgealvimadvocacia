@@ -79,6 +79,7 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
      4. servidor: regra da(s) rota(s) em `src/middleware/rbac-rules.js` com `tab('tab_x')`; menu em `painel-1-app.js` (`TAB_RULES`);
      5. aba excluída: remover tudo isso (módulo, permissão, switch, coluna, regras) e rodar `npm run check:rbac`.
    * Verificação: `npm run check:rbac` (também roda dentro de `npm run check:architecture`).
+   * **Perfil novo ou mudado na matriz?** `tests/rbac-per-role.test.js` entra como CADA perfil e confere todas as rotas GET, a Visão Geral/cockpit e o menu; área nova da API vai também na tabela `AREA_ABA` desse teste.
 
 5. **Comandos de Verificação Mandatórios:**
    * Guardião do RBAC: `npm run check:rbac`
