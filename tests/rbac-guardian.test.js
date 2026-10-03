@@ -21,6 +21,7 @@ const FILES = [
   'src/modules/auth/auth.routes.js',
   'src/modules/hr/hr.routes.js',
   'public/js/painel/painel-1-app.js',
+  'public/js/painel/painel-3.js',
 ];
 
 /** Cópia mínima do projeto com uma adulteração; devolve as violações. */
@@ -66,6 +67,7 @@ describe('guardião RBAC: reprova adulterações', () => {
     ['painel sem permissões', 'public/js/painel/painel-1-app.js', (s) => s.replace('await loadAndApplyUserPermissions();', ''), /loadAndApplyUserPermissions/],
     ['módulo sem exigir aba', 'public/js/painel/painel-1-app.js', (s) => s.replace('if (isM || p.tab_hr === 1) loadHrDashboard();', 'loadHrDashboard();'), /tab_hr/],
     ['entrada sem função central', 'public/js/painel/painel-1-app.js', (s) => s.replace('await applyPermissionsAndLoadModules();', 'loadLeads();'), /entrada/],
+    ['menu aberto por padrão', 'public/js/painel/painel-3.js', (s) => s.replace('var WM_MASTER=false, WM_ALLOWED={};', 'var WM_MASTER=true, WM_ALLOWED=null;'), /FECHADO/],
     ['rbac sem deny-by-default', 'src/middleware/rbac.js', (s) => s.replace(/if \(!rule\)\s*\{/, 'if (false) {'), /deny-by-default/],
   ];
   for (const [nome, file, fn, re] of cases) {

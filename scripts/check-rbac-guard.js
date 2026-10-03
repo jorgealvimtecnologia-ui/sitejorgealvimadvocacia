@@ -120,6 +120,11 @@ export function checkRbacStatic(root = ROOT_DIR) {
     }
   }
 
+  // 3b) Controle de janelas/menu: FECHADO por padrão (antes de as permissões chegarem, ou se falharem)
+  const wm = read('public/js/painel/painel-3.js');
+  if (wm === null) violations.push(`${TAG} public/js/painel/painel-3.js não existe.`);
+  else if (!/var WM_MASTER=false,\s*WM_ALLOWED=\{\};/.test(wm)) violations.push(`${TAG} painel-3.js: o controle de módulos não começa FECHADO (WM_MASTER=false, WM_ALLOWED={}): enquanto as permissões não chegam, ou se falharem, o painel abriria tudo.`);
+
   // 4a) rbac.js continua negando por padrão
   const rbac = read('src/middleware/rbac.js');
   if (rbac === null) violations.push(`${TAG} src/middleware/rbac.js não existe.`);

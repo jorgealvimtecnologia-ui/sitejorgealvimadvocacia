@@ -991,7 +991,8 @@
     }
 
     // ---- Controle de acesso (RBAC): restringe módulos por perfil do usuário ----
-    var WM_MASTER=true, WM_ALLOWED=null;
+    // FECHADO POR PADRÃO: até as permissões do usuário chegarem do servidor (ou se falharem), só o que é de todos abre.
+    var WM_MASTER=false, WM_ALLOWED={};
     var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', clients:'tab_clients', docs:'tab_clients',
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
@@ -1049,7 +1050,7 @@
       try{
         fetch('/api/access-control/my-permissions',{headers:(typeof getAuthHeaders==='function'?getAuthHeaders():{})})
           .then(function(r){return r.json();}).then(function(d){
-            if(!d||!d.success) return;
+            if(!d||!d.success){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); return; }
             if(d.is_master){ WM_MASTER=true; WM_ALLOWED=null; }
             else { WM_MASTER=false; WM_ALLOWED={}; var p=d.permissions||{};
               Object.keys(MODULE_PERM).forEach(function(id){ if(p[MODULE_PERM[id]]) WM_ALLOWED[id]=1; }); }
@@ -1058,7 +1059,7 @@
               var defMod = (!moduleAllowed('lawsuits') && moduleAllowed('colaborador')) ? 'colaborador' : 'dashboard';
               openModule(defMod);
             }
-          }).catch(function(){});
+          }).catch(function(){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); });
       }catch(e){}
     }
 
