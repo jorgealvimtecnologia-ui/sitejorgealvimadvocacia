@@ -392,6 +392,7 @@
       try {
         const d = await jget('/api/notifications?box=all&limit=100');
         updateNotifBadge(d.unread, d.critical);
+        if (typeof loadDeadlineAlertsCard === 'function') loadDeadlineAlertsCard(); // configuração dos alertas externos (só o mestre)
         document.getElementById('notif-list').innerHTML = d.notifications.length
           ? d.notifications.map(n => `<div class="bg-white rounded-xl border ${n.is_read ? 'border-slate-200' : 'border-amber-300'} shadow-sm p-3 flex items-start gap-3">
               <span>${notifIcon(n.level)}</span>
@@ -400,6 +401,7 @@
                 ${n.message ? `<div class="text-xs text-slate-500">${esc(n.message)}</div>` : ''}
                 <div class="text-[10px] text-slate-400 mt-0.5">${fmtDate(n.created_at)}${n.link ? ` • <a class="underline cursor-pointer" onclick="gotoFromLink('${n.link}')">abrir</a>` : ''}</div>
               </div>
+              ${n.category === 'prazo' && n.resource_id && ['calendar_event', 'court_publication', 'admin_request'].includes(n.resource_type) ? `<button onclick="ackDeadline('${n.resource_type}','${esc(n.resource_id)}')" class="text-[11px] text-emerald-700 hover:text-emerald-900 underline">confirmar ciência</button>` : ''}
               ${n.is_read ? '' : `<button onclick="markNotifRead(${n.id})" class="text-[11px] text-slate-400 hover:text-slate-700">marcar lida</button>`}
             </div>`).join('')
           : '<div class="text-slate-400 text-sm p-4">Nenhuma notificação.</div>';
@@ -414,6 +416,11 @@
     async function markNotifRead(id) { await jsend('/api/notifications/' + id + '/read', 'PATCH', { is_read: true }); loadNotificationsList(); }
     async function markAllNotificationsRead() { await jsend('/api/notifications/read-all', 'POST'); loadNotificationsList(); }
     async function scanDeadlinesNow() { const { data } = await jsend('/api/notifications/scan', 'POST'); if (data.message) alert(data.message); loadNotificationsList(); }
+    // Ciência de prazo (só advogados cadastrados com OAB; o servidor confere quem é).
+    async function ackDeadline(type, id) {
+      const { ok, data } = await jsend('/api/deadline-alerts/ack', 'POST', { resource_type: type, resource_id: id });
+      alert(ok ? (data.alreadyAcknowledged ? 'A ciência já estava registrada em nome de ' : 'Ciência registrada em nome de ') + data.lawyer + '.' : (data.error || 'Não foi possível registrar a ciência.'));
+    }
     function gotoFromLink(link) { if (link && link.startsWith('#tab:')) switchTab(link.slice(5)); }
 
     // ---------------- ASSINATURAS ----------------

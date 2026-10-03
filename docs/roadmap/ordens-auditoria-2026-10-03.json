@@ -29,8 +29,9 @@
       "ref": "AUD-04",
       "prioridade": "P0",
       "titulo": "Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto",
-      "descricao": "A varredura de prazos (hora em hora, janelas até 15 dias) só gera notificação dentro do painel. Falta saída por canal externo, confirmação de que o responsável viu e escalonamento ao substituto e ao titular.",
-      "criterios": "Alerta escalonado (7, 3 e 1 dia e no dia) chega por e-mail e/ou WhatsApp; exige confirmação de ciência registrada com autor e horário; sem confirmação, avisa o substituto e o titular; falha de envio é registrada; testes automatizados cobrindo o escalonamento."
+      "descricao": "A varredura de prazos só gerava notificação dentro do painel. Agora há aviso por WhatsApp e e-mail, SÓ para advogados (integrante ativo, função de Advogado, OAB cadastrada; o perfil 'advogado' do controle de acesso é o valor padrão da coluna e não prova nada), escalonado D-7/D-3/D-1/D-0 e 3 dias após o vencimento, com ciência por link ou painel, escalonamento a substituto e titular, registro de cada envio, reenvio e alerta crítico quando desiste.",
+      "criterios": "Só advogados recebem (provado por teste com secretária e estagiário rotulados 'advogado'); ciência registrada com autor, hora e meio; sem ciência escala a substituto e titular; falhas registradas e reenviadas; configuração pelo painel; documentação em docs/ALERTAS-DE-PRAZO.md.",
+      "estado": "implementado no repositório (PR #8); falta o Dr. Jorge definir titular/substitutos e configurar o gateway de WhatsApp e o SMTP"
     },
     {
       "ref": "AUD-05",
@@ -187,6 +188,22 @@
       "titulo": "Migrar o .env do servidor Contabo para o cofre criptografado e confirmar o nginx (ação do Dr. Jorge)",
       "descricao": "O deploy passa a recusar publicar enquanto o .env do servidor tiver segredos em texto puro. O primeiro deploy precisa de uma liberação de uso único; depois, migrar com node scripts/env-vault.js migrate --gerar-chave, guardar a chave no cofre de senhas e reiniciar. Também confirmar que o nginx do Contabo (que não está no repositório) bloqueia arquivos ocultos.",
       "criterios": "node scripts/env-vault.js status sem segredos em texto puro; chave guardada no cofre de senhas; e-mail de linha de base recebido; node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br sem violações; rotação das chaves se houver suspeita de exposição anterior."
+    },
+    {
+      "ref": "AUD-27",
+      "prioridade": "P0",
+      "estado": "proposta de matriz escrita (docs/PAPEIS-E-PERMISSOES.md); aguardando aprovação do Dr. Jorge",
+      "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
+      "descricao": "Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente.",
+      "criterios": "Cada pessoa tem exatamente uma função, escolhida pelo mestre; a permissão vem da função (sem nome próprio nem texto de login no código); mudar a função muda o acesso; exceções individuais só pelo mestre e registradas na auditoria; escopo de dados aplicado no servidor (ex.: advogado só vê seus processos); chefe de sistema de informação sem acesso a dados de clientes; testes por função na API e nas pastas de arquivos; matriz aprovada pelo Dr. Jorge."
+    },
+    {
+      "ref": "AUD-28",
+      "prioridade": "P1",
+      "estado": "resolvido neste PR (npm test serial)",
+      "titulo": "Testes automatizados instáveis (falso vermelho em cerca de metade das execuções)",
+      "descricao": "Medido na main original: 3 de 6 execuções de npm test falharam com 'Unable to deserialize cloned data' (erro do executor de testes do Node ao ler a saída de api.test.js em paralelo), sem nenhum teste de fato reprovado.",
+      "criterios": "npm test e a CI passam de forma estável; execução serial custa cerca de 57 s contra 24 s; 6 de 6 execuções seriais verdes."
     }
   ]
 }

@@ -55,6 +55,10 @@ const RULES = [
   // ---- Qualquer sessão logada ----
   [/^\/api\/auth\/(me|unlock)\b/, ANY],
   [/^\/api\/notifications(\/|$)/, PANEL],
+  // Alertas de prazo por WhatsApp/e-mail: confirmar ciência = operador logado (o servidor exige que seja advogado
+  // cadastrado ou o mestre); todo o resto (config, preferências, log, execução) = só o mestre.
+  [/^\/api\/deadline-alerts\/ack\b/, PANEL],
+  [/^\/api\/deadline-alerts(\/|$)/, MASTER],
   [/^\/api\/access-control\/my-permissions\b/, ANY],
 
   // ---- Só o mestre (administração sensível) ----

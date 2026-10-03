@@ -27,6 +27,7 @@ import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
 import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } from './src/modules/sync/sync.routes.js';
 import { startEnvWatcher } from './src/shared/env-watch.js';
+import { deadlineAlertsRouter, startDeadlineAlerts } from './src/modules/deadline-alerts/deadline-alerts.routes.js';
 import { adminRequestsRouter } from './src/modules/adminrequests/adminrequests.routes.js';
 import { kanbanRouter } from './src/modules/kanban/kanban.routes.js';
 import { runMigrations } from './src/db/migrate.js';
@@ -1653,6 +1654,7 @@ app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: 0,
 // Roteadores Modulares
 app.use(rocketsRouter);
 app.use(notificationsRouter);
+app.use(deadlineAlertsRouter);
 app.use(esignRouter);
 app.use(lgpdRouter);
 app.use(dashboardRouter);
@@ -3110,6 +3112,8 @@ if (!IS_TEST) {
     try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
     // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
     try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
+    // Alertas de prazo por WhatsApp/e-mail (só para advogados), com escalonamento e ciência.
+    try { startDeadlineAlerts(); } catch (e) { console.warn('[BOOT] Alertas de prazo externos não iniciados:', e.message); }
     // Vigia do .env: toda alteração gera e-mail ao titular (cofre criptografado + relatório só com nomes).
     try { startEnvWatcher({ dir: __dirname }); } catch (e) { console.warn('[BOOT] Vigia do .env não iniciado:', e.message); }
   });

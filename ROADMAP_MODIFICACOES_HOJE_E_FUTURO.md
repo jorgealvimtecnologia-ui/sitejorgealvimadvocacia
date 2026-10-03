@@ -237,28 +237,44 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 (repositório x capacidades discutidas)
 
-Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia (jurídico, CRM, ERP, portais, segurança, operação, design e papéis humanos). Resultado verificado na data: **287/287 testes passando**, lint sem erros, guardião de arquitetura aprovado e 1 vulnerabilidade moderada de dependência (`multer`).
+Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia. **28 ordens**, das quais **6 já implementadas no PR #8** (aguardando publicação) e as demais planejadas.
 
-**Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens pelo comando abaixo.
+**Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
-> **Status de registro:** neste repositório ✅ registrado em 03/10/2026. No Roadmap Vivo do site ⏳ **pendente**: exige a chave do agente (`ROADMAP_AGENT_KEY`) no `.env`/ambiente. Depois de configurá-la, rode `npm run roadmap:register-batch -- --aplicar` (sem `--aplicar` apenas simula; rodar de novo não duplica ordens).
+> **Status de registro:** neste repositório ✅. No Roadmap Vivo do site ⏳ **pendente**: exige a chave do agente (`ROADMAP_AGENT_KEY`) no `.env`/ambiente (sem `--aplicar` o comando só simula; rodar de novo não duplica).
 
-### P0 — Urgente (4)
+### P0 — Urgente (7)
 
-- **AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
-  - *Situação:* Hoje a política aceita 4 a 12 caracteres (src/shared/password-policy.js): o mínimo é muito fraco e o máximo impede frases longas. Manter a fonte única da política e o upgrade transparente no login.
-  - *Pronto quando:* Mínimo de 10 a 12 e máximo de pelo menos 64 caracteres, aplicado em todos os pontos (painel, portais, scripts de reset); senhas antigas continuam entrando e são orientadas a trocar; testes de política atualizados e npm test verde.
-- **AUD-02 — Tirar o .env do backup (ou criptografar o conjunto)**
-  - *Situação:* backup.sh copia o .env para .env.backup dentro de cada backup, e puxar-backup-hd.sh leva isso para o HD externo sem criptografia, junto com chaves Asaas, SMTP e Meta.
-  - *Pronto quando:* Backups novos não contêm segredos em texto puro; backups antigos revisados e limpos; decisão registrada sobre rotacionar segredos caso o HD externo tenha sido exposto.
-- **AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
-  - *Situação:* Há backup diário (cron 03:00, VACUUM INTO) e cópia externa, mas nenhum teste que prove que o banco e os documentos restauram.
+- **✅ AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
+  - *Estado:* implementado no repositório (PR #8); falta publicar
+  - *Situação:* O backend já exigia 8 a 64 caracteres, mas o front-end ainda limitava os campos a 4 a 12 (maxlength="12" impedia digitar senha longa), os textos diziam "4 a 12", scripts/reset-master-pass.js tinha regra própria e docs/SECURITY.md estava desatualizado. Correção da premissa original desta ordem, que se baseou na documentação sem conferir o código.
+  - *Pronto quando:* Mínimo de 10 e máximo de 64 caracteres em todos os pontos (backend, formulários, textos, scripts de reset); senhas antigas continuam entrando e o login avisa para trocar; teste que falha se o front divergir da política; npm test verde.
+- **✅ AUD-02 — Tirar o .env do backup (ou criptografar o conjunto)**
+  - *Estado:* implementado no repositório (PR #8); falta publicar
+  - *Situação:* O backup.sh copiava o .env e as chaves TLS para um pacote levado a HD externo sem criptografia; e a chave do Asaas, o token da Meta e as sessões ficam em texto puro DENTRO do leads.db. Confirmado por teste que o backup antigo vazava a chave do Asaas.
+  - *Pronto quando:* Backups novos sem .env, sem chaves privadas e com a cópia do banco higienizada; ferramenta que limpa pacotes antigos; teste com segredos plantados; decisão do Dr. Jorge sobre girar chaves caso algum backup antigo já tenha saído do controle.
+- **✅ AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
+  - *Estado:* implementado no repositório (PR #8); falta publicar e o Dr. Jorge confirmar RPO/RTO
+  - *Situação:* Havia backup diário e cópia externa, mas nenhum teste que provasse que o banco e os documentos restauram, nem aviso se o cron parasse. Também: o script de cron perdia o agendamento em silêncio em servidor sem crontab.
   - *Pronto quando:* Script de restauração em ambiente isolado que valida integridade do leads.db e dos arquivos; rotina mensal registrada; RPO e RTO documentados em docs/INFRA.md.
-- **AUD-04 — Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto**
-  - *Situação:* A varredura de prazos (hora em hora, janelas até 15 dias) só gera notificação dentro do painel. Falta saída por canal externo, confirmação de que o responsável viu e escalonamento ao substituto e ao titular.
-  - *Pronto quando:* Alerta escalonado (7, 3 e 1 dia e no dia) chega por e-mail e/ou WhatsApp; exige confirmação de ciência registrada com autor e horário; sem confirmação, avisa o substituto e o titular; falha de envio é registrada; testes automatizados cobrindo o escalonamento.
+- **✅ AUD-04 — Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto**
+  - *Estado:* implementado no repositório (PR #8); falta o Dr. Jorge definir titular/substitutos e configurar o gateway de WhatsApp e o SMTP
+  - *Situação:* A varredura de prazos só gerava notificação dentro do painel. Agora há aviso por WhatsApp e e-mail, SÓ para advogados (integrante ativo, função de Advogado, OAB cadastrada; o perfil 'advogado' do controle de acesso é o valor padrão da coluna e não prova nada), escalonado D-7/D-3/D-1/D-0 e 3 dias após o vencimento, com ciência por link ou painel, escalonamento a substituto e titular, registro de cada envio, reenvio e alerta crítico quando desiste.
+  - *Pronto quando:* Só advogados recebem (provado por teste com secretária e estagiário rotulados 'advogado'); ciência registrada com autor, hora e meio; sem ciência escala a substituto e titular; falhas registradas e reenviadas; configuração pelo painel; documentação em docs/ALERTAS-DE-PRAZO.md.
+- **✅ AUD-25 — Guardião do .env: nunca exposto no GitHub nem no servidor; segredos só criptografados; aviso por e-mail a cada alteração**
+  - *Estado:* implementado no repositório (PR #8); falta migrar o servidor (AUD-26)
+  - *Situação:* Pedido do Dr. Jorge. O .env com segredos não pode ficar em texto puro no GitHub, na imagem Docker nem no servidor Contabo; se precisar existir lá, criptografado. Toda alteração do .env envia e-mail ao titular. Também corrige um bug existente: o .env era carregado depois dos módulos que leem o SMTP, então o SMTP configurado no .env era ignorado. O .dockerignore não excluía o .env (o COPY . . o embutia na imagem).
+  - *Pronto quando:* Regra no CLAUDE.md e no guardião (npm run check:architecture); cofre .env.enc com chave fora do projeto; deploy recusa segredos em texto puro; verificação diária do site ao vivo na CI; e-mail a cada alteração com relatório só de nomes e o cofre criptografado, nunca valores nem a chave; testes cobrindo vazamento.
+- **AUD-26 — Migrar o .env do servidor Contabo para o cofre criptografado e confirmar o nginx (ação do Dr. Jorge)**
+  - *Estado:* pendente: ação no servidor (uso único)
+  - *Situação:* O deploy passa a recusar publicar enquanto o .env do servidor tiver segredos em texto puro. O primeiro deploy precisa de uma liberação de uso único; depois, migrar com node scripts/env-vault.js migrate --gerar-chave, guardar a chave no cofre de senhas e reiniciar. Também confirmar que o nginx do Contabo (que não está no repositório) bloqueia arquivos ocultos.
+  - *Pronto quando:* node scripts/env-vault.js status sem segredos em texto puro; chave guardada no cofre de senhas; e-mail de linha de base recebido; node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br sem violações; rotação das chaves se houver suspeita de exposição anterior.
+- **AUD-27 — Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome**
+  - *Estado:* proposta de matriz escrita (docs/PAPEIS-E-PERMISSOES.md); aguardando aprovação do Dr. Jorge
+  - *Situação:* Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente.
+  - *Pronto quando:* Cada pessoa tem exatamente uma função, escolhida pelo mestre; a permissão vem da função (sem nome próprio nem texto de login no código); mudar a função muda o acesso; exceções individuais só pelo mestre e registradas na auditoria; escopo de dados aplicado no servidor (ex.: advogado só vê seus processos); chefe de sistema de informação sem acesso a dados de clientes; testes por função na API e nas pastas de arquivos; matriz aprovada pelo Dr. Jorge.
 
-### P1 — Alto (7)
+### P1 — Alto (8)
 
 - **AUD-05 — Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo**
   - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
@@ -281,6 +297,10 @@ Origem: auditoria do código, dos testes e da documentação contra as capacidad
 - **AUD-11 — Folga arquitetural: reduzir server.js e quebrar switchTab**
   - *Situação:* server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).
   - *Pronto quando:* server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.
+- **✅ AUD-28 — Testes automatizados instáveis (falso vermelho em cerca de metade das execuções)**
+  - *Estado:* resolvido neste PR (npm test serial)
+  - *Situação:* Medido na main original: 3 de 6 execuções de npm test falharam com 'Unable to deserialize cloned data' (erro do executor de testes do Node ao ler a saída de api.test.js em paralelo), sem nenhum teste de fato reprovado.
+  - *Pronto quando:* npm test e a CI passam de forma estável; execução serial custa cerca de 57 s contra 24 s; 6 de 6 execuções seriais verdes.
 
 ### P2 — Normal (13)
 
