@@ -40,6 +40,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "backup:scrub-old": "node scripts/backup-scrub-old.js",
+    "backup:verify": "node scripts/backup-restore-test.js",
     "env:vault": "node scripts/env-vault.js"
   },
   "devDependencies": {

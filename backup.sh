@@ -74,6 +74,11 @@ if [ -n "${VAZADOS}" ]; then
     exit 1
 fi
 
+# Manifesto de integridade: o teste de restauração (scripts/backup-restore-test.js)
+# confere cada arquivo do pacote contra estes hashes SHA-256.
+( cd "${DEST_FOLDER}" && find . -type f ! -name MANIFEST.sha256 -print0 | sort -z | xargs -0 -r sha256sum > MANIFEST.sha256 )
+echo "   ✓ Manifesto de integridade gerado ($(wc -l < "${DEST_FOLDER}/MANIFEST.sha256") arquivo(s))."
+
 # 4. Compactação e Empacotamento
 echo "🗜️  Compactando pacote de backup..."
 cd "${BACKUP_DIR}"

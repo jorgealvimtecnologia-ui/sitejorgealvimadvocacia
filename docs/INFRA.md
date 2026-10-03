@@ -97,7 +97,8 @@ O backup de **dados** (banco, documentos) é separado do backup de **código** q
   Cópia externa (3-2-1): `puxar-backup-hd.sh` baixa o pacote mais recente para o HD externo.
 - **Conteúdo:** `leads.db` (cópia a quente, **higienizada**), `storage/` (documentos de clientes e do
   escritório), certificados **públicos** de `nginx/ssl/` e `env-variaveis.txt` (só os **nomes** das
-  variáveis do `.env`, sem valores, para saber o que reconfigurar).
+  variáveis do `.env`, sem valores, para saber o que reconfigurar) e `MANIFEST.sha256` (hash de cada arquivo, usado pelo
+  teste de restauração).
 
 ### Segredos fora do backup
 
@@ -135,6 +136,53 @@ node scripts/backup-scrub-old.js /media/SEU_HD/Backups-JorgeAlvim --aplicar
 Limpar o arquivo **não desfaz** uma exposição que já aconteceu: se alguma cópia antiga já saiu do seu
 controle (HD perdido ou emprestado, enviado a terceiros), **gire as chaves** (Asaas, SMTP, Meta e as demais
 do `.env`) em cada serviço.
+
+### Teste de restauração, RPO e RTO
+
+Backup que nunca foi restaurado é só uma esperança. Por isso o backup passa por um **teste de restauração**
+(`scripts/backup-restore-test.js`, `npm run backup:verify`): ele pega o pacote mais recente, **restaura numa pasta
+temporária isolada** (nunca toca o banco nem os arquivos de produção) e confere:
+
+| Verificação | O que pega |
+| --- | --- |
+| Idade do backup (máx. 36 h) | o cron diário parou de rodar |
+| Checksum SHA-256 do pacote | pacote corrompido ou adulterado |
+| Extração | pacote ilegível |
+| `PRAGMA integrity_check` do banco | banco corrompido (inclusive o que ainda abre) |
+| Tabelas essenciais + pelo menos 1 usuário | backup "vazio" que não serviria para restaurar |
+| Cada arquivo contra o `MANIFEST.sha256` | documento de cliente corrompido, trocado ou faltando |
+| Sem segredos em texto puro | regressão da proteção do `.env` |
+
+- **Quando:** todo **domingo às 04:30** (configurado por `scripts/setup-backup-cron.sh`). Semanal de propósito: se o
+  backup diário parar, o aviso chega em até 7 dias, não em 30.
+- **Se falhar:** e-mail ao titular (`--avisar`, precisa de SMTP) e linha em `backups/restore-test.log`. Backup que
+  falha no teste **não é confiável**: corrija antes de depender dele.
+- **Rodar à mão:** `npm run backup:verify` (ou informe um pacote: `node scripts/backup-restore-test.js caminho.tar.gz`).
+  Passe `--json` para uma saída estruturada. O relatório mostra o **tempo da restauração**, que é o dado real para o RTO.
+- Pacotes antigos (sem manifesto) passam com **aviso**; não são reprovados.
+
+**Metas de recuperação** (propostas pelo desenho atual; **o Dr. Jorge precisa confirmar ou ajustar**):
+
+| Meta | Valor proposto | Por quê |
+| --- | --- | --- |
+| **RPO** (quanto dado se aceita perder) | **até 24 h** | há um backup por dia, às 03:00: na pior hora do dia perde-se o que entrou desde as 03:00 |
+| **RTO** (quanto tempo parado, no máximo) | **até 4 h** | tempo para pôr um servidor de pé, restaurar o pacote, recolocar o `.env` e conferir. É uma **meta ainda não medida de ponta a ponta**: o teste semanal mede só a restauração em área isolada; faça um exercício real (servidor reserva) para validar |
+
+Se 24 h de perda for demais para o escritório, o caminho é copiar o banco com mais frequência (ex.: de hora em hora),
+o que **ainda não está implementado**.
+
+**Restaurar de verdade (servidor perdido ou dados corrompidos):**
+
+1. Pegue o pacote mais recente: no servidor (`backups/`) ou no HD externo (`puxar-backup-hd.sh` guarda lá).
+2. **Prove que ele serve antes de usar:** `node scripts/backup-restore-test.js caminho/do/pacote.tar.gz`.
+3. Pare o serviço: `systemctl stop advocacia`.
+4. Extraia: `tar -xzf pacote.tar.gz -C /tmp/` e copie `leads.db` e `storage/` para `/var/www/advocacia/`.
+   Apague `leads.db-wal` e `leads.db-shm` antigos, se existirem.
+5. Recoloque o código (`deploy-servidor.bat`) e o `.env`/`.env.enc` (do cofre de senhas; use `env-variaveis.txt`
+   como checklist) e a chave do cofre em `/etc/advocacia/env.key`.
+6. `systemctl start advocacia`, confira `http://localhost:3000/health` e faça login.
+7. Informe de novo as chaves de API no painel (Asaas, Meta): a cópia do banco no backup vem sem elas, de propósito.
+8. Registre o dia, o pacote usado e quanto tempo levou: é o seu RTO real.
 
 ## `.env` criptografado no servidor (cofre) e o guardião do `.env`
 

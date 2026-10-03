@@ -21,8 +21,9 @@
       "ref": "AUD-03",
       "prioridade": "P0",
       "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",
-      "descricao": "Há backup diário (cron 03:00, VACUUM INTO) e cópia externa, mas nenhum teste que prove que o banco e os documentos restauram.",
-      "criterios": "Script de restauração em ambiente isolado que valida integridade do leads.db e dos arquivos; rotina mensal registrada; RPO e RTO documentados em docs/INFRA.md."
+      "descricao": "Havia backup diário e cópia externa, mas nenhum teste que provasse que o banco e os documentos restauram, nem aviso se o cron parasse. Também: o script de cron perdia o agendamento em silêncio em servidor sem crontab.",
+      "criterios": "Script de restauração em ambiente isolado que valida integridade do leads.db e dos arquivos; rotina mensal registrada; RPO e RTO documentados em docs/INFRA.md.",
+      "estado": "implementado no repositório (PR #8); falta publicar e o Dr. Jorge confirmar RPO/RTO"
     },
     {
       "ref": "AUD-04",
