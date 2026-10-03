@@ -1047,9 +1047,18 @@
         });
       }
 
+      gateByModule();
+
       // 4. Fechar janelas ativas não autorizadas
       order.slice().forEach(function(id){ if(!moduleAllowed(id)) closeWin(id); });
     }
+    // Esconde atalhos/cartões de módulos que a pessoa não pode abrir (data-need-module="clients", "finance"...)
+    function gateByModule(){
+      document.querySelectorAll('[data-need-module]').forEach(function(el){
+        el.style.display = moduleAllowed(el.getAttribute('data-need-module')) ? '' : 'none';
+      });
+    }
+    window.gateByModule=gateByModule;
     function fetchPerms(){
       try{
         fetch('/api/access-control/my-permissions',{headers:(typeof getAuthHeaders==='function'?getAuthHeaders():{})})

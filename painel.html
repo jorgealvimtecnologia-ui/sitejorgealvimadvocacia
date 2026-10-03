@@ -1077,19 +1077,19 @@
 
           <!-- Ações Rápidas de 1 Clique (Zero Dead-Ends) -->
           <div class="flex flex-wrap items-center gap-2">
-            <button type="button" onclick="if(typeof openNewClientModal==='function') openNewClientModal(); else openModule('clients');" style="background:#0f172a;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+            <button type="button" data-need-module="clients" onclick="if(typeof openNewClientModal==='function') openNewClientModal(); else openModule('clients');" style="background:#0f172a;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>➕</span> <span>Novo Cliente</span>
             </button>
-            <button type="button" onclick="if(typeof openNewLawsuitModal==='function') openNewLawsuitModal(); else openModule('lawsuits');" style="background:#1d4ed8;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+            <button type="button" data-need-module="lawsuits" onclick="if(typeof openNewLawsuitModal==='function') openNewLawsuitModal(); else openModule('lawsuits');" style="background:#1d4ed8;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>⚖️</span> <span>Novo Processo</span>
             </button>
-            <button type="button" onclick="if(typeof openNewTransactionModal==='function') openNewTransactionModal(); else openModule('finance');" style="background:#047857;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+            <button type="button" data-need-module="finance" onclick="if(typeof openNewTransactionModal==='function') openNewTransactionModal(); else openModule('finance');" style="background:#047857;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>💰</span> <span>Novo Lançamento</span>
             </button>
             <button type="button" onclick="if(typeof openNewRocketModal==='function') openNewRocketModal(); else openModule('rockets');" style="background:#7e22ce;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>🚀</span> <span>Novo Despacho</span>
             </button>
-            <button type="button" onclick="openModule('roadmap')" style="background:#4338ca;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]" title="Abrir Radar Tecnológico & Roadmap Vivo 2026–2029">
+            <button type="button" data-need-module="roadmap" onclick="openModule('roadmap')" style="background:#4338ca;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]" title="Abrir Radar Tecnológico & Roadmap Vivo 2026–2029">
               <span>🗺️</span> <span>Roadmap Vivo</span>
             </button>
             <button type="button" onclick="loadDashboardOverview(true); window.loadMeuDiaHoje && window.loadMeuDiaHoje();" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition hover:bg-slate-100">

@@ -55,10 +55,10 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="openModule('calendar')" class="px-3.5 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                  <button type="button" data-need-module="calendar" onclick="openModule('calendar')" class="px-3.5 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
                     <span>Ver Prazos Fatais</span> <span>➔</span>
                   </button>
-                  <button type="button" onclick="openModule('publications')" class="px-3 py-2 bg-red-950/40 hover:bg-red-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
+                  <button type="button" data-need-module="publications" onclick="openModule('publications')" class="px-3 py-2 bg-red-950/40 hover:bg-red-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
                     DJEN / Intimações
                   </button>
                 </div>
@@ -78,10 +78,10 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="openModule('calendar')" class="px-3.5 py-2 bg-slate-950 text-amber-400 hover:bg-slate-900 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                  <button type="button" data-need-module="calendar" onclick="openModule('calendar')" class="px-3.5 py-2 bg-slate-950 text-amber-400 hover:bg-slate-900 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
                     <span>Ver Agenda</span> <span>➔</span>
                   </button>
-                  <button type="button" onclick="openModule('lawsuits')" class="px-3 py-2 bg-white/40 hover:bg-white/60 text-slate-950 font-semibold text-xs rounded-xl border border-black/10 transition">
+                  <button type="button" data-need-module="lawsuits" onclick="openModule('lawsuits')" class="px-3 py-2 bg-white/40 hover:bg-white/60 text-slate-950 font-semibold text-xs rounded-xl border border-black/10 transition">
                     Processos
                   </button>
                 </div>
@@ -101,10 +101,10 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="openModule('judicial')" class="px-3.5 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                  <button type="button" data-need-module="judicial" onclick="openModule('judicial')" class="px-3.5 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
                     <span>Radar Judicial</span> <span>➔</span>
                   </button>
-                  <button type="button" onclick="openModule('calendar')" class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
+                  <button type="button" data-need-module="calendar" onclick="openModule('calendar')" class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
                     Ver Agenda
                   </button>
                 </div>
@@ -113,7 +113,7 @@
         }
 
         // 3. Renderizar os 8 Cards Executivos Interativos de 1 Clique
-        const makeCard = (opt) => `
+        const makeCard = (opt) => (typeof window.moduleAllowed === 'function' && !window.moduleAllowed(opt.module)) ? '' : `
           <div onclick="openModule('${opt.module}')" class="group bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-gold-300 hover:scale-[1.01] transition-all duration-150 cursor-pointer flex flex-col justify-between" title="Abrir módulo ${opt.moduleName}">
             <div>
               <div class="flex items-center justify-between">
@@ -317,6 +317,7 @@
         // 7. Funil e Sincronização
         loadDashboardFunnel();
         loadSyncStatus();
+        if (typeof window.gateByModule === 'function') window.gateByModule();   // esconde atalhos/cartões de áreas sem permissão
       } catch (e) { console.error('[dashboard]', e); }
     }
     async function loadSyncStatus() {
