@@ -37,7 +37,8 @@
     "lint:fix": "eslint . --fix",
     "audit": "npm audit --omit=dev --audit-level=high",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "backup:scrub-old": "node scripts/backup-scrub-old.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

@@ -87,3 +87,51 @@ Passos na sua conta (feitos por você):
 
 Observações: a renovação do Let's Encrypt (HTTP-01) continua funcionando através da
 Cloudflare; o plano Free limita upload a 100 MB (o app já usa 100 MB — no limite).
+
+## Backup de dados (diário), segredos e recuperação
+
+O backup de **dados** (banco, documentos) é separado do backup de **código** que o deploy faz.
+
+- **Quando:** todo dia às 03:00, por cron (`scripts/setup-backup-cron.sh` configura; roda `backup.sh`).
+- **Onde:** `backups/backup_jorgealvim_<data-hora>.tar.gz` + `.sha256` no servidor; fica 30 dias.
+  Cópia externa (3-2-1): `puxar-backup-hd.sh` baixa o pacote mais recente para o HD externo.
+- **Conteúdo:** `leads.db` (cópia a quente, **higienizada**), `storage/` (documentos de clientes e do
+  escritório), certificados **públicos** de `nginx/ssl/` e `env-variaveis.txt` (só os **nomes** das
+  variáveis do `.env`, sem valores, para saber o que reconfigurar).
+
+### Segredos fora do backup
+
+O pacote é levado a HD externo sem criptografia, então **nunca** leva segredos em texto puro:
+
+| Segredo | O que o backup faz |
+| --- | --- |
+| `.env` (Asaas, SMTP, Meta, WhatsApp, reCAPTCHA…) | **Não copia.** Só grava os nomes em `env-variaveis.txt` |
+| Chaves privadas TLS (`*key*`, `.pfx`, `.p12`) | **Não copia** (o certificado se reemite) |
+| Chaves de API gravadas no banco (`system_settings`, `meta_api_settings`: `asaas_api_key`, `meta_system_user_token`…) | A **cópia** do banco sai com esses valores vazios (`scripts/backup-scrub-db.js`). O banco de produção não é alterado |
+| Sessões de login e links temporários (`auth_sessions`, `magic_upload_tokens`) | Removidos da cópia |
+
+O `backup.sh` aborta se algum arquivo `.env`/chave escapar para dentro do pacote, e apaga a pasta
+temporária em qualquer saída. Coberto por `tests/backup-secrets.test.js`.
+
+**Onde fica, então, o `.env` de produção?** Guarde uma cópia no seu **cofre de senhas** (ex.: Bitwarden,
+1Password) ou num arquivo criptografado só seu, fora do servidor e do HD de backup. Sem essa cópia, uma
+restauração a partir de um servidor novo exige recriar as chaves nos painéis de cada serviço.
+
+**Depois de restaurar um backup:** (1) recolocar o `.env` a partir do cofre (use `env-variaveis.txt` como
+checklist); (2) informar de novo as chaves de API no painel (Financeiro → Asaas; Meta Ads); (3) fazer login
+de novo (as sessões antigas não existem mais).
+
+### Limpar backups antigos (feitos antes desta proteção)
+
+Pacotes antigos podem conter `.env.backup`, chaves TLS e um banco com chaves de API. Revise e limpe,
+tanto no servidor quanto no HD externo (passe a pasta de cada um):
+
+```
+node scripts/backup-scrub-old.js backups             # só relata, não altera nada
+node scripts/backup-scrub-old.js backups --aplicar   # regrava os pacotes sem os segredos
+node scripts/backup-scrub-old.js /media/SEU_HD/Backups-JorgeAlvim --aplicar
+```
+
+Limpar o arquivo **não desfaz** uma exposição que já aconteceu: se alguma cópia antiga já saiu do seu
+controle (HD perdido ou emprestado, enviado a terceiros), **gire as chaves** (Asaas, SMTP, Meta e as demais
+do `.env`) em cada serviço.
