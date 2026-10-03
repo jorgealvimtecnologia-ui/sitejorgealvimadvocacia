@@ -682,7 +682,10 @@
           (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
           (tab === 'calendar' && p.tab_calendar === 1) ||
           (tab === 'publications' && p.tab_publications === 1) ||
-          (tab === 'docs' && p.tab_lawsuits === 1) ||
+          (tab === 'docs' && p.tab_clients === 1) ||
+          (tab === 'dashboard' && p.tab_dashboard === 1) ||
+          (tab === 'kanban' && p.tab_kanban === 1) ||
+          (['editor', 'calc'].includes(tab) && p.tab_tools === 1) ||
           (tab === 'finance' && p.tab_financial === 1) ||
           (tab === 'nfse' && p.tab_nfse === 1) ||
           (tab === 'esign' && p.tab_esign === 1) ||
@@ -973,7 +976,7 @@
         'lawsuits': isMaster || perms.tab_lawsuits === 1,
         'calendar': isMaster || perms.tab_calendar === 1,
         'publications': isMaster || perms.tab_publications === 1,
-        'docs': isMaster || perms.tab_lawsuits === 1,
+        'docs': isMaster || perms.tab_clients === 1,
         'finance': isMaster || perms.tab_financial === 1,
         'nfse': isMaster || perms.tab_nfse === 1,
         'blog': isMaster || perms.tab_blog === 1,
@@ -988,7 +991,7 @@
         'hr': isMaster || perms.tab_hr === 1,
         'rockets': true,
         'colaborador': isMaster || perms.tab_colaborador === 1,
-        'dashboard': isMaster || perms.tab_lawsuits === 1 || perms.tab_clients === 1 || perms.tab_financial === 1,
+        'dashboard': isMaster || perms.tab_dashboard === 1,
         'notifications': isMaster || perms.tab_alerts === 1,
         'esign': isMaster || perms.tab_esign === 1,
         'lgpd': isMaster || perms.tab_audit === 1,

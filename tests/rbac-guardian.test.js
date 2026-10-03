@@ -73,7 +73,7 @@ describe('guardião RBAC: reprova adulterações', () => {
     ['menu aberto por padrão', 'public/js/painel/painel-3.js', (s) => s.replace('var WM_MASTER=false, WM_ALLOWED={};', 'var WM_MASTER=true, WM_ALLOWED=null;'), /FECHADO/],
     ['aba NOVA sem regra de acesso', 'public/js/painel/painel-3.js', (s) => s.replace("var MODULES={", "var MODULES={ 'aba-nova':{label:'Aba Nova'},"), /ABA NOVA SEM REGRA.*aba-nova/],
     ['aba EXCLUÍDA ainda no RBAC', 'public/js/painel/painel-3.js', (s) => s.replace("var ALWAYS_ALLOWED={", "var ALWAYS_ALLOWED={'aba-fantasma':1,"), /ABA EXCLUÍDA.*aba-fantasma/],
-    ['permissão nova sem switch na matriz', 'src/shared/permissions.js', (s) => s.replace("'tab_alerts'];", "'tab_alerts', 'tab_nova'];"), /tab_nova.*não tem switch/],
+    ['permissão nova sem switch na matriz', 'src/shared/permissions.js', (s) => s.replace("'tab_tools'];", "'tab_tools', 'tab_nova'];"), /tab_nova.*não tem switch/],
     ['switch da matriz de aba que não existe', 'public/js/tabs/tab-users.js', (s) => s.replace("{ key: 'tab_alerts'", "{ key: 'tab_velha', label: 'x', icon: 'x', title: 'x' },\n      { key: 'tab_alerts'"), /tab_velha/],
     ['coluna da matriz sem th no painel', 'painel.html', (s) => s.replace('🔔 Alertas</th>', '</th>'.replace('</th>', '🔔 Alertas</th>\n<th class="x">extra</th>')), /colunas/],
     ['aba no HTML fora do RBAC', 'painel.html', (s) => s.replace('id="tab-content-dashboard"', 'id="tab-content-dashboard"') + '<div id="tab-content-escondida"></div>', /tab-content-escondida/],

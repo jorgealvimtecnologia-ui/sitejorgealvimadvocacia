@@ -999,10 +999,11 @@
       colaborador:'tab_colaborador',
       finance:'tab_financial', nfse:'tab_nfse', esign:'tab_esign', users:'tab_users',
       audit:'tab_audit', lgpd:'tab_audit', blog:'tab_blog', faq:'tab_blog', 'site-boxes':'tab_blog',
-      notifications:'tab_alerts', explorer:'tab_settings', 'meta-ads':'tab_settings' };
+      notifications:'tab_alerts', dashboard:'tab_dashboard', kanban:'tab_kanban', editor:'tab_tools', calc:'tab_tools',
+      explorer:'tab_settings', 'meta-ads':'tab_settings' };
     // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM e Radar & Roadmap.
     var MASTER_ONLY={maintenance:1,roadmap:1};
-    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,rockets:1};
+    var ALWAYS_ALLOWED={rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
       // 1. Menu Bar do Desktop
@@ -1059,8 +1060,8 @@
               Object.keys(MODULE_PERM).forEach(function(id){ if(p[MODULE_PERM[id]]) WM_ALLOWED[id]=1; }); }
             applyPerms();
             if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})){
-              var defMod = (!moduleAllowed('lawsuits') && moduleAllowed('colaborador')) ? 'colaborador' : 'dashboard';
-              openModule(defMod);
+              var defMod = ['dashboard','calendar','clients','leads','colaborador','rockets'].filter(moduleAllowed)[0];
+              if(defMod) openModule(defMod);
             }
           }).catch(function(){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); });
       }catch(e){}
@@ -1100,10 +1101,10 @@
       window.applyPerms=applyPerms;
       window.moduleAllowed=moduleAllowed;
       updateEmpty();
-      if(typeof getToken==='function' && getToken()){ openModule('dashboard'); fetchPerms(); }
+      if(typeof getToken==='function' && getToken()){ fetchPerms(); }
       if(typeof window.showPanelScreen==='function'){
         var _sps=window.showPanelScreen;
-        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); if(!order.length) openModule('dashboard'); fetchPerms(); return r; };
+        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); fetchPerms(); return r; };
       }
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();

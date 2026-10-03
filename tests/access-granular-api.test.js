@@ -69,6 +69,16 @@ describe('permissões granulares no servidor', () => {
     assert.equal((await toggle('tab_alerts', true)).status, 200);
     assert.notEqual((await request(app).get('/api/notifications').set(auth(opToken))).status, 403);
   });
+  it('Visão Geral e Kanban: liberados por herança; o mestre desliga e o servidor passa a negar (403)', async () => {
+    assert.notEqual((await request(app).get('/api/dashboard/stats').set(auth(opToken))).status, 403);
+    assert.equal((await toggle('tab_dashboard', false)).status, 200);
+    assert.equal((await toggle('tab_kanban', false)).status, 200);
+    assert.equal((await request(app).get('/api/dashboard/stats').set(auth(opToken))).status, 403);
+    assert.equal((await request(app).get('/api/kanban/cards').set(auth(opToken))).status, 403);
+    const p = await perms();
+    assert.equal(p.tab_dashboard, 0);
+    assert.equal(p.tab_tools, 1);
+  });
   it('manutenção/backups: operador comum (mesmo com Config) leva 403', async () => {
     assert.equal((await request(app).get('/api/admin/maintenance/backups').set(auth(opToken))).status, 403);
   });

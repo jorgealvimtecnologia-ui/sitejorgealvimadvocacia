@@ -74,7 +74,7 @@ export const RULES = [
   [/^\/api\/lawsuits(\/|$)/, tab('tab_lawsuits')],
   [/^\/api\/(court|publications)(\/|$)/, tab('tab_publications')],
   [/^\/api\/calendar(\/|$)/, tab('tab_calendar')],
-  [/^\/api\/documents(\/|$)/, tab('tab_lawsuits')],   // gerador de peças/procurações: mesma permissão da aba Documentos do painel
+  [/^\/api\/documents(\/|$)/, tab('tab_clients')],   // gerador de documentos: a mesma permissão que o menu usa para a aba Documentos
   [/^\/api\/financial(\/|$)/, tab('tab_financial')],
   [/^\/api\/nfse(\/|$)/, tab('tab_nfse')],
   [/^\/api\/(esign|signatures)(\/|$)/, tab('tab_esign')],
@@ -95,7 +95,9 @@ export const RULES = [
   [/^\/api\/admin\/(pre-clients|visits)(\/|$)/, tab('tab_leads')],      // aba "Tráfego & Acessos"
 
   // ---- Demais rotas do painel: qualquer operador logado ----
-  [/^\/api\/(dashboard|kanban|sync|site-content|legaltech|legal-docs|ai|analytics|audit)(\/|$)/, PANEL]
+  [/^\/api\/dashboard(\/|$)/, tab('tab_dashboard')],
+  [/^\/api\/kanban(\/|$)/, tab('tab_kanban')],
+  [/^\/api\/(sync|site-content|legaltech|legal-docs|ai|analytics|audit)(\/|$)/, PANEL]
 ];
 
 /** Regra de RBAC que decide um caminho/método (a primeira que casa), ou undefined se não houver (=> negado). */

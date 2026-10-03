@@ -57,3 +57,18 @@ describe('consistência: toda chave de aba usada existe', () => {
     assert.equal((th.match(/<th /g) || []).length, matriz.length + 4, 'colunas do cabeçalho != switches + (cadastrado, perfil, testar visão, status)');
   });
 });
+
+describe('Visão Geral, Kanban e Ferramentas', () => {
+  it('herdam "liberado" (eram de todos), mas o mestre pode desligar por pessoa', () => {
+    const p = effectivePerms({ tab_calendar: 1 });
+    assert.equal(p.tab_dashboard, 1);
+    assert.equal(p.tab_kanban, 1);
+    assert.equal(p.tab_tools, 1);
+    const off = effectivePerms({ tab_calendar: 1, tab_dashboard: 0, tab_kanban: 0, tab_tools: 0 });
+    assert.equal(off.tab_dashboard + off.tab_kanban + off.tab_tools, 0);
+  });
+  it('sem perfil / sem linha: nada, nem Visão Geral', () => {
+    assert.ok(Object.values(effectivePerms({ role_template: 'sem_perfil', tab_leads: 1 })).every((v) => v === 0));
+    assert.ok(Object.values(effectivePerms(undefined)).every((v) => v === 0));
+  });
+});

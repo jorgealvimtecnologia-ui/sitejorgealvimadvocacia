@@ -37,13 +37,16 @@
       { key: 'tab_settings', label: 'Config', icon: '⚙️', title: 'Configurações & Integrações' },
       { key: 'tab_blog', label: 'Blog & Site', icon: '📝', title: 'Blog, FAQ e boxes da Home do site' },
       { key: 'tab_audit', label: 'Auditoria & LGPD', icon: '🛡️', title: 'Auditoria & Logs e LGPD' },
-      { key: 'tab_alerts', label: 'Alertas', icon: '🔔', title: 'Alertas & Prazos (notificações do escritório)' }
+      { key: 'tab_alerts', label: 'Alertas', icon: '🔔', title: 'Alertas & Prazos (notificações do escritório)' },
+      { key: 'tab_dashboard', label: 'Visão Geral', icon: '📊', title: 'Visão Geral (painel de comando)' },
+      { key: 'tab_kanban', label: 'Kanban', icon: '🗂️', title: 'Fluxo de Trabalho (Kanban 5W2H)' },
+      { key: 'tab_tools', label: 'Ferramentas', icon: '🧰', title: 'Ferramentas: Editor de Texto e Calculadora' }
     ];
 
     async function loadAccessControlMatrix() {
       const tbody = document.getElementById('access-matrix-tbody');
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="23" class="text-center py-8 text-slate-400 font-medium">Carregando permissões e sincronizando cadastrados...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="26" class="text-center py-8 text-slate-400 font-medium">Carregando permissões e sincronizando cadastrados...</td></tr>`;
       }
 
       try {
@@ -101,7 +104,7 @@
       if (list.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="23" class="text-center py-10 text-slate-400">
+            <td colspan="26" class="text-center py-10 text-slate-400">
               Nenhum cadastrado encontrado com os filtros selecionados.
             </td>
           </tr>
@@ -281,7 +284,8 @@
         tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
         tab_hr: 1, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 1,
         tab_users: 1, tab_settings: 1,
-        tab_nfse: 1, tab_esign: 1, tab_blog: 1, tab_audit: 1, tab_alerts: 1
+        tab_nfse: 1, tab_esign: 1, tab_blog: 1, tab_audit: 1, tab_alerts: 1,
+        tab_dashboard: 1, tab_kanban: 1, tab_tools: 1
       };
       applyAccessControlToUI(masterPerms);
       switchTab('users');

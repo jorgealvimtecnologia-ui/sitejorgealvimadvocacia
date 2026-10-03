@@ -548,7 +548,8 @@ accessRouter.post('/api/access-control/toggle', requireAuth, (req, res) => {
       'tab_leads', 'tab_clients', 'tab_lawsuits', 'tab_radar', 'tab_offices',
       'tab_drive', 'tab_calendar', 'tab_publications', 'tab_hr', 'tab_financial',
       'tab_colaborador', 'tab_portal_cliente', 'tab_users', 'tab_settings',
-      'tab_nfse', 'tab_esign', 'tab_blog', 'tab_audit', 'tab_alerts'
+      'tab_nfse', 'tab_esign', 'tab_blog', 'tab_audit', 'tab_alerts',
+      'tab_dashboard', 'tab_kanban', 'tab_tools'
     ];
 
     if (!validTabs.includes(tab_key)) {
@@ -634,7 +635,7 @@ accessRouter.post('/api/access-control/apply-template', requireAuth, (req, res) 
       tpl.tabs.tab_users, tpl.tabs.tab_settings, tpl.data_scope, now, user_id
     );
     // Aplicar um perfil modelo volta as abas granulares a "herdar" (o perfil define tudo de novo)
-    db.prepare(`UPDATE access_permissions SET tab_nfse = NULL, tab_esign = NULL, tab_blog = NULL, tab_audit = NULL, tab_alerts = NULL WHERE user_id = ?`).run(user_id);
+    db.prepare(`UPDATE access_permissions SET tab_nfse = NULL, tab_esign = NULL, tab_blog = NULL, tab_audit = NULL, tab_alerts = NULL, tab_dashboard = NULL, tab_kanban = NULL, tab_tools = NULL WHERE user_id = ?`).run(user_id);
 
     logAudit(req, {
       event_type: 'ALTERACAO_PERMISSAO',
@@ -754,7 +755,7 @@ accessRouter.get('/api/access-control/my-permissions', (req, res) => {
       success: true,
       is_master: false,
       role_name: roleKey,
-      permissions: effectivePerms(tpl.tabs)
+      permissions: effectivePerms({ ...tpl.tabs, role_template: roleKey })
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
