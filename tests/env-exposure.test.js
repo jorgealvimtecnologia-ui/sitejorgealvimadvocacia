@@ -166,6 +166,7 @@ describe('guardião completo (check-architecture.js)', () => {
         'src/middleware/rbac-rules.js',
         'src/modules/auth/auth.routes.js',
         'src/modules/hr/hr.routes.js',
+        'src/modules/access/access.routes.js',
         'public/js/painel/painel-1-app.js',
         'public/js/painel/painel-3.js',
         'src/shared/permissions.js',

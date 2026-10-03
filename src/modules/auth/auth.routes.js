@@ -11,6 +11,7 @@ import { verifyPassword, isStrongHash, hashPassword } from '../../shared/passwor
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures, normalizeLoginId } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
 import { isMasterEmail } from '../../config/master-emails.js';
+import { findEmployeeForUser, findUserForEmployee, findEmployeeByTypedName } from '../../shared/identity-link.js';
 import { validatePassword, outdatedPasswordNotice } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { deliverAccessCode } from '../../shared/access-codes.js';
@@ -81,6 +82,12 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     if (user && isPasswordValid) {
       clearLoginFailures(reqIp, lockId);
 
+      // Operador SUSPENSO na Matriz de Acessos não entra (antes só o Google barrava; a senha ainda abria o sistema).
+      const susp = db.prepare(`SELECT is_active FROM access_permissions WHERE user_id = ?`).get(user.id);
+      if (susp && susp.is_active === 0 && user.id !== 'USR-MASTER-01') {
+        return res.status(403).json({ error: 'Acesso Negado (RBAC): Seu perfil de operador encontra-se desativado na Matriz de Controle de Acesso. Contate a administração.' });
+      }
+
       // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
       try {
         const matched = verifyPassword(rawPassword, user.password_hash, user.salt) ? rawPassword : compactPassword;
@@ -106,13 +113,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
       // Se este operador/usuário também for colaborador cadastrado no RH (ex: motorista, secretária, estagiário)
       let employeeToken = null;
-      let matchedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${user.name.toLowerCase()}%`, user.id);
-      if (!matchedEmp) {
-        const parts = user.name.trim().split(/\s+/);
-        if (parts.length >= 2) {
-          matchedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? AND LOWER(name) LIKE ?`).get(`%${parts[0].toLowerCase()}%`, `%${parts[parts.length - 1].toLowerCase()}%`);
-        }
-      }
+      const matchedEmp = findEmployeeForUser(db, user);
       if (matchedEmp) {
         try {
           employeeToken = createEmployeeSession(matchedEmp);
@@ -231,11 +232,11 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(email)) = ?`).get(cleanUsername);
     }
     if (!employee) {
-      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ? OR id = ?`).get(`%${cleanUsername}%`, `%${compactUsername}%`, rawUsername);
+      employee = findEmployeeByTypedName(db, rawUsername);
     }
 
     if (employee) {
-      const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(name) LIKE ? OR username = ? OR id = ?`).get(`%${employee.name.toLowerCase()}%`, cleanUsername, employee.id);
+      const linkedUser = findUserForEmployee(db, employee) || db.prepare(`SELECT * FROM users WHERE username = ?`).get(cleanUsername);
       const isUserAuth = linkedUser && (
         verifyPassword(rawPassword, linkedUser.password_hash, linkedUser.salt) ||
         (compactPassword !== rawPassword && verifyPassword(compactPassword, linkedUser.password_hash, linkedUser.salt))
@@ -545,7 +546,7 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
     // 2. Checar se é COLABORADOR do RH
     let employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(cpf)) = ? OR id = ?`).get(email, email);
     if (!employee && operator) {
-      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ?`).get(`%${operator.name.toLowerCase()}%`);
+      employee = findEmployeeForUser(db, operator);
     }
 
     if (employee) {
@@ -658,7 +659,7 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
       if (['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
         user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
       } else {
-        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(name)) LIKE ?`).get(cleanUsername, `%${cleanUsername}%`);
+        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(name)) = ?`).get(cleanUsername, cleanUsername);
       }
     }
 

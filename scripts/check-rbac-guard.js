@@ -98,6 +98,21 @@ export function checkRbacStatic(root = ROOT_DIR) {
     if (/process\.env\.NODE_ENV\s*!==\s*['"]production['"][^;\n]*mock/i.test(g)) violations.push(`${TAG} google-auth.js libera o token de teste por "não é produção": deve ser negado por padrão.`);
   }
 
+  // 2b) Logins: vínculo EXATO entre pessoas (nunca por pedaço de nome) e operador suspenso não entra
+  for (const rel of ['src/modules/auth/auth.routes.js', 'src/modules/hr/hr.routes.js', 'src/modules/access/access.routes.js']) {
+    const t = read(rel);
+    if (t === null) { violations.push(`${TAG} ${rel} não existe.`); continue; }
+    if (/FROM (hr_employees|users)\s+WHERE[^`]*name\)?\s+LIKE/i.test(t.replace(/FROM users WHERE username LIKE '%(mariana|gabriela)%' OR name LIKE '%(mariana|gabriela)%'/g, ''))) {
+      violations.push(`${TAG} ${rel} vincula pessoas por PEDAÇO do nome (LIKE): a operadora "Ana" receberia a sessão/dados de RH da "Mariana". Use src/shared/identity-link.js (vínculo exato).`);
+    }
+  }
+  const authT = read('src/modules/auth/auth.routes.js');
+  if (authT !== null && !/susp\.is_active === 0/.test(authT)) violations.push(`${TAG} auth.routes.js: o login por SENHA não barra operador suspenso (is_active = 0) na Matriz de Acessos.`);
+  const hrT = read('src/modules/hr/hr.routes.js');
+  if (hrT !== null && !/authSuspended/.test(hrT)) violations.push(`${TAG} hr.routes.js: o login do colaborador emite sessão de painel (adminToken) para operador suspenso.`);
+  const rbacT = read('src/middleware/rbac.js');
+  if (rbacT !== null && !/isSuspended\(panel\.userId\)/.test(rbacT)) violations.push(`${TAG} rbac.js: sessão de operador suspenso continua com acesso à API (falta a checagem isSuspended no guarda).`);
+
   // 3) Painel: toda entrada aplica as permissões
   const app = read('public/js/painel/painel-1-app.js');
   if (app === null) {

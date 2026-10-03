@@ -9,6 +9,7 @@ import { logAudit } from '../../middleware/audit.js';
 import { hashPassword } from '../../shared/password-crypto.js';
 import { validatePassword } from '../../shared/password-policy.js';
 import { effectivePerms } from '../../shared/permissions.js';
+import { findEmployeeForUser } from '../../shared/identity-link.js';
 
 export const accessRouter = express.Router();
 
@@ -313,7 +314,7 @@ export function syncAllAccessPermissions() {
       // Buscar colaborador correspondente no RH para herdar cargo real
       let linkedEmp = null;
       try {
-        linkedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) = ? OR LOWER(name) LIKE ?`).get(u.name.toLowerCase(), `%${u.name.toLowerCase()}%`);
+        linkedEmp = findEmployeeForUser(db, u);
       } catch (e) {}
 
       const pos = ((linkedEmp && linkedEmp.position) || '').toLowerCase();

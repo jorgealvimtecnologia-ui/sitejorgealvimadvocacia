@@ -28,6 +28,16 @@ export function isMasterSession(s) {
   return !!s && (s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master');
 }
 
+/** Operador suspenso na Matriz de Acessos (is_active = 0): perde TODO acesso ao painel, mesmo com sessão já aberta. */
+function isSuspended(userId) {
+  try {
+    const p = db.prepare(`SELECT is_active FROM access_permissions WHERE user_id = ?`).get(userId);
+    return !!p && p.is_active === 0;
+  } catch (e) {
+    return false;
+  }
+}
+
 function operatorHasTab(s, tabKey) {
   if (isMasterSession(s)) return true;
   try {
@@ -58,6 +68,11 @@ export function rbacGuard(req, res, next) {
     const client = panel ? null : validateClientToken(token);
     const employee = panel || client ? null : validateEmployeeToken(token);
     if (!panel && !client && !employee) return needLogin(res);
+
+    // Suspenso na matriz = sem acesso a NADA do painel, nem com sessão aberta antes da suspensão.
+    if (panel && !isMasterSession(panel) && isSuspended(panel.userId)) {
+      return deny(res, 'Seu perfil de operador está desativado na Matriz de Controle de Acesso. Contate a administração.');
+    }
 
     if (need === ANY) return next();
     if (need === CLIENT) return client ? next() : deny(res);

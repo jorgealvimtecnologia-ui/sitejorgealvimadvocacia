@@ -20,6 +20,7 @@ const FILES = [
   'src/middleware/rbac-rules.js',
   'src/modules/auth/auth.routes.js',
   'src/modules/hr/hr.routes.js',
+  'src/modules/access/access.routes.js',
   'public/js/painel/painel-1-app.js',
   'public/js/painel/painel-3.js',
   'src/shared/permissions.js',
@@ -77,6 +78,9 @@ describe('guardião RBAC: reprova adulterações', () => {
     ['switch da matriz de aba que não existe', 'public/js/tabs/tab-users.js', (s) => s.replace("{ key: 'tab_alerts'", "{ key: 'tab_velha', label: 'x', icon: 'x', title: 'x' },\n      { key: 'tab_alerts'"), /tab_velha/],
     ['coluna da matriz sem th no painel', 'painel.html', (s) => s.replace('🔔 Alertas</th>', '</th>'.replace('</th>', '🔔 Alertas</th>\n<th class="x">extra</th>')), /colunas/],
     ['aba no HTML fora do RBAC', 'painel.html', (s) => s.replace('id="tab-content-dashboard"', 'id="tab-content-dashboard"') + '<div id="tab-content-escondida"></div>', /tab-content-escondida/],
+    ['vínculo por pedaço de nome', 'src/modules/hr/hr.routes.js', (s) => s + "\nconst x = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`);\n", /PEDAÇO do nome/],
+    ['login por senha deixa suspenso entrar', 'src/modules/auth/auth.routes.js', (s) => s.replace('susp.is_active === 0', 'false'), /suspenso/],
+    ['API aceita sessão de suspenso', 'src/middleware/rbac.js', (s) => s.replace('isSuspended(panel.userId)', 'false'), /isSuspended/],
     ['rbac sem deny-by-default', 'src/middleware/rbac.js', (s) => s.replace(/if \(!rule\)\s*\{/, 'if (false) {'), /deny-by-default/],
   ];
   for (const [nome, file, fn, re] of cases) {

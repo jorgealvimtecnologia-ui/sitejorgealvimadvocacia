@@ -432,18 +432,14 @@ describe('Entrada Unificada (Identity-First Login)', () => {
       )
     `).run(`PERM-${susId}`, susId);
 
+    // Suspenso na matriz: nem a senha abre mais o sistema (antes só as permissões davam 403 depois do login).
     const loginRes = await request(app)
       .post('/api/auth/login')
       .send({ identifier: 'operador.suspenso', password: 'sus12345' });
 
-    assert.equal(loginRes.status, 200);
-
-    const permRes = await request(app)
-      .get('/api/access-control/my-permissions')
-      .set('Authorization', `Bearer ${loginRes.body.token}`);
-
-    assert.equal(permRes.status, 403, 'Operador suspenso deve ser bloqueado com 403');
-    assert.match(permRes.body.error, /desativado/i);
+    assert.equal(loginRes.status, 403);
+    assert.ok(!loginRes.body.token);
+    assert.match(loginRes.body.error, /RBAC|desativado/i);
   });
 
   it('16. Cliente autenticado -> BLOQUEADO de rotas administrativas do painel com 401', async () => {

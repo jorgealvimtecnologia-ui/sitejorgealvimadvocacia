@@ -10,6 +10,7 @@ import { hashPassword, verifyPassword, isStrongHash } from '../../shared/passwor
 import { calculateINSSProgressivo, calculateIRRF, calculateVTDeduction, calculateFGTS } from '../../shared/labor.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
 import { isMasterEmail } from '../../config/master-emails.js';
+import { findEmployeeForUser, findUserForEmployee, findEmployeeByTypedName } from '../../shared/identity-link.js';
 import { loginRateLimit, guardLoginStart, guardLoginFailure, guardLoginSuccess } from '../../shared/login-guard.js';
 
 export const hrRouter = express.Router();
@@ -831,20 +832,14 @@ hrRouter.post('/api/hr/employee/login', loginRateLimit, (req, res) => {
       employee = db.prepare(`SELECT * FROM hr_employees WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? OR cpf = ?`).get(cleanNumbers, rawId);
     }
     if (!employee) {
-      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ? OR id = ?`).get(`%${cleanId}%`, `%${compactId}%`, rawId);
+      employee = findEmployeeByTypedName(db, rawId);
     }
 
     // Se informou um nome de usuário (ex: 'carlos.motorista', 'patricia.secretaria')
     if (!employee) {
       const uMatch = db.prepare(`SELECT * FROM users WHERE LOWER(username) = ? OR id = ?`).get(cleanId, rawId);
       if (uMatch) {
-        employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${uMatch.name.toLowerCase()}%`, uMatch.id);
-        if (!employee) {
-          const parts = uMatch.name.trim().split(/\s+/);
-          if (parts.length >= 2) {
-            employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? AND LOWER(name) LIKE ?`).get(`%${parts[0].toLowerCase()}%`, `%${parts[parts.length - 1].toLowerCase()}%`);
-          }
-        }
+        employee = findEmployeeForUser(db, uMatch);
       }
     }
 
@@ -879,7 +874,7 @@ hrRouter.post('/api/hr/employee/login', loginRateLimit, (req, res) => {
     // 1) Senha real do usuário mestre (sem senha universal)
     // 2) CPF em dígitos limpos (primeiro acesso)
     // 3) Senha do usuário na tabela `users` se houver vínculo
-    const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(name) LIKE ? OR username = ? OR id = ?`).get(`%${employee.name.toLowerCase()}%`, cleanId, employee.id);
+    const linkedUser = findUserForEmployee(db, employee) || db.prepare(`SELECT * FROM users WHERE username = ?`).get(cleanId);
     const authUser = linkedUser || (employee.id === 'EMP-MASTER-01'
       ? db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get()
       : null);
@@ -921,7 +916,8 @@ hrRouter.post('/api/hr/employee/login', loginRateLimit, (req, res) => {
     const token = createEmployeeSession(employee);
 
     let adminToken = null;
-    if (authUser && authUser.id) {
+    const authSuspended = authUser && db.prepare(`SELECT is_active FROM access_permissions WHERE user_id = ?`).get(authUser.id)?.is_active === 0;
+    if (authUser && authUser.id && !authSuspended) {
       try {
         adminToken = createSession(authUser);
       } catch (e) {}
@@ -994,7 +990,7 @@ const handleEmployeeGoogleAuth = async (req, res) => {
     if (!employee) {
       const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(username)) = ?`).get(email, email);
       if (linkedUser) {
-        employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${linkedUser.name.toLowerCase()}%`, linkedUser.id);
+        employee = findEmployeeForUser(db, linkedUser);
         if (!employee && (linkedUser.role === 'master' || linkedUser.username === 'jorgealvimtecnologia')) {
           employee = {
             id: 'EMP-MASTER-01',
@@ -1068,7 +1064,7 @@ hrRouter.get('/api/hr/employee/me', requireEmployeeAuth, (req, res) => {
     let employeeId = req.employee ? (req.employee.employeeId || req.employee.id) : null;
     if (!employeeId && req.user) {
       try {
-        const emp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${(req.user.name || '').toLowerCase()}%`, req.user.id);
+        const emp = findEmployeeForUser(db, req.user);
         if (emp) employeeId = emp.id;
       } catch (e) {}
     }
@@ -1093,8 +1089,8 @@ hrRouter.get('/api/hr/employee/me', requireEmployeeAuth, (req, res) => {
             vt_daily_value as vt_daily_amount, 
             va_monthly_value as va_monthly_amount 
           FROM hr_employees 
-          WHERE LOWER(name) LIKE ? OR id = ?
-        `).get(`%${(req.user.name || '').toLowerCase()}%`, req.user.id);
+          WHERE id = ?
+        `).get((findEmployeeForUser(db, req.user) || {}).id || '');
         if (employee) employeeId = employee.id;
       } catch (e) {}
     }
