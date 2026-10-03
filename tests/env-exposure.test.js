@@ -155,9 +155,22 @@ describe('guardião completo (check-architecture.js)', () => {
       fs.mkdirSync(path.join(dir, 'public/js/tabs'), { recursive: true });
       for (let i = 1; i <= 10; i++) fs.writeFileSync(path.join(dir, `public/js/tabs/tab-${i}.js`), '');
       fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
-      for (const f of ['check-architecture.js', 'check-env-exposure.js'])
+      for (const f of ['check-architecture.js', 'check-env-exposure.js', 'check-rbac-guard.js'])
         fs.copyFileSync(path.join(ROOT, 'scripts', f), path.join(dir, 'scripts', f));
       fs.copyFileSync(path.join(ROOT, 'src/shared/env-vault.js'), path.join(dir, 'src/shared/env-vault.js'));
+      // o guardião do RBAC (regra 8) lê estes arquivos do projeto
+      for (const f of [
+        'src/config/master-emails.js',
+        'src/shared/google-auth.js',
+        'src/middleware/rbac.js',
+        'src/middleware/rbac-rules.js',
+        'src/modules/auth/auth.routes.js',
+        'src/modules/hr/hr.routes.js',
+        'public/js/painel/painel-1-app.js',
+      ]) {
+        fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+        fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
+      }
       const run = () => spawnSync(process.execPath, ['scripts/check-architecture.js'], { cwd: dir });
 
       const limpo = run();

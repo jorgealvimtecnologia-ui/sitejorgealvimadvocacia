@@ -10,6 +10,7 @@ import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures, normalizeLoginId } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
+import { isMasterEmail } from '../../config/master-emails.js';
 import { validatePassword, outdatedPasswordNotice } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { deliverAccessCode } from '../../shared/access-codes.js';
@@ -374,8 +375,13 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
     // 2. Localizar operador estritamente no ecossistema administrativo
     let user = null;
 
+    // 0) Contas Google MESTRAS (src/config/master-emails.js) são o mestre, com prioridade sobre qualquer outro vínculo.
+    if (isMasterEmail(email)) {
+      user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+
     // A) Por google_id já vinculado previamente a um usuário operador
-    if (googleUser.sub) {
+    if (!user && googleUser.sub) {
       user = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
     }
 
@@ -393,16 +399,6 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
       if (operatorPerm) {
         user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
       }
-    }
-
-    // D) Mestre oficial (Dr. Jorge Alvim) - emails explicitamente autorizados na env ou padrão institucional
-    const adminEmailsEnv = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
-      .split(',')
-      .map(s => s.toLowerCase().trim())
-      .filter(Boolean);
-
-    if (!user && adminEmailsEnv.includes(email)) {
-      user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
     }
 
     // 3. Validação RBAC estrita de perfil e acesso
@@ -496,7 +492,11 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
 
     // 1. Checar se é OPERADOR (users ou access_permissions onde role_template != 'cliente')
     let operator = null;
-    if (googleUser.sub) {
+    // Contas Google MESTRAS (src/config/master-emails.js): prioridade sobre qualquer outro vínculo.
+    if (isMasterEmail(email)) {
+      operator = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+    if (!operator && googleUser.sub) {
       operator = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
     }
     if (!operator) {
@@ -510,13 +510,6 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
       if (operatorPerm) {
         operator = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
       }
-    }
-    const adminEmailsEnv = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
-      .split(',')
-      .map(s => s.toLowerCase().trim())
-      .filter(Boolean);
-    if (!operator && adminEmailsEnv.includes(email)) {
-      operator = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
     }
 
     // Se for operador ativo

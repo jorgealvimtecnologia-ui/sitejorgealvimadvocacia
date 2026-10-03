@@ -65,7 +65,17 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
      de variáveis + cópia **criptografada** do cofre. Nunca enviar o `.env` em texto puro, valores ou a chave por e-mail, chat ou documento.
    * Novo segredo? Use `node scripts/env-vault.js set NOME` (vai direto para o cofre). Nunca adicione segredo ao `.env` em texto puro.
 
-4. **Comandos de Verificação Mandatórios:**
+4. **🛂 RBAC: senha do painel e senha Google só entram nas abas da função (RHABAC):**
+   * Login por **senha** e por **Google** obedecem às mesmas permissões (por função/usuário, negado por padrão). Nenhum
+     login abre todas as abas: toda entrada do painel passa por `applyPermissionsAndLoadModules()` e toda rota `/api` tem
+     regra em `src/middleware/rbac-rules.js`. Rota nova sem regra = 403 até para o mestre; o guardião reprova.
+   * **Contas mestras (únicas):** `jorgealvimtecnologia@gmail.com`, `jorgealvim10@gmail.com`, `jorgealvimadvocacia@gmail.com`
+     (`src/config/master-emails.js`). Mudar essa lista exige decisão do Dr. Jorge e atualizar `scripts/check-rbac-guard.js`.
+     Variável de ambiente nunca cria mestre. O token de teste do Google nunca vale em produção.
+   * Verificação: `npm run check:rbac` (também roda dentro de `npm run check:architecture`).
+
+5. **Comandos de Verificação Mandatórios:**
+   * Guardião do RBAC: `npm run check:rbac`
    * Guardião de Arquitetura (inclui a proteção do `.env`): `npm run check:architecture`
    * Exposição do `.env` (repositório, servidor, site ao vivo): `npm run check:env`
    * Bateria de Testes (200+ testes): `npm test`

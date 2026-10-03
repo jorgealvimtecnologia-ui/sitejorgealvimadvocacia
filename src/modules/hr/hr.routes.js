@@ -9,6 +9,7 @@ import { getClientIp } from '../../shared/net.js';
 import { hashPassword, verifyPassword, isStrongHash } from '../../shared/password-crypto.js';
 import { calculateINSSProgressivo, calculateIRRF, calculateVTDeduction, calculateFGTS } from '../../shared/labor.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
+import { isMasterEmail } from '../../config/master-emails.js';
 import { loginRateLimit, guardLoginStart, guardLoginFailure, guardLoginSuccess } from '../../shared/login-guard.js';
 
 export const hrRouter = express.Router();
@@ -977,12 +978,7 @@ const handleEmployeeGoogleAuth = async (req, res) => {
     }
 
     // 2. Se for Dr. Jorge Alvim / Master
-    const masterEmails = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
-      .split(',')
-      .map(s => s.toLowerCase().trim())
-      .filter(Boolean);
-
-    if (!employee && masterEmails.includes(email)) {
+    if (!employee && isMasterEmail(email)) {
       employee = {
         id: 'EMP-MASTER-01',
         name: 'Dr. Jorge Alvim',

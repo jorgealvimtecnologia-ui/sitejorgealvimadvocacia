@@ -13,6 +13,8 @@
  * 4. Teto máximo de linhas em arquivos legados (Ceiling Check).
  * 5. O .env NUNCA fica exposto (GitHub, imagem Docker, servidor): segredos só
  *    criptografados em .env.enc (ver scripts/check-env-exposure.js).
+ * 6. RBAC: senha do painel e senha Google só abrem abas conforme a função; mestres
+ *    são só as 3 contas aprovadas (ver scripts/check-rbac-guard.js).
  * ==============================================================================
  */
 
@@ -20,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkRepo as checkEnvExposure } from './check-env-exposure.js';
+import { checkRbac } from './check-rbac-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -188,6 +191,18 @@ checkLargeFunctions(path.join(ROOT_DIR, 'public/js/painel/painel-1-app.js'), 'pa
   envCheck.warnings.forEach(w => warnings.push(w));
   if (envCheck.violations.length === 0) {
     console.log(`  ${GREEN}✓${RESET} Proteção do .env: nada versionado/embutido em texto puro, nginx e backup sem exposição — ${BOLD}OK${RESET}`);
+  }
+}
+
+// ------------------------------------------------------------------------------
+// REGRA 8: RBAC — login por senha e por Google só abre as abas da função do usuário;
+// contas mestras = as 3 aprovadas; toda rota /api tem regra (negado por padrão).
+// ------------------------------------------------------------------------------
+{
+  const rbac = await checkRbac(ROOT_DIR);
+  rbac.violations.forEach(v => violations.push(v));
+  if (rbac.violations.length === 0) {
+    console.log(`  ${GREEN}✓${RESET} RBAC: senha e Google só entram nas abas da função; 3 contas mestras aprovadas — ${BOLD}OK${RESET}`);
   }
 }
 

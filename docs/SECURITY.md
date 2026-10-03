@@ -109,3 +109,10 @@ Rodar **antes de cada deploy de produção** (leva poucos minutos):
 
 > Periodicidade mínima recomendada mesmo sem release novo: rodar o passo 1 (`npm audit`)
 > a cada 1–2 meses, pois vulnerabilidades de dependências surgem com o tempo.
+
+## Guardião do RBAC e contas mestras
+
+- **Senha do painel e senha Google obedecem à mesma regra de permissões** (por função/usuário, negado por padrão). Toda entrada do painel passa por `applyPermissionsAndLoadModules()`; toda rota `/api` tem regra em `src/middleware/rbac-rules.js`.
+- **Contas mestras (únicas):** `jorgealvimtecnologia@gmail.com`, `jorgealvim10@gmail.com`, `jorgealvimadvocacia@gmail.com` (`src/config/master-emails.js`). Variável de ambiente não cria mestre (`GOOGLE_ADMIN_EMAILS` foi aposentada).
+- `npm run check:rbac` (e `check:architecture`) reprova: mestre fora da lista, Google sem `aud`/e-mail verificado, token de teste sem portão, painel que abre módulo sem checar a aba, rota `/api` sem regra ou rota sensível pública.
+- Atenção: `jorgealvimadvocacia@gmail.com` é o e-mail público do escritório (alvo de phishing). Proteja as 3 contas Google com verificação em duas etapas **do próprio Google** (isso não é 2FA do sistema).
