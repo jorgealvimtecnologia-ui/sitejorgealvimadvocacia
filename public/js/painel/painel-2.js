@@ -55,10 +55,10 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="openModule('calendar')" class="px-3.5 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                  <button type="button" data-need-module="calendar" onclick="openModule('calendar')" class="px-3.5 py-2 bg-white text-red-700 hover:bg-red-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
                     <span>Ver Prazos Fatais</span> <span>➔</span>
                   </button>
-                  <button type="button" onclick="openModule('publications')" class="px-3 py-2 bg-red-950/40 hover:bg-red-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
+                  <button type="button" data-need-module="publications" onclick="openModule('publications')" class="px-3 py-2 bg-red-950/40 hover:bg-red-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
                     DJEN / Intimações
                   </button>
                 </div>
@@ -78,10 +78,10 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="openModule('calendar')" class="px-3.5 py-2 bg-slate-950 text-amber-400 hover:bg-slate-900 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                  <button type="button" data-need-module="calendar" onclick="openModule('calendar')" class="px-3.5 py-2 bg-slate-950 text-amber-400 hover:bg-slate-900 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
                     <span>Ver Agenda</span> <span>➔</span>
                   </button>
-                  <button type="button" onclick="openModule('lawsuits')" class="px-3 py-2 bg-white/40 hover:bg-white/60 text-slate-950 font-semibold text-xs rounded-xl border border-black/10 transition">
+                  <button type="button" data-need-module="lawsuits" onclick="openModule('lawsuits')" class="px-3 py-2 bg-white/40 hover:bg-white/60 text-slate-950 font-semibold text-xs rounded-xl border border-black/10 transition">
                     Processos
                   </button>
                 </div>
@@ -101,10 +101,10 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" onclick="openModule('judicial')" class="px-3.5 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
+                  <button type="button" data-need-module="judicial" onclick="openModule('judicial')" class="px-3.5 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
                     <span>Radar Judicial</span> <span>➔</span>
                   </button>
-                  <button type="button" onclick="openModule('calendar')" class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
+                  <button type="button" data-need-module="calendar" onclick="openModule('calendar')" class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 text-white font-semibold text-xs rounded-xl border border-white/20 transition">
                     Ver Agenda
                   </button>
                 </div>
@@ -113,7 +113,7 @@
         }
 
         // 3. Renderizar os 8 Cards Executivos Interativos de 1 Clique
-        const makeCard = (opt) => `
+        const makeCard = (opt) => (typeof window.moduleAllowed === 'function' && !window.moduleAllowed(opt.module)) ? '' : `
           <div onclick="openModule('${opt.module}')" class="group bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-gold-300 hover:scale-[1.01] transition-all duration-150 cursor-pointer flex flex-col justify-between" title="Abrir módulo ${opt.moduleName}">
             <div>
               <div class="flex items-center justify-between">
@@ -295,7 +295,7 @@
         const c = d.compliance || {};
         const compEl = document.getElementById('dash-compliance');
         if (compEl) {
-          const compItem = (icon, label, count, modId, warn) => `
+          const compItem = (icon, label, count, modId, warn) => (typeof window.moduleAllowed === 'function' && !window.moduleAllowed(modId)) ? '' : `
             <div onclick="openModule('${modId}')" class="p-2.5 rounded-xl border border-slate-100 hover:border-gold-300 hover:bg-amber-50/40 transition cursor-pointer flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <span class="text-base">${icon}</span>
@@ -317,11 +317,18 @@
         // 7. Funil e Sincronização
         loadDashboardFunnel();
         loadSyncStatus();
+        if (typeof window.gateByModule === 'function') window.gateByModule();   // esconde atalhos/cartões de áreas sem permissão
       } catch (e) { console.error('[dashboard]', e); }
     }
     async function loadSyncStatus() {
       const el = document.getElementById('sync-status-text');
       if (!el) return;
+      // A sincronização DJEN é da equipe com a aba Intimações: para os demais, a faixa some (o servidor também nega).
+      const cp = window.currentUserPermissions;
+      const band = document.getElementById('sync-status-band');
+      const podeSync = !!cp && (cp.is_master || (cp.permissions && cp.permissions.tab_publications === 1));
+      if (band) band.style.display = podeSync ? '' : 'none';
+      if (!podeSync) return;
       try {
         const d = await jget('/api/sync/status');
         if (d.running) { el.textContent = 'Sincronizando agora…'; return; }
@@ -392,6 +399,7 @@
       try {
         const d = await jget('/api/notifications?box=all&limit=100');
         updateNotifBadge(d.unread, d.critical);
+        if (typeof loadDeadlineAlertsCard === 'function') loadDeadlineAlertsCard(); // configuração dos alertas externos (só o mestre)
         document.getElementById('notif-list').innerHTML = d.notifications.length
           ? d.notifications.map(n => `<div class="bg-white rounded-xl border ${n.is_read ? 'border-slate-200' : 'border-amber-300'} shadow-sm p-3 flex items-start gap-3">
               <span>${notifIcon(n.level)}</span>
@@ -400,6 +408,7 @@
                 ${n.message ? `<div class="text-xs text-slate-500">${esc(n.message)}</div>` : ''}
                 <div class="text-[10px] text-slate-400 mt-0.5">${fmtDate(n.created_at)}${n.link ? ` • <a class="underline cursor-pointer" onclick="gotoFromLink('${n.link}')">abrir</a>` : ''}</div>
               </div>
+              ${n.category === 'prazo' && n.resource_id && ['calendar_event', 'court_publication', 'admin_request'].includes(n.resource_type) ? `<button onclick="ackDeadline('${n.resource_type}','${esc(n.resource_id)}')" class="text-[11px] text-emerald-700 hover:text-emerald-900 underline">confirmar ciência</button>` : ''}
               ${n.is_read ? '' : `<button onclick="markNotifRead(${n.id})" class="text-[11px] text-slate-400 hover:text-slate-700">marcar lida</button>`}
             </div>`).join('')
           : '<div class="text-slate-400 text-sm p-4">Nenhuma notificação.</div>';
@@ -410,10 +419,15 @@
       if (unread > 0) { b.textContent = unread; b.classList.remove('hidden'); b.className = 'px-1.5 py-0.5 rounded-full text-white text-[10px] font-bold ' + (critical > 0 ? 'bg-red-600 animate-pulse' : 'bg-amber-500'); }
       else { b.classList.add('hidden'); }
     }
-    async function refreshNotifBadge() { try { const d = await jget('/api/notifications?box=unread&limit=1'); updateNotifBadge(d.unread, d.critical); } catch (e) {} }
+    async function refreshNotifBadge() { const cp = window.currentUserPermissions; if (!cp || !(cp.is_master || (cp.permissions && cp.permissions.tab_alerts === 1))) return; try { const d = await jget('/api/notifications?box=unread&limit=1'); updateNotifBadge(d.unread, d.critical); } catch (e) {} }
     async function markNotifRead(id) { await jsend('/api/notifications/' + id + '/read', 'PATCH', { is_read: true }); loadNotificationsList(); }
     async function markAllNotificationsRead() { await jsend('/api/notifications/read-all', 'POST'); loadNotificationsList(); }
     async function scanDeadlinesNow() { const { data } = await jsend('/api/notifications/scan', 'POST'); if (data.message) alert(data.message); loadNotificationsList(); }
+    // Ciência de prazo (só advogados cadastrados com OAB; o servidor confere quem é).
+    async function ackDeadline(type, id) {
+      const { ok, data } = await jsend('/api/deadline-alerts/ack', 'POST', { resource_type: type, resource_id: id });
+      alert(ok ? (data.alreadyAcknowledged ? 'A ciência já estava registrada em nome de ' : 'Ciência registrada em nome de ') + data.lawyer + '.' : (data.error || 'Não foi possível registrar a ciência.'));
+    }
     function gotoFromLink(link) { if (link && link.startsWith('#tab:')) switchTab(link.slice(5)); }
 
     // ---------------- ASSINATURAS ----------------

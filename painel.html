@@ -551,7 +551,7 @@
       <!-- Etapa 2: Validar Código e Nova Senha -->
       <div id="admin-reset-step-2" class="hidden mt-4 space-y-4">
         <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-medium">
-          Código de 6 dígitos enviado para o WhatsApp! Digite-o abaixo junto com a sua nova senha (4 a 12 caracteres).
+          Código de 6 dígitos enviado para o WhatsApp! Digite-o abaixo junto com a sua nova senha (10 a 64 caracteres).
         </div>
 
         <div>
@@ -569,7 +569,7 @@
 
         <div>
           <label for="admin-reset-newpassword" class="block text-xs font-bold text-slate-700 mb-1">
-            Nova Senha (4 a 12 caracteres) *
+            Nova Senha (10 a 64 caracteres) *
           </label>
           <input 
             type="password" 
@@ -1077,19 +1077,19 @@
 
           <!-- Ações Rápidas de 1 Clique (Zero Dead-Ends) -->
           <div class="flex flex-wrap items-center gap-2">
-            <button type="button" onclick="if(typeof openNewClientModal==='function') openNewClientModal(); else openModule('clients');" style="background:#0f172a;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+            <button type="button" data-need-module="clients" onclick="if(typeof openNewClientModal==='function') openNewClientModal(); else openModule('clients');" style="background:#0f172a;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>➕</span> <span>Novo Cliente</span>
             </button>
-            <button type="button" onclick="if(typeof openNewLawsuitModal==='function') openNewLawsuitModal(); else openModule('lawsuits');" style="background:#1d4ed8;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+            <button type="button" data-need-module="lawsuits" onclick="if(typeof openNewLawsuitModal==='function') openNewLawsuitModal(); else openModule('lawsuits');" style="background:#1d4ed8;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>⚖️</span> <span>Novo Processo</span>
             </button>
-            <button type="button" onclick="if(typeof openNewTransactionModal==='function') openNewTransactionModal(); else openModule('finance');" style="background:#047857;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
+            <button type="button" data-need-module="finance" onclick="if(typeof openNewTransactionModal==='function') openNewTransactionModal(); else openModule('finance');" style="background:#047857;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>💰</span> <span>Novo Lançamento</span>
             </button>
             <button type="button" onclick="if(typeof openNewRocketModal==='function') openNewRocketModal(); else openModule('rockets');" style="background:#7e22ce;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]">
               <span>🚀</span> <span>Novo Despacho</span>
             </button>
-            <button type="button" onclick="openModule('roadmap')" style="background:#4338ca;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]" title="Abrir Radar Tecnológico & Roadmap Vivo 2026–2029">
+            <button type="button" data-need-module="roadmap" onclick="openModule('roadmap')" style="background:#4338ca;color:#ffffff" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]" title="Abrir Radar Tecnológico & Roadmap Vivo 2026–2029">
               <span>🗺️</span> <span>Roadmap Vivo</span>
             </button>
             <button type="button" onclick="loadDashboardOverview(true); window.loadMeuDiaHoje && window.loadMeuDiaHoje();" style="background:#f8fafc;color:#334155;border:1px solid #cbd5e1" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition hover:bg-slate-100">
@@ -1107,7 +1107,7 @@
         </div>
 
         <!-- Faixa Compacta de Sincronização Automática (ComunicaAPI & DJEN) -->
-        <div class="bg-gradient-to-r from-amber-50/70 via-white to-slate-50 rounded-2xl border border-gold-300/80 shadow-sm p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div id="sync-status-band" class="bg-gradient-to-r from-amber-50/70 via-white to-slate-50 rounded-2xl border border-gold-300/80 shadow-sm p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <span class="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-700 border border-amber-200 flex items-center justify-center text-sm font-bold flex-shrink-0">🔄</span>
             <div>
@@ -1237,7 +1237,7 @@
             </div>
 
             <!-- Radar de Intimações e Comunicações dos Tribunais -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+            <div data-need-module="publications" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
               <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
                 <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
                   <span>📢</span> Intimações & DJEN (Publicações Oficiais)
@@ -1261,7 +1261,7 @@
           <!-- Coluna 2: Gestão, Equipe, Compliance & Comercial -->
           <div class="space-y-5">
             <!-- Presença da Equipe Hoje (Ponto Digital) -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+            <div data-need-module="hr" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
               <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
                 <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
                   <span>👔</span> Equipe & Presença Hoje
@@ -1289,7 +1289,7 @@
             </div>
 
             <!-- Funil de Captação & Conversão do Site -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+            <div data-need-module="leads" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
               <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
                 <h3 class="font-bold text-navy-950 text-sm flex items-center gap-2">
                   <span>🔻</span> Funil de Captação & Conversão <span class="text-[10px] font-normal text-slate-400">(30 dias)</span>
@@ -1313,6 +1313,7 @@
             <button onclick="markAllNotificationsRead()" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100">Marcar todas como lidas</button>
           </div>
         </div>
+        <div id="deadline-alerts-card"></div>
         <div id="notif-list" class="space-y-2">Carregando…</div>
       </section>
 
@@ -3149,7 +3150,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
 
           <div class="overflow-x-auto p-2">
-            <table class="w-full text-left text-xs border-collapse min-w-[1450px]">
+            <table class="w-full text-left text-xs border-collapse min-w-[2200px]">
               <thead>
                 <tr class="bg-navy-950 text-gold-300 font-bold uppercase tracking-wider text-[10px] border-b border-navy-900">
                   <th class="py-3 px-3 w-64">Cadastrado / Vínculo</th>
@@ -3163,18 +3164,26 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   <th class="py-3 px-1.5 text-center" title="Agenda & Prazos">📅 Agenda</th>
                   <th class="py-3 px-1.5 text-center" title="Intimações & DJEN">📰 Intimações</th>
                   <th class="py-3 px-1.5 text-center" title="Gestão de Pessoal RH/DP">👥 RH/DP</th>
-                  <th class="py-3 px-1.5 text-center" title="Ficha Financeira Geral">📊 Ficha Anual</th>
+                  <th class="py-3 px-1.5 text-center" title="Financeiro & Caixa (inclui a Ficha Financeira Anual)">📊 Financeiro</th>
+                  <th class="py-3 px-1.5 text-center" title="Notas Fiscais (NFS-e)">🧾 NFS-e</th>
+                  <th class="py-3 px-1.5 text-center" title="Assinaturas Eletrônicas">✍️ Assinaturas</th>
                   <th class="py-3 px-1.5 text-center" title="Portal do Colaborador">👤 Colaborador</th>
                   <th class="py-3 px-1.5 text-center" title="Portal do Cliente">🌐 Portal Cliente</th>
                   <th class="py-3 px-1.5 text-center" title="Gestão de Usuários">🔐 Usuários</th>
-                  <th class="py-3 px-1.5 text-center" title="Configurações & Gateway">⚙️ Config</th>
+                  <th class="py-3 px-1.5 text-center" title="Configurações, integrações, Meta Ads e Explorar Arquivos">⚙️ Config</th>
+                  <th class="py-3 px-1.5 text-center" title="Blog, FAQ e boxes da Home do site">📝 Blog & Site</th>
+                  <th class="py-3 px-1.5 text-center" title="Auditoria & Logs e LGPD">🛡️ Auditoria & LGPD</th>
+                  <th class="py-3 px-1.5 text-center" title="Alertas & Prazos (notificações do escritório)">🔔 Alertas</th>
+                  <th class="py-3 px-1.5 text-center" title="Visão Geral (painel de comando)">📊 Visão Geral</th>
+                  <th class="py-3 px-1.5 text-center" title="Fluxo de Trabalho (Kanban 5W2H)">🗂️ Kanban</th>
+                  <th class="py-3 px-1.5 text-center" title="Ferramentas: Editor de Texto e Calculadora">🧰 Ferramentas</th>
                   <th class="py-3 px-2 text-center" title="Simular visão do usuário no painel">🎭 Testar Visão</th>
                   <th class="py-3 px-3 text-center">Status Geral</th>
                 </tr>
               </thead>
               <tbody id="access-matrix-tbody" class="divide-y divide-slate-200">
                 <tr>
-                  <td colspan="18" class="text-center py-10 text-slate-400">
+                  <td colspan="26" class="text-center py-10 text-slate-400">
                     Carregando matriz de controle de acessos...
                   </td>
                 </tr>
@@ -8323,7 +8332,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Senha de Acesso</label>
           <div class="relative">
-            <input type="password" id="nu-password" required minlength="4" maxlength="12" placeholder="De 4 a 12 caracteres" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+            <input type="password" id="nu-password" required minlength="10" maxlength="64" placeholder="De 10 a 64 caracteres" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
             <button type="button" onclick="togglePasswordVisibility('nu-password')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar senha">
               👁️
             </button>
@@ -8387,7 +8396,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Nova Senha (deixe em branco se não desejar alterar)</label>
           <div class="relative">
-            <input type="password" id="eu-password" minlength="4" maxlength="12" placeholder="Nova senha (de 4 a 12 caracteres)" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
+            <input type="password" id="eu-password" minlength="10" maxlength="64" placeholder="Nova senha (de 10 a 64 caracteres)" class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-gold-500 focus:bg-white" />
             <button type="button" onclick="togglePasswordVisibility('eu-password')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar senha">
               👁️
             </button>
@@ -11614,6 +11623,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-charts.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-roadmap.js?v=20260922-v1"></script>
   <script src="/js/tabs/tab-qa.js?v=20260924"></script>
+  <script src="/js/tabs/tab-deadline-alerts.js?v=20261003-v1"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD

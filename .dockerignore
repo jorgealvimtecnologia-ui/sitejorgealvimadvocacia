@@ -4,3 +4,14 @@ dist
 .gitignore
 *.log
 .DS_Store
+
+# Segredos e dados NUNCA entram na imagem (o "COPY . ." do Dockerfile copiaria tudo).
+# O .env e o banco são montados/definidos no ambiente de execução, não embutidos.
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+backups
+nginx/ssl

@@ -13,6 +13,11 @@ DEST_FOLDER="${BACKUP_DIR}/${BACKUP_NAME}"
 
 mkdir -p "${DEST_FOLDER}"
 
+# A pasta temporária pode conter dados sensíveis antes da higienização/compactação:
+# em qualquer saída (sucesso ou erro) ela é apagada. Só o .tar.gz final permanece.
+cleanup() { rm -rf "${DEST_FOLDER}"; }
+trap cleanup EXIT
+
 echo "========================================================"
 echo "📦 Iniciando Backup do Sistema Jorge Alvim Advocacia"
 echo "📅 Data/Hora: $(date +'%d/%m/%Y %H:%M:%S')"
@@ -28,6 +33,10 @@ if [ -f "${PROJECT_DIR}/leads.db" ]; then
       db.close();
     "
     echo "   ✓ Banco de dados copiado com sucesso via VACUUM a quente!"
+    # O backup viaja para HD externo sem criptografia: a CÓPIA (nunca o banco de
+    # produção) perde chaves de API e sessões ativas. Ver scripts/backup-scrub-db.js.
+    echo "🧼 Higienizando a cópia do banco (sem segredos em texto puro)..."
+    node "${PROJECT_DIR}/scripts/backup-scrub-db.js" "${DEST_FOLDER}/leads.db"
 else
     echo "   ⚠️  Aviso: leads.db não encontrado no diretório do projeto."
 fi
@@ -39,14 +48,36 @@ if [ -d "${PROJECT_DIR}/storage" ]; then
     echo "   ✓ Arquivos de storage copiados!"
 fi
 
-# 3. Backup de Configurações Críticas (Nginx, Docker e Variáveis de Ambiente)
+# 3. Configurações críticas — SEM SEGREDOS.
+# O .env (chaves Asaas, SMTP, Meta, etc.) e as chaves privadas TLS NÃO entram no backup:
+# ele é levado a HD externo sem criptografia. Para saber o que reconfigurar numa
+# restauração, gravamos apenas os NOMES das variáveis (nunca os valores). O .env em si
+# deve ficar guardado em cofre de senhas (ver docs/INFRA.md, "Segredos fora do backup").
 if [ -f "${PROJECT_DIR}/.env" ]; then
-    cp "${PROJECT_DIR}/.env" "${DEST_FOLDER}/.env.backup"
+    grep -E '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*=' "${PROJECT_DIR}/.env" \
+        | sed -E 's/^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=.*/\1/' | sort -u \
+        > "${DEST_FOLDER}/env-variaveis.txt" || true
+    echo "   ✓ Lista de NOMES das variáveis do .env gravada (sem valores)."
 fi
 if [ -d "${PROJECT_DIR}/nginx/ssl" ]; then
-    mkdir -p "${DEST_FOLDER}/nginx"
-    cp -r "${PROJECT_DIR}/nginx/ssl" "${DEST_FOLDER}/nginx/"
+    mkdir -p "${DEST_FOLDER}/nginx/ssl"
+    # certificados públicos sim; chaves privadas e contêineres (.key, *key*, .pfx, .p12) nunca
+    find "${PROJECT_DIR}/nginx/ssl" -type f ! -iname '*key*' ! -iname '*.pfx' ! -iname '*.p12' \
+        -exec cp {} "${DEST_FOLDER}/nginx/ssl/" \;
 fi
+
+# Trava de segurança: se algo sensível escapou para a pasta, aborta o backup.
+VAZADOS="$(find "${DEST_FOLDER}" \( -name '.env' -o -name '.env.*' -o -iname '*key*' -o -iname '*.pfx' -o -iname '*.p12' \) | head -5)"
+if [ -n "${VAZADOS}" ]; then
+    echo "❌ ABORTADO: arquivos sensíveis encontrados no pacote de backup:"
+    echo "${VAZADOS}"
+    exit 1
+fi
+
+# Manifesto de integridade: o teste de restauração (scripts/backup-restore-test.js)
+# confere cada arquivo do pacote contra estes hashes SHA-256.
+( cd "${DEST_FOLDER}" && find . -type f ! -name MANIFEST.sha256 -print0 | sort -z | xargs -0 -r sha256sum > MANIFEST.sha256 )
+echo "   ✓ Manifesto de integridade gerado ($(wc -l < "${DEST_FOLDER}/MANIFEST.sha256") arquivo(s))."
 
 # 4. Compactação e Empacotamento
 echo "🗜️  Compactando pacote de backup..."

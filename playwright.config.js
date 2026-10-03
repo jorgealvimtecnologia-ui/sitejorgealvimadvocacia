@@ -21,16 +21,35 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: process.env.BASE_URL ? undefined : {
-    command: 'node server.js',
-    url: `http://localhost:${PORT}/health`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
-    env: {
-      PORT: String(PORT),
-      DB_PATH: DB,
-      NODE_ENV: 'development',
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Opcional: usar um Chromium já instalado (ex.: PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome).
+        ...(process.env.PW_CHROMIUM_PATH
+          ? { launchOptions: { executablePath: process.env.PW_CHROMIUM_PATH, args: ['--no-sandbox'] } }
+          : {}),
+      },
     },
-  },
+  ],
+  webServer: process.env.BASE_URL
+    ? undefined
+    : {
+        command: 'node server.js',
+        url: `http://localhost:${PORT}/health`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 30000,
+        env: {
+          PORT: String(PORT),
+          DB_PATH: DB,
+          NODE_ENV: 'development',
+          // Banco de teste novo a cada execução: a senha inicial do mestre vem desta variável (só neste banco temporário).
+          MASTER_PASSWORD: 'jorgealvim',
+          // O token de teste do Google só vale em teste/desenvolvimento (NUNCA em produção): usado em e2e/google-rbac-ui.spec.js.
+          ALLOW_MOCK_GOOGLE_TOKEN: '1',
+          ENV_WATCH_DISABLED: '1',
+          DEADLINE_ALERTS_DISABLED: '1',
+        },
+      },
 });

@@ -1,3 +1,4 @@
+import './src/config/load-env.js'; // PRIMEIRO import: carrega .env + cofre .env.enc antes dos demais módulos
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
@@ -25,6 +26,8 @@ import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
 import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } from './src/modules/sync/sync.routes.js';
+import { startEnvWatcher } from './src/shared/env-watch.js';
+import { deadlineAlertsRouter, startDeadlineAlerts } from './src/modules/deadline-alerts/deadline-alerts.routes.js';
 import { adminRequestsRouter } from './src/modules/adminrequests/adminrequests.routes.js';
 import { kanbanRouter } from './src/modules/kanban/kanban.routes.js';
 import { runMigrations } from './src/db/migrate.js';
@@ -69,15 +72,7 @@ import { loginRateLimit } from './src/shared/login-guard.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Carrega variáveis de ambiente do arquivo .env (carregador nativo do Node >= 20.12/22).
-// Segredos (chaves Asaas, origens CORS, etc.) devem ficar no .env, nunca no código.
-try {
-  if (typeof process.loadEnvFile === 'function' && fs.existsSync(path.join(__dirname, '.env'))) {
-    process.loadEnvFile(path.join(__dirname, '.env'));
-  }
-} catch (e) {
-  console.warn('[ENV] Não foi possível carregar .env:', e.message);
-}
+// Variáveis de ambiente: carregadas em src/config/load-env.js (1º import), com suporte ao cofre .env.enc.
 
 const app = express();
 app.disable('x-powered-by'); // não expor a stack (Express)
@@ -1625,16 +1620,31 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .map(s => s.trim())
   .filter(Boolean);
 
-app.use(cors({
-  origin(origin, callback) {
-    // Requisições sem origin (apps nativos, curl, mesma origem) são permitidas
-    if (!origin) return callback(null, true);
-    if (ALLOWED_ORIGINS.length === 0) return callback(null, true); // fallback dev
-    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    return callback(new Error('Origem não permitida pela política de CORS.'));
-  },
-  credentials: true
-}));
+// Mesma origem (o navegador envia Origin também em POST do próprio site) é sempre permitida:
+// o Host da requisição é o do próprio site, então não é uma origem "de fora". Só origens de
+// OUTRO site precisam estar em ALLOWED_ORIGINS. (Antes, o painel do domínio de homologação
+// ficava bloqueado quando ALLOWED_ORIGINS não o listava.)
+export function isSameOrigin(origin, host) {
+  try {
+    return !!host && new URL(origin).host.toLowerCase() === String(host).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+app.use((req, res, next) => {
+  cors({
+    origin(origin, callback) {
+      // Requisições sem origin (apps nativos, curl, mesma origem) são permitidas
+      if (!origin) return callback(null, true);
+      if (isSameOrigin(origin, req.headers.host)) return callback(null, true);
+      if (ALLOWED_ORIGINS.length === 0) return callback(null, true); // fallback dev
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error('Origem não permitida pela política de CORS.'));
+    },
+    credentials: true
+  })(req, res, next);
+});
 app.use(express.json({ limit: '25mb' })); // lotes de intimações (ingest) podem ser grandes
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
@@ -1659,6 +1669,7 @@ app.use('/js', express.static(path.join(__dirname, 'public', 'js'), { maxAge: 0,
 // Roteadores Modulares
 app.use(rocketsRouter);
 app.use(notificationsRouter);
+app.use(deadlineAlertsRouter);
 app.use(esignRouter);
 app.use(lgpdRouter);
 app.use(dashboardRouter);
@@ -3116,6 +3127,10 @@ if (!IS_TEST) {
     try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
     // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
     try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
+    // Alertas de prazo por WhatsApp/e-mail (só para advogados), com escalonamento e ciência.
+    try { startDeadlineAlerts(); } catch (e) { console.warn('[BOOT] Alertas de prazo externos não iniciados:', e.message); }
+    // Vigia do .env: toda alteração gera e-mail ao titular (cofre criptografado + relatório só com nomes).
+    try { startEnvWatcher({ dir: __dirname }); } catch (e) { console.warn('[BOOT] Vigia do .env não iniciado:', e.message); }
   });
 
   // Manter o loop de eventos ativo continuamente

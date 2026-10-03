@@ -12,13 +12,15 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { validatePassword } from '../src/shared/password-policy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const newPass = (process.env.NEWPASS || process.argv[2] || '').trim();
 
-// Política do sistema: 4 a 12 caracteres (mesma regra do painel/portais).
-if (!newPass || newPass.length < 4 || newPass.length > 12) {
-  console.error('✗ Senha inválida. Informe de 4 a 12 caracteres (variável NEWPASS).');
+// Política do sistema: fonte única em src/shared/password-policy.js (mesma regra do painel/portais).
+const pol = validatePassword(newPass);
+if (!pol.ok) {
+  console.error(`✗ Senha inválida. ${pol.error} (variável NEWPASS).`);
   process.exit(1);
 }
 

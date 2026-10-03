@@ -682,18 +682,23 @@
           (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
           (tab === 'calendar' && p.tab_calendar === 1) ||
           (tab === 'publications' && p.tab_publications === 1) ||
-          (tab === 'docs' && p.tab_lawsuits === 1) ||
+          (tab === 'docs' && p.tab_clients === 1) ||
+          (tab === 'dashboard' && p.tab_dashboard === 1) ||
+          (tab === 'kanban' && p.tab_kanban === 1) ||
+          (['editor', 'calc'].includes(tab) && p.tab_tools === 1) ||
           (tab === 'finance' && p.tab_financial === 1) ||
-          (tab === 'nfse' && p.tab_financial === 1) ||
+          (tab === 'nfse' && p.tab_nfse === 1) ||
+          (tab === 'esign' && p.tab_esign === 1) ||
           (tab === 'judicial' && p.tab_radar === 1) ||
           (tab === 'offices' && p.tab_offices === 1) ||
           (tab === 'drive' && p.tab_drive === 1) ||
           (tab === 'users' && p.tab_users === 1) ||
           (tab === 'hr' && p.tab_hr === 1) ||
           (tab === 'rockets') ||
-          (['blog', 'site-boxes', 'faq', 'lgpd', 'notifications', 'meta-ads'].includes(tab) && p.tab_settings === 1) ||
-          (tab === 'audit' && p.tab_users === 1) ||
-          (tab === 'maintenance' && p.tab_users === 1)
+          (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
+          (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
+          (tab === 'notifications' && p.tab_alerts === 1) ||
+          (tab === 'meta-ads' && p.tab_settings === 1)
         );
         if (!isAllowed) {
           console.warn(`[RBAC] Acesso restrito à aba: ${tab}`);
@@ -971,13 +976,13 @@
         'lawsuits': isMaster || perms.tab_lawsuits === 1,
         'calendar': isMaster || perms.tab_calendar === 1,
         'publications': isMaster || perms.tab_publications === 1,
-        'docs': isMaster || perms.tab_lawsuits === 1,
+        'docs': isMaster || perms.tab_clients === 1,
         'finance': isMaster || perms.tab_financial === 1,
-        'nfse': isMaster || perms.tab_financial === 1,
-        'blog': isMaster || perms.tab_settings === 1,
-        'site-boxes-top': isMaster || perms.tab_settings === 1,
-        'faq-top': isMaster || perms.tab_settings === 1,
-        'audit': isMaster || perms.tab_users === 1,
+        'nfse': isMaster || perms.tab_nfse === 1,
+        'blog': isMaster || perms.tab_blog === 1,
+        'site-boxes-top': isMaster || perms.tab_blog === 1,
+        'faq-top': isMaster || perms.tab_blog === 1,
+        'audit': isMaster || perms.tab_audit === 1,
         'pre-clients': isMaster || perms.tab_clients === 1,
         'judicial': isMaster || perms.tab_radar === 1,
         'offices': isMaster || perms.tab_offices === 1,
@@ -986,15 +991,15 @@
         'hr': isMaster || perms.tab_hr === 1,
         'rockets': true,
         'colaborador': isMaster || perms.tab_colaborador === 1,
-        'dashboard': isMaster || perms.tab_lawsuits === 1 || perms.tab_clients === 1 || perms.tab_financial === 1,
-        'notifications': isMaster || perms.tab_settings === 1,
-        'esign': isMaster || perms.tab_financial === 1,
-        'lgpd': isMaster || perms.tab_settings === 1,
+        'dashboard': isMaster || perms.tab_dashboard === 1,
+        'notifications': isMaster || perms.tab_alerts === 1,
+        'esign': isMaster || perms.tab_esign === 1,
+        'lgpd': isMaster || perms.tab_audit === 1,
         'admin-requests': isMaster || perms.tab_lawsuits === 1,
-        'maintenance': isMaster || perms.tab_users === 1,
+        'maintenance': isMaster,
         'meta-ads': isMaster || perms.tab_settings === 1,
-        'site-boxes': isMaster || perms.tab_settings === 1,
-        'faq': isMaster || perms.tab_settings === 1
+        'site-boxes': isMaster || perms.tab_blog === 1,
+        'faq': isMaster || perms.tab_blog === 1
       };
 
       // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
@@ -1060,6 +1065,23 @@
       }
     }
     window.loadAndApplyUserPermissions = loadAndApplyUserPermissions;
+
+    // ÚNICO ponto de entrada pós-login (senha, Google e sessão restaurada): aplica as permissões do usuário
+    // (esconde o que a função dele não permite) e carrega SOMENTE os módulos autorizados.
+    async function applyPermissionsAndLoadModules() {
+      await loadAndApplyUserPermissions();
+      const p = window.currentUserPermissions?.permissions || {};
+      const isM = window.currentUserPermissions?.is_master;
+      if (isM || p.tab_leads === 1) loadLeads();
+      if (isM || p.tab_clients === 1) loadClients();
+      if (isM || p.tab_lawsuits === 1) loadLawsuits();
+      if (isM || p.tab_offices === 1) loadOffices();
+      if (isM || p.tab_drive === 1) loadDriveFiles();
+      if (isM || p.tab_calendar === 1) loadCalendarSummary();
+      if (isM || p.tab_publications === 1) loadPublicationsStats();
+      if (isM || p.tab_hr === 1) loadHrDashboard();
+    }
+    window.applyPermissionsAndLoadModules = applyPermissionsAndLoadModules;
     window.applyPermissionsToUI = applyPermissionsToUI;
 
     // 1. Autenticação & Inicialização
@@ -1075,18 +1097,7 @@
         if (res.ok) {
           const data = await res.json();
           showPanelScreen(data.user);
-          await loadAndApplyUserPermissions();
-
-          // Popula apenas dados dos módulos autorizados
-          const p = window.currentUserPermissions?.permissions || {};
-          const isM = window.currentUserPermissions?.is_master;
-          if (isM || p.tab_leads === 1) loadLeads();
-          if (isM || p.tab_clients === 1) loadClients();
-          if (isM || p.tab_lawsuits === 1) loadLawsuits();
-          if (isM || p.tab_offices === 1) loadOffices();
-          if (isM || p.tab_drive === 1) loadDriveFiles();
-          if (isM || p.tab_calendar === 1) loadCalendarSummary();
-          if (isM || p.tab_publications === 1) loadPublicationsStats();
+          await applyPermissionsAndLoadModules();
         } else {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
@@ -1151,6 +1162,7 @@
       document.documentElement.classList.add('has-admin-session');
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
+      setTimeout(() => { if (typeof showPendingPasswordNotice === 'function') showPendingPasswordNotice(); }, 800);
 
       // Se for perfil operacional restrito (motorista / colaborador), esconde preventivamente a aba de clientes
       const role = user ? (user.role || '').toLowerCase() : '';
@@ -1214,6 +1226,7 @@
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem('ja_admin_token', data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+          try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
           if (data.employeeToken) {
             localStorage.setItem('ja_employee_token', data.employeeToken);
           }
@@ -1225,19 +1238,7 @@
             return;
           }
           showPanelScreen(data.user);
-          await loadAndApplyUserPermissions();
-
-          // Popula apenas dados dos módulos autorizados
-          const p = window.currentUserPermissions?.permissions || {};
-          const isM = window.currentUserPermissions?.is_master;
-          if (isM || p.tab_leads === 1) loadLeads();
-          if (isM || p.tab_clients === 1) loadClients();
-          if (isM || p.tab_lawsuits === 1) loadLawsuits();
-          if (isM || p.tab_offices === 1) loadOffices();
-          if (isM || p.tab_drive === 1) loadDriveFiles();
-          if (isM || p.tab_calendar === 1) loadCalendarSummary();
-          if (isM || p.tab_publications === 1) loadPublicationsStats();
-          if (isM || p.tab_hr === 1) loadHrDashboard();
+          await applyPermissionsAndLoadModules();
         } else {
           errorText.textContent = data.error || 'Credenciais inválidas.';
           errorMsg.classList.remove('hidden');
@@ -1327,14 +1328,7 @@
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
-          loadLeads();
-          loadClients();
-          loadLawsuits();
-          loadOffices();
-          loadDriveFiles();
-          loadCalendarSummary();
-          loadPublicationsStats();
-          loadHrDashboard();
+          await applyPermissionsAndLoadModules(); // o Google segue as MESMAS permissões do login por senha
         } else {
           if (errorText) errorText.textContent = data.error || 'Conta Google não autorizada para este painel.';
           if (errorMsg) errorMsg.classList.remove('hidden');
@@ -1471,8 +1465,8 @@
         return;
       }
 
-      if (new_password.length < 4 || new_password.length > 12) {
-        showAdminResetAlert('A nova senha deve ter entre 4 e 12 caracteres.', 'error');
+      if (new_password.length < 10 || new_password.length > 64) {
+        showAdminResetAlert('A nova senha deve ter entre 10 e 64 caracteres.', 'error');
         return;
       }
 
