@@ -322,6 +322,12 @@
     async function loadSyncStatus() {
       const el = document.getElementById('sync-status-text');
       if (!el) return;
+      // A sincronização DJEN é da equipe com a aba Intimações: para os demais, a faixa some (o servidor também nega).
+      const cp = window.currentUserPermissions;
+      const band = document.getElementById('sync-status-band');
+      const podeSync = !!cp && (cp.is_master || (cp.permissions && cp.permissions.tab_publications === 1));
+      if (band) band.style.display = podeSync ? '' : 'none';
+      if (!podeSync) return;
       try {
         const d = await jget('/api/sync/status');
         if (d.running) { el.textContent = 'Sincronizando agora…'; return; }
