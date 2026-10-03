@@ -237,6 +237,14 @@
       "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
       "descricao": "No cadastro de operadores, \"Administrador Geral\" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta \"mariana\" ou \"gabriela\" por pedaço do texto digitado (ainda exige a senha da pessoa).",
       "criterios": "Perfil do Administrador Geral definido pelo Dr. Jorge; login por senha só por usuário ou e-mail exatos; guardião reprova a volta dos apelidos."
+    },
+    {
+      "ref": "AUD-39",
+      "prioridade": "P1",
+      "estado": "pendente: revisão combinada com o Dr. Jorge",
+      "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
+      "descricao": "Hoje os segredos estão espalhados: no cofre criptografado do servidor (SMTP_PASS), no .env dos computadores (chave do agente do Roadmap Vivo, chave do cofre no Bitwarden) e DENTRO do banco leads.db em texto puro (system_settings: chave do Asaas; meta_api_settings: token da Meta; outras chaves de API). Também usados pelo código: DATAJUD_API_KEY, GOOGLE_MAPS_API_KEY, RECAPTCHA_SECRET_KEY, WHATSAPP_API_KEY e WHATSAPP_GATEWAY_URL, MASTER_PASSWORD, SYNC_PASS. Mais as credenciais fora do código: chave SSH de deploy, secrets do GitHub (DEPLOY_*), contas Google mestras e senhas de app.",
+      "criterios": "Inventário (só nomes, onde está, quem usa, quando foi criada/trocada) em docs/; cada segredo guardado no cofre do servidor ou no gerenciador de senhas, nunca em texto puro no banco ou no .env; segredos do banco migrados ou criptografados; datas de troca definidas; quem perdeu uma chave sabe como recuperar; guardião reprova segredo novo em texto puro."
     }
   ],
   "sincronizar": [

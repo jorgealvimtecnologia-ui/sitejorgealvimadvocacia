@@ -237,7 +237,7 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 — só o que ainda NÃO foi feito
 
-Atualizado ao fim de 03/10/2026. **32 ordens abertas**: 5 do P0 (o que sobrou), 11 do P1, 13 do P2 e 3 do P3.
+Atualizado ao fim de 03/10/2026. **33 ordens abertas**: 5 do P0 (o que sobrou), 12 do P1, 13 do P2 e 3 do P3.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
@@ -271,7 +271,7 @@ Atualizado ao fim de 03/10/2026. **32 ordens abertas**: 5 do P0 (o que sobrou), 
   - *Situação:* A produção foi publicada a partir da branch claude/awesome-allen-td2uwv (PR #8, ainda rascunho). A main não tem as correções de segurança. Um deploy feito a partir da main reverteria o login Google corrigido, as permissões por função e o cofre do .env.
   - *Pronto quando:* PR #8 revisado e mesclado na main pelo Dr. Jorge; CI verde na main; próximo deploy sai da main e a versão no ar confere com o commit da main.
 
-### P1 — Alto (11)
+### P1 — Alto (12)
 
 - **AUD-05 — Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo**
   - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
@@ -310,6 +310,10 @@ Atualizado ao fim de 03/10/2026. **32 ordens abertas**: 5 do P0 (o que sobrou), 
   - *Estado:* pendente: ação do Dr. Jorge
   - *Situação:* A conta jorgealvimtecnologia tem verificação em duas etapas, chaves de acesso e telefone de recuperação, mas a senha é de ago/2023. As outras duas contas mestras (jorgealvimadvocacia, o e-mail público do escritório e alvo de phishing, e jorgealvim10) precisam das mesmas proteções do próprio Google.
   - *Pronto quando:* Senha trocada; verificação em duas etapas e chaves de acesso conferidas nas três contas mestras; "Revisar atividades de segurança" sem itens desconhecidos.
+- **AUD-39 — Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)**
+  - *Estado:* pendente: revisão combinada com o Dr. Jorge
+  - *Situação:* Hoje os segredos estão espalhados: no cofre criptografado do servidor (SMTP_PASS), no .env dos computadores (chave do agente do Roadmap Vivo, chave do cofre no Bitwarden) e DENTRO do banco leads.db em texto puro (system_settings: chave do Asaas; meta_api_settings: token da Meta; outras chaves de API). Também usados pelo código: DATAJUD_API_KEY, GOOGLE_MAPS_API_KEY, RECAPTCHA_SECRET_KEY, WHATSAPP_API_KEY e WHATSAPP_GATEWAY_URL, MASTER_PASSWORD, SYNC_PASS. Mais as credenciais fora do código: chave SSH de deploy, secrets do GitHub (DEPLOY_*), contas Google mestras e senhas de app.
+  - *Pronto quando:* Inventário (só nomes, onde está, quem usa, quando foi criada/trocada) em docs/; cada segredo guardado no cofre do servidor ou no gerenciador de senhas, nunca em texto puro no banco ou no .env; segredos do banco migrados ou criptografados; datas de troca definidas; quem perdeu uma chave sabe como recuperar; guardião reprova segredo novo em texto puro.
 
 ### P2 — Normal (13)
 
