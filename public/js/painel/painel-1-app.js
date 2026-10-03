@@ -1060,6 +1060,23 @@
       }
     }
     window.loadAndApplyUserPermissions = loadAndApplyUserPermissions;
+
+    // ÚNICO ponto de entrada pós-login (senha, Google e sessão restaurada): aplica as permissões do usuário
+    // (esconde o que a função dele não permite) e carrega SOMENTE os módulos autorizados.
+    async function applyPermissionsAndLoadModules() {
+      await loadAndApplyUserPermissions();
+      const p = window.currentUserPermissions?.permissions || {};
+      const isM = window.currentUserPermissions?.is_master;
+      if (isM || p.tab_leads === 1) loadLeads();
+      if (isM || p.tab_clients === 1) loadClients();
+      if (isM || p.tab_lawsuits === 1) loadLawsuits();
+      if (isM || p.tab_offices === 1) loadOffices();
+      if (isM || p.tab_drive === 1) loadDriveFiles();
+      if (isM || p.tab_calendar === 1) loadCalendarSummary();
+      if (isM || p.tab_publications === 1) loadPublicationsStats();
+      if (isM || p.tab_hr === 1) loadHrDashboard();
+    }
+    window.applyPermissionsAndLoadModules = applyPermissionsAndLoadModules;
     window.applyPermissionsToUI = applyPermissionsToUI;
 
     // 1. Autenticação & Inicialização
@@ -1075,18 +1092,7 @@
         if (res.ok) {
           const data = await res.json();
           showPanelScreen(data.user);
-          await loadAndApplyUserPermissions();
-
-          // Popula apenas dados dos módulos autorizados
-          const p = window.currentUserPermissions?.permissions || {};
-          const isM = window.currentUserPermissions?.is_master;
-          if (isM || p.tab_leads === 1) loadLeads();
-          if (isM || p.tab_clients === 1) loadClients();
-          if (isM || p.tab_lawsuits === 1) loadLawsuits();
-          if (isM || p.tab_offices === 1) loadOffices();
-          if (isM || p.tab_drive === 1) loadDriveFiles();
-          if (isM || p.tab_calendar === 1) loadCalendarSummary();
-          if (isM || p.tab_publications === 1) loadPublicationsStats();
+          await applyPermissionsAndLoadModules();
         } else {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
@@ -1227,19 +1233,7 @@
             return;
           }
           showPanelScreen(data.user);
-          await loadAndApplyUserPermissions();
-
-          // Popula apenas dados dos módulos autorizados
-          const p = window.currentUserPermissions?.permissions || {};
-          const isM = window.currentUserPermissions?.is_master;
-          if (isM || p.tab_leads === 1) loadLeads();
-          if (isM || p.tab_clients === 1) loadClients();
-          if (isM || p.tab_lawsuits === 1) loadLawsuits();
-          if (isM || p.tab_offices === 1) loadOffices();
-          if (isM || p.tab_drive === 1) loadDriveFiles();
-          if (isM || p.tab_calendar === 1) loadCalendarSummary();
-          if (isM || p.tab_publications === 1) loadPublicationsStats();
-          if (isM || p.tab_hr === 1) loadHrDashboard();
+          await applyPermissionsAndLoadModules();
         } else {
           errorText.textContent = data.error || 'Credenciais inválidas.';
           errorMsg.classList.remove('hidden');
@@ -1329,14 +1323,7 @@
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
-          loadLeads();
-          loadClients();
-          loadLawsuits();
-          loadOffices();
-          loadDriveFiles();
-          loadCalendarSummary();
-          loadPublicationsStats();
-          loadHrDashboard();
+          await applyPermissionsAndLoadModules(); // o Google segue as MESMAS permissões do login por senha
         } else {
           if (errorText) errorText.textContent = data.error || 'Conta Google não autorizada para este painel.';
           if (errorMsg) errorMsg.classList.remove('hidden');
