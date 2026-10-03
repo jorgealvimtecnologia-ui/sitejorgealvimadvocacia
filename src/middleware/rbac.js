@@ -10,6 +10,7 @@
  * métodos HTTP). A PRIMEIRA regra cujo caminho — e método, se houver — casa decide.
  */
 import { db } from '../config/db.js';
+import { hasTab } from '../shared/permissions.js';
 import { validateToken, validateClientToken, validateEmployeeToken } from './auth.js';
 
 import { PUBLIC, ANY, CLIENT, EMPLOYEE, PANEL, PANEL_OR_EMPLOYEE, MASTER, RULES } from './rbac-rules.js';
@@ -31,7 +32,7 @@ function operatorHasTab(s, tabKey) {
   if (isMasterSession(s)) return true;
   try {
     const perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(s.userId);
-    return !!(perm && perm[tabKey]);
+    return !!(perm && hasTab(perm, tabKey));
   } catch (e) {
     return false;
   }

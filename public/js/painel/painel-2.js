@@ -412,7 +412,7 @@
       if (unread > 0) { b.textContent = unread; b.classList.remove('hidden'); b.className = 'px-1.5 py-0.5 rounded-full text-white text-[10px] font-bold ' + (critical > 0 ? 'bg-red-600 animate-pulse' : 'bg-amber-500'); }
       else { b.classList.add('hidden'); }
     }
-    async function refreshNotifBadge() { try { const d = await jget('/api/notifications?box=unread&limit=1'); updateNotifBadge(d.unread, d.critical); } catch (e) {} }
+    async function refreshNotifBadge() { const cp = window.currentUserPermissions; if (!cp || !(cp.is_master || (cp.permissions && cp.permissions.tab_alerts === 1))) return; try { const d = await jget('/api/notifications?box=unread&limit=1'); updateNotifBadge(d.unread, d.critical); } catch (e) {} }
     async function markNotifRead(id) { await jsend('/api/notifications/' + id + '/read', 'PATCH', { is_read: true }); loadNotificationsList(); }
     async function markAllNotificationsRead() { await jsend('/api/notifications/read-all', 'POST'); loadNotificationsList(); }
     async function scanDeadlinesNow() { const { data } = await jsend('/api/notifications/scan', 'POST'); if (data.message) alert(data.message); loadNotificationsList(); }

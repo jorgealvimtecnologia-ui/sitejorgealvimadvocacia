@@ -28,17 +28,22 @@
       { key: 'tab_calendar', label: 'Agenda', icon: '📅', title: 'Agenda Forense & Prazos' },
       { key: 'tab_publications', label: 'Intimações', icon: '📰', title: 'Intimações & DJEN' },
       { key: 'tab_hr', label: 'RH/DP', icon: '👥', title: 'Gestão de Pessoal & Ponto' },
-      { key: 'tab_financial', label: 'Ficha Geral', icon: '📊', title: 'Ficha Financeira Anual do Escritório' },
+      { key: 'tab_financial', label: 'Financeiro', icon: '📊', title: 'Financeiro & Caixa (inclui a Ficha Financeira Anual)' },
+      { key: 'tab_nfse', label: 'NFS-e', icon: '🧾', title: 'Notas Fiscais (NFS-e)' },
+      { key: 'tab_esign', label: 'Assinaturas', icon: '✍️', title: 'Assinaturas Eletrônicas' },
       { key: 'tab_colaborador', label: 'Colaborador', icon: '👤', title: 'Portal do Colaborador (Autoatendimento)' },
       { key: 'tab_portal_cliente', label: 'Portal Cliente', icon: '🌐', title: 'Portal do Cliente' },
       { key: 'tab_users', label: 'Usuários', icon: '🔐', title: 'Gestão de Usuários e Senhas' },
-      { key: 'tab_settings', label: 'Config', icon: '⚙️', title: 'Configurações & Integrações' }
+      { key: 'tab_settings', label: 'Config', icon: '⚙️', title: 'Configurações & Integrações' },
+      { key: 'tab_blog', label: 'Blog & Site', icon: '📝', title: 'Blog, FAQ e boxes da Home do site' },
+      { key: 'tab_audit', label: 'Auditoria & LGPD', icon: '🛡️', title: 'Auditoria & Logs e LGPD' },
+      { key: 'tab_alerts', label: 'Alertas', icon: '🔔', title: 'Alertas & Prazos (notificações do escritório)' }
     ];
 
     async function loadAccessControlMatrix() {
       const tbody = document.getElementById('access-matrix-tbody');
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="17" class="text-center py-8 text-slate-400 font-medium">Carregando permissões e sincronizando cadastrados...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="23" class="text-center py-8 text-slate-400 font-medium">Carregando permissões e sincronizando cadastrados...</td></tr>`;
       }
 
       try {
@@ -96,7 +101,7 @@
       if (list.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="18" class="text-center py-10 text-slate-400">
+            <td colspan="23" class="text-center py-10 text-slate-400">
               Nenhum cadastrado encontrado com os filtros selecionados.
             </td>
           </tr>
@@ -275,7 +280,8 @@
         tab_leads: 1, tab_clients: 1, tab_lawsuits: 1, tab_radar: 1,
         tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
         tab_hr: 1, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 1,
-        tab_users: 1, tab_settings: 1
+        tab_users: 1, tab_settings: 1,
+        tab_nfse: 1, tab_esign: 1, tab_blog: 1, tab_audit: 1, tab_alerts: 1
       };
       applyAccessControlToUI(masterPerms);
       switchTab('users');
@@ -321,7 +327,7 @@
       toggleTabBtn('tab-btn-publications', perms.tab_publications === 1);
       toggleTabBtn('tab-btn-hr', perms.tab_hr === 1);
       toggleTabBtn('tab-btn-finance', perms.tab_financial === 1);
-      toggleTabBtn('tab-btn-nfse', perms.tab_financial === 1);
+      toggleTabBtn('tab-btn-nfse', perms.tab_nfse === 1);
       toggleTabBtn('tab-btn-users', perms.tab_users === 1);
     }
 

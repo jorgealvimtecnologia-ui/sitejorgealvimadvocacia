@@ -48,7 +48,9 @@ export const RULES = [
 
   // ---- Qualquer sessão logada ----
   [/^\/api\/auth\/(me|unlock)\b/, ANY],
-  [/^\/api\/notifications(\/|$)/, PANEL],
+  [/^\/api\/notifications\/stream\b/, PANEL],                       // tempo real (foguetes, novos leads): continua para todo operador
+  [/^\/api\/notifications\/whatsapp-template\b/, tab('tab_esign')],   // modelo de mensagem usado na tela de Assinaturas
+  [/^\/api\/notifications(\/|$)/, tab('tab_alerts')],
   // Alertas de prazo por WhatsApp/e-mail: confirmar ciência = operador logado (o servidor exige que seja advogado
   // cadastrado ou o mestre); todo o resto (config, preferências, log, execução) = só o mestre.
   [/^\/api\/deadline-alerts\/ack\b/, PANEL],
@@ -63,7 +65,7 @@ export const RULES = [
   [/^\/api\/admin\/roadmap(\/|$)/, MASTER],
   [/^\/api\/admin\/qa(\/|$)/, MASTER],
   [/^\/api\/admin\/relatorios(\/|$)/, MASTER],
-  [/^\/api\/lgpd(\/|$)/, MASTER],
+  [/^\/api\/lgpd(\/|$)/, tab('tab_audit')],
 
   // ---- Módulos do painel controlados pela matriz de permissões (mestre sempre) ----
   [/^\/api\/clients(\/|$)/, tab('tab_clients')],
@@ -73,7 +75,9 @@ export const RULES = [
   [/^\/api\/(court|publications)(\/|$)/, tab('tab_publications')],
   [/^\/api\/calendar(\/|$)/, tab('tab_calendar')],
   [/^\/api\/documents(\/|$)/, tab('tab_lawsuits')],   // gerador de peças/procurações: mesma permissão da aba Documentos do painel
-  [/^\/api\/(financial|nfse|esign|signatures)(\/|$)/, tab('tab_financial')],
+  [/^\/api\/financial(\/|$)/, tab('tab_financial')],
+  [/^\/api\/nfse(\/|$)/, tab('tab_nfse')],
+  [/^\/api\/(esign|signatures)(\/|$)/, tab('tab_esign')],
   [/^\/api\/hr(\/|$)/, tab('tab_hr')],
   [/^\/api\/drive(\/|$)/, tab('tab_drive')],
   [/^\/api\/offices(\/|$)/, tab('tab_offices')],
@@ -85,7 +89,9 @@ export const RULES = [
   // (antes, /api/admin/* era "qualquer operador logado": o menu escondia a aba, mas o servidor deixava uma
   // secretária ler a auditoria, editar o blog/FAQ, baixar backups ou colocar o sistema em manutenção)
   [/^\/api\/admin\/maintenance(\/|$)/, MASTER],                       // manutenção, sessões, backups, VACUUM, modo manutenção
-  [/^\/api\/admin\/(audit-logs|blog|site|whatsapp)(\/|$)/, tab('tab_settings')],
+  [/^\/api\/admin\/audit-logs(\/|$)/, tab('tab_audit')],
+  [/^\/api\/admin\/(blog|site)(\/|$)/, tab('tab_blog')],
+  [/^\/api\/admin\/whatsapp(\/|$)/, tab('tab_settings')],
   [/^\/api\/admin\/(pre-clients|visits)(\/|$)/, tab('tab_leads')],      // aba "Tráfego & Acessos"
 
   // ---- Demais rotas do painel: qualquer operador logado ----

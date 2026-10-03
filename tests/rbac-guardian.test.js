@@ -108,9 +108,15 @@ describe('administração: a API segue a mesma aba do menu', () => {
     for (const p of ['/api/admin/maintenance/backups', '/api/admin/maintenance/backups/download/x', '/api/admin/maintenance/mode', '/api/admin/maintenance/sessions/disconnect-all'])
       assert.equal(alvo(p), 'master', p);
   });
-  it('auditoria, blog, FAQ/site e WhatsApp exigem a aba Config', () => {
-    for (const p of ['/api/admin/audit-logs', '/api/admin/blog/posts', '/api/admin/site/faqs', '/api/admin/whatsapp/test'])
-      assert.deepEqual(alvo(p), { panelTab: 'tab_settings' }, p);
+  it('cada área exige a SUA aba (não uma aba genérica)', () => {
+    const esperado = {
+      '/api/admin/audit-logs': 'tab_audit', '/api/lgpd/requests': 'tab_audit',
+      '/api/admin/blog/posts': 'tab_blog', '/api/admin/site/faqs': 'tab_blog',
+      '/api/admin/whatsapp/test': 'tab_settings', '/api/notifications': 'tab_alerts',
+      '/api/nfse/x': 'tab_nfse', '/api/esign/requests': 'tab_esign', '/api/signatures/x': 'tab_esign',
+      '/api/financial/summary': 'tab_financial', '/api/notifications/whatsapp-template': 'tab_esign'
+    };
+    for (const [p, aba] of Object.entries(esperado)) assert.deepEqual(alvo(p), { panelTab: aba }, p);
   });
   it('tráfego e pré-clientes exigem a aba Leads', () => {
     for (const p of ['/api/admin/visits/stats', '/api/admin/pre-clients/x/convert-to-lead'])

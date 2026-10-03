@@ -997,9 +997,11 @@
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       colaborador:'tab_colaborador',
-      finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
-      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', faq:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
-    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
+      finance:'tab_financial', nfse:'tab_nfse', esign:'tab_esign', users:'tab_users',
+      audit:'tab_audit', lgpd:'tab_audit', blog:'tab_blog', faq:'tab_blog', 'site-boxes':'tab_blog',
+      notifications:'tab_alerts', explorer:'tab_settings', 'meta-ads':'tab_settings' };
+    // maintenance (backups, sessões, VACUUM) e roadmap: só o mestre (sem coluna na matriz)
+    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
       // 1. Menu Bar do Desktop

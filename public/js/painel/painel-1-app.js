@@ -684,16 +684,18 @@
           (tab === 'publications' && p.tab_publications === 1) ||
           (tab === 'docs' && p.tab_lawsuits === 1) ||
           (tab === 'finance' && p.tab_financial === 1) ||
-          (tab === 'nfse' && p.tab_financial === 1) ||
+          (tab === 'nfse' && p.tab_nfse === 1) ||
+          (tab === 'esign' && p.tab_esign === 1) ||
           (tab === 'judicial' && p.tab_radar === 1) ||
           (tab === 'offices' && p.tab_offices === 1) ||
           (tab === 'drive' && p.tab_drive === 1) ||
           (tab === 'users' && p.tab_users === 1) ||
           (tab === 'hr' && p.tab_hr === 1) ||
           (tab === 'rockets') ||
-          (['blog', 'site-boxes', 'faq', 'lgpd', 'notifications', 'meta-ads'].includes(tab) && p.tab_settings === 1) ||
-          (tab === 'audit' && p.tab_users === 1) ||
-          (tab === 'maintenance' && p.tab_users === 1)
+          (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
+          (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
+          (tab === 'notifications' && p.tab_alerts === 1) ||
+          (tab === 'meta-ads' && p.tab_settings === 1)
         );
         if (!isAllowed) {
           console.warn(`[RBAC] Acesso restrito à aba: ${tab}`);
@@ -973,11 +975,11 @@
         'publications': isMaster || perms.tab_publications === 1,
         'docs': isMaster || perms.tab_lawsuits === 1,
         'finance': isMaster || perms.tab_financial === 1,
-        'nfse': isMaster || perms.tab_financial === 1,
-        'blog': isMaster || perms.tab_settings === 1,
-        'site-boxes-top': isMaster || perms.tab_settings === 1,
-        'faq-top': isMaster || perms.tab_settings === 1,
-        'audit': isMaster || perms.tab_users === 1,
+        'nfse': isMaster || perms.tab_nfse === 1,
+        'blog': isMaster || perms.tab_blog === 1,
+        'site-boxes-top': isMaster || perms.tab_blog === 1,
+        'faq-top': isMaster || perms.tab_blog === 1,
+        'audit': isMaster || perms.tab_audit === 1,
         'pre-clients': isMaster || perms.tab_clients === 1,
         'judicial': isMaster || perms.tab_radar === 1,
         'offices': isMaster || perms.tab_offices === 1,
@@ -987,14 +989,14 @@
         'rockets': true,
         'colaborador': isMaster || perms.tab_colaborador === 1,
         'dashboard': isMaster || perms.tab_lawsuits === 1 || perms.tab_clients === 1 || perms.tab_financial === 1,
-        'notifications': isMaster || perms.tab_settings === 1,
-        'esign': isMaster || perms.tab_financial === 1,
-        'lgpd': isMaster || perms.tab_settings === 1,
+        'notifications': isMaster || perms.tab_alerts === 1,
+        'esign': isMaster || perms.tab_esign === 1,
+        'lgpd': isMaster || perms.tab_audit === 1,
         'admin-requests': isMaster || perms.tab_lawsuits === 1,
-        'maintenance': isMaster || perms.tab_users === 1,
+        'maintenance': isMaster,
         'meta-ads': isMaster || perms.tab_settings === 1,
-        'site-boxes': isMaster || perms.tab_settings === 1,
-        'faq': isMaster || perms.tab_settings === 1
+        'site-boxes': isMaster || perms.tab_blog === 1,
+        'faq': isMaster || perms.tab_blog === 1
       };
 
       // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
