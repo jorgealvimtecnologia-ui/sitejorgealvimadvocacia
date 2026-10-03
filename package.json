@@ -26,6 +26,7 @@
     "roadmap:functions": "node scripts/roadmap-agent.js functions",
     "roadmap:note": "node scripts/roadmap-agent.js note",
     "roadmap:register": "node scripts/roadmap-agent.js register",
+    "roadmap:register-batch": "node scripts/roadmap-register-batch.js",
     "roadmap:import-local": "node scripts/roadmap-agent.js import-local",
     "qa:checklist": "node scripts/generate-qa-checklist.js",
     "test:e2e": "playwright test",

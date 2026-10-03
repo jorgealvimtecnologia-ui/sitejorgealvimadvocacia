@@ -1,6 +1,6 @@
 # 🗺️ Roadmap Estratégico & Arquitetura Unificada: Plataforma Jorge Alvim Advocacia & Legaltech
 **Advogado Titular:** Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943  
-**Data da Última Atualização:** 22 de Setembro de 2026 • Juiz de Fora - MG  
+**Data da Última Atualização:** 3 de Outubro de 2026 • Juiz de Fora - MG  
 **Ambiente:** Servidor VPS Contabo em Produção (`161.97.71.14`) | Ambiente Local Node.js + Docker  
 **Repositório GitHub:** `jorgealvimtecnologia-ui/sitejorgealvimadvocacia`  
 **Conformidade Ética e Legal:** Provimento 205/2021 do CFOAB, Código de Ética e Disciplina, e LGPD (Lei 13.709/2018)  
@@ -187,9 +187,9 @@ Itens mapeados que dependem de ação direta do Dr. Jorge Eduardo da Silva Alvim
 
 ## 🔒 9. Sustentabilidade do Código & Garantias de Engenharia
 
-- **Teto Rigoroso de Linhas:** `server.js` com **2.997 / 3.200 linhas** e `painel-1-app.js` com **1.611 / 1.800 linhas**.
-- **Arquitetura Modular:** 34 submódulos backend em `src/modules/` e 18 submódulos de abas desacoplados em `public/js/tabs/`.
-- **Bateria de Testes Automatizados:** **180 testes aprovados (100% de sucesso)** cobrindo todas as 36 suítes unitárias, de integração e regras RBAC, sem regressões.
+- **Teto Rigoroso de Linhas:** `server.js` com **3.127 / 3.200 linhas** (restam 73) e `painel-1-app.js` com **1.640 / 1.800 linhas**; `switchTab` com 295 linhas (teto 250).
+- **Arquitetura Modular:** 37 submódulos backend em `src/modules/` e 19 submódulos de abas desacoplados em `public/js/tabs/`.
+- **Bateria de Testes Automatizados:** **287 testes aprovados (100% de sucesso)** cobrindo unidade, integração e regras RBAC, sem regressões (verificado em 03/10/2026).
 - **Auditoria Contínua:** `npm run audit:flow` (Score 90/100 Ouro) e `npm run check:architecture` (100% aprovado).
 
 ---
@@ -233,3 +233,97 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 | `ORD-MUESODZ8` | Teste geral do sistema e monitoração de acessos | Core Jurídico | Onda 1 — Confiabilidade & SRE | P1 | ⚪ Planejado | `jorgealvimtecnologia` |
 | `ORD-MUGAU9ST-CSP` | Integração Omnichannel: Distribuição de Artigos com IA para Google, YouTube, Instagram e Facebook | Inteligência Artificial | Onda 3 — Produto & Captação | P1 | ⚪ Planejado | `Dr. Jorge Alvim (via Antigravity)` |
 
+---
+
+## 🔎 11. Ordens da Auditoria de 03/10/2026 (repositório x capacidades discutidas)
+
+Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia (jurídico, CRM, ERP, portais, segurança, operação, design e papéis humanos). Resultado verificado na data: **287/287 testes passando**, lint sem erros, guardião de arquitetura aprovado e 1 vulnerabilidade moderada de dependência (`multer`).
+
+**Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens pelo comando abaixo.
+
+> **Status de registro:** neste repositório ✅ registrado em 03/10/2026. No Roadmap Vivo do site ⏳ **pendente**: exige a chave do agente (`ROADMAP_AGENT_KEY`) no `.env`/ambiente. Depois de configurá-la, rode `npm run roadmap:register-batch -- --aplicar` (sem `--aplicar` apenas simula; rodar de novo não duplica ordens).
+
+### P0 — Urgente (4)
+
+- **AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
+  - *Situação:* Hoje a política aceita 4 a 12 caracteres (src/shared/password-policy.js): o mínimo é muito fraco e o máximo impede frases longas. Manter a fonte única da política e o upgrade transparente no login.
+  - *Pronto quando:* Mínimo de 10 a 12 e máximo de pelo menos 64 caracteres, aplicado em todos os pontos (painel, portais, scripts de reset); senhas antigas continuam entrando e são orientadas a trocar; testes de política atualizados e npm test verde.
+- **AUD-02 — Tirar o .env do backup (ou criptografar o conjunto)**
+  - *Situação:* backup.sh copia o .env para .env.backup dentro de cada backup, e puxar-backup-hd.sh leva isso para o HD externo sem criptografia, junto com chaves Asaas, SMTP e Meta.
+  - *Pronto quando:* Backups novos não contêm segredos em texto puro; backups antigos revisados e limpos; decisão registrada sobre rotacionar segredos caso o HD externo tenha sido exposto.
+- **AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
+  - *Situação:* Há backup diário (cron 03:00, VACUUM INTO) e cópia externa, mas nenhum teste que prove que o banco e os documentos restauram.
+  - *Pronto quando:* Script de restauração em ambiente isolado que valida integridade do leads.db e dos arquivos; rotina mensal registrada; RPO e RTO documentados em docs/INFRA.md.
+- **AUD-04 — Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto**
+  - *Situação:* A varredura de prazos (hora em hora, janelas até 15 dias) só gera notificação dentro do painel. Falta saída por canal externo, confirmação de que o responsável viu e escalonamento ao substituto e ao titular.
+  - *Pronto quando:* Alerta escalonado (7, 3 e 1 dia e no dia) chega por e-mail e/ou WhatsApp; exige confirmação de ciência registrada com autor e horário; sem confirmação, avisa o substituto e o titular; falha de envio é registrada; testes automatizados cobrindo o escalonamento.
+
+### P1 — Alto (7)
+
+- **AUD-05 — Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo**
+  - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
+  - *Pronto quando:* Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil.
+- **AUD-06 — Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências**
+  - *Situação:* npm audit acusa 1 vulnerabilidade moderada (multer 2.2.0 a 2.3.0, negação de serviço por upload abortado). docs/SECURITY.md afirma 0 vulnerabilidades. A CI roda o audit com continue-on-error.
+  - *Pronto quando:* npm audit --omit=dev sem pendências; docs/SECURITY.md atualizado; CI falha em high ou critical; npm test verde após a atualização.
+- **AUD-07 — Mover a chave do DataJud para variável de ambiente**
+  - *Situação:* juridico.routes.js mantém um valor padrão fixo para a chave do DataJud. Provavelmente é a chave pública divulgada pelo CNJ, mas deve sair do código.
+  - *Pronto quando:* Confirmada a natureza da chave; leitura apenas de DATAJUD_API_KEY (com documentação no .env.example); sem segredo literal no código; sincronização continua funcionando.
+- **AUD-08 — Observabilidade: logs estruturados, rastreamento de erros e alertas**
+  - *Situação:* Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.
+  - *Pronto quando:* Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados.
+- **AUD-09 — Migrações de banco versionadas**
+  - *Situação:* Existe uma única migração (001_kanban_indexes.sql); o restante do esquema nasce de CREATE TABLE IF NOT EXISTS espalhado em server.js e nos módulos, sem histórico reversível.
+  - *Pronto quando:* Runner usando a tabela schema_migrations; esquema atual consolidado em migrações numeradas; novas mudanças de esquema só por migração; teste que sobe banco vazio e aplica todas.
+- **AUD-10 — CI estrita: build funcionando e versões de Node alinhadas**
+  - *Situação:* O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.
+  - *Pronto quando:* Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega.
+- **AUD-11 — Folga arquitetural: reduzir server.js e quebrar switchTab**
+  - *Situação:* server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).
+  - *Pronto quando:* server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.
+
+### P2 — Normal (13)
+
+- **AUD-12 — Criptografia de documentos em repouso e backup externo automático e criptografado**
+  - *Situação:* Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.
+  - *Pronto quando:* Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor.
+- **AUD-13 — Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor**
+  - *Situação:* Existem dois módulos (esign e signatures) com assinatura simples/avançada própria (Lei 14.063/2020), sem ICP-Brasil.
+  - *Pronto quando:* Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada.
+- **AUD-14 — IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão**
+  - *Situação:* src/modules/ai/ai.routes.js não chama nenhum modelo: gera minutas a partir de modelos de texto. Rotular como gerador de modelos e planejar IA real com regras de privacidade.
+  - *Pronto quando:* Fornecedor escolhido com contrato que impeça treino com dados do escritório; resumo de andamento em linguagem simples e triagem de leads funcionando; aviso de que não é consultoria jurídica; todo texto passa por revisão humana antes de uso; tela atual renomeada para refletir que são modelos.
+- **AUD-15 — Agendamento online de consulta ligado à agenda e ao CRM**
+  - *Situação:* O site capta contato por formulário e WhatsApp, mas não há marcação de horário pelo próprio visitante.
+  - *Pronto quando:* Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis.
+- **AUD-16 — Portal do cliente: andamento em linguagem simples e "o que preciso fazer"**
+  - *Situação:* O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.
+  - *Pronto quando:* Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou "nada a fazer agora"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais.
+- **AUD-17 — Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes**
+  - *Situação:* Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.
+  - *Pronto quando:* Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa.
+- **AUD-18 — Design system: tokens, componentes e página-catálogo**
+  - *Situação:* A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.
+  - *Pronto quando:* Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado.
+- **AUD-19 — Acessibilidade e desempenho com verificação automática**
+  - *Situação:* painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.
+  - *Pronto quando:* Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.
+- **AUD-20 — Ambiente de homologação ativo e checklist de verificação da produção**
+  - *Situação:* Scripts de staging existem, mas a documentação diz "a configurar uma vez" e não é possível saber, pelo código, se cron, certificado e staging estão ativos.
+  - *Pronto quando:* Staging no ar com acesso restrito e sem dados reais de clientes; checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada.
+- **AUD-21 — Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)**
+  - *Situação:* Não há registro de teste de invasão autorizado nem de revisão por encarregado de dados ou advogado de privacidade. O sistema já tem módulo LGPD, política de privacidade e trilha de auditoria.
+  - *Pronto quando:* Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional.
+- **AUD-22 — Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)**
+  - *Situação:* Funções que não aparecem em código: produto, UX, segurança, SEO e conteúdo, suporte, treinamento e contabilidade. É preciso definir quem assume cada uma.
+  - *Pronto quando:* Tabela papel x responsável aprovada pelo Dr. Jorge; lacunas viram ordens; guias curtos e treinamento de uma tarde para a equipe; canal de suporte definido.
+- **AUD-23 — Pesquisa de UX com usuários reais**
+  - *Situação:* A aba Testes Físicos já coleta falhas, mas não há teste de usabilidade estruturado com advogados, secretária e clientes.
+  - *Pronto quando:* Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site).
+- **AUD-24 — Presença no Google e Cloudflare (ações externas do Dr. Jorge)**
+  - *Situação:* Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.
+  - *Pronto quando:* Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.
+
+### Observação sobre o backlog da seção 8
+
+O item 7 da seção 8 (2FA/TOTP) conflita com a decisão expressa registrada no `CLAUDE.md` e no `docs/SECURITY.md` (veto a 2FA). Recomenda-se o Dr. Jorge confirmar a decisão e remover o item do backlog, ou revogar o veto formalmente.

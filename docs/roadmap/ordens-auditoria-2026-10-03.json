@@ -1,0 +1,173 @@
+{
+  "origem": "Auditoria do repositório vs. capacidades discutidas (03/10/2026)",
+  "ordens": [
+    {
+      "ref": "AUD-01",
+      "prioridade": "P0",
+      "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
+      "descricao": "Hoje a política aceita 4 a 12 caracteres (src/shared/password-policy.js): o mínimo é muito fraco e o máximo impede frases longas. Manter a fonte única da política e o upgrade transparente no login.",
+      "criterios": "Mínimo de 10 a 12 e máximo de pelo menos 64 caracteres, aplicado em todos os pontos (painel, portais, scripts de reset); senhas antigas continuam entrando e são orientadas a trocar; testes de política atualizados e npm test verde."
+    },
+    {
+      "ref": "AUD-02",
+      "prioridade": "P0",
+      "titulo": "Tirar o .env do backup (ou criptografar o conjunto)",
+      "descricao": "backup.sh copia o .env para .env.backup dentro de cada backup, e puxar-backup-hd.sh leva isso para o HD externo sem criptografia, junto com chaves Asaas, SMTP e Meta.",
+      "criterios": "Backups novos não contêm segredos em texto puro; backups antigos revisados e limpos; decisão registrada sobre rotacionar segredos caso o HD externo tenha sido exposto."
+    },
+    {
+      "ref": "AUD-03",
+      "prioridade": "P0",
+      "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",
+      "descricao": "Há backup diário (cron 03:00, VACUUM INTO) e cópia externa, mas nenhum teste que prove que o banco e os documentos restauram.",
+      "criterios": "Script de restauração em ambiente isolado que valida integridade do leads.db e dos arquivos; rotina mensal registrada; RPO e RTO documentados em docs/INFRA.md."
+    },
+    {
+      "ref": "AUD-04",
+      "prioridade": "P0",
+      "titulo": "Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto",
+      "descricao": "A varredura de prazos (hora em hora, janelas até 15 dias) só gera notificação dentro do painel. Falta saída por canal externo, confirmação de que o responsável viu e escalonamento ao substituto e ao titular.",
+      "criterios": "Alerta escalonado (7, 3 e 1 dia e no dia) chega por e-mail e/ou WhatsApp; exige confirmação de ciência registrada com autor e horário; sem confirmação, avisa o substituto e o titular; falha de envio é registrada; testes automatizados cobrindo o escalonamento."
+    },
+    {
+      "ref": "AUD-05",
+      "prioridade": "P1",
+      "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
+      "descricao": "A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.",
+      "criterios": "Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil."
+    },
+    {
+      "ref": "AUD-06",
+      "prioridade": "P1",
+      "titulo": "Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências",
+      "descricao": "npm audit acusa 1 vulnerabilidade moderada (multer 2.2.0 a 2.3.0, negação de serviço por upload abortado). docs/SECURITY.md afirma 0 vulnerabilidades. A CI roda o audit com continue-on-error.",
+      "criterios": "npm audit --omit=dev sem pendências; docs/SECURITY.md atualizado; CI falha em high ou critical; npm test verde após a atualização."
+    },
+    {
+      "ref": "AUD-07",
+      "prioridade": "P1",
+      "titulo": "Mover a chave do DataJud para variável de ambiente",
+      "descricao": "juridico.routes.js mantém um valor padrão fixo para a chave do DataJud. Provavelmente é a chave pública divulgada pelo CNJ, mas deve sair do código.",
+      "criterios": "Confirmada a natureza da chave; leitura apenas de DATAJUD_API_KEY (com documentação no .env.example); sem segredo literal no código; sincronização continua funcionando."
+    },
+    {
+      "ref": "AUD-08",
+      "prioridade": "P1",
+      "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
+      "descricao": "Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.",
+      "criterios": "Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados."
+    },
+    {
+      "ref": "AUD-09",
+      "prioridade": "P1",
+      "titulo": "Migrações de banco versionadas",
+      "descricao": "Existe uma única migração (001_kanban_indexes.sql); o restante do esquema nasce de CREATE TABLE IF NOT EXISTS espalhado em server.js e nos módulos, sem histórico reversível.",
+      "criterios": "Runner usando a tabela schema_migrations; esquema atual consolidado em migrações numeradas; novas mudanças de esquema só por migração; teste que sobe banco vazio e aplica todas."
+    },
+    {
+      "ref": "AUD-10",
+      "prioridade": "P1",
+      "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
+      "descricao": "O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.",
+      "criterios": "Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega."
+    },
+    {
+      "ref": "AUD-11",
+      "prioridade": "P1",
+      "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
+      "descricao": "server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).",
+      "criterios": "server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde."
+    },
+    {
+      "ref": "AUD-12",
+      "prioridade": "P2",
+      "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
+      "descricao": "Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.",
+      "criterios": "Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor."
+    },
+    {
+      "ref": "AUD-13",
+      "prioridade": "P2",
+      "titulo": "Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor",
+      "descricao": "Existem dois módulos (esign e signatures) com assinatura simples/avançada própria (Lei 14.063/2020), sem ICP-Brasil.",
+      "criterios": "Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada."
+    },
+    {
+      "ref": "AUD-14",
+      "prioridade": "P2",
+      "titulo": "IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão",
+      "descricao": "src/modules/ai/ai.routes.js não chama nenhum modelo: gera minutas a partir de modelos de texto. Rotular como gerador de modelos e planejar IA real com regras de privacidade.",
+      "criterios": "Fornecedor escolhido com contrato que impeça treino com dados do escritório; resumo de andamento em linguagem simples e triagem de leads funcionando; aviso de que não é consultoria jurídica; todo texto passa por revisão humana antes de uso; tela atual renomeada para refletir que são modelos."
+    },
+    {
+      "ref": "AUD-15",
+      "prioridade": "P2",
+      "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
+      "descricao": "O site capta contato por formulário e WhatsApp, mas não há marcação de horário pelo próprio visitante.",
+      "criterios": "Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis."
+    },
+    {
+      "ref": "AUD-16",
+      "prioridade": "P2",
+      "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
+      "descricao": "O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.",
+      "criterios": "Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou \"nada a fazer agora\"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais."
+    },
+    {
+      "ref": "AUD-17",
+      "prioridade": "P2",
+      "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
+      "descricao": "Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.",
+      "criterios": "Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa."
+    },
+    {
+      "ref": "AUD-18",
+      "prioridade": "P2",
+      "titulo": "Design system: tokens, componentes e página-catálogo",
+      "descricao": "A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.",
+      "criterios": "Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado."
+    },
+    {
+      "ref": "AUD-19",
+      "prioridade": "P2",
+      "titulo": "Acessibilidade e desempenho com verificação automática",
+      "descricao": "painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.",
+      "criterios": "Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados."
+    },
+    {
+      "ref": "AUD-20",
+      "prioridade": "P2",
+      "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
+      "descricao": "Scripts de staging existem, mas a documentação diz \"a configurar uma vez\" e não é possível saber, pelo código, se cron, certificado e staging estão ativos.",
+      "criterios": "Staging no ar com acesso restrito e sem dados reais de clientes; checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada."
+    },
+    {
+      "ref": "AUD-21",
+      "prioridade": "P2",
+      "titulo": "Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)",
+      "descricao": "Não há registro de teste de invasão autorizado nem de revisão por encarregado de dados ou advogado de privacidade. O sistema já tem módulo LGPD, política de privacidade e trilha de auditoria.",
+      "criterios": "Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional."
+    },
+    {
+      "ref": "AUD-22",
+      "prioridade": "P2",
+      "titulo": "Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)",
+      "descricao": "Funções que não aparecem em código: produto, UX, segurança, SEO e conteúdo, suporte, treinamento e contabilidade. É preciso definir quem assume cada uma.",
+      "criterios": "Tabela papel x responsável aprovada pelo Dr. Jorge; lacunas viram ordens; guias curtos e treinamento de uma tarde para a equipe; canal de suporte definido."
+    },
+    {
+      "ref": "AUD-23",
+      "prioridade": "P2",
+      "titulo": "Pesquisa de UX com usuários reais",
+      "descricao": "A aba Testes Físicos já coleta falhas, mas não há teste de usabilidade estruturado com advogados, secretária e clientes.",
+      "criterios": "Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site)."
+    },
+    {
+      "ref": "AUD-24",
+      "prioridade": "P2",
+      "titulo": "Presença no Google e Cloudflare (ações externas do Dr. Jorge)",
+      "descricao": "Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.",
+      "criterios": "Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD."
+    }
+  ]
+}
