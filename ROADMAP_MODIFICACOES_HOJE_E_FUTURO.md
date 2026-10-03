@@ -235,55 +235,43 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ---
 
-## 🔎 11. Ordens da Auditoria de 03/10/2026 (repositório x capacidades discutidas)
+## 🔎 11. Ordens da Auditoria de 03/10/2026 — só o que ainda NÃO foi feito
 
-Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia. **30 ordens**, das quais **8 já implementadas no PR #8** (aguardando publicação) e as demais planejadas.
+Atualizado ao fim de 03/10/2026. **32 ordens abertas**: 5 do P0 (o que sobrou), 11 do P1, 13 do P2 e 3 do P3.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
-> **Status de registro:** neste repositório ✅. No Roadmap Vivo do site ⏳ **pendente**: exige a chave do agente (`ROADMAP_AGENT_KEY`) no `.env`/ambiente (sem `--aplicar` o comando só simula; rodar de novo não duplica).
+> **Status de registro:** neste repositório ✅. No Roadmap Vivo do site ⏳ **pendente** (AUD-32): exige a chave do agente (`ROADMAP_AGENT_KEY`) no ambiente; sem `--aplicar` o comando só simula, e rodar de novo não duplica.
 
-### P0 — Urgente (9)
+### ✅ Concluídas em 03/10/2026 (publicadas em produção, versão f158399)
 
-- **✅ AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
-  - *Estado:* implementado no repositório (PR #8); falta publicar
-  - *Situação:* O backend já exigia 8 a 64 caracteres, mas o front-end ainda limitava os campos a 4 a 12 (maxlength="12" impedia digitar senha longa), os textos diziam "4 a 12", scripts/reset-master-pass.js tinha regra própria e docs/SECURITY.md estava desatualizado. Correção da premissa original desta ordem, que se baseou na documentação sem conferir o código.
-  - *Pronto quando:* Mínimo de 10 e máximo de 64 caracteres em todos os pontos (backend, formulários, textos, scripts de reset); senhas antigas continuam entrando e o login avisa para trocar; teste que falha se o front divergir da política; npm test verde.
-- **✅ AUD-02 — Tirar o .env do backup (ou criptografar o conjunto)**
-  - *Estado:* implementado no repositório (PR #8); falta publicar
-  - *Situação:* O backup.sh copiava o .env e as chaves TLS para um pacote levado a HD externo sem criptografia; e a chave do Asaas, o token da Meta e as sessões ficam em texto puro DENTRO do leads.db. Confirmado por teste que o backup antigo vazava a chave do Asaas.
-  - *Pronto quando:* Backups novos sem .env, sem chaves privadas e com a cópia do banco higienizada; ferramenta que limpa pacotes antigos; teste com segredos plantados; decisão do Dr. Jorge sobre girar chaves caso algum backup antigo já tenha saído do controle.
-- **✅ AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
-  - *Estado:* implementado no repositório (PR #8); falta publicar e o Dr. Jorge confirmar RPO/RTO
-  - *Situação:* Havia backup diário e cópia externa, mas nenhum teste que provasse que o banco e os documentos restauram, nem aviso se o cron parasse. Também: o script de cron perdia o agendamento em silêncio em servidor sem crontab.
-  - *Pronto quando:* Script de restauração em ambiente isolado que valida integridade do leads.db e dos arquivos; rotina mensal registrada; RPO e RTO documentados em docs/INFRA.md.
-- **✅ AUD-04 — Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto**
-  - *Estado:* implementado no repositório (PR #8); falta o Dr. Jorge definir titular/substitutos e configurar o gateway de WhatsApp e o SMTP
-  - *Situação:* A varredura de prazos só gerava notificação dentro do painel. Agora há aviso por WhatsApp e e-mail, SÓ para advogados (integrante ativo, função de Advogado, OAB cadastrada; o perfil 'advogado' do controle de acesso é o valor padrão da coluna e não prova nada), escalonado D-7/D-3/D-1/D-0 e 3 dias após o vencimento, com ciência por link ou painel, escalonamento a substituto e titular, registro de cada envio, reenvio e alerta crítico quando desiste.
-  - *Pronto quando:* Só advogados recebem (provado por teste com secretária e estagiário rotulados 'advogado'); ciência registrada com autor, hora e meio; sem ciência escala a substituto e titular; falhas registradas e reenviadas; configuração pelo painel; documentação em docs/ALERTAS-DE-PRAZO.md.
-- **✅ AUD-25 — Guardião do .env: nunca exposto no GitHub nem no servidor; segredos só criptografados; aviso por e-mail a cada alteração**
-  - *Estado:* implementado no repositório (PR #8); falta migrar o servidor (AUD-26)
-  - *Situação:* Pedido do Dr. Jorge. O .env com segredos não pode ficar em texto puro no GitHub, na imagem Docker nem no servidor Contabo; se precisar existir lá, criptografado. Toda alteração do .env envia e-mail ao titular. Também corrige um bug existente: o .env era carregado depois dos módulos que leem o SMTP, então o SMTP configurado no .env era ignorado. O .dockerignore não excluía o .env (o COPY . . o embutia na imagem).
-  - *Pronto quando:* Regra no CLAUDE.md e no guardião (npm run check:architecture); cofre .env.enc com chave fora do projeto; deploy recusa segredos em texto puro; verificação diária do site ao vivo na CI; e-mail a cada alteração com relatório só de nomes e o cofre criptografado, nunca valores nem a chave; testes cobrindo vazamento.
-- **AUD-26 — Migrar o .env do servidor Contabo para o cofre criptografado e confirmar o nginx (ação do Dr. Jorge)**
-  - *Estado:* pendente: ação no servidor (uso único)
-  - *Situação:* O deploy passa a recusar publicar enquanto o .env do servidor tiver segredos em texto puro. O primeiro deploy precisa de uma liberação de uso único; depois, migrar com node scripts/env-vault.js migrate --gerar-chave, guardar a chave no cofre de senhas e reiniciar. Também confirmar que o nginx do Contabo (que não está no repositório) bloqueia arquivos ocultos.
-  - *Pronto quando:* node scripts/env-vault.js status sem segredos em texto puro; chave guardada no cofre de senhas; e-mail de linha de base recebido; node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br sem violações; rotação das chaves se houver suspeita de exposição anterior.
+- **AUD-01** política de senha 10 a 64 · **AUD-02** backup sem segredos · **AUD-25** guardião do `.env` · **AUD-28** testes estáveis · **AUD-29** login Google forjado corrigido (sem sinal de exploração: nenhum `google_id` suspeito, IPs conferidos) · **AUD-30** guardião do RBAC e contas mestras.
+- **Também entregue, sem ordem prévia:** matriz de acessos com 26 colunas; menu e API na mesma permissão; painel fechado por padrão; Visão Geral e cockpit filtrados por aba; operador suspenso não entra; vínculo operador-colaborador exato; papel desconhecido sem acesso; teste automático por perfil; `.env` no cofre criptografado, chave guardada fora do servidor e chave trocada (`rotate-key`); correção do dono dos arquivos do cofre (o site caiu por alguns minutos na migração).
+
+### P0 — Urgente (sobras) (5)
+
+- **AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
+  - *Estado:* publicado em produção (03/10); sobra ação no servidor e decisão do Dr. Jorge
+  - *Situação:* O teste de restauração, o manifesto e a limpeza de segredos dos backups já estão no ar. Sobra ligar a verificação semanal no servidor e fixar as metas de recuperação.
+  - *Pronto quando:* scripts/setup-backup-cron.sh executado no servidor (cron semanal ativo, conferido com crontab -l); primeira verificação semanal registrada; Dr. Jorge confirma RPO 24 h e RTO 4 h (propostos) em docs/INFRA.md.
+- **AUD-04 — Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto**
+  - *Estado:* publicado em produção (03/10); sobra configuração pelo Dr. Jorge
+  - *Situação:* Os alertas de prazo por WhatsApp/e-mail só para advogados já estão no ar. Sobra configurar quem recebe e por onde enviar.
+  - *Pronto quando:* Advogado titular e substitutos definidos no painel (Alertas & Notificações); gateway de WhatsApp configurado e testado com um envio real; envio por e-mail testado; primeiro ciclo real de alertas conferido.
+- **AUD-26 — Fechar a migração do .env: conferir o nginx e girar a senha do SMTP (ação do Dr. Jorge)**
+  - *Estado:* feito em 03/10 (cofre, chave guardada, chave trocada); sobra conferir o nginx e girar a senha do SMTP
+  - *Situação:* O .env do servidor já está no cofre criptografado, a cópia solta foi apagada, a chave está no Bitwarden e a chave que vazou na conversa foi trocada (rotate-key). Sobra: confirmar que o nginx do Contabo (fora do repositório) bloqueia arquivos ocultos, e criar uma nova senha de app do SMTP, porque e-mails de aviso antigos carregam cópias do cofre cifradas com a chave que vazou.
+  - *Pronto quando:* node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br sem violações; nova senha de app gravada com env-vault.js set SMTP_PASS (seguido de chown www-data e reinício); senhas de app antigas revogadas no Google, inclusive a de 26/09; /health ok.
 - **AUD-27 — Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome**
-  - *Estado:* proposta de matriz escrita (docs/PAPEIS-E-PERMISSOES.md); aguardando aprovação do Dr. Jorge
-  - *Situação:* Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente.
-  -  Também: após o login com Google o painel não aplicava as permissões no menu (mostrava abas a mais); já corrigido, e os 3 caminhos de entrada (senha, Google, sessão) usam a mesma função.
-  - *Pronto quando:* Cada pessoa tem exatamente uma função, escolhida pelo mestre; a permissão vem da função (sem nome próprio nem texto de login no código); mudar a função muda o acesso; exceções individuais só pelo mestre e registradas na auditoria; escopo de dados aplicado no servidor (ex.: advogado só vê seus processos); chefe de sistema de informação sem acesso a dados de clientes; testes por função na API e nas pastas de arquivos; matriz aprovada pelo Dr. Jorge.
-- **✅ AUD-29 — URGENTE: login Google aceitava token de teste em produção (entrada como mestre sem conta Google)**
-  - *Estado:* corrigido no repositório (PR #8); URGENTE publicar e rodar a verificação no servidor
-  - *Situação:* verifyGoogleToken aceitava 'mock-google-token:<id>:<e-mail>:<nome>' em qualquer ambiente desde 19/09/2026. Com o e-mail do mestre, qualquer pessoa entrava como mestre e abria clientes, financeiro e usuários (reproduzido localmente em modo produção). Também não conferia o aud (para quem o token foi emitido), o emissor nem o e-mail verificado, e tinha um caminho alternativo por /userinfo sem aud. Afeta os 4 logins Google.
-  - *Pronto quando:* Token de teste recusado fora de teste (provado nos 4 logins em modo produção); aud, emissor e e-mail verificado conferidos; correção publicada; node scripts/check-google-forgery.js rodado no servidor sem google_id suspeito e logins Google por IP revisados pelo Dr. Jorge; se houver suspeita, trocar senhas e encerrar sessões.
-- **✅ AUD-30 — Guardião do RBAC: senha do painel e senha Google só entram nas abas da função; 3 contas mestras**
-  - *Estado:* feito no repositório (PR #8); publicar com o próximo deploy
-  - *Situação:* scripts/check-rbac-guard.js (regra 8 do check-architecture; npm run check:rbac) reprova entrada do painel sem applyPermissionsAndLoadModules, Google sem aud/e-mail verificado ou com token de teste sem trava, rota /api sem regra e rota sensível pública. Mestres únicos em src/config/master-emails.js: jorgealvimtecnologia@gmail.com, jorgealvim10@gmail.com, jorgealvimadvocacia@gmail.com (GOOGLE_ADMIN_EMAILS aposentada). Corrigido também /api/documents, que dava 403 até para o mestre.
-  - *Pronto quando:* npm run check:rbac verde; adulterações reprovadas (tests/rbac-guardian.test.js); 3 contas entram como mestre e outros e-mails não (tests/master-google-login.test.js).
+  - *Estado:* proposta enviada (17 funções); aguardando as 5 respostas do Dr. Jorge
+  - *Situação:* Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente. Já feito: a matriz ganhou colunas separadas (26 colunas), papel desconhecido deixa de virar Advogado, "atendente" é Secretária e o vínculo operador-colaborador é exato. Sobra cadastrar as 17 funções como perfis (etapa 1) e passar cada pessoa à função certa, com confirmação uma a uma, removendo as regras por nome (etapa 2).
+  - *Pronto quando:* As 17 funções existem como perfis na matriz e passam no teste por perfil (tests/rbac-per-role.test.js); cada pessoa tem exatamente uma função confirmada pelo mestre; nenhuma regra por nome próprio ou trecho de login; matriz aprovada pelo Dr. Jorge (cinco perguntas em docs/PAPEIS-E-PERMISSOES.md).
+- **AUD-33 — Mesclar o PR #8 na main (a produção roda o código da branch)**
+  - *Estado:* pendente: decisão do Dr. Jorge
+  - *Situação:* A produção foi publicada a partir da branch claude/awesome-allen-td2uwv (PR #8, ainda rascunho). A main não tem as correções de segurança. Um deploy feito a partir da main reverteria o login Google corrigido, as permissões por função e o cofre do .env.
+  - *Pronto quando:* PR #8 revisado e mesclado na main pelo Dr. Jorge; CI verde na main; próximo deploy sai da main e a versão no ar confere com o commit da main.
 
-### P1 — Alto (8)
+### P1 — Alto (11)
 
 - **AUD-05 — Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo**
   - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
@@ -306,10 +294,22 @@ Origem: auditoria do código, dos testes e da documentação contra as capacidad
 - **AUD-11 — Folga arquitetural: reduzir server.js e quebrar switchTab**
   - *Situação:* server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).
   - *Pronto quando:* server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.
-- **✅ AUD-28 — Testes automatizados instáveis (falso vermelho em cerca de metade das execuções)**
-  - *Estado:* resolvido neste PR (npm test serial)
-  - *Situação:* Medido na main original: 3 de 6 execuções de npm test falharam com 'Unable to deserialize cloned data' (erro do executor de testes do Node ao ler a saída de api.test.js em paralelo), sem nenhum teste de fato reprovado.
-  - *Pronto quando:* npm test e a CI passam de forma estável; execução serial custa cerca de 57 s contra 24 s; 6 de 6 execuções seriais verdes.
+- **AUD-31 — Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)**
+  - *Estado:* pendente
+  - *Situação:* Hoje cada aba só liga ou desliga: quem tem Processos vê todos os processos. O escopo de dados (data_scope) é gravado mas nenhum trecho do servidor o aplica, e não existe permissão de somente leitura. A primeira versão das 17 funções trata o "restrito" como desligado.
+  - *Pronto quando:* Advogado de escritório e estagiário veem só os processos em que são responsáveis, provado por teste na API; cliente só os seus; permissão de somente leitura por aba onde a matriz pedir; testes por função e por escopo.
+- **AUD-32 — Registrar estas ordens no Roadmap Vivo do site**
+  - *Estado:* pendente: falta a chave do agente no ambiente
+  - *Situação:* As ordens vivem neste JSON e em ROADMAP_MODIFICACOES_HOJE_E_FUTURO.md. O site ainda não as recebeu porque o comando de registro exige a ROADMAP_AGENT_KEY, que o Dr. Jorge cadastra nas configurações do ambiente (nunca no chat).
+  - *Pronto quando:* npm run roadmap:register-batch -- --aplicar executado; npm run roadmap:list mostra as ordens no site; rodar de novo não duplica.
+- **AUD-34 — Reiniciar o servidor Contabo para aplicar as atualizações de sistema**
+  - *Estado:* pendente: horário combinado com o Dr. Jorge
+  - *Situação:* O servidor mostra "System restart required" e 33 atualizações pendentes (2 de segurança do ESM). Não foi reiniciado para não arriscar a produção no meio das mudanças.
+  - *Pronto quando:* Backup recente conferido; reinício em horário de baixo movimento; serviço advocacia, nginx e backup voltam sozinhos; /health ok; apt sem atualizações de segurança pendentes.
+- **AUD-35 — Trocar a senha da conta Google mestra e conferir as outras duas contas mestras**
+  - *Estado:* pendente: ação do Dr. Jorge
+  - *Situação:* A conta jorgealvimtecnologia tem verificação em duas etapas, chaves de acesso e telefone de recuperação, mas a senha é de ago/2023. As outras duas contas mestras (jorgealvimadvocacia, o e-mail público do escritório e alvo de phishing, e jorgealvim10) precisam das mesmas proteções do próprio Google.
+  - *Pronto quando:* Senha trocada; verificação em duas etapas e chaves de acesso conferidas nas três contas mestras; "Revisar atividades de segurança" sem itens desconhecidos.
 
 ### P2 — Normal (13)
 
@@ -338,8 +338,9 @@ Origem: auditoria do código, dos testes e da documentação contra as capacidad
   - *Situação:* painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.
   - *Pronto quando:* Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.
 - **AUD-20 — Ambiente de homologação ativo e checklist de verificação da produção**
-  - *Situação:* Scripts de staging existem, mas a documentação diz "a configurar uma vez" e não é possível saber, pelo código, se cron, certificado e staging estão ativos.
-  - *Pronto quando:* Staging no ar com acesso restrito e sem dados reais de clientes; checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada.
+  - *Estado:* staging ativo desde 03/10; sobra o checklist periódico da produção
+  - *Situação:* O staging (homolog.jorgealvimadvocacia.com.br) está no ar e foi usado para validar as correções. Sobra a rotina periódica de verificação da produção.
+  - *Pronto quando:* Checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada; staging sem dados reais de clientes.
 - **AUD-21 — Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)**
   - *Situação:* Não há registro de teste de invasão autorizado nem de revisão por encarregado de dados ou advogado de privacidade. O sistema já tem módulo LGPD, política de privacidade e trilha de auditoria.
   - *Pronto quando:* Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional.
@@ -352,6 +353,21 @@ Origem: auditoria do código, dos testes e da documentação contra as capacidad
 - **AUD-24 — Presença no Google e Cloudflare (ações externas do Dr. Jorge)**
   - *Situação:* Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.
   - *Pronto quando:* Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.
+
+### P3 — Baixo (3)
+
+- **AUD-36 — Instalar o pacote "compression" no servidor (resposta com gzip na origem)**
+  - *Estado:* pendente
+  - *Situação:* O log de inicialização avisa que o pacote compression não está instalado: a origem responde sem gzip (a Cloudflare entrega Brotli, então o usuário não sente).
+  - *Pronto quando:* npm install --omit=dev feito no servidor em horário tranquilo; o log mostra a compressão ativa; /health ok.
+- **AUD-37 — Teste de navegador do menu para cada função**
+  - *Estado:* pendente
+  - *Situação:* O teste por perfil cobre API, Visão Geral e cockpit para todos os perfis, mas o teste de navegador (Playwright) só confere o menu da secretária.
+  - *Pronto quando:* e2e que entra como cada função e confere os itens do menu e que o console não registra chamadas negadas pela API.
+- **AUD-38 — Decidir o perfil do nível "Administrador Geral" e remover os apelidos fixos do login**
+  - *Estado:* pendente: depende da AUD-27
+  - *Situação:* No cadastro de operadores, "Administrador Geral" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta "mariana" ou "gabriela" por pedaço do texto digitado (ainda exige a senha da pessoa).
+  - *Pronto quando:* Perfil do Administrador Geral definido pelo Dr. Jorge; login por senha só por usuário ou e-mail exatos; guardião reprova a volta dos apelidos.
 
 ### Observação sobre o backlog da seção 8
 
