@@ -1620,16 +1620,31 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .map(s => s.trim())
   .filter(Boolean);
 
-app.use(cors({
-  origin(origin, callback) {
-    // Requisições sem origin (apps nativos, curl, mesma origem) são permitidas
-    if (!origin) return callback(null, true);
-    if (ALLOWED_ORIGINS.length === 0) return callback(null, true); // fallback dev
-    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    return callback(new Error('Origem não permitida pela política de CORS.'));
-  },
-  credentials: true
-}));
+// Mesma origem (o navegador envia Origin também em POST do próprio site) é sempre permitida:
+// o Host da requisição é o do próprio site, então não é uma origem "de fora". Só origens de
+// OUTRO site precisam estar em ALLOWED_ORIGINS. (Antes, o painel do domínio de homologação
+// ficava bloqueado quando ALLOWED_ORIGINS não o listava.)
+export function isSameOrigin(origin, host) {
+  try {
+    return !!host && new URL(origin).host.toLowerCase() === String(host).toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+app.use((req, res, next) => {
+  cors({
+    origin(origin, callback) {
+      // Requisições sem origin (apps nativos, curl, mesma origem) são permitidas
+      if (!origin) return callback(null, true);
+      if (isSameOrigin(origin, req.headers.host)) return callback(null, true);
+      if (ALLOWED_ORIGINS.length === 0) return callback(null, true); // fallback dev
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error('Origem não permitida pela política de CORS.'));
+    },
+    credentials: true
+  })(req, res, next);
+});
 app.use(express.json({ limit: '25mb' })); // lotes de intimações (ingest) podem ser grandes
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
