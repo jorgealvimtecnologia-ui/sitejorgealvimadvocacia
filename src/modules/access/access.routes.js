@@ -269,6 +269,21 @@ const ROLE_TEMPLATES = {
       tab_users: 0, tab_settings: 0
     }
   },
+  // Quem NÃO se encaixa em nenhuma função fica SEM acesso até o mestre escolher o perfil
+  // (antes caía no perfil Advogado: processos, radar, drive, agenda... sem ninguém ter decidido).
+  sem_perfil: {
+    key: 'sem_perfil',
+    name: 'Sem perfil definido (o mestre precisa escolher)',
+    badge_label: '⛔ Sem perfil',
+    badge_class: 'bg-slate-100 text-slate-700 border-slate-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 0, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 0, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
   cliente: {
     key: 'cliente',
     name: 'Cliente (PF / PJ)',
@@ -305,7 +320,7 @@ export function syncAllAccessPermissions() {
       const uname = (u.username || '').toLowerCase();
       const urole = (u.role || '').toLowerCase();
 
-      let tplKey = 'advogado';
+      let tplKey = 'sem_perfil';
       let userType = 'admin';
 
       if (isMaster) {
@@ -320,7 +335,7 @@ export function syncAllAccessPermissions() {
       } else if (pos.includes('motorist') || pos.includes('externo') || uname.includes('motorista') || urole === 'motorista') {
         tplKey = 'motorista';
         userType = 'motorista';
-      } else if (pos.includes('secret') || pos.includes('recepc') || uname.includes('secretaria') || uname.includes('recepcao') || urole === 'secretaria') {
+      } else if (pos.includes('secret') || pos.includes('recepc') || uname.includes('secretaria') || uname.includes('recepcao') || urole === 'secretaria' || urole === 'atendente') {
         tplKey = 'secretaria';
         userType = 'secretaria';
       } else if (pos.includes('estagi') || uname.includes('estagiario') || uname.includes('estagio') || urole === 'estagiario') {
@@ -329,8 +344,8 @@ export function syncAllAccessPermissions() {
       } else if (pos.includes('gerente') || pos.includes('financ') || uname.includes('adm') || urole === 'gerente') {
         tplKey = 'gerente';
         userType = 'gerente';
-      } else if (pos.includes('advog') || uname.includes('adv') || urole === 'advogado') {
-        tplKey = 'advogado';
+      } else if (pos.includes('advog') || uname.includes('adv') || urole === 'advogado' || urole === 'admin') {
+        tplKey = 'advogado';   // "Administrador Geral" do cadastro de operadores segue como estava (decisão do mestre se muda)
         userType = 'advogado';
       }
 
@@ -386,7 +401,7 @@ export function syncAllAccessPermissions() {
     const employees = db.prepare(`SELECT * FROM hr_employees`).all();
     for (const emp of employees) {
       const pos = (emp.position || '').toLowerCase();
-      let tplKey = 'advogado';
+      let tplKey = 'sem_perfil';
       let userType = 'empregado';
 
       if (pos.includes('estagi')) {
@@ -495,7 +510,7 @@ accessRouter.get('/api/access-control/matrix', requireAuth, (req, res) => {
 
     // SEGURANÇA: a matriz não expõe senhas. Para trocar, usa-se "Redefinir senha".
     const matrix = rows.map(r => {
-      const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
+      const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.sem_perfil;
       return {
         ...r,
         ...effectivePerms(r),
@@ -711,8 +726,10 @@ accessRouter.get('/api/access-control/my-permissions', (req, res) => {
     }
 
     // 4. Fallback estrito ao template do cargo do usuário (session.role)
-    const roleKey = session.role || 'advogado';
-    const tpl = ROLE_TEMPLATES[roleKey] || ROLE_TEMPLATES.advogado;
+    // Papel desconhecido => SEM acesso (nunca "Advogado" por omissão); "atendente" é a secretária/recepção.
+    const rawRole = String(session.role || '').toLowerCase();
+    const roleKey = rawRole === 'atendente' ? 'secretaria' : rawRole === 'admin' ? 'advogado' : ROLE_TEMPLATES[rawRole] ? rawRole : 'sem_perfil';
+    const tpl = ROLE_TEMPLATES[roleKey];
 
     // Auto-registrar na matriz access_permissions para manter rastreabilidade
     try {
