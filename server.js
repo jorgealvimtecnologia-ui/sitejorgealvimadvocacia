@@ -1,3 +1,4 @@
+import './src/config/load-env.js'; // PRIMEIRO import: carrega .env + cofre .env.enc antes dos demais módulos
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
@@ -25,6 +26,7 @@ import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
 import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } from './src/modules/sync/sync.routes.js';
+import { startEnvWatcher } from './src/shared/env-watch.js';
 import { adminRequestsRouter } from './src/modules/adminrequests/adminrequests.routes.js';
 import { kanbanRouter } from './src/modules/kanban/kanban.routes.js';
 import { runMigrations } from './src/db/migrate.js';
@@ -69,15 +71,7 @@ import { loginRateLimit } from './src/shared/login-guard.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Carrega variáveis de ambiente do arquivo .env (carregador nativo do Node >= 20.12/22).
-// Segredos (chaves Asaas, origens CORS, etc.) devem ficar no .env, nunca no código.
-try {
-  if (typeof process.loadEnvFile === 'function' && fs.existsSync(path.join(__dirname, '.env'))) {
-    process.loadEnvFile(path.join(__dirname, '.env'));
-  }
-} catch (e) {
-  console.warn('[ENV] Não foi possível carregar .env:', e.message);
-}
+// Variáveis de ambiente: carregadas em src/config/load-env.js (1º import), com suporte ao cofre .env.enc.
 
 const app = express();
 app.disable('x-powered-by'); // não expor a stack (Express)
@@ -3116,6 +3110,8 @@ if (!IS_TEST) {
     try { startDeadlineScanner(); } catch (e) { console.warn('[BOOT] Scanner de prazos não iniciado:', e.message); }
     // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
     try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
+    // Vigia do .env: toda alteração gera e-mail ao titular (cofre criptografado + relatório só com nomes).
+    try { startEnvWatcher({ dir: __dirname }); } catch (e) { console.warn('[BOOT] Vigia do .env não iniciado:', e.message); }
   });
 
   // Manter o loop de eventos ativo continuamente

@@ -11,12 +11,15 @@
  * 2. Novas rotas de API devem residir em `src/modules/<modulo>/<modulo>.routes.js`.
  * 3. Novas abas do painel devem residir em `public/js/tabs/tab-<modulo>.js`.
  * 4. Teto máximo de linhas em arquivos legados (Ceiling Check).
+ * 5. O .env NUNCA fica exposto (GitHub, imagem Docker, servidor): segredos só
+ *    criptografados em .env.enc (ver scripts/check-env-exposure.js).
  * ==============================================================================
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkRepo as checkEnvExposure } from './check-env-exposure.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -173,6 +176,20 @@ function checkLargeFunctions(filePath, relName, maxLines = 250) {
 
 checkLargeFunctions(path.join(ROOT_DIR, 'server.js'), 'server.js', 300);
 checkLargeFunctions(path.join(ROOT_DIR, 'public/js/painel/painel-1-app.js'), 'painel-1-app.js', 250);
+
+// ------------------------------------------------------------------------------
+// REGRA 7: O .env NUNCA fica exposto — nem no GitHub, nem na imagem Docker, nem no
+// servidor Contabo. Segredos só criptografados (.env.enc, scripts/env-vault.js).
+// No servidor, o deploy roda a mesma verificação (scripts/deploy-remote.sh).
+// ------------------------------------------------------------------------------
+{
+  const envCheck = checkEnvExposure(ROOT_DIR);
+  envCheck.violations.forEach(v => violations.push(v));
+  envCheck.warnings.forEach(w => warnings.push(w));
+  if (envCheck.violations.length === 0) {
+    console.log(`  ${GREEN}✓${RESET} Proteção do .env: nada versionado/embutido em texto puro, nginx e backup sem exposição — ${BOLD}OK${RESET}`);
+  }
+}
 
 // ------------------------------------------------------------------------------
 // RESULTADO FINAL DA AUDITORIA

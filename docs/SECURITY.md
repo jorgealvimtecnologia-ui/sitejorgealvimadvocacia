@@ -46,6 +46,16 @@ Camadas independentes de proteção, de forma que a falha de uma não derrube o 
 - **`npm audit`** roda na CI (`npm run audit`, produção, nível high+) como sinal.
   Estado atual: **0 vulnerabilidades**.
 
+## Segredos do `.env` (cofre criptografado + guardião)
+
+- O `.env` com segredos **nunca** fica em texto puro no GitHub, na imagem Docker nem no servidor: os segredos vão para
+  `.env.enc` (AES-256-GCM, chave via scrypt) e a chave fica **fora do projeto** (`/etc/advocacia/env.key`, 600).
+- O guardião (`npm run check:architecture`, na CI e no `npm test`) reprova `.env`/chaves versionados, `.dockerignore` sem `.env`,
+  script que envie o `.env`, nginx sem bloqueio de arquivos ocultos e `backup.sh` que copie o `.env`. O deploy recusa publicar
+  com segredos em texto puro no servidor. A CI confere o site ao vivo todo dia (`/.env`, `/.git/config`, `/leads.db`...).
+- Toda alteração do `.env` gera e-mail ao titular com relatório **só de nomes** e a cópia **criptografada** do cofre.
+- Roteiro completo, migração e comandos: [`docs/INFRA.md`](INFRA.md#env-criptografado-no-servidor-cofre-e-o-guardião-do-env).
+
 ## NÃO implementado (decisão do produto)
 
 - **2FA/TOTP** — deliberadamente fora de escopo por ora.

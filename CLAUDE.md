@@ -54,7 +54,19 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
 2. **🚫 Veto Absoluto a 2FA / TOTP:**
    * O sistema NÃO utiliza autenticação de dois fatores por decisão expressa do usuário.
 
-3. **Comandos de Verificação Mandatórios:**
-   * Guardião de Arquitetura: `npm run check:architecture`
+3. **🔐 Proibição Absoluta de `.env` Exposto:**
+   * O `.env` com segredos **nunca** fica em texto puro no GitHub, na imagem Docker nem no servidor Contabo.
+     Se precisar existir lá, os segredos ficam **criptografados** em `.env.enc` (`node scripts/env-vault.js`);
+     a chave do cofre fica fora do projeto (`/etc/advocacia/env.key`, permissão 600) e **nunca** em repositório, backup ou e-mail.
+   * O guardião (`npm run check:architecture`) **reprova** `.env`/chave versionados, `.dockerignore` sem `.env`,
+     script que envie o `.env` em texto puro, nginx sem bloqueio de arquivos ocultos e `backup.sh` que copie o `.env`.
+     O deploy (`scripts/deploy-remote.sh`) **recusa** publicar se o `.env` do servidor tiver segredos em texto puro.
+   * **Toda alteração do `.env` gera e-mail ao titular** (`jorgealvimtecnologia@gmail.com`): relatório só com NOMES
+     de variáveis + cópia **criptografada** do cofre. Nunca enviar o `.env` em texto puro, valores ou a chave por e-mail, chat ou documento.
+   * Novo segredo? Use `node scripts/env-vault.js set NOME` (vai direto para o cofre). Nunca adicione segredo ao `.env` em texto puro.
+
+4. **Comandos de Verificação Mandatórios:**
+   * Guardião de Arquitetura (inclui a proteção do `.env`): `npm run check:architecture`
+   * Exposição do `.env` (repositório, servidor, site ao vivo): `npm run check:env`
    * Bateria de Testes (200+ testes): `npm test`
    * E2E Checklist de Produção: `npm run test:checklist`

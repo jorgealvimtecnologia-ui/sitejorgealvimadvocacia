@@ -6,14 +6,16 @@
       "prioridade": "P0",
       "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
       "descricao": "O backend já exigia 8 a 64 caracteres, mas o front-end ainda limitava os campos a 4 a 12 (maxlength=\"12\" impedia digitar senha longa), os textos diziam \"4 a 12\", scripts/reset-master-pass.js tinha regra própria e docs/SECURITY.md estava desatualizado. Correção da premissa original desta ordem, que se baseou na documentação sem conferir o código.",
-      "criterios": "Mínimo de 10 e máximo de 64 caracteres em todos os pontos (backend, formulários, textos, scripts de reset); senhas antigas continuam entrando e o login avisa para trocar; teste que falha se o front divergir da política; npm test verde."
+      "criterios": "Mínimo de 10 e máximo de 64 caracteres em todos os pontos (backend, formulários, textos, scripts de reset); senhas antigas continuam entrando e o login avisa para trocar; teste que falha se o front divergir da política; npm test verde.",
+      "estado": "implementado no repositório (PR #8); falta publicar"
     },
     {
       "ref": "AUD-02",
       "prioridade": "P0",
       "titulo": "Tirar o .env do backup (ou criptografar o conjunto)",
-      "descricao": "backup.sh copia o .env para .env.backup dentro de cada backup, e puxar-backup-hd.sh leva isso para o HD externo sem criptografia, junto com chaves Asaas, SMTP e Meta.",
-      "criterios": "Backups novos não contêm segredos em texto puro; backups antigos revisados e limpos; decisão registrada sobre rotacionar segredos caso o HD externo tenha sido exposto."
+      "descricao": "O backup.sh copiava o .env e as chaves TLS para um pacote levado a HD externo sem criptografia; e a chave do Asaas, o token da Meta e as sessões ficam em texto puro DENTRO do leads.db. Confirmado por teste que o backup antigo vazava a chave do Asaas.",
+      "criterios": "Backups novos sem .env, sem chaves privadas e com a cópia do banco higienizada; ferramenta que limpa pacotes antigos; teste com segredos plantados; decisão do Dr. Jorge sobre girar chaves caso algum backup antigo já tenha saído do controle.",
+      "estado": "implementado no repositório (PR #8); falta publicar"
     },
     {
       "ref": "AUD-03",
@@ -168,6 +170,22 @@
       "titulo": "Presença no Google e Cloudflare (ações externas do Dr. Jorge)",
       "descricao": "Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.",
       "criterios": "Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD."
+    },
+    {
+      "ref": "AUD-25",
+      "prioridade": "P0",
+      "estado": "implementado no repositório (PR #8); falta migrar o servidor (AUD-26)",
+      "titulo": "Guardião do .env: nunca exposto no GitHub nem no servidor; segredos só criptografados; aviso por e-mail a cada alteração",
+      "descricao": "Pedido do Dr. Jorge. O .env com segredos não pode ficar em texto puro no GitHub, na imagem Docker nem no servidor Contabo; se precisar existir lá, criptografado. Toda alteração do .env envia e-mail ao titular. Também corrige um bug existente: o .env era carregado depois dos módulos que leem o SMTP, então o SMTP configurado no .env era ignorado. O .dockerignore não excluía o .env (o COPY . . o embutia na imagem).",
+      "criterios": "Regra no CLAUDE.md e no guardião (npm run check:architecture); cofre .env.enc com chave fora do projeto; deploy recusa segredos em texto puro; verificação diária do site ao vivo na CI; e-mail a cada alteração com relatório só de nomes e o cofre criptografado, nunca valores nem a chave; testes cobrindo vazamento."
+    },
+    {
+      "ref": "AUD-26",
+      "prioridade": "P0",
+      "estado": "pendente: ação no servidor (uso único)",
+      "titulo": "Migrar o .env do servidor Contabo para o cofre criptografado e confirmar o nginx (ação do Dr. Jorge)",
+      "descricao": "O deploy passa a recusar publicar enquanto o .env do servidor tiver segredos em texto puro. O primeiro deploy precisa de uma liberação de uso único; depois, migrar com node scripts/env-vault.js migrate --gerar-chave, guardar a chave no cofre de senhas e reiniciar. Também confirmar que o nginx do Contabo (que não está no repositório) bloqueia arquivos ocultos.",
+      "criterios": "node scripts/env-vault.js status sem segredos em texto puro; chave guardada no cofre de senhas; e-mail de linha de base recebido; node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br sem violações; rotação das chaves se houver suspeita de exposição anterior."
     }
   ]
 }

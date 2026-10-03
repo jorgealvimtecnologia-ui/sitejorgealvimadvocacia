@@ -135,3 +135,86 @@ node scripts/backup-scrub-old.js /media/SEU_HD/Backups-JorgeAlvim --aplicar
 Limpar o arquivo **não desfaz** uma exposição que já aconteceu: se alguma cópia antiga já saiu do seu
 controle (HD perdido ou emprestado, enviado a terceiros), **gire as chaves** (Asaas, SMTP, Meta e as demais
 do `.env`) em cada serviço.
+
+## `.env` criptografado no servidor (cofre) e o guardião do `.env`
+
+**Regra:** o `.env` com segredos **nunca** fica em texto puro no GitHub, na imagem Docker nem no Contabo.
+Os segredos (chaves de API, senhas, tokens) ficam **criptografados** em `.env.enc` (AES-256-GCM); o
+`.env` guarda só configuração pública (porta, IDs, origens CORS). O servidor abre o cofre ao iniciar,
+em memória. Quem decide o que é segredo é o nome da variável (`*KEY*`, `*TOKEN*`, `*SECRET*`, `*PASS*`,
+`*SENHA*`...; `RECAPTCHA_SITE_KEY` e `*_KEY_SHA256` são públicas).
+
+| Peça | Onde fica | Observação |
+| --- | --- | --- |
+| `.env` (só configuração pública) | `/var/www/advocacia/.env`, permissão 600 | pode ter IDs/portas |
+| `.env.enc` (segredos criptografados) | `/var/www/advocacia/.env.enc`, permissão 600 | seguro para anexar a e-mail |
+| **Chave do cofre** | `/etc/advocacia/env.key`, permissão 600, **fora do projeto** | nunca em backup, repositório ou e-mail |
+| Cópia da chave | **seu cofre de senhas** (Bitwarden, 1Password...) | sem ela o `.env.enc` não abre |
+
+### Migrar o servidor (uma vez)
+
+O guardião do deploy **recusa** publicar enquanto o `.env` do servidor tiver segredos em texto puro. Para o
+primeiro deploy, libere **uma vez** e migre logo em seguida:
+
+```
+# 1) no servidor: libera UM deploy (o arquivo é apagado sozinho depois de usado)
+ssh root@161.97.71.14 "touch /var/www/advocacia/.deploy-permite-env-texto-puro"
+
+# 2) faça o deploy normal (deploy-servidor.bat). Ele avisa que foi liberado e pede a migração.
+
+# 3) no servidor: cria a chave fora do projeto e move os segredos para o cofre
+ssh root@161.97.71.14
+cd /var/www/advocacia
+node scripts/env-vault.js migrate --gerar-chave      # confere ida e volta antes de tocar no .env
+cat /etc/advocacia/env.key                           # COPIE para o cofre de senhas agora
+systemctl restart advocacia
+node scripts/env-vault.js status                     # deve dizer: segredos em texto puro: nenhum ✓
+```
+
+A partir daí, o deploy passa sem liberação. Para trocar/definir um segredo: `node scripts/env-vault.js set ASAAS_API_KEY`
+(sem o valor na linha de comando: ele lê da entrada, para não ficar no histórico do shell).
+Os scripts `ativar-google-analytics`, `ativar-google-login` etc. só gravam IDs **públicos** no `.env`, o que continua permitido.
+
+### Aviso por e-mail a cada alteração
+
+Toda alteração do `.env`/`.env.enc` (variável adicionada, removida, alterada ou arquivo regravado), por qualquer meio
+(script, ssh, editor), gera um e-mail a `jorgealvimtecnologia@gmail.com` com:
+
+- **relatório** (`env-alteracao-<data>.txt`): servidor, versão no ar, e os **nomes** das variáveis adicionadas/removidas/alteradas.
+  **Nunca valores.**
+- **cópia criptografada** do cofre (`env-cofre-<data>.enc`): só abre com a chave, que **não** vai no e-mail.
+
+O servidor confere ao iniciar e de hora em hora; se o e-mail falhar, a alteração fica pendente e é reenviada. O primeiro envio é a
+"linha de base". Requer SMTP configurado (`SMTP_HOST/SMTP_USER/SMTP_PASS`). Trocar o destinatário: `ENV_CHANGE_NOTIFY_TO`.
+Histórico local (só nomes): `.env.historico.log`.
+
+> O `.env` em texto puro **nunca** é enviado por e-mail: enviar segredos por e-mail os expõe (caixa de entrada, backups do
+> provedor, encaminhamentos), que é exatamente o que o guardião proíbe.
+
+### Conferir a exposição
+
+```
+npm run check:env                                         # repositório (também roda no npm test e na CI)
+node scripts/check-env-exposure.js --servidor=/var/www/advocacia          # no servidor (o deploy já roda isto)
+node scripts/check-env-exposure.js --servidor=/var/www/advocacia --backups # inclui pacotes de backup antigos
+node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br # bate no site ao vivo (/.env, /.git/config, /leads.db...)
+```
+
+A CI confere o site ao vivo todo dia (`.github/workflows/env-exposure.yml`); se algo ficar acessível, a execução falha e o GitHub avisa.
+
+### nginx do servidor Contabo
+
+O `nginx/default.conf` do repositório já bloqueia arquivos ocultos. O nginx que roda **no Contabo** não está no repositório:
+confirme que o `server` HTTPS dele tem este bloco (e rode a checagem `--url` acima para provar):
+
+```
+location ~ /\.(?!well-known) {
+    deny all;
+    return 404;
+}
+```
+
+### Ordem de precedência ao carregar
+
+variável já definida no processo (ex.: `Environment=` do systemd) → cofre `.env.enc` → `.env`.
+Se existe `.env.enc` e a chave não abre o cofre, o servidor **não inicia** (rodar com configuração incompleta é pior).
