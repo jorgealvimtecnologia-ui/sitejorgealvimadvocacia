@@ -40,6 +40,22 @@ const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const PUBLIC_HEADER =
   '# Somente configuração NÃO secreta. Os segredos ficam criptografados em .env.enc\n# (administre com: node scripts/env-vault.js).\n';
 
+/**
+ * Rodando como root (migração no servidor), os arquivos gerados ficariam de root e o SERVIÇO (www-data) não
+ * conseguiria ler o .env, o .env.enc nem a chave: o site cairia em ciclo de reinício (EACCES). Por isso o dono
+ * é copiado de uma pasta do projeto que o serviço usa (src/). Fora do root não faz nada.
+ */
+export function chownLike(file, refPath, { getuid = process.getuid?.bind(process), fsImpl = fs } = {}) {
+  try {
+    if (typeof getuid !== 'function' || getuid() !== 0) return false;
+    const ref = fsImpl.statSync(refPath);
+    fsImpl.chownSync(file, ref.uid, ref.gid);
+    return true;
+  } catch {
+    return false; // sem pasta de referência (ex.: teste) ou sistema sem chown
+  }
+}
+
 function writeAtomic(file, content) {
   const tmp = `${file}.novo`;
   fs.writeFileSync(tmp, content, { mode: 0o600 });
@@ -49,6 +65,7 @@ function writeAtomic(file, content) {
   } catch {
     /* sistemas sem chmod */
   }
+  chownLike(file, path.join(ROOT_DIR, 'src'));
 }
 
 /** Igualdade por nome e valor (o parseEnv do Node não preserva a ordem das chaves). */
@@ -82,6 +99,8 @@ export function genKey({ file = process.env.ENV_VAULT_KEY_FILE || DEFAULT_KEY_FI
   } catch {
     /* sistemas sem chmod */
   }
+  chownLike(file, path.join(ROOT_DIR, 'src'));
+  chownLike(path.dirname(file), path.join(ROOT_DIR, 'src'));
   return { file, key };
 }
 

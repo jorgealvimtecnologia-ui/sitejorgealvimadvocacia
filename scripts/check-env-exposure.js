@@ -215,6 +215,29 @@ export function checkServer(
       `${TAG} A chave do cofre (${keyFile}) está DENTRO da pasta do projeto. Mantenha fora (padrão ${DEFAULT_KEY_FILE}).`
     );
   }
+  // O SERVIÇO precisa LER .env, .env.enc e a chave: o dono tem de ser o mesmo da pasta src/ (usuário do serviço).
+  // (Migrar como root deixava tudo de root e o site caía em ciclo de reinício com EACCES.)
+  if (platform !== 'win32' && typeof process.getuid === 'function' && fs.existsSync(path.join(dir, 'src'))) {
+    const ref = fs.statSync(path.join(dir, 'src'));
+    for (const f of [plainFile, path.join(dir, '.env.enc'), resolvedKey]) {
+      if (!fs.existsSync(f)) continue;
+      const st = fs.statSync(f);
+      if (st.uid === ref.uid) continue;
+      if (fix && process.getuid() === 0) {
+        try {
+          fs.chownSync(f, ref.uid, ref.gid);
+          if (f === resolvedKey) fs.chownSync(path.dirname(f), ref.uid, ref.gid);
+          fixed.push(`${path.basename(f)}: dono corrigido para o usuário do serviço (uid ${ref.uid})`);
+          continue;
+        } catch {
+          /* cai na violação abaixo */
+        }
+      }
+      violations.push(
+        `${TAG} ${f} pertence ao uid ${st.uid}, mas o serviço roda com o uid ${ref.uid}: ele não consegue ler e o site cai. Corrija: chown ${ref.uid}:${ref.gid} ${f}`
+      );
+    }
+  }
   for (const f of fs.readdirSync(dir)) {
     if (/^env\.key$|\.env\.key$/i.test(f))
       violations.push(`${TAG} Arquivo de chave do cofre dentro do projeto: ${f}. Mova para fora da pasta.`);

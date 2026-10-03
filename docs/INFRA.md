@@ -266,3 +266,14 @@ location ~ /\.(?!well-known) {
 
 variável já definida no processo (ex.: `Environment=` do systemd) → cofre `.env.enc` → `.env`.
 Se existe `.env.enc` e a chave não abre o cofre, o servidor **não inicia** (rodar com configuração incompleta é pior).
+
+### Migração do .env como root: o serviço precisa ser o DONO
+
+Rodar `node scripts/env-vault.js migrate` como `root` deixava `.env`, `.env.enc` e `/etc/advocacia/env.key` de root com permissão 600: o serviço (www-data) não os lia (`EACCES`) e o site caía em ciclo de reinício (ocorreu em 03/10/2026). Agora o script copia o dono da pasta `src/` (usuário do serviço) e o guardião do servidor confere (e, no deploy, corrige) o dono desses três arquivos. Correção manual, se acontecer:
+
+```bash
+U=$(systemctl cat advocacia | sed -n 's/^User=//p'); U=${U:-www-data}
+chown "$U:$U" /var/www/advocacia/.env /var/www/advocacia/.env.enc
+chown -R "$U:$U" /etc/advocacia && chmod 700 /etc/advocacia && chmod 600 /etc/advocacia/env.key
+systemctl restart advocacia
+```
