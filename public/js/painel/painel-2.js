@@ -295,7 +295,7 @@
         const c = d.compliance || {};
         const compEl = document.getElementById('dash-compliance');
         if (compEl) {
-          const compItem = (icon, label, count, modId, warn) => `
+          const compItem = (icon, label, count, modId, warn) => (typeof window.moduleAllowed === 'function' && !window.moduleAllowed(modId)) ? '' : `
             <div onclick="openModule('${modId}')" class="p-2.5 rounded-xl border border-slate-100 hover:border-gold-300 hover:bg-amber-50/40 transition cursor-pointer flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <span class="text-base">${icon}</span>

@@ -12,7 +12,7 @@ process.env.DB_PATH = TMP_DB;
 process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
-const { filterOverviewForUser } = await import('../src/modules/dashboard/dashboard.routes.js');
+const { filterOverviewForUser, filterCockpitForUser } = await import('../src/modules/dashboard/dashboard.routes.js');
 const { hashPassword } = await import('../src/shared/password-crypto.js');
 
 after(() => {
@@ -79,5 +79,41 @@ describe('GET /api/dashboard/overview', () => {
     assert.equal(s.body.financeiro.saldo_mes, 0);
     assert.ok(!JSON.stringify(s.body).includes('12345'));
     assert.ok(m.body.financeiro.receita_mes >= 12345, `o mestre deveria ver a receita real, veio ${m.body.financeiro.receita_mes}`);
+  });
+});
+
+const cockpit = () => ({
+  success: true,
+  prazos: {
+    hoje: [{ id: 1, source: 'agenda', title: 'Prazo agenda', client_name: 'Cliente A' }, { id: 2, source: 'djen', title: 'Intimação X', client_name: 'Vara 1' }],
+    amanha: [{ id: 3, title: 'Amanhã', client_name: 'Cliente B' }],
+    semana: [{ id: 4, title: 'Semana', client_name: 'Cliente C' }],
+    total_hoje: 2, total_semana: 4
+  },
+  audiencias: [{ id: 5, title: 'Audiência', client_name: 'Cliente D' }],
+  intimacoes: [{ id: 6, numero_processo: '0001', texto: 'texto da intimação' }]
+});
+
+describe('filterCockpitForUser (Meu Dia Hoje)', () => {
+  it('mestre recebe tudo', () => assert.deepEqual(filterCockpitForUser(cockpit(), {}, true), cockpit()));
+  it('secretária (agenda, sem intimações): vê a agenda e NÃO vê intimações do DJEN', () => {
+    const c = filterCockpitForUser(cockpit(), { tab_calendar: 1 });
+    assert.equal(c.prazos.hoje.length, 1);
+    assert.equal(c.prazos.hoje[0].source, 'agenda');
+    assert.equal(c.audiencias.length, 1);
+    assert.deepEqual(c.intimacoes, []);
+    assert.ok(!JSON.stringify(c).includes('Intimação X'));
+    assert.equal(c.prazos.total_hoje, 1);
+  });
+  it('só Leads (sem agenda, processos nem intimações): nada de prazos, audiências ou intimações', () => {
+    const c = filterCockpitForUser(cockpit(), { tab_leads: 1 });
+    assert.deepEqual([c.prazos.hoje, c.prazos.amanha, c.prazos.semana, c.audiencias, c.intimacoes], [[], [], [], [], []]);
+    assert.equal(c.prazos.total_semana, 0);
+  });
+  it('quem tem Intimações vê as do DJEN', () => {
+    const c = filterCockpitForUser(cockpit(), { tab_publications: 1 });
+    assert.equal(c.intimacoes.length, 1);
+    assert.equal(c.prazos.hoje.length, 1);
+    assert.equal(c.prazos.hoje[0].source, 'djen');
   });
 });

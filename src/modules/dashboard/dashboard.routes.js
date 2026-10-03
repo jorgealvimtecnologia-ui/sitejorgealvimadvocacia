@@ -56,13 +56,36 @@ export function filterOverviewForUser(payload, perms, isMaster = false) {
   return out;
 }
 
-function overviewFor(req, payload) {
+function permsOf(req) {
   const master = isMasterSession(req.user);
   let perms = {};
   if (!master) {
     try { perms = effectivePerms(db.prepare('SELECT * FROM access_permissions WHERE user_id = ?').get(req.user?.userId)); } catch (e) { perms = {}; }
   }
+  return { master, perms };
+}
+
+function overviewFor(req, payload) {
+  const { master, perms } = permsOf(req);
   return filterOverviewForUser(payload, perms, master);
+}
+
+/** Cockpit "Meu Dia Hoje": agenda/prazos só com Agenda ou Processos; intimações do DJEN só com Intimações. */
+export function filterCockpitForUser(c, perms, master = false) {
+  if (master) return c;
+  const agenda = perms.tab_calendar === 1 || perms.tab_lawsuits === 1;
+  const pubs = perms.tab_publications === 1;
+  const hojeAgenda = (c.prazos.hoje || []).filter((p) => p.source !== 'djen');
+  const hojeDjen = (c.prazos.hoje || []).filter((p) => p.source === 'djen');
+  const hoje = [...(agenda ? hojeAgenda : []), ...(pubs ? hojeDjen : [])];
+  const amanha = agenda ? c.prazos.amanha : [];
+  const semana = agenda ? c.prazos.semana : [];
+  return {
+    ...c,
+    prazos: { hoje, amanha, semana, total_hoje: hoje.length, total_semana: hoje.length + amanha.length + semana.length },
+    audiencias: agenda ? c.audiencias : [],
+    intimacoes: pubs ? c.intimacoes : []
+  };
 }
 
 /** GET /api/dashboard/overview — visão geral consolidada do Painel de Comando Executivo. */
@@ -286,7 +309,7 @@ dashboardRouter.get('/api/dashboard/meu-dia-hoje', requireAuth, (req, res) => {
       LIMIT 6
     `).all(), []);
 
-    return res.json({
+    const cockpit = {
       success: true,
       data_hoje: todayStr,
       hora_atual: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -299,7 +322,9 @@ dashboardRouter.get('/api/dashboard/meu-dia-hoje', requireAuth, (req, res) => {
       },
       audiencias: audienciasHoje,
       intimacoes: intimacoesDjen
-    });
+    };
+    const { master, perms } = permsOf(req);
+    return res.json(filterCockpitForUser(cockpit, perms, master));
   } catch (err) {
     console.error('[COCKPIT] Erro ao obter dados de Meu Dia Hoje:', err);
     return res.status(500).json({ error: 'Erro ao carregar dados matinais do advogado.' });
