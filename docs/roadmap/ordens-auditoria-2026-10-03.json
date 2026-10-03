@@ -204,6 +204,14 @@
       "titulo": "Testes automatizados instáveis (falso vermelho em cerca de metade das execuções)",
       "descricao": "Medido na main original: 3 de 6 execuções de npm test falharam com 'Unable to deserialize cloned data' (erro do executor de testes do Node ao ler a saída de api.test.js em paralelo), sem nenhum teste de fato reprovado.",
       "criterios": "npm test e a CI passam de forma estável; execução serial custa cerca de 57 s contra 24 s; 6 de 6 execuções seriais verdes."
+    },
+    {
+      "ref": "AUD-29",
+      "prioridade": "P0",
+      "estado": "corrigido no repositório (PR #8); URGENTE publicar e rodar a verificação no servidor",
+      "titulo": "URGENTE: login Google aceitava token de teste em produção (entrada como mestre sem conta Google)",
+      "descricao": "verifyGoogleToken aceitava 'mock-google-token:<id>:<e-mail>:<nome>' em qualquer ambiente desde 19/09/2026. Com o e-mail do mestre, qualquer pessoa entrava como mestre e abria clientes, financeiro e usuários (reproduzido localmente em modo produção). Também não conferia o aud (para quem o token foi emitido), o emissor nem o e-mail verificado, e tinha um caminho alternativo por /userinfo sem aud. Afeta os 4 logins Google.",
+      "criterios": "Token de teste recusado fora de teste (provado nos 4 logins em modo produção); aud, emissor e e-mail verificado conferidos; correção publicada; node scripts/check-google-forgery.js rodado no servidor sem google_id suspeito e logins Google por IP revisados pelo Dr. Jorge; se houver suspeita, trocar senhas e encerrar sessões."
     }
   ]
 }

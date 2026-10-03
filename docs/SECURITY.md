@@ -46,6 +46,21 @@ Camadas independentes de proteção, de forma que a falha de uma não derrube o 
 - **`npm audit`** roda na CI (`npm run audit`, produção, nível high+) como sinal.
   Estado atual: **0 vulnerabilidades**.
 
+## Login com Google
+
+Os 4 logins Google (painel, unificado, colaborador, portal do cliente) passam por `verifyGoogleToken` (`src/shared/google-auth.js`),
+que exige: validação **com o Google**; token emitido **para este sistema** (`aud` = nosso Client ID; extras em `GOOGLE_ALLOWED_AUDIENCES`);
+emissor Google; **e-mail verificado**. Depois do login a sessão é a mesma do login por senha: o acesso a cada aba segue a matriz de
+permissões do usuário (RBAC), sem atalho para "todas as abas".
+
+> **Incidente corrigido (03/10/2026):** a função aceitava um "token de teste" (`mock-google-token:<id>:<e-mail>:<nome>`) **em qualquer
+> ambiente, inclusive produção**. Como o e-mail do Dr. Jorge é aceito como mestre, qualquer pessoa na internet podia entrar como
+> **mestre** sem conta Google, com acesso a clientes, financeiro e usuários. Existia desde 19/09/2026. Agora o token de teste só vale com
+> `NODE_ENV=test` (ou, fora de produção, `ALLOW_MOCK_GOOGLE_TOKEN=1`); o caminho alternativo por `/userinfo`, que não informa o `aud`, foi removido.
+> **Depois de publicar a correção, rode no servidor:** `node scripts/check-google-forgery.js` (somente leitura). Ele procura `google_id`
+> que não é numérico (rastro de login forjado) e lista os logins Google por IP. Se achar algo: trocar a senha da conta, apagar o
+> `google_id` suspeito, encerrar as sessões e revisar a auditoria.
+
 ## Segredos do `.env` (cofre criptografado + guardião)
 
 - O `.env` com segredos **nunca** fica em texto puro no GitHub, na imagem Docker nem no servidor: os segredos vão para

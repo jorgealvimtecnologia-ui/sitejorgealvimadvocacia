@@ -14,6 +14,8 @@
 | E as pastas de arquivos? | Só **dois portões**: `/storage/office_drive` exige a aba "Drive"; `/storage/clients` exige a aba "Clientes" (e o cliente só abre a própria pasta). Não há acesso por pasta nem por função além disso. |
 | Quantas funções existem? | **8 modelos:** mestre, dono de escritório, advogado, estagiário, secretária, gerente administrativo-financeiro, motorista, cliente. |
 
+| E o login com Google? | Cria a **mesma sessão** do login por senha e passa pelo **mesmo RBAC**: o Google só prova quem é a pessoa; as abas vêm da permissão dela. Não existe atalho para "todas as abas" (testes em `tests/google-rbac.test.js`). **Exceção encontrada e corrigida:** um token de teste era aceito em produção e dava acesso de mestre (ver `docs/SECURITY.md`). Quando as funções forem implantadas, o Google passa a segui-las automaticamente, pois usa o mesmo usuário. |
+
 **Consequência prática:** dar o mesmo cargo a duas pessoas não garante o mesmo acesso; trocar o nome de uma pessoa pode mudar o que ela vê; e a regra "só vê o que é seu" ainda não existe no servidor.
 
 ## 2. Como deve ser (a sua regra): por função

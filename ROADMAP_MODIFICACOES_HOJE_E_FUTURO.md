@@ -237,13 +237,13 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 (repositório x capacidades discutidas)
 
-Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia. **28 ordens**, das quais **6 já implementadas no PR #8** (aguardando publicação) e as demais planejadas.
+Origem: auditoria do código, dos testes e da documentação contra as capacidades de um sistema completo para escritório de advocacia. **29 ordens**, das quais **7 já implementadas no PR #8** (aguardando publicação) e as demais planejadas.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
 > **Status de registro:** neste repositório ✅. No Roadmap Vivo do site ⏳ **pendente**: exige a chave do agente (`ROADMAP_AGENT_KEY`) no `.env`/ambiente (sem `--aplicar` o comando só simula; rodar de novo não duplica).
 
-### P0 — Urgente (7)
+### P0 — Urgente (8)
 
 - **✅ AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
   - *Estado:* implementado no repositório (PR #8); falta publicar
@@ -273,6 +273,10 @@ Origem: auditoria do código, dos testes e da documentação contra as capacidad
   - *Estado:* proposta de matriz escrita (docs/PAPEIS-E-PERMISSOES.md); aguardando aprovação do Dr. Jorge
   - *Situação:* Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente.
   - *Pronto quando:* Cada pessoa tem exatamente uma função, escolhida pelo mestre; a permissão vem da função (sem nome próprio nem texto de login no código); mudar a função muda o acesso; exceções individuais só pelo mestre e registradas na auditoria; escopo de dados aplicado no servidor (ex.: advogado só vê seus processos); chefe de sistema de informação sem acesso a dados de clientes; testes por função na API e nas pastas de arquivos; matriz aprovada pelo Dr. Jorge.
+- **✅ AUD-29 — URGENTE: login Google aceitava token de teste em produção (entrada como mestre sem conta Google)**
+  - *Estado:* corrigido no repositório (PR #8); URGENTE publicar e rodar a verificação no servidor
+  - *Situação:* verifyGoogleToken aceitava 'mock-google-token:<id>:<e-mail>:<nome>' em qualquer ambiente desde 19/09/2026. Com o e-mail do mestre, qualquer pessoa entrava como mestre e abria clientes, financeiro e usuários (reproduzido localmente em modo produção). Também não conferia o aud (para quem o token foi emitido), o emissor nem o e-mail verificado, e tinha um caminho alternativo por /userinfo sem aud. Afeta os 4 logins Google.
+  - *Pronto quando:* Token de teste recusado fora de teste (provado nos 4 logins em modo produção); aud, emissor e e-mail verificado conferidos; correção publicada; node scripts/check-google-forgery.js rodado no servidor sem google_id suspeito e logins Google por IP revisados pelo Dr. Jorge; se houver suspeita, trocar senhas e encerrar sessões.
 
 ### P1 — Alto (8)
 
