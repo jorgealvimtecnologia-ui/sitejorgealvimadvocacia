@@ -44,7 +44,10 @@ Camadas independentes de proteção, de forma que a falha de uma não derrube o 
 ## Dependências (OWASP A06)
 
 - **`npm audit`** roda na CI (`npm run audit`, produção, nível high+) como sinal.
-  Estado atual: **0 vulnerabilidades**.
+  Estado atual (03/10/2026): **0 vulnerabilidades em PRODUÇÃO** (o multer foi atualizado para 2.4.0, que corrige a negação
+  de serviço por upload abortado). A CI agora **bloqueia** a entrega se aparecer high/critical em produção.
+  Restam 5 avisos *high* só em **ferramentas de desenvolvimento** (cadeia do Tailwind: braces, micromatch, chokidar, fast-glob):
+  não vão para o servidor; a correção exige trocar a versão principal do Tailwind (ver a ordem de compilar o Tailwind localmente).
 
 ## Login com Google
 

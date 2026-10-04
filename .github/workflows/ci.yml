@@ -36,11 +36,10 @@ jobs:
         run: npm test
 
       - name: Auditoria de dependências (npm audit — produção, high+)
-        # Sinaliza vulnerabilidades high/critical nas dependências de produção
-        # (OWASP A06: componentes vulneráveis). Informativo para não travar a
-        # entrega por avisos fora do nosso controle; revisar quando acender.
+        # BLOQUEIA a entrega se houver vulnerabilidade high/critical nas dependências
+        # de PRODUÇÃO (OWASP A06). Ferramentas só de desenvolvimento (cadeia do Tailwind)
+        # ficam de fora: não vão para o servidor (docs/SECURITY.md, seção de dependências).
         run: npm run audit
-        continue-on-error: true
 
       - name: Build do front (Vite) — informativo, não bloqueia
         # O deploy de produção é por cópia de arquivos (o Express serve os .html
