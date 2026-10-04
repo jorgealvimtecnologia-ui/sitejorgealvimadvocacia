@@ -50,7 +50,11 @@ test.describe('Checklist de Produção - Varredura de Páginas', () => {
       page.on('requestfailed', request => {
         const url = request.url();
         const failure = request.failure()?.errorText || '';
+        // Imagem de TERCEIRO (CDN externa) bloqueada pelo navegador (ORB): falha do serviço externo, não do site.
+        // Falhas de arquivos do próprio site continuam reprovando.
+        const terceiroBloqueadoORB = failure.includes('ERR_BLOCKED_BY_ORB') && new URL(url).origin !== new URL(page.url()).origin;
         if (
+          !terceiroBloqueadoORB &&
           !failure.includes('net::ERR_ABORTED') &&
           !failure.includes('ERR_INTERNET_DISCONNECTED') &&
           !failure.includes('ERR_NAME_NOT_RESOLVED') &&
