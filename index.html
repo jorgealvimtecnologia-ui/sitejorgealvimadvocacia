@@ -2960,12 +2960,23 @@
       }
     }
 
+    // Olho do campo "Nova Senha" da recuperação: fica visível enquanto a pessoa digita (sem ocultar sozinho) e volta a ocultar ao sair.
+    function toggleResetPassword(forceHide) {
+      const pwd = document.getElementById('uauth-reset-newpass');
+      const icon = document.getElementById('uauth-reset-pwd-icon');
+      if (!pwd) return;
+      const show = forceHide === true ? false : pwd.type === 'password';
+      pwd.type = show ? 'text' : 'password';
+      if (icon) icon.textContent = show ? '🙈' : '👁️';
+    }
+
     // ================= RECUPERAÇÃO DE SENHA UNIFICADA =================
     function handleUniversalForgotPassword() {
       openAdminResetView();
     }
 
     function openAdminResetView() {
+      toggleResetPassword(true);
       const mainBox = document.getElementById('uauth-main-container');
       const resetBox = document.getElementById('uauth-reset-container');
       const resetStep1 = document.getElementById('uauth-reset-step-1');
@@ -2985,6 +2996,7 @@
     }
 
     function closeAdminResetView() {
+      toggleResetPassword(true);
       const mainBox = document.getElementById('uauth-main-container');
       const resetBox = document.getElementById('uauth-reset-container');
       if (mainBox) mainBox.classList.remove('hidden');
@@ -3896,12 +3908,24 @@
               <label for="uauth-reset-newpass" class="block text-xs font-bold text-slate-700 mb-1">
                 Nova Senha de Acesso (10 a 64 caracteres) *
               </label>
-              <input 
-                type="password" 
-                id="uauth-reset-newpass" 
-                placeholder="Digite a nova senha" 
-                class="uauth-input"
-              />
+              <div style="position: relative; width: 100%;">
+                <input 
+                  type="password" 
+                  id="uauth-reset-newpass" 
+                  placeholder="Digite a nova senha" 
+                  autocomplete="new-password"
+                  class="uauth-input"
+                  style="padding-right: 42px;"
+                />
+                <button 
+                  type="button" 
+                  onclick="toggleResetPassword()" 
+                  style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;" 
+                  title="Ver ou ocultar senha"
+                >
+                  <span id="uauth-reset-pwd-icon">👁️</span>
+                </button>
+              </div>
             </div>
             <button 
               type="button" 
