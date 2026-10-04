@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configurar Node.js 24
-        # Node 24 é necessário: o servidor usa o builtin `node:sqlite`.
+        # Node 24: a mesma versão do servidor de produção, do Dockerfile, do .nvmrc e do README (teste tests/node-version.test.js).
         uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -41,9 +41,6 @@ jobs:
         # ficam de fora: não vão para o servidor (docs/SECURITY.md, seção de dependências).
         run: npm run audit
 
-      - name: Build do front (Vite) — informativo, não bloqueia
-        # O deploy de produção é por cópia de arquivos (o Express serve os .html
-        # diretamente); o build do Vite não faz parte do pipeline de produção e
-        # hoje falha ao parsear o HTML legado. Mantemos como sinal, sem gatear a CI.
+      - name: Build do front (Vite)
+        # Bloqueia a entrega se o build quebrar (o HTML legado hoje compila normalmente).
         run: npm run build
-        continue-on-error: true

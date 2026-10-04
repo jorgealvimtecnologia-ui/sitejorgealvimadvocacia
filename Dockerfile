@@ -1,5 +1,5 @@
-# Imagem oficial do Node.js 22 (Alpine Linux - leve, segura e rápida)
-FROM node:22-alpine
+# Imagem oficial do Node.js 24 (Alpine Linux - leve, segura e rápida) — mesma versão da produção e da CI
+FROM node:24-alpine
 
 # Instala Python 3 e bibliotecas necessárias para o robô do Radar Judicial
 RUN apk add --no-cache python3 py3-pip py3-requests py3-urllib3

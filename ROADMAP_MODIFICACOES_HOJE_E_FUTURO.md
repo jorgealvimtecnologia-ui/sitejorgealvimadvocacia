@@ -292,9 +292,11 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.
   - *Pronto quando:* Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados.
 - **AUD-09 — Migrações de banco versionadas**
+  - *Estado:* SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (mexe na base do banco; retomar só quando ele mandar). Já ajudou: o esquema inteiro saiu do server.js para src/db/schema.js (AUD-11), o primeiro passo para as migrações.
   - *Situação:* Existe uma única migração (001_kanban_indexes.sql); o restante do esquema nasce de CREATE TABLE IF NOT EXISTS espalhado em server.js e nos módulos, sem histórico reversível.
   - *Pronto quando:* Runner usando a tabela schema_migrations; esquema atual consolidado em migrações numeradas; novas mudanças de esquema só por migração; teste que sobe banco vazio e aplica todas.
 - **AUD-10 — CI estrita: build funcionando e versões de Node alinhadas**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar
   - *Situação:* O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.
   - *Pronto quando:* Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega.
 - **AUD-11 — Folga arquitetural: reduzir server.js e quebrar switchTab**

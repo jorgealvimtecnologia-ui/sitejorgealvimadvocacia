@@ -78,14 +78,17 @@
       "prioridade": "P1",
       "titulo": "Migrações de banco versionadas",
       "descricao": "Existe uma única migração (001_kanban_indexes.sql); o restante do esquema nasce de CREATE TABLE IF NOT EXISTS espalhado em server.js e nos módulos, sem histórico reversível.",
-      "criterios": "Runner usando a tabela schema_migrations; esquema atual consolidado em migrações numeradas; novas mudanças de esquema só por migração; teste que sobe banco vazio e aplica todas."
+      "criterios": "Runner usando a tabela schema_migrations; esquema atual consolidado em migrações numeradas; novas mudanças de esquema só por migração; teste que sobe banco vazio e aplica todas.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (mexe na base do banco; retomar só quando ele mandar). Já ajudou: o esquema inteiro saiu do server.js para src/db/schema.js (AUD-11), o primeiro passo para as migrações."
     },
     {
       "ref": "AUD-10",
       "prioridade": "P1",
       "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
       "descricao": "O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.",
-      "criterios": "Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega."
+      "criterios": "Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "nota_entrega": "Node 24 em todo lugar (CI, Dockerfile, .nvmrc, engines, README) com teste que reprova divergência; o build do Vite já compila o HTML legado e agora BLOQUEIA a CI (sem continue-on-error)."
     },
     {
       "ref": "AUD-11",
