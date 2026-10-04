@@ -2,6 +2,8 @@
  * Módulo JURÍDICO (radar) — intimações DJEN, DataJud/CNJ, prazos e tribunais.
  * Rotas /api/judicial e /api/court. Extraído do server.js.
  */
+import { computeLegalDeadline } from '../../shared/deadline-calc.js';
+import { ensureCourtHolidays, holidayCoverage } from '../../shared/court-calendar.js';
 import express from 'express';
 import { execFile } from 'node:child_process';
 import path from 'path';
@@ -710,225 +712,25 @@ juridicoRouter.post('/api/judicial/import-to-office', requireAuth, (req, res) =>
 // 📢 MÓDULO DE INTIMAÇÕES (COMUNICAAPI / DJEN), DATAJUD & CALCULADORA DE PRAZOS
 // =========================================================================
 
-// Semeador de Feriados Forenses e Nacionais (2025, 2026, 2027)
+// Feriados forenses e nacionais: gerados por regra (src/shared/court-calendar.js) e estendidos a cada partida,
+// sempre com folga de anos à frente. Não apaga nem altera o que o escritório já cadastrou.
 export function seedCourtHolidays() {
   try {
-    const existing = db.prepare(`SELECT count(*) as count FROM court_holidays`).get();
-    if (existing && existing.count > 0) return;
-
-    const holidays = [
-      // 2025
-      { id: 'HOL-2025-01-01', holiday_date: '2025-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-03-03', holiday_date: '2025-03-03', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-03-04', holiday_date: '2025-03-04', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-03-05', holiday_date: '2025-03-05', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-16', holiday_date: '2025-04-16', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-17', holiday_date: '2025-04-17', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-18', holiday_date: '2025-04-18', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-21', holiday_date: '2025-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-05-01', holiday_date: '2025-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-06-19', holiday_date: '2025-06-19', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-08-11', holiday_date: '2025-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-09-07', holiday_date: '2025-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-10-12', holiday_date: '2025-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-10-28', holiday_date: '2025-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-11-02', holiday_date: '2025-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-11-15', holiday_date: '2025-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-11-20', holiday_date: '2025-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-12-08', holiday_date: '2025-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-12-25', holiday_date: '2025-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-
-      // 2026
-      { id: 'HOL-2026-01-01', holiday_date: '2026-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-02-16', holiday_date: '2026-02-16', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-02-17', holiday_date: '2026-02-17', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-02-18', holiday_date: '2026-02-18', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-01', holiday_date: '2026-04-01', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-02', holiday_date: '2026-04-02', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-03', holiday_date: '2026-04-03', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-21', holiday_date: '2026-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-05-01', holiday_date: '2026-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-06-04', holiday_date: '2026-06-04', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-08-11', holiday_date: '2026-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-09-07', holiday_date: '2026-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-10-12', holiday_date: '2026-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-10-28', holiday_date: '2026-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-11-02', holiday_date: '2026-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-11-15', holiday_date: '2026-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-11-20', holiday_date: '2026-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-12-08', holiday_date: '2026-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-12-25', holiday_date: '2026-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-
-      // 2027
-      { id: 'HOL-2027-01-01', holiday_date: '2027-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-02-08', holiday_date: '2027-02-08', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-02-09', holiday_date: '2027-02-09', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-02-10', holiday_date: '2027-02-10', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-03-24', holiday_date: '2027-03-24', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-03-25', holiday_date: '2027-03-25', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-03-26', holiday_date: '2027-03-26', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-04-21', holiday_date: '2027-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-05-01', holiday_date: '2027-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-05-27', holiday_date: '2027-05-27', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-08-11', holiday_date: '2027-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-09-07', holiday_date: '2027-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-10-12', holiday_date: '2027-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-10-28', holiday_date: '2027-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-11-02', holiday_date: '2027-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-11-15', holiday_date: '2027-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-11-20', holiday_date: '2027-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-12-08', holiday_date: '2027-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-12-25', holiday_date: '2027-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 }
-    ];
-
-    const insertStmt = db.prepare(`INSERT OR IGNORE INTO court_holidays (id, holiday_date, name, jurisdiction, is_forensic_recess) VALUES (?, ?, ?, ?, ?)`);
-    holidays.forEach(h => insertStmt.run(h.id, h.holiday_date, h.name, h.jurisdiction, h.is_forensic_recess));
-    console.log('📅 [FERIADOS FORENSES] Feriados nacionais e judiciais semeados com sucesso!');
+    const hoje = new Date().getFullYear();
+    const novos = ensureCourtHolidays(db, 2025, hoje + 4);
+    if (novos > 0) console.log(`📅 [FERIADOS FORENSES] ${novos} feriado(s) acrescentado(s) até ${hoje + 4}.`);
+    const cob = holidayCoverage(db);
+    if (!cob.ok) console.warn(`📅 [FERIADOS FORENSES] ${cob.warning}`);
   } catch (err) {
-    console.warn('Aviso ao semear feriados:', err.message);
+    console.warn('Aviso ao preparar feriados:', err.message);
   }
 }
 // (seedCourtHolidays é chamado no boot pelo server.js, dentro do app.listen)
 
-// Helper: Verifica se uma data é dia útil forense (não é sábado, domingo, feriado nem recesso forense)
-function isCourtBusinessDay(dateObj, holidaysMap) {
-  const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return { isBusinessDay: false, reason: dayOfWeek === 0 ? 'Domingo' : 'Sábado' };
-  }
-
-  const y = dateObj.getFullYear();
-  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const d = String(dateObj.getDate()).padStart(2, '0');
-  const dateStr = `${y}-${m}-${d}`;
-
-  // Recesso Forense (art. 220 CPC: 20 de dezembro a 20 de janeiro)
-  const month = dateObj.getMonth() + 1;
-  const day = dateObj.getDate();
-  if ((month === 12 && day >= 20) || (month === 1 && day <= 20)) {
-    return { isBusinessDay: false, reason: 'Recesso Forense (Art. 220 CPC)' };
-  }
-
-  // Feriado cadastrado
-  if (holidaysMap.has(dateStr)) {
-    return { isBusinessDay: false, reason: `Feriado: ${holidaysMap.get(dateStr)}` };
-  }
-
-  return { isBusinessDay: true, reason: 'Dia Útil' };
-}
-
-// Helper: Próximo dia útil
-function getNextCourtBusinessDay(dateObj, holidaysMap) {
-  const next = new Date(dateObj);
-  next.setDate(next.getDate() + 1);
-  while (!isCourtBusinessDay(next, holidaysMap).isBusinessDay) {
-    next.setDate(next.getDate() + 1);
-  }
-  return next;
-}
-
-// Motor de Cálculo de Prazos Processuais (CPC/15, CLT, CPP, JEF)
+// Calcula o prazo lendo os feriados do banco (o motor puro fica em src/shared/deadline-calc.js).
 function calculateLegalDeadline(disponibilizacaoStr, daysCount, regime = 'cpc', customHolidays = []) {
   const holidaysRows = db.prepare(`SELECT holiday_date, name FROM court_holidays`).all();
-  const holidaysMap = new Map();
-  holidaysRows.forEach(h => holidaysMap.set(h.holiday_date, h.name));
-  customHolidays.forEach(ch => holidaysMap.set(ch.date, ch.name));
-
-  const [y, m, d] = disponibilizacaoStr.slice(0, 10).split('-').map(Number);
-  const dataD0 = new Date(y, m - 1, d, 12, 0, 0); // Data da Disponibilização
-
-  // 1. Data da Publicação (D1) = 1º dia útil seguinte à disponibilização (art. 224, § 2º, CPC)
-  const dataPublicacao = getNextCourtBusinessDay(dataD0, holidaysMap);
-
-  // 2. Início do Prazo (D2) = 1º dia útil seguinte à publicação (art. 224, § 3º, CPC)
-  const dataInicioContagem = getNextCourtBusinessDay(dataPublicacao, holidaysMap);
-
-  const pad = (n) => String(n).padStart(2, '0');
-  const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
-
-  const memoriaCalculo = [];
-  const feriadosCompensados = [];
-
-  let diasUteisContados = 0;
-  let cursor = new Date(dataInicioContagem);
-  let dataFatal = null;
-
-  if (regime === 'cpc' || regime === 'clt' || regime === 'jef') {
-    // Contagem em DIAS ÚTEIS (Art. 219 CPC / Art. 775 CLT)
-    while (diasUteisContados < daysCount) {
-      const info = isCourtBusinessDay(cursor, holidaysMap);
-      const curFmt = fmt(cursor);
-
-      if (info.isBusinessDay) {
-        diasUteisContados++;
-        memoriaCalculo.push({
-          dia_numero: diasUteisContados,
-          data: curFmt,
-          status: 'contado',
-          descricao: `${diasUteisContados}º Dia Útil`
-        });
-        if (diasUteisContados === daysCount) {
-          dataFatal = new Date(cursor);
-          break;
-        }
-      } else {
-        memoriaCalculo.push({
-          dia_numero: null,
-          data: curFmt,
-          status: 'ignorado',
-          descricao: info.reason
-        });
-        if (!feriadosCompensados.some(f => f.date === curFmt)) {
-          feriadosCompensados.push({ date: curFmt, reason: info.reason });
-        }
-      }
-
-      cursor.setDate(cursor.getDate() + 1);
-    }
-  } else {
-    // Contagem em DIAS CORRIDOS (Art. 798 CPP - Penal)
-    for (let i = 1; i <= daysCount; i++) {
-      const curFmt = fmt(cursor);
-      memoriaCalculo.push({
-        dia_numero: i,
-        data: curFmt,
-        status: 'contado',
-        descricao: `${i}º Dia Corrido`
-      });
-      if (i === daysCount) {
-        dataFatal = new Date(cursor);
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-
-    // Se o último dia cair em dia não útil, prorroga para o 1º dia útil subsequente (art. 798, § 3º, CPP)
-    let infoFatal = isCourtBusinessDay(dataFatal, holidaysMap);
-    while (!infoFatal.isBusinessDay) {
-      memoriaCalculo.push({
-        dia_numero: null,
-        data: fmt(dataFatal),
-        status: 'prorrogado',
-        descricao: `Vencimento em ${infoFatal.reason} -> Prorrogado para o 1º dia útil seguinte`
-      });
-      dataFatal.setDate(dataFatal.getDate() + 1);
-      infoFatal = isCourtBusinessDay(dataFatal, holidaysMap);
-    }
-  }
-
-  return {
-    success: true,
-    regime: regime.toUpperCase(),
-    prazo_dias: daysCount,
-    tipo_dias: (regime === 'cpp' ? 'Corridos' : 'Úteis'),
-    data_disponibilizacao: fmt(dataD0),
-    data_publicacao: fmt(dataPublicacao),
-    data_inicio_prazo: fmt(dataInicioContagem),
-    data_fatal: fmt(dataFatal),
-    dias_uteis_contados: diasUteisContados,
-    total_dias_corridos: Math.round((dataFatal - dataD0) / (1000 * 60 * 60 * 24)),
-    feriados_compensados: feriadosCompensados,
-    memoria_calculo: memoriaCalculo
-  };
+  return computeLegalDeadline(disponibilizacaoStr, daysCount, regime, customHolidays, holidaysRows);
 }
 
 // 1. Endpoint: Calcular Prazo Processual
@@ -1312,6 +1114,50 @@ juridicoRouter.post('/api/court/datajud/search', requireAuth, async (req, res) =
   } catch (err) {
     console.error('[ERRO] Falha na consulta DataJud:', err);
     return res.status(500).json({ error: 'Erro na consulta DataJud: ' + err.message });
+  }
+});
+
+// 8a. Cobertura do calendário (aviso quando faltar ano à frente)
+juridicoRouter.get('/api/court/holidays/coverage', requireAuth, (req, res) => {
+  try {
+    return res.json({ success: true, ...holidayCoverage(db) });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 8b. Cadastro de feriado LOCAL do escritório (municipal, ponto facultativo do tribunal, portaria)
+juridicoRouter.post('/api/court/holidays', requireAuth, (req, res) => {
+  try {
+    const date = String(req.body?.date || '').trim();
+    const name = String(req.body?.name || '').trim().slice(0, 120);
+    const dt = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T12:00:00Z`) : null;
+    if (!dt || Number.isNaN(dt.getTime()) || dt.toISOString().slice(0, 10) !== date) {
+      return res.status(400).json({ error: 'Informe uma data válida (AAAA-MM-DD).' });
+    }
+    if (!name) return res.status(400).json({ error: 'Informe o nome do feriado.' });
+    const exists = db.prepare('SELECT name FROM court_holidays WHERE holiday_date = ?').get(date);
+    if (exists) return res.status(409).json({ error: `Esta data já está cadastrada: ${exists.name}.` });
+    db.prepare(`INSERT INTO court_holidays (id, holiday_date, name, jurisdiction, is_forensic_recess) VALUES (?, ?, ?, 'local', 0)`)
+      .run(`HOL-LOC-${date}`, date, name);
+    logAudit(req, { event_type: 'ALTERACAO', event_name: 'FERIADO_LOCAL_CADASTRADO', module: 'PRAZOS', resource_id: `HOL-LOC-${date}`, description: `Feriado local cadastrado: ${date} — ${name}.` });
+    return res.status(201).json({ success: true, id: `HOL-LOC-${date}` });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 8c. Remove só feriados LOCAIS cadastrados pelo escritório (os do calendário gerado não se apagam)
+juridicoRouter.delete('/api/court/holidays/:id', requireAuth, (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    if (!id.startsWith('HOL-LOC-')) return res.status(403).json({ error: 'Só é possível remover feriados locais cadastrados pelo escritório.' });
+    const r = db.prepare('DELETE FROM court_holidays WHERE id = ?').run(id);
+    if (!r.changes) return res.status(404).json({ error: 'Feriado não encontrado.' });
+    logAudit(req, { event_type: 'ALTERACAO', event_name: 'FERIADO_LOCAL_REMOVIDO', module: 'PRAZOS', resource_id: id, description: `Feriado local removido: ${id}.` });
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

@@ -333,6 +333,7 @@
     function openDeadlineCalculator(params = {}) {
       const modal = document.getElementById('modal-deadline-calculator');
       loadPublicationsLawyers();
+      loadHolidayAdmin();
 
       const pad = (n) => String(n).padStart(2, '0');
       const now = new Date();
@@ -360,6 +361,63 @@
     function closeDeadlineCalculator() {
       const modal = document.getElementById('modal-deadline-calculator');
       if (modal) modal.classList.add('hidden');
+    }
+
+    // ===== Calendário de feriados: cobertura e feriados locais (AUD-05) =====
+    function _holEsc(t) {
+      return String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function loadHolidayAdmin() {
+      const cov = document.getElementById('hol-coverage');
+      const list = document.getElementById('hol-local-list');
+      if (!cov || !list) return;
+      try {
+        const [rc, rl] = await Promise.all([
+          fetch('/api/court/holidays/coverage', { headers: getAuthHeaders() }),
+          fetch('/api/court/holidays', { headers: getAuthHeaders() })
+        ]);
+        const c = await rc.json();
+        const l = await rl.json();
+        cov.innerHTML = c.ok
+          ? `✅ Calendário cobre de ${_holEsc(c.first_year)} até ${_holEsc(c.last_year)} (${_holEsc(c.years_ahead)} anos à frente).`
+          : `<span class="text-rose-700 font-bold">⚠️ ${_holEsc(c.warning)}</span>`;
+        const locais = (l.holidays || []).filter((h) => h.jurisdiction === 'local');
+        list.innerHTML = locais.length
+          ? locais.map((h) => `<div class="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-2.5 py-1.5"><span><b class="font-mono">${_holEsc(h.holiday_date.split('-').reverse().join('/'))}</b> — ${_holEsc(h.name)}</span><button type="button" onclick="removeLocalHoliday('${_holEsc(h.id)}')" class="text-rose-600 font-bold">Remover</button></div>`).join('')
+          : '<span class="text-slate-400">Nenhum feriado local cadastrado.</span>';
+      } catch {
+        cov.textContent = 'Não foi possível carregar o calendário.';
+      }
+    }
+
+    async function addLocalHoliday() {
+      const date = document.getElementById('hol-new-date')?.value;
+      const name = document.getElementById('hol-new-name')?.value.trim();
+      const msg = document.getElementById('hol-msg');
+      if (msg) msg.textContent = '';
+      try {
+        const res = await fetch('/api/court/holidays', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ date, name })
+        });
+        const data = await res.json();
+        if (!res.ok) { if (msg) msg.textContent = data.error || 'Não foi possível cadastrar.'; return; }
+        document.getElementById('hol-new-name').value = '';
+        await loadHolidayAdmin();
+        handleCalculateDeadline();
+      } catch {
+        if (msg) msg.textContent = 'Erro ao conectar ao servidor.';
+      }
+    }
+
+    async function removeLocalHoliday(id) {
+      try {
+        await fetch(`/api/court/holidays/${encodeURIComponent(id)}`, { method: 'DELETE', headers: getAuthHeaders() });
+      } catch { /* a lista recarregada mostra o estado real */ }
+      await loadHolidayAdmin();
+      handleCalculateDeadline();
     }
 
     function handlePresetChange() {
@@ -523,6 +581,8 @@
   window.toggleCurrentPublicationReadStatus = typeof toggleCurrentPublicationReadStatus !== 'undefined' ? toggleCurrentPublicationReadStatus : window.toggleCurrentPublicationReadStatus;
   window.calculateDeadlineToCurrentPublication = typeof calculateDeadlineToCurrentPublication !== 'undefined' ? calculateDeadlineToCurrentPublication : window.calculateDeadlineToCurrentPublication;
   window.calculateDeadlineToPublication = typeof calculateDeadlineToPublication !== 'undefined' ? calculateDeadlineToPublication : window.calculateDeadlineToPublication;
+  window.addLocalHoliday = addLocalHoliday;
+  window.removeLocalHoliday = removeLocalHoliday;
   window.openDeadlineCalculator = typeof openDeadlineCalculator !== 'undefined' ? openDeadlineCalculator : window.openDeadlineCalculator;
   window.closeDeadlineCalculator = typeof closeDeadlineCalculator !== 'undefined' ? closeDeadlineCalculator : window.closeDeadlineCalculator;
   window.handlePresetChange = typeof handlePresetChange !== 'undefined' ? handlePresetChange : window.handlePresetChange;

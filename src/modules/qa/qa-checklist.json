@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T23:27:21.484Z",
-  "total": 905,
+  "generated_at": "2026-10-04T22:15:45.390Z",
+  "total": 908,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -1188,6 +1188,17 @@
       "label": "Enviar Código por E-mail ✉️",
       "action": "requestModalAdminResetCode",
       "how": "Clique em “Enviar Código por E-mail ✉️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 0
+    },
+    {
+      "id": "QA-52B921A309",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Central Segura de Acesso",
+      "kind": "Botão",
+      "label": "👁️",
+      "action": "toggleResetPassword",
+      "how": "Clique em “👁️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 0
     },
     {
@@ -4359,6 +4370,17 @@
       "order": 7005
     },
     {
+      "id": "QA-8714905746",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Publicações / Intimações",
+      "kind": "Botão",
+      "label": "Remover",
+      "action": "removeLocalHoliday",
+      "how": "Clique em “Remover”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7005
+    },
+    {
       "id": "QA-90D5040831",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -5239,47 +5261,25 @@
       "order": 7012
     },
     {
-      "id": "QA-DCBA9B9894",
+      "id": "QA-D24E243264",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Radar Judicial",
       "kind": "Botão",
-      "label": "5006870-33 (TJMG)",
+      "label": "número CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO)",
       "action": "setJudicialSearchExample",
-      "how": "Clique em “5006870-33 (TJMG)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “número CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7012
     },
     {
-      "id": "QA-446A327E2C",
+      "id": "QA-EBDB1D9D92",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Radar Judicial",
       "kind": "Botão",
-      "label": "OAB/MG 222.943",
+      "label": "OAB/MG 222.943 (escritório)",
       "action": "setJudicialSearchExample",
-      "how": "Clique em “OAB/MG 222.943”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
-      "order": 7012
-    },
-    {
-      "id": "QA-882725BD1D",
-      "page": "Painel administrativo",
-      "url": "/painel",
-      "section": "Radar Judicial",
-      "kind": "Botão",
-      "label": "Mariana Souza",
-      "action": "setJudicialSearchExample",
-      "how": "Clique em “Mariana Souza”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
-      "order": 7012
-    },
-    {
-      "id": "QA-54CBB9020E",
-      "page": "Painel administrativo",
-      "url": "/painel",
-      "section": "Radar Judicial",
-      "kind": "Botão",
-      "label": "123.456.789-00",
-      "action": "setJudicialSearchExample",
-      "how": "Clique em “123.456.789-00”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “OAB/MG 222.943 (escritório)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7012
     },
     {
@@ -7560,6 +7560,28 @@
       "order": 7090
     },
     {
+      "id": "QA-ABE064E349",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: admin password reset modal",
+      "kind": "Botão",
+      "label": "Enviar Código por E-mail ✉️",
+      "action": "requestAdminResetCode",
+      "how": "Clique em “Enviar Código por E-mail ✉️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-F6805DDDE2",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: admin password reset modal",
+      "kind": "Botão",
+      "label": "👁️",
+      "action": "toggleAdminResetPassword",
+      "how": "Clique em “👁️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
       "id": "QA-57EE28B934",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -9207,6 +9229,17 @@
       "label": "&times;",
       "action": "closeDeadlineCalculator",
       "how": "Clique em “&times;”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-1064FB5F7F",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal deadline calculator",
+      "kind": "Botão",
+      "label": "Adicionar",
+      "action": "addLocalHoliday",
+      "how": "Clique em “Adicionar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7090
     },
     {

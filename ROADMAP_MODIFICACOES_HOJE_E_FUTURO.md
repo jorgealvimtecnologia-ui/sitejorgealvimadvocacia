@@ -278,6 +278,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
 ### P1 — Alto (13)
 
 - **AUD-05 — Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo**
+  - *Estado:* feito no repositório em 04/10/2026 (CI verde); falta publicar no servidor
   - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
   - *Pronto quando:* Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil.
 - **AUD-06 — Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências**

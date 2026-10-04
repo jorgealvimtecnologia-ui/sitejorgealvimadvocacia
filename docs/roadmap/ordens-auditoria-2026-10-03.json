@@ -46,7 +46,9 @@
       "prioridade": "P1",
       "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
       "descricao": "A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.",
-      "criterios": "Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil."
+      "criterios": "Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil.",
+      "estado": "feito no repositório em 04/10/2026 (CI verde); falta publicar no servidor",
+      "nota_entrega": "Calendário gerado por regra (Páscoa) e estendido a cada partida até 4 anos à frente (hoje até 2030), sem apagar o que o escritório cadastrou; aviso de cobertura; feriados locais cadastráveis no painel (calculadora de prazos); motor de prazo separado e coberto por 20 testes (dias úteis, feriado, recesso 20/12–20/01, fim de semana, prorrogação, feriado local)."
     },
     {
       "ref": "AUD-06",

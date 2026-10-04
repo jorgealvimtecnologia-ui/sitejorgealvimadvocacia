@@ -10268,6 +10268,22 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
           </div>
 
+          <!-- Calendário de feriados: cobertura e feriados locais do escritório -->
+          <details id="calc-holiday-admin" class="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs">
+            <summary class="cursor-pointer font-bold text-slate-700 text-[11px] uppercase tracking-wider">📆 Calendário de feriados e feriados locais</summary>
+            <div class="mt-3 space-y-3">
+              <div id="hol-coverage" class="text-[11px] text-slate-600">Carregando…</div>
+              <div id="hol-local-list" class="space-y-1 text-[11px] text-slate-700"></div>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input type="date" id="hol-new-date" class="px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-800" />
+                <input type="text" id="hol-new-name" maxlength="120" placeholder="Ex: Aniversário da cidade" class="flex-1 px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-800" />
+                <button type="button" onclick="addLocalHoliday()" class="px-3 py-2 rounded-xl bg-navy-950 text-white font-bold text-xs">Adicionar</button>
+              </div>
+              <p id="hol-msg" class="text-[11px] text-slate-500"></p>
+              <p class="text-[10px] text-slate-400">Os feriados nacionais e forenses são gerados automaticamente. Cadastre aqui os municipais e os pontos facultativos do seu tribunal: eles passam a valer em todos os cálculos de prazo.</p>
+            </div>
+          </details>
+
           <!-- Botões de Ação Final -->
           <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
             <button 
