@@ -643,6 +643,35 @@
       }
     });
 
+    // Permissão da aba conforme a matriz de acesso do operador (negado por padrão).
+    function isTabAllowedByPermissions(tab, p) {
+      return (
+        (tab === 'leads' && p.tab_leads === 1) ||
+        (tab === 'clients' && p.tab_clients === 1) ||
+        (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
+        (tab === 'calendar' && p.tab_calendar === 1) ||
+        (tab === 'publications' && p.tab_publications === 1) ||
+        (tab === 'docs' && p.tab_clients === 1) ||
+        (tab === 'dashboard' && p.tab_dashboard === 1) ||
+        (tab === 'kanban' && p.tab_kanban === 1) ||
+        (['editor', 'calc'].includes(tab) && p.tab_tools === 1) ||
+        (tab === 'finance' && p.tab_financial === 1) ||
+        (tab === 'nfse' && p.tab_nfse === 1) ||
+        (tab === 'esign' && p.tab_esign === 1) ||
+        (tab === 'judicial' && p.tab_radar === 1) ||
+        (tab === 'offices' && p.tab_offices === 1) ||
+        (tab === 'drive' && p.tab_drive === 1) ||
+        (tab === 'users' && p.tab_users === 1) ||
+        (tab === 'hr' && p.tab_hr === 1) ||
+        (tab === 'rockets') ||
+        (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
+        (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
+        (tab === 'notifications' && p.tab_alerts === 1) ||
+        (tab === 'meta-ads' && p.tab_settings === 1)
+        
+      );
+    }
+
     // Alternar entre Abas
     function switchTab(tab) {
       if (typeof window.moduleAllowed === 'function' && !window.moduleAllowed(tab)) {
@@ -676,30 +705,7 @@
       // Validação de Permissão RBAC antes de abrir a aba
       if (window.currentUserPermissions && !window.currentUserPermissions.is_master) {
         const p = window.currentUserPermissions.permissions || {};
-        const isAllowed = (
-          (tab === 'leads' && p.tab_leads === 1) ||
-          (tab === 'clients' && p.tab_clients === 1) ||
-          (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
-          (tab === 'calendar' && p.tab_calendar === 1) ||
-          (tab === 'publications' && p.tab_publications === 1) ||
-          (tab === 'docs' && p.tab_clients === 1) ||
-          (tab === 'dashboard' && p.tab_dashboard === 1) ||
-          (tab === 'kanban' && p.tab_kanban === 1) ||
-          (['editor', 'calc'].includes(tab) && p.tab_tools === 1) ||
-          (tab === 'finance' && p.tab_financial === 1) ||
-          (tab === 'nfse' && p.tab_nfse === 1) ||
-          (tab === 'esign' && p.tab_esign === 1) ||
-          (tab === 'judicial' && p.tab_radar === 1) ||
-          (tab === 'offices' && p.tab_offices === 1) ||
-          (tab === 'drive' && p.tab_drive === 1) ||
-          (tab === 'users' && p.tab_users === 1) ||
-          (tab === 'hr' && p.tab_hr === 1) ||
-          (tab === 'rockets') ||
-          (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
-          (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
-          (tab === 'notifications' && p.tab_alerts === 1) ||
-          (tab === 'meta-ads' && p.tab_settings === 1)
-        );
+        const isAllowed = isTabAllowedByPermissions(tab, p);
         if (!isAllowed) {
           console.warn(`[RBAC] Acesso restrito à aba: ${tab}`);
           const fallback = (p.tab_calendar === 1) ? 'calendar' : ((p.tab_leads === 1) ? 'leads' : 'rockets');
@@ -754,57 +760,21 @@
       const activeClass = "flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all border border-gold-400 bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm cursor-pointer";
       const inactiveClass = "flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-all border border-slate-200 bg-white cursor-pointer";
 
-      tabLeads.classList.add('hidden');
-      tabClients.classList.add('hidden');
-      tabLawsuits.classList.add('hidden');
-      if (tabCalendar) tabCalendar.classList.add('hidden');
-      if (tabPublications) tabPublications.classList.add('hidden');
-      tabDocs.classList.add('hidden');
-      if (tabFinance) tabFinance.classList.add('hidden');
-      if (tabNfse) tabNfse.classList.add('hidden');
-      if (tabBlog) tabBlog.classList.add('hidden');
-      if (tabAudit) tabAudit.classList.add('hidden');
-      if (tabPreClients) tabPreClients.classList.add('hidden');
-      if (tabJudicial) tabJudicial.classList.add('hidden');
-      if (tabOffices) tabOffices.classList.add('hidden');
-      if (tabDrive) tabDrive.classList.add('hidden');
-      if (tabHr) tabHr.classList.add('hidden');
-      tabUsers.classList.add('hidden');
-
-      btnLeads.className = inactiveClass;
-      btnClients.className = inactiveClass;
-      btnLawsuits.className = inactiveClass;
-      if (btnCalendar) btnCalendar.className = inactiveClass;
-      if (btnPublications) btnPublications.className = inactiveClass;
-      btnDocs.className = inactiveClass;
-      if (btnFinance) btnFinance.className = inactiveClass;
-      if (btnNfse) btnNfse.className = inactiveClass;
-      if (btnBlog) btnBlog.className = inactiveClass;
-      if (btnAudit) btnAudit.className = inactiveClass;
-      if (btnPreClients) btnPreClients.className = inactiveClass;
-      if (btnJudicial) btnJudicial.className = inactiveClass;
-      if (btnOffices) btnOffices.className = inactiveClass;
-      if (btnDrive) btnDrive.className = inactiveClass;
-      if (btnHr) btnHr.className = inactiveClass;
-      btnUsers.className = inactiveClass;
-
-      // Foguetes: aba adicionada na modularização; não constava no switchTab inline.
-      const tabRockets = document.getElementById('tab-content-rockets');
-      const btnRockets = document.getElementById('tab-btn-rockets');
-      if (tabRockets) tabRockets.classList.add('hidden');
-      if (btnRockets) btnRockets.className = inactiveClass;
-
-      // Novas abas (dashboard, assinaturas, LGPD, notificações, manutenção, meta-ads, site-boxes, faq) — módulos de gestão.
-      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq'].forEach(function (t) {
+      // Esconde todas as abas e volta todos os botões ao estado inativo (as ativas são marcadas abaixo).
+      ['leads', 'clients', 'lawsuits', 'calendar', 'publications', 'docs', 'finance', 'nfse', 'blog', 'audit', 'pre-clients',
+        'judicial', 'offices', 'drive', 'hr', 'users', 'rockets', 'dashboard', 'esign', 'lgpd', 'notifications',
+        'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq'].forEach(function (t) {
         const c = document.getElementById('tab-content-' + t);
         const b = document.getElementById('tab-btn-' + t);
         if (c) c.classList.add('hidden');
         if (b) b.className = inactiveClass;
       });
-      const btnSiteBoxesTop = document.getElementById('tab-btn-site-boxes-top');
-      if (btnSiteBoxesTop) btnSiteBoxesTop.className = inactiveClass;
-      const btnFaqTop = document.getElementById('tab-btn-faq-top');
-      if (btnFaqTop) btnFaqTop.className = inactiveClass;
+      ['site-boxes-top', 'faq-top'].forEach(function (t) {
+        const b = document.getElementById('tab-btn-' + t);
+        if (b) b.className = inactiveClass;
+      });
+      const tabRockets = document.getElementById('tab-content-rockets');
+      const btnRockets = document.getElementById('tab-btn-rockets');
 
       if (tab === 'leads') {
         tabLeads.classList.remove('hidden');

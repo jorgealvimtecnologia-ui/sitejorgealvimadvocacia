@@ -288,6 +288,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* juridico.routes.js mantém um valor padrão fixo para a chave do DataJud. Provavelmente é a chave pública divulgada pelo CNJ, mas deve sair do código.
   - *Pronto quando:* Confirmada a natureza da chave; leitura apenas de DATAJUD_API_KEY (com documentação no .env.example); sem segredo literal no código; sincronização continua funcionando.
 - **AUD-08 — Observabilidade: logs estruturados, rastreamento de erros e alertas**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar e ligar o monitor externo
   - *Situação:* Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.
   - *Pronto quando:* Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados.
 - **AUD-09 — Migrações de banco versionadas**
@@ -297,6 +298,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.
   - *Pronto quando:* Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega.
 - **AUD-11 — Folga arquitetural: reduzir server.js e quebrar switchTab**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar
   - *Situação:* server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).
   - *Pronto quando:* server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.
 - **AUD-31 — Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)**

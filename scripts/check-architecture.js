@@ -46,7 +46,7 @@ console.log(`\n${BOLD}${CYAN}🔍 INICIANDO AUDITORIA ARQUITETURAL DE MODULARIDA
 // REGRA 1: Checagem de Teto Monolítico (Ceiling Check)
 // ------------------------------------------------------------------------------
 const CEILINGS = [
-  { file: 'server.js', maxLines: 3200, label: 'Backend Server Core' },
+  { file: 'server.js', maxLines: 2000, label: 'Backend Server Core' },
   { file: 'public/js/painel/painel-1-app.js', maxLines: 1800, label: 'Frontend Painel Monolith (Decomposto)' },
 ];
 

@@ -69,7 +69,9 @@
       "prioridade": "P1",
       "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
       "descricao": "Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.",
-      "criterios": "Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados."
+      "criterios": "Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e ligar o monitor externo",
+      "nota_entrega": "Logs JSON com id de requisição (X-Request-Id) sem corpo/token/query; /health checa banco, disco e tarefas automáticas (503 se o banco cair); vigia a cada 10 min avisa o mestre (tarefa parada, disco baixo, certificado); erros em anel + log. Falta: monitor EXTERNO de disponibilidade (ex.: UptimeRobot) apontando para /health e definir CERT_CHECK_HOST no cofre (ver docs/INFRA.md)."
     },
     {
       "ref": "AUD-09",
@@ -90,7 +92,9 @@
       "prioridade": "P1",
       "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
       "descricao": "server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).",
-      "criterios": "server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde."
+      "criterios": "server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "nota_entrega": "server.js de 3.141 para ~1.720 linhas (esquema do banco movido para src/db/schema.js, mesma ordem de execução); teto do guardião baixado para 2.000; switchTab de 300 para 241 linhas (permissões e reset de abas em funções/laço); teste e2e de troca de abas."
     },
     {
       "ref": "AUD-31",

@@ -45,7 +45,7 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
 
 ### 🚨 REGRAS SUPREMAS DE ARQUITETURA (GUARDIÃO MODULAR)
 1. **Proibição de Monólitos:**
-   * `server.js` é apenas um orquestrador. Teto máximo: **3.200 linhas**.
+   * `server.js` é apenas um orquestrador. Teto máximo: **2.000 linhas** (era 3.200; o esquema do banco foi para `src/db/schema.js`).
    * `public/js/painel/painel-1-app.js` é o Core Shell. Teto máximo: **1.800 linhas**.
    * Novas rotas de API devem SEMPRE ficar em `src/modules/<nome>/<nome>.routes.js`.
    * Novas abas do painel devem SEMPRE ficar em `public/js/tabs/tab-<nome>.js`.
