@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T22:15:45.390Z",
-  "total": 908,
+  "generated_at": "2026-10-04T23:12:40.673Z",
+  "total": 911,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -113,6 +113,17 @@
       "order": 0
     },
     {
+      "id": "QA-9286AC5D21",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "📅 Agendar consulta",
+      "action": "/agendar",
+      "how": "Clique em “📅 Agendar consulta”. Confira: abre /agendar sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
       "id": "QA-3D9084BF70",
       "page": "Site institucional (página inicial)",
       "url": "/",
@@ -198,6 +209,17 @@
       "label": "Contato & Envio de Documentos",
       "action": "#contato",
       "how": "Clique em “Contato & Envio de Documentos”. Confira: a tela rola/abre a parte correta (#contato).",
+      "order": 0
+    },
+    {
+      "id": "QA-E3878D2BC2",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "📅 Agendar consulta online",
+      "action": "/agendar",
+      "how": "Clique em “📅 Agendar consulta online”. Confira: abre /agendar sem erro e com o conteúdo certo.",
       "order": 0
     },
     {
@@ -4125,6 +4147,17 @@
       "label": "Abrir no celular",
       "action": "abrir-celular",
       "how": "Abra no celular. Confira: nada cortado ou sobreposto, textos legíveis e botões fáceis de tocar.",
+      "order": 7004
+    },
+    {
+      "id": "QA-50AD1AD27E",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Agenda",
+      "kind": "Botão",
+      "label": "🌐 Agendamento online",
+      "action": "openBookingAdmin",
+      "how": "Clique em “🌐 Agendamento online”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7004
     },
     {

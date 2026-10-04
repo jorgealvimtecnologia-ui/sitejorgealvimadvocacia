@@ -135,7 +135,7 @@ const AREA_ABA = {
   '/api/leads': 'tab_leads', '/api/analytics/summary': 'tab_leads', '/api/admin/visits': 'tab_leads', '/api/admin/pre-clients': 'tab_leads',
   '/api/lawsuits': 'tab_lawsuits', '/api/admin-requests': 'tab_lawsuits',
   '/api/court': 'tab_publications', '/api/publications': 'tab_publications', '/api/sync': 'tab_publications',
-  '/api/calendar': 'tab_calendar', '/api/judicial': 'tab_radar', '/api/offices': 'tab_offices', '/api/drive': 'tab_drive',
+  '/api/calendar': 'tab_calendar', '/api/booking/settings': 'tab_calendar', '/api/booking/appointments': 'tab_calendar', '/api/judicial': 'tab_radar', '/api/offices': 'tab_offices', '/api/drive': 'tab_drive',
   '/api/hr/': 'tab_hr', '/api/financial': 'tab_financial', '/api/nfse': 'tab_nfse', '/api/esign/requests': 'tab_esign',
   '/api/dashboard': 'tab_dashboard', '/api/kanban': 'tab_kanban', '/api/notifications': 'tab_alerts',
   '/api/admin/audit-logs': 'tab_audit', '/api/lgpd': 'tab_audit', '/api/admin/blog': 'tab_blog', '/api/admin/site': 'tab_blog',

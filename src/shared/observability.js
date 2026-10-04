@@ -172,15 +172,15 @@ export function buildHealth(db, { now = Date.now(), dir = process.cwd() } = {}) 
 /** Problemas atuais, em texto, a partir do /health e (opcional) dos dias que faltam para o certificado vencer. */
 export function findProblems(health, { certDaysLeft = null } = {}) {
   const p = [];
-  if (health.db === 'fail') p.push({ key: 'db', level: 'danger', title: '🚨 Banco de dados não responde', message: 'O sistema não consegue consultar o banco. Verifique o servidor imediatamente.' });
+  if (health.db === 'fail') p.push({ key: 'db', level: 'critical', title: '🚨 Banco de dados não responde', message: 'O sistema não consegue consultar o banco. Verifique o servidor imediatamente.' });
   for (const [name, st] of Object.entries(health.jobs || {})) {
-    if (st === 'stale') p.push({ key: `job:${name}`, level: 'danger', title: `⏱️ Tarefa automática parada: ${name}`, message: `A tarefa "${name}" não roda no intervalo esperado. Prazos ou sincronização podem estar sem atualização.` });
+    if (st === 'stale') p.push({ key: `job:${name}`, level: 'critical', title: `⏱️ Tarefa automática parada: ${name}`, message: `A tarefa "${name}" não roda no intervalo esperado. Prazos ou sincronização podem estar sem atualização.` });
   }
   if (health.disk === 'critical' || health.disk === 'low') {
-    p.push({ key: 'disk', level: health.disk === 'critical' ? 'danger' : 'warning', title: '💾 Pouco espaço em disco', message: `Resta ${health.disk_free_percent}% de espaço livre no servidor. Libere espaço antes que o sistema pare de gravar.` });
+    p.push({ key: 'disk', level: health.disk === 'critical' ? 'critical' : 'warning', title: '💾 Pouco espaço em disco', message: `Resta ${health.disk_free_percent}% de espaço livre no servidor. Libere espaço antes que o sistema pare de gravar.` });
   }
   if (certDaysLeft != null && certDaysLeft <= 15) {
-    p.push({ key: 'cert', level: certDaysLeft <= 5 ? 'danger' : 'warning', title: '🔒 Certificado do site perto de vencer', message: `O certificado HTTPS vence em ${certDaysLeft} dia(s). Renove para o site não ficar com aviso de segurança.` });
+    p.push({ key: 'cert', level: certDaysLeft <= 5 ? 'critical' : 'warning', title: '🔒 Certificado do site perto de vencer', message: `O certificado HTTPS vence em ${certDaysLeft} dia(s). Renove para o site não ficar com aviso de segurança.` });
   }
   return p;
 }

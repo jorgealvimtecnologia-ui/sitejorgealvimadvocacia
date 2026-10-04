@@ -134,11 +134,11 @@ describe('erros e vigia', () => {
     assert.deepEqual(findProblems(base), []);
     assert.equal(findProblems({ ...base, jobs: { sync: 'stale' } })[0].key, 'job:sync');
     assert.equal(findProblems({ ...base, disk: 'low', disk_free_percent: 9 })[0].level, 'warning');
-    assert.equal(findProblems({ ...base, disk: 'critical', disk_free_percent: 3 })[0].level, 'danger');
+    assert.equal(findProblems({ ...base, disk: 'critical', disk_free_percent: 3 })[0].level, 'critical');
     assert.equal(findProblems({ ...base, db: 'fail' })[0].key, 'db');
     assert.equal(findProblems(base, { certDaysLeft: 20 }).length, 0);
     assert.equal(findProblems(base, { certDaysLeft: 10 })[0].level, 'warning');
-    assert.equal(findProblems(base, { certDaysLeft: 3 })[0].level, 'danger');
+    assert.equal(findProblems(base, { certDaysLeft: 3 })[0].level, 'critical');
   });
   it('o tratador de erros do servidor devolve o id da requisição', async () => {
     const r = await request(app).get('/api/rota-inexistente-xyz');

@@ -163,7 +163,9 @@
       "prioridade": "P2",
       "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
       "descricao": "O site capta contato por formulário e WhatsApp, mas não há marcação de horário pelo próprio visitante.",
-      "criterios": "Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis."
+      "criterios": "Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar (painel → Agenda → Agendamento online)",
+      "nota_entrega": "Página pública /agendar (dia + horário livre da agenda do advogado, dados com consentimento LGPD, reCAPTCHA quando configurado); cada marcação vira lead no funil + evento \"consulta\" na agenda (que bloqueia o horário) + aviso no painel; confirmação por e-mail com convite .ics e link pessoal para remarcar/cancelar; lembrete 24 h antes; só e-mail (sem WhatsApp). Nasce DESLIGADO; só o mestre liga e configura. 26 testes + e2e no navegador."
     },
     {
       "ref": "AUD-16",

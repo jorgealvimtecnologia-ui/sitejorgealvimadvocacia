@@ -67,6 +67,7 @@ import { roadmapAgentRouter } from './src/modules/roadmap/roadmap.agent.js';
 import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
+import { bookingRouter, startBookingReminders } from './src/modules/booking/booking.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 import { serveStoredFiles } from './src/middleware/stored-files.js';
 import './src/db/schema.js'; // esquema do banco (por último entre os imports, como rodava antes no corpo do server.js)
@@ -236,6 +237,7 @@ app.use(roadmapAgentRouter);
 app.use(qaRouter);
 app.use(ocrRouter);
 app.use(recaptchaRouter);
+app.use(bookingRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
@@ -1660,6 +1662,7 @@ if (!IS_TEST) {
     // Inicia o agendador de sincronização (ComunicaAPI + reconciliação interna).
     try { startSyncScheduler(); } catch (e) { console.warn('[BOOT] Agendador de sync não iniciado:', e.message); }
     // Alertas de prazo por WhatsApp/e-mail (só para advogados), com escalonamento e ciência.
+    try { startBookingReminders(); } catch (e) { console.warn('[BOOT] Lembretes de agendamento não iniciados:', e.message); }
     try { startDeadlineAlerts(); } catch (e) { console.warn('[BOOT] Alertas de prazo externos não iniciados:', e.message); }
     // Vigia do .env: toda alteração gera e-mail ao titular (cofre criptografado + relatório só com nomes).
     try { installProcessErrorHandlers(); startWatchdog({ db, notify: createNotification }); } catch (e) { console.warn('[BOOT] Vigia de saúde não iniciado:', e.message); }

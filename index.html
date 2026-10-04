@@ -458,6 +458,9 @@
             <span>Contato & Envio</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
+          <a href="/agendar" data-booking-link hidden class="relative px-3 py-2 rounded-lg font-bold text-gold-700 hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200">
+            <span>📅 Agendar consulta</span>
+          </a>
           <button onclick="openUniversalAuthModal('admin')" type="button" id="btn-open-universal-portal" class="text-xs text-navy-950 font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-50 via-gold-50 to-amber-100 hover:from-amber-100 hover:to-gold-200 border border-gold-300/80 hover:border-gold-400 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-2 cursor-pointer group" title="Acesse com segurança seu Portal (Cliente, Colaborador ou Advogado)">
             <span class="text-sm">🏛️</span>
             <span class="tracking-tight text-navy-950 font-extrabold">Acessar Portais</span>
@@ -520,6 +523,7 @@
           </a>
           <a href="#faq" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Dúvidas Frequentes (FAQ)</a>
           <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Contato & Envio de Documentos</a>
+          <a href="/agendar" data-booking-link hidden class="mobile-nav-link text-gold-700 font-bold py-2 border-b border-slate-100 transition-colors">📅 Agendar consulta online</a>
           <button onclick="openUniversalAuthModal('client'); try{toggleMobileMenu(false)}catch(e){}" type="button" class="mobile-nav-link text-left text-navy-950 font-bold py-3 bg-gradient-to-r from-amber-50 to-gold-50 hover:from-gold-100 hover:to-amber-100 px-4 rounded-xl border border-gold-300 flex items-center justify-between cursor-pointer w-full shadow-sm">
             <div class="flex items-center space-x-2.5">
               <span class="text-lg">🏛️</span>
@@ -4260,6 +4264,16 @@
 
   <script src="/js/analytics.js"></script>
   <script defer src="/js/enhance-ui.js"></script>
+  <script>
+    // Agendamento online: os links só aparecem quando o escritório liga o recurso (painel → Agenda → Agendamento online).
+    (function () {
+      try {
+        fetch('/api/booking/config').then(function (r) { return r.json(); }).then(function (c) {
+          if (c && c.enabled) document.querySelectorAll('[data-booking-link]').forEach(function (el) { el.hidden = false; });
+        }).catch(function () {});
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>
 

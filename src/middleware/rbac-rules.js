@@ -34,6 +34,11 @@ export const RULES = [
   [/^\/api\/analytics\/(event|consent)\b/, PUBLIC],
   [/^\/api\/lgpd\/request\b/, PUBLIC, ['POST']],
   [/^\/api\/leads\/?$/, PUBLIC, ['POST']],            // captação de leads pelo site (só POST)
+  [/^\/api\/booking\/(config|slots)\b/, PUBLIC, ['GET']],          // agendamento online: horários livres
+  [/^\/api\/booking\/?$/, PUBLIC, ['POST']],                        // agendamento online: marcar
+  [/^\/api\/booking\/manage\//, PUBLIC],                            // cancelar/remarcar pelo link pessoal (token)
+  [/^\/api\/booking\/settings\b/, MASTER, ['PUT']],                  // ligar/configurar o agendamento: só o mestre
+  [/^\/api\/booking\/(settings|appointments)\b/, tab('tab_calendar')],
   [/^\/api\/recaptcha\//, PUBLIC],                    // configuração pública do reCAPTCHA
   [/^\/api\/agent\/roadmap/, PUBLIC],                 // API dos agentes: tem chave própria (X-Roadmap-Agent-Key)
 
