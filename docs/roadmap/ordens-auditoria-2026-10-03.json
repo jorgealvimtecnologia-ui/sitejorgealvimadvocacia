@@ -261,6 +261,14 @@
       "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",
       "descricao": "As bases públicas (DataJud e Diário da Justiça) não permitem busca por CPF/CNPJ nem por nome de parte em todos os tribunais. Quem precisa disso hoje usa provedores comerciais de dados processuais, com custo e contrato (e cuidados de LGPD e sigilo).",
       "criterios": "Comparativo de provedores (custo, cobertura de tribunais, termos de uso, LGPD); decisão do Dr. Jorge; se aprovado, integração com a chave guardada no cofre e o mesmo princípio: só dado real, com a fonte indicada."
+    },
+    {
+      "ref": "AUD-42",
+      "prioridade": "P1",
+      "estado": "pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)",
+      "titulo": "WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)",
+      "descricao": "Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.",
+      "criterios": "Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado)."
     }
   ],
   "sincronizar": [

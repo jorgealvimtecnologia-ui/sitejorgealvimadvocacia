@@ -237,7 +237,7 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 — só o que ainda NÃO foi feito
 
-Atualizado em 04/10/2026. **35 ordens abertas**: 6 do P0 (o que sobrou), 12 do P1, 14 do P2 e 3 do P3.
+Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P1, 14 do P2 e 3 do P3.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada por `node scripts/roadmap-gerar-md.js`; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
@@ -275,7 +275,7 @@ Atualizado em 04/10/2026. **35 ordens abertas**: 6 do P0 (o que sobrou), 12 do P
   - *Situação:* Em 04/10/2026 o Dr. Jorge testou o Radar em produção: nenhuma busca (número, nome, CPF/CNPJ, OAB) devolvia dado real. O Radar completava a resposta com dados INVENTADOS: um processo de enchimento para clientes encontrados, andamentos e documentos padrão, advogado padrão e um card falso "Consulta Pública de Autos"; e a sincronização automática chegou a gravar esses andamentos em processos reais. Já corrigido no código: o Radar só devolve dado real (DataJud, DJEN ou o cadastro do escritório), mostra as fontes consultadas e o motivo de cada falha, e a sincronização só grava andamento de fonte real. Limites reais: o DataJud público só busca por NÚMERO do processo; por nome/OAB só o Diário da Justiça (DJEN) ajuda; por CPF/CNPJ não existe fonte pública.
   - *Pronto quando:* Publicado; node scripts/radar-diagnostico.js no servidor mostra DataJud e ComunicaAPI respondendo (chave aceita pelo CNJ); busca por número de um processo real devolve o andamento real; node scripts/radar-limpar-fabricados.js rodado (primeiro sem --aplicar) e os andamentos inventados antigos removidos; decisão do Dr. Jorge sobre buscar por nome/CPF em provedor pago (ver AUD-41).
 
-### P1 — Alto (12)
+### P1 — Alto (13)
 
 - **AUD-05 — Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo**
   - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
@@ -318,6 +318,10 @@ Atualizado em 04/10/2026. **35 ordens abertas**: 6 do P0 (o que sobrou), 12 do P
   - *Estado:* pendente: revisão combinada com o Dr. Jorge
   - *Situação:* Hoje os segredos estão espalhados: no cofre criptografado do servidor (SMTP_PASS), no .env dos computadores (chave do agente do Roadmap Vivo, chave do cofre no Bitwarden) e DENTRO do banco leads.db em texto puro (system_settings: chave do Asaas; meta_api_settings: token da Meta; outras chaves de API). Também usados pelo código: DATAJUD_API_KEY, GOOGLE_MAPS_API_KEY, RECAPTCHA_SECRET_KEY, WHATSAPP_API_KEY e WHATSAPP_GATEWAY_URL, MASTER_PASSWORD, SYNC_PASS. Mais as credenciais fora do código: chave SSH de deploy, secrets do GitHub (DEPLOY_*), contas Google mestras e senhas de app.
   - *Pronto quando:* Inventário (só nomes, onde está, quem usa, quando foi criada/trocada) em docs/; cada segredo guardado no cofre do servidor ou no gerenciador de senhas, nunca em texto puro no banco ou no .env; segredos do banco migrados ou criptografados; datas de troca definidas; quem perdeu uma chave sabe como recuperar; guardião reprova segredo novo em texto puro.
+- **AUD-42 — WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)**
+  - *Estado:* pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)
+  - *Situação:* Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.
+  - *Pronto quando:* Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado).
 
 ### P2 — Normal (14)
 
