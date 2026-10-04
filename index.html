@@ -3042,10 +3042,15 @@
         });
         const data = await res.json();
 
-        if (res.ok && data.success) {
+        if (res.ok && data.success && data.channels && data.channels[channel] === false) {
+          // O sistema não tem este canal ligado: não prometemos um envio que não existe.
           showUAuthResetAlert(isEmail
-            ? 'Código enviado! Verifique o e-mail cadastrado (confira também a caixa de spam).'
-            : 'Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+            ? 'O envio por e-mail não está ativo neste sistema. Use o WhatsApp ou fale com o suporte.'
+            : 'O envio por WhatsApp não está ativo neste sistema. Use "Enviar por e-mail".', 'error');
+        } else if (res.ok && data.success) {
+          showUAuthResetAlert(isEmail
+            ? 'Se o usuário existir, o código foi enviado ao e-mail cadastrado (confira também a caixa de spam).'
+            : 'Se o usuário existir, o código foi enviado ao WhatsApp do Dr. Jorge Alvim.', 'success');
           const step2Hint = document.getElementById('uauth-reset-step2-hint');
           if (step2Hint) {
             step2Hint.textContent = isEmail

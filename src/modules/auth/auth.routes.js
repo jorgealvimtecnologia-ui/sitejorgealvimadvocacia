@@ -15,6 +15,7 @@ import { findEmployeeForUser, findUserForEmployee, findEmployeeByTypedName } fro
 import { validatePassword, outdatedPasswordNotice } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { deliverAccessCode } from '../../shared/access-codes.js';
+import { isEmailConfigured } from '../../shared/email.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
 
 export const authRouter = express.Router();
@@ -668,6 +669,9 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
     // casos), preservando a resposta genérica contra enumeração de contas.
     const genericResponse = {
       success: true,
+      // Quais canais o sistema tem configurados (informação do sistema, não da conta): a tela usa isso para
+      // não prometer um envio que não existe.
+      channels: { whatsapp: !!String(process.env.WHATSAPP_GATEWAY_URL || '').trim(), email: isEmailConfigured() },
       message: deliveryChannel === 'email'
         ? 'Se o usuário existir, o código de verificação foi enviado ao e-mail cadastrado.'
         : 'Se o usuário existir, o código de verificação foi enviado ao WhatsApp do Administrador.'

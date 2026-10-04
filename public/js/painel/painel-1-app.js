@@ -1399,6 +1399,7 @@
     }
 
     function closeAdminForgotPasswordModal() {
+      if (typeof toggleAdminResetPassword === "function") toggleAdminResetPassword(true);
       const modal = document.getElementById('admin-password-reset-modal');
       if (modal) modal.classList.add('hidden');
       const step1 = document.getElementById('admin-reset-step-1');
@@ -1409,7 +1410,7 @@
       if (alertBox) alertBox.classList.add('hidden');
     }
 
-    async function requestAdminResetCode() {
+    async function requestAdminResetCode(channel = 'whatsapp') {
       const userInput = document.getElementById('admin-reset-username');
       const sendBtn = document.getElementById('btn-admin-send-code');
       const username = userInput ? userInput.value.trim() : '';
@@ -1419,21 +1420,29 @@
         return;
       }
 
-      if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = `<span>Enviando código...</span>`;
-      }
+      const botoes = ['btn-admin-send-code', 'btn-admin-send-code-email'].map((id) => document.getElementById(id)).filter(Boolean);
+      const textosOriginais = botoes.map((b) => b.innerHTML);
+      botoes.forEach((b) => { b.disabled = true; });
+      if (sendBtn) sendBtn.innerHTML = `<span>Enviando código...</span>`;
 
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, channel })
         });
         const data = await res.json();
 
-        if (res.ok && data.success) {
-          showAdminResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+        const canalLabel = channel === 'email' ? 'e-mail' : 'WhatsApp';
+        if (res.ok && data.success && data.channels && data.channels[channel] === false) {
+          // O sistema não tem este canal ligado: não prometemos um envio que não existe.
+          showAdminResetAlert(channel === 'email'
+            ? 'O envio por e-mail não está ativo neste sistema. Use o WhatsApp ou fale com o suporte.'
+            : 'O envio por WhatsApp não está ativo neste sistema. Use "Enviar Código por E-mail".', 'error');
+        } else if (res.ok && data.success) {
+          showAdminResetAlert(`Se o usuário existir, o código foi enviado ao ${channel === 'email' ? 'e-mail cadastrado' : 'WhatsApp do Dr. Jorge Alvim'}. Confira ${channel === 'email' ? 'a caixa de entrada e o spam' : 'o WhatsApp'}.`, 'success');
+          const t2 = document.getElementById('admin-reset-step2-text');
+          if (t2) t2.textContent = `Código solicitado por ${canalLabel}!`;
           document.getElementById('admin-reset-step-1')?.classList.add('hidden');
           document.getElementById('admin-reset-step-2')?.classList.remove('hidden');
           setTimeout(() => { document.getElementById('admin-reset-code')?.focus(); }, 150);
@@ -1443,10 +1452,7 @@
       } catch (err) {
         showAdminResetAlert('Erro ao conectar ao servidor.', 'error');
       } finally {
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          sendBtn.innerHTML = `<span>Enviar Código via WhatsApp</span> <span>📲</span>`;
-        }
+        botoes.forEach((b, i) => { b.disabled = false; b.innerHTML = textosOriginais[i]; });
       }
     }
 
@@ -1510,6 +1516,17 @@
         }
       }
     }
+
+    // Olho do campo "Nova Senha": fica visível enquanto digita e volta a ocultar ao sair.
+    function toggleAdminResetPassword(forceHide) {
+      const pwd = document.getElementById('admin-reset-newpassword');
+      const icon = document.getElementById('admin-reset-pwd-icon');
+      if (!pwd) return;
+      const show = forceHide === true ? false : pwd.type === 'password';
+      pwd.type = show ? 'text' : 'password';
+      if (icon) icon.textContent = show ? '🙈' : '👁️';
+    }
+    window.toggleAdminResetPassword = toggleAdminResetPassword;
 
     window.openAdminForgotPasswordModal = openAdminForgotPasswordModal;
     window.closeAdminForgotPasswordModal = closeAdminForgotPasswordModal;
