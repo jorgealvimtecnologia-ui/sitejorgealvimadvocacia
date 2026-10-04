@@ -52,7 +52,7 @@ const pais = await (async () => {
     return '';
   }
 })();
-if (pais) out(pais === 'BR', `Origem do servidor: país ${pais}${pais === 'BR' ? '.' : ' — FORA DO BRASIL: o Diário da Justiça (ComunicaAPI) bloqueia essa origem. Veja a ordem AUD-42 (saída pelo Brasil).'}`);
+if (pais) out(pais === 'BR', `Origem do servidor: país ${pais}${pais === 'BR' ? '.' : ' — FORA DO BRASIL: o Diário da Justiça (ComunicaAPI) bloqueia essa origem. Veja a ordem AUD-40 (saída pelo Brasil).'}`);
 
 // 1. DataJud
 const key = String(process.env.DATAJUD_API_KEY || '').trim();
