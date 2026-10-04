@@ -45,7 +45,8 @@
     "env:vault": "node scripts/env-vault.js",
     "check:perf": "node scripts/perf-budget.js",
     "test:a11y": "playwright test e2e/a11y.spec.js",
-    "test:lighthouse:ci": "node scripts/lighthouse-ci.js"
+    "test:lighthouse:ci": "node scripts/lighthouse-ci.js",
+    "check:producao": "node scripts/producao-checklist.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

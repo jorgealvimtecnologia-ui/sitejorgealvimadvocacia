@@ -365,7 +365,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.
   - *Pronto quando:* Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.
 - **AUD-20 — Ambiente de homologação ativo e checklist de verificação da produção**
-  - *Estado:* staging ativo desde 03/10; sobra o checklist periódico da produção
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar e o cron rodar no servidor
   - *Situação:* O staging (homolog.jorgealvimadvocacia.com.br) está no ar e foi usado para validar as correções. Sobra a rotina periódica de verificação da produção.
   - *Pronto quando:* Checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada; staging sem dados reais de clientes.
 - **AUD-21 — Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)**
@@ -381,6 +381,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* A aba Testes Físicos já coleta falhas, mas não há teste de usabilidade estruturado com advogados, secretária e clientes.
   - *Pronto quando:* Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site).
 - **AUD-24 — Presença no Google e Cloudflare (ações externas do Dr. Jorge)**
+  - *Estado:* guia pronto (docs/GUIA-GOOGLE-CLOUDFLARE.md); ações externas a cargo do Dr. Jorge
   - *Situação:* Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.
   - *Pronto quando:* Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.
 - **AUD-41 — Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento**

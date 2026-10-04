@@ -209,7 +209,8 @@
       "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
       "descricao": "O staging (homolog.jorgealvimadvocacia.com.br) está no ar e foi usado para validar as correções. Sobra a rotina periódica de verificação da produção.",
       "criterios": "Checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada; staging sem dados reais de clientes.",
-      "estado": "staging ativo desde 03/10; sobra o checklist periódico da produção"
+      "estado": "feito no repositório em 04/10/2026; falta publicar e o cron rodar no servidor",
+      "nota_entrega": "scripts/producao-checklist.js: confere site/health, certificado HTTPS, backup diário recente, cópia externa cifrada, teste de restauração, disco, tarefas automáticas e versão publicada; reprova (exit 1) em problema grave. Agendado por setup-backup-cron.sh (segunda 05:00) com aviso por e-mail (scripts/avisar-producao.js). 8 testes. npm run check:producao."
     },
     {
       "ref": "AUD-21",
@@ -240,7 +241,9 @@
       "prioridade": "P2",
       "titulo": "Presença no Google e Cloudflare (ações externas do Dr. Jorge)",
       "descricao": "Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.",
-      "criterios": "Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD."
+      "criterios": "Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.",
+      "estado": "guia pronto (docs/GUIA-GOOGLE-CLOUDFLARE.md); ações externas a cargo do Dr. Jorge",
+      "nota_entrega": "Passo a passo: Perfil da Empresa no Google (com regras da OAB sobre avaliações), Search Console (GSC_VERIFICATION + sitemap.xml), GA4 (GA_MEASUREMENT_ID, respeitando o banner LGPD), Cloudflare Free (SSL Full strict, nameservers no registro.br, TRUST_CLOUDFLARE=1). Todas as variáveis vão ao cofre; o código já está preparado."
     },
     {
       "ref": "AUD-36",

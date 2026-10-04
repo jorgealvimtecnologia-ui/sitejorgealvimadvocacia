@@ -19,6 +19,9 @@ mkdir -p "$PROJ/backups"
 
 CRON_LINE="0 3 * * * cd $PROJ && /bin/bash backup.sh >> $PROJ/backups/backup.log 2>&1"
 VERIFY_LINE="30 4 * * 0 cd $PROJ && $NODE_BIN scripts/backup-restore-test.js backups --avisar --log=backups/restore-test.log >> backups/restore-test.out 2>&1"
+# Verificacao periodica da producao (AUD-20): segunda 05:00, confere site/certificado/backup e avisa por e-mail se houver problema grave.
+PROD_URL_V="${PROD_URL:-https://jorgealvimadvocacia.com.br}"
+CHECKLIST_LINE="0 5 * * 1 cd $PROJ && $NODE_BIN scripts/producao-checklist.js --url=$PROD_URL_V --servidor=$PROJ >> backups/producao-checklist.log 2>&1 || $NODE_BIN scripts/avisar-producao.js >> backups/producao-checklist.log 2>&1"
 
 if crontab -l 2>/dev/null | grep -Fq "backup.sh"; then
   echo "✓ Cron de backup já estava configurado."
@@ -32,6 +35,13 @@ if crontab -l 2>/dev/null | grep -Fq "backup-restore-test.js"; then
 else
   ( crontab -l 2>/dev/null || true; echo "$VERIFY_LINE" ) | crontab -
   echo "✅ Cron do teste de restauração ADICIONADO: todo domingo às 04:30."
+fi
+
+if crontab -l 2>/dev/null | grep -Fq "producao-checklist.js"; then
+  echo "OK Cron da verificacao de producao ja estava configurado."
+else
+  ( crontab -l 2>/dev/null || true; echo "$CHECKLIST_LINE" ) | crontab -
+  echo "ADICIONADO Cron da verificacao de producao: toda segunda as 05:00."
 fi
 
 echo ""

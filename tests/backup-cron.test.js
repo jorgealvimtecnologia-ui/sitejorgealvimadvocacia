@@ -47,9 +47,9 @@ describe('setup-backup-cron.sh', { skip: !canRun && 'requer Linux com bash' }, (
     const r = run();
     assert.equal(r.status, 0, r.stderr.toString());
     const l = lines();
-    assert.equal(l.length, 2);
+    assert.equal(l.length, 3);
     assert.match(
-      l.find((x) => x.includes('backup.sh')),
+      l.find((x) => x.includes('backup.sh') && !x.includes('restore')),
       /^0 3 \* \* \* cd .*backup\.sh/
     );
     const verify = l.find((x) => x.includes('backup-restore-test.js'));
@@ -61,13 +61,17 @@ describe('setup-backup-cron.sh', { skip: !canRun && 'requer Linux com bash' }, (
       /&& \/\S+\/node scripts\/backup-restore-test\.js/,
       `deve usar o caminho absoluto do node (o PATH do cron é mínimo): ${verify}`
     );
+    // AUD-20: verificação de produção semanal (segunda 05:00)
+    const prod = l.find((x) => x.includes('producao-checklist.js'));
+    assert.ok(prod, 'a verificação de produção não foi agendada');
+    assert.match(prod, /^0 5 \* \* 1 cd /);
   });
 
   it('servidor SEM crontab algum (crontab -l falha): agenda as duas rotinas (bug antigo: perdia o agendamento em silêncio)', () => {
     assert.equal(fs.existsSync(store), false);
     const r = run();
     assert.equal(r.status, 0, r.stderr.toString());
-    assert.equal(lines().length, 2);
+    assert.equal(lines().length, 3);
     assert.ok(
       lines().some((l) => l.includes('backup.sh')),
       'o backup diário não foi agendado'
@@ -78,7 +82,7 @@ describe('setup-backup-cron.sh', { skip: !canRun && 'requer Linux com bash' }, (
     run();
     const r = run();
     assert.equal(r.status, 0);
-    assert.equal(lines().length, 2);
+    assert.equal(lines().length, 3);
     assert.match(r.stdout.toString(), /já estava configurado/);
   });
 
@@ -86,9 +90,10 @@ describe('setup-backup-cron.sh', { skip: !canRun && 'requer Linux com bash' }, (
     fs.writeFileSync(store, `0 1 * * * echo outra-tarefa\n0 3 * * * cd ${proj} && /bin/bash backup.sh\n`);
     run();
     const l = lines();
-    assert.equal(l.length, 3);
+    assert.equal(l.length, 4);
     assert.ok(l.includes('0 1 * * * echo outra-tarefa'));
-    assert.equal(l.filter((x) => x.includes('backup.sh')).length, 1);
+    assert.equal(l.filter((x) => x.includes('backup.sh') && !x.includes('restore')).length, 1);
     assert.equal(l.filter((x) => x.includes('backup-restore-test.js')).length, 1);
+    assert.equal(l.filter((x) => x.includes('producao-checklist.js')).length, 1);
   });
 });
