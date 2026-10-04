@@ -245,6 +245,22 @@
       "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
       "descricao": "Hoje os segredos estão espalhados: no cofre criptografado do servidor (SMTP_PASS), no .env dos computadores (chave do agente do Roadmap Vivo, chave do cofre no Bitwarden) e DENTRO do banco leads.db em texto puro (system_settings: chave do Asaas; meta_api_settings: token da Meta; outras chaves de API). Também usados pelo código: DATAJUD_API_KEY, GOOGLE_MAPS_API_KEY, RECAPTCHA_SECRET_KEY, WHATSAPP_API_KEY e WHATSAPP_GATEWAY_URL, MASTER_PASSWORD, SYNC_PASS. Mais as credenciais fora do código: chave SSH de deploy, secrets do GitHub (DEPLOY_*), contas Google mestras e senhas de app.",
       "criterios": "Inventário (só nomes, onde está, quem usa, quando foi criada/trocada) em docs/; cada segredo guardado no cofre do servidor ou no gerenciador de senhas, nunca em texto puro no banco ou no .env; segredos do banco migrados ou criptografados; datas de troca definidas; quem perdeu uma chave sabe como recuperar; guardião reprova segredo novo em texto puro."
+    },
+    {
+      "ref": "AUD-40",
+      "prioridade": "P0",
+      "estado": "correção no repositório (nada mais é inventado); falta publicar e diagnosticar as fontes no servidor",
+      "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
+      "descricao": "Em 04/10/2026 o Dr. Jorge testou o Radar em produção: nenhuma busca (número, nome, CPF/CNPJ, OAB) devolvia dado real. O Radar completava a resposta com dados INVENTADOS: um processo de enchimento para clientes encontrados, andamentos e documentos padrão, advogado padrão e um card falso \"Consulta Pública de Autos\"; e a sincronização automática chegou a gravar esses andamentos em processos reais. Já corrigido no código: o Radar só devolve dado real (DataJud, DJEN ou o cadastro do escritório), mostra as fontes consultadas e o motivo de cada falha, e a sincronização só grava andamento de fonte real. Limites reais: o DataJud público só busca por NÚMERO do processo; por nome/OAB só o Diário da Justiça (DJEN) ajuda; por CPF/CNPJ não existe fonte pública.",
+      "criterios": "Publicado; node scripts/radar-diagnostico.js no servidor mostra DataJud e ComunicaAPI respondendo (chave aceita pelo CNJ); busca por número de um processo real devolve o andamento real; node scripts/radar-limpar-fabricados.js rodado (primeiro sem --aplicar) e os andamentos inventados antigos removidos; decisão do Dr. Jorge sobre buscar por nome/CPF em provedor pago (ver AUD-41)."
+    },
+    {
+      "ref": "AUD-41",
+      "prioridade": "P2",
+      "estado": "pendente: decisão do Dr. Jorge",
+      "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",
+      "descricao": "As bases públicas (DataJud e Diário da Justiça) não permitem busca por CPF/CNPJ nem por nome de parte em todos os tribunais. Quem precisa disso hoje usa provedores comerciais de dados processuais, com custo e contrato (e cuidados de LGPD e sigilo).",
+      "criterios": "Comparativo de provedores (custo, cobertura de tribunais, termos de uso, LGPD); decisão do Dr. Jorge; se aprovado, integração com a chave guardada no cofre e o mesmo princípio: só dado real, com a fonte indicada."
     }
   ],
   "sincronizar": [

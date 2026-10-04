@@ -42,15 +42,15 @@
       if (type === 'number') {
         if (btnNumber) btnNumber.className = activeBtnClass;
         label.textContent = 'Número Único do Processo (CNJ / NPU)';
-        input.placeholder = 'Ex: 5006870-33.2024.8.13.0313 ou 5007788-99.2026.8.13.0145';
+        input.placeholder = 'Número CNJ com 20 dígitos: NNNNNNN-DD.AAAA.J.TR.OOOO';
       } else if (type === 'name') {
         if (btnName) btnName.className = activeBtnClass;
         label.textContent = 'Nome Completo da Parte ou Empresa';
-        input.placeholder = 'Ex: Mariana Souza, Carlos Alberto Santos, Banco do Brasil';
+        input.placeholder = 'Nome completo da parte ou do advogado (busca no Diário da Justiça)';
       } else if (type === 'cpf' || type === 'cnpj') {
         if (btnDoc) btnDoc.className = activeBtnClass;
         label.textContent = 'CPF ou CNPJ da Parte';
-        input.placeholder = 'Ex: 123.456.789-00 ou 12.345.678/0001-99';
+        input.placeholder = 'CPF ou CNPJ (só encontra processos cadastrados no escritório)';
       } else if (type === 'oab') {
         if (btnOab) btnOab.className = activeBtnClass;
         label.textContent = 'Número da Inscrição da OAB / UF';
@@ -130,6 +130,7 @@
             cacheIndicator.classList.remove('hidden');
           }
 
+          renderJudicialDiagnostics(data);
           renderJudicialResults(currentJudicialResults);
         } else {
           alert(`❌ ${data.error || 'Erro ao consultar o Radar Judicial.'}`);
@@ -176,6 +177,37 @@
         if (keyB.year !== keyA.year) return keyB.year - keyA.year;
         return keyB.seq - keyA.seq;
       });
+    }
+
+    // Mostra POR QUE a busca devolveu (ou não) dados: limites da busca, fontes consultadas e links do portal oficial.
+    function renderJudicialDiagnostics(data) {
+      const container = document.getElementById('judicial-results-container');
+      if (!container) return;
+      let box = document.getElementById('judicial-diagnostics');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'judicial-diagnostics';
+        container.parentNode.insertBefore(box, container);
+      }
+      const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const notices = (data.notices || []).map((n) => `<li>${esc(n)}</li>`).join('');
+      const sources = (data.sources || [])
+        .map((s) => `<li>${s.ok ? '✅' : '⚠️'} <b>${esc(s.name)}</b>${s.detail ? `: ${esc(s.detail)}` : ''}</li>`)
+        .join('');
+      const links = (data.portal_links || [])
+        .filter((l) => /^https?:\/\//.test(l.url || ''))
+        .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg border border-blue-200 bg-white text-blue-800 font-semibold hover:bg-blue-50">${esc(l.name)} ↗</a>`)
+        .join('');
+      if (!notices && !sources && !links) {
+        box.innerHTML = '';
+        return;
+      }
+      box.innerHTML = `
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-3 text-xs text-slate-700 space-y-2">
+          ${notices ? `<ul class="list-disc pl-4 space-y-1">${notices}</ul>` : ''}
+          ${sources ? `<details><summary class="cursor-pointer font-bold text-slate-600">Fontes consultadas</summary><ul class="mt-1 space-y-0.5">${sources}</ul></details>` : ''}
+          ${links ? `<div class="flex flex-wrap items-center gap-2 pt-1"><span class="font-bold">Consultar no portal oficial:</span>${links}</div>` : ''}
+        </div>`;
     }
 
     function renderJudicialResults(processes) {
@@ -269,7 +301,7 @@
       if (btnContainer) btnContainer.innerHTML = buttonsHtml;
 
       container.innerHTML = pageItems.map((p, index) => {
-        const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Processo Ativo', date: p.distribution_date };
+        const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Sem andamentos informados pela fonte', date: p.distribution_date };
         const poloAtivoName = p.polo_ativo?.[0]?.name || 'Parte Autora';
         const poloPassivoName = p.polo_passivo?.[0]?.name || 'Parte Ré';
         const formattedDate = lastMov.date ? (lastMov.date.includes('-') ? lastMov.date.split('-').reverse().join('/') : lastMov.date) : '-';
@@ -393,11 +425,20 @@
       document.getElementById('jmodal-polo-passivo').textContent = poloPassivoName;
       document.getElementById('jmodal-polo-passivo-doc').textContent = poloPassivoDoc ? `Documento: ${poloPassivoDoc}` : '';
 
-      const lawyerName = process.lawyers?.[0]?.name || 'Dr. Jorge Eduardo da Silva Alvim';
-      const lawyerOAB = process.lawyers?.[0]?.oab || '222.943';
-      document.getElementById('jmodal-lawyers').textContent = `${lawyerName} (OAB/${process.lawyers?.[0]?.uf || 'MG'} ${lawyerOAB})`;
+      // Advogados: só os que a fonte informou (o Python manda "advogados"; o motor nativo, "lawyers"). Nunca um nome padrão.
+      const lawyerList = (process.lawyers || process.advogados || []).filter((a) => a && a.name);
+      document.getElementById('jmodal-lawyers').textContent = lawyerList.length
+        ? lawyerList.map((a) => `${a.name}${a.oab ? ` (${/^OAB/i.test(a.oab) ? a.oab : `OAB${a.uf ? '/' + a.uf : ''} ${a.oab}`})` : ''}`).join('; ')
+        : 'Não informado pela fonte consultada';
 
-      document.getElementById('jmodal-portal-link').href = process.direct_portal_url;
+      const portalLink = document.getElementById('jmodal-portal-link');
+      if (process.direct_portal_url) {
+        portalLink.href = process.direct_portal_url;
+        portalLink.classList.remove('hidden');
+      } else {
+        portalLink.removeAttribute('href');
+        portalLink.classList.add('hidden');
+      }
 
       // Renderizar Documentos Públicos
       const docsContainer = document.getElementById('jmodal-docs-container');

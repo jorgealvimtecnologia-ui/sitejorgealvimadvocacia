@@ -237,9 +237,9 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 — só o que ainda NÃO foi feito
 
-Atualizado ao fim de 03/10/2026. **33 ordens abertas**: 5 do P0 (o que sobrou), 12 do P1, 13 do P2 e 3 do P3.
+Atualizado em 04/10/2026. **35 ordens abertas**: 6 do P0 (o que sobrou), 12 do P1, 14 do P2 e 3 do P3.
 
-**Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada a partir dele; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
+**Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada por `node scripts/roadmap-gerar-md.js`; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
 > **Status de registro:** neste repositório ✅. No Roadmap Vivo do site ⏳ **pendente** (AUD-32): exige a chave do agente (`ROADMAP_AGENT_KEY`) no ambiente; sem `--aplicar` o comando só simula, e rodar de novo não duplica.
 
@@ -248,7 +248,7 @@ Atualizado ao fim de 03/10/2026. **33 ordens abertas**: 5 do P0 (o que sobrou), 
 - **AUD-01** política de senha 10 a 64 · **AUD-02** backup sem segredos · **AUD-25** guardião do `.env` · **AUD-28** testes estáveis · **AUD-29** login Google forjado corrigido (sem sinal de exploração: nenhum `google_id` suspeito, IPs conferidos) · **AUD-30** guardião do RBAC e contas mestras.
 - **Também entregue, sem ordem prévia:** matriz de acessos com 26 colunas; menu e API na mesma permissão; painel fechado por padrão; Visão Geral e cockpit filtrados por aba; operador suspenso não entra; vínculo operador-colaborador exato; papel desconhecido sem acesso; teste automático por perfil; `.env` no cofre criptografado, chave guardada fora do servidor e chave trocada (`rotate-key`); correção do dono dos arquivos do cofre (o site caiu por alguns minutos na migração).
 
-### P0 — Urgente (sobras) (5)
+### P0 — Urgente (sobras) (6)
 
 - **AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
   - *Estado:* publicado em produção (03/10); sobra ação no servidor e decisão do Dr. Jorge
@@ -270,6 +270,10 @@ Atualizado ao fim de 03/10/2026. **33 ordens abertas**: 5 do P0 (o que sobrou), 
   - *Estado:* pendente: decisão do Dr. Jorge
   - *Situação:* A produção foi publicada a partir da branch claude/awesome-allen-td2uwv (PR #8, ainda rascunho). A main não tem as correções de segurança. Um deploy feito a partir da main reverteria o login Google corrigido, as permissões por função e o cofre do .env.
   - *Pronto quando:* PR #8 revisado e mesclado na main pelo Dr. Jorge; CI verde na main; próximo deploy sai da main e a versão no ar confere com o commit da main.
+- **AUD-40 — Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)**
+  - *Estado:* correção no repositório (nada mais é inventado); falta publicar e diagnosticar as fontes no servidor
+  - *Situação:* Em 04/10/2026 o Dr. Jorge testou o Radar em produção: nenhuma busca (número, nome, CPF/CNPJ, OAB) devolvia dado real. O Radar completava a resposta com dados INVENTADOS: um processo de enchimento para clientes encontrados, andamentos e documentos padrão, advogado padrão e um card falso "Consulta Pública de Autos"; e a sincronização automática chegou a gravar esses andamentos em processos reais. Já corrigido no código: o Radar só devolve dado real (DataJud, DJEN ou o cadastro do escritório), mostra as fontes consultadas e o motivo de cada falha, e a sincronização só grava andamento de fonte real. Limites reais: o DataJud público só busca por NÚMERO do processo; por nome/OAB só o Diário da Justiça (DJEN) ajuda; por CPF/CNPJ não existe fonte pública.
+  - *Pronto quando:* Publicado; node scripts/radar-diagnostico.js no servidor mostra DataJud e ComunicaAPI respondendo (chave aceita pelo CNJ); busca por número de um processo real devolve o andamento real; node scripts/radar-limpar-fabricados.js rodado (primeiro sem --aplicar) e os andamentos inventados antigos removidos; decisão do Dr. Jorge sobre buscar por nome/CPF em provedor pago (ver AUD-41).
 
 ### P1 — Alto (12)
 
@@ -315,7 +319,7 @@ Atualizado ao fim de 03/10/2026. **33 ordens abertas**: 5 do P0 (o que sobrou), 
   - *Situação:* Hoje os segredos estão espalhados: no cofre criptografado do servidor (SMTP_PASS), no .env dos computadores (chave do agente do Roadmap Vivo, chave do cofre no Bitwarden) e DENTRO do banco leads.db em texto puro (system_settings: chave do Asaas; meta_api_settings: token da Meta; outras chaves de API). Também usados pelo código: DATAJUD_API_KEY, GOOGLE_MAPS_API_KEY, RECAPTCHA_SECRET_KEY, WHATSAPP_API_KEY e WHATSAPP_GATEWAY_URL, MASTER_PASSWORD, SYNC_PASS. Mais as credenciais fora do código: chave SSH de deploy, secrets do GitHub (DEPLOY_*), contas Google mestras e senhas de app.
   - *Pronto quando:* Inventário (só nomes, onde está, quem usa, quando foi criada/trocada) em docs/; cada segredo guardado no cofre do servidor ou no gerenciador de senhas, nunca em texto puro no banco ou no .env; segredos do banco migrados ou criptografados; datas de troca definidas; quem perdeu uma chave sabe como recuperar; guardião reprova segredo novo em texto puro.
 
-### P2 — Normal (13)
+### P2 — Normal (14)
 
 - **AUD-12 — Criptografia de documentos em repouso e backup externo automático e criptografado**
   - *Situação:* Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.
@@ -357,6 +361,10 @@ Atualizado ao fim de 03/10/2026. **33 ordens abertas**: 5 do P0 (o que sobrou), 
 - **AUD-24 — Presença no Google e Cloudflare (ações externas do Dr. Jorge)**
   - *Situação:* Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.
   - *Pronto quando:* Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.
+- **AUD-41 — Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento**
+  - *Estado:* pendente: decisão do Dr. Jorge
+  - *Situação:* As bases públicas (DataJud e Diário da Justiça) não permitem busca por CPF/CNPJ nem por nome de parte em todos os tribunais. Quem precisa disso hoje usa provedores comerciais de dados processuais, com custo e contrato (e cuidados de LGPD e sigilo).
+  - *Pronto quando:* Comparativo de provedores (custo, cobertura de tribunais, termos de uso, LGPD); decisão do Dr. Jorge; se aprovado, integração com a chave guardada no cofre e o mesmo princípio: só dado real, com a fonte indicada.
 
 ### P3 — Baixo (3)
 

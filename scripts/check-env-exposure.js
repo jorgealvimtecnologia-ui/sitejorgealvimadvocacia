@@ -99,7 +99,7 @@ export function checkRepo(root = ROOT_DIR) {
     }
     // Chave de API LITERAL no código-fonte (ex.: "APIKey xxxx..."): deve vir do ambiente/cofre.
     for (const f of tracked) {
-      if (!/^(src\/.*|server\.js|scripts\/.*)\.js$/.test(f) || !fs.existsSync(path.join(root, f))) continue;
+      if (!/^(src\/.*|server\.js|scripts\/.*)\.(js|py)$/.test(f) || !fs.existsSync(path.join(root, f))) continue;
       const text = fs.readFileSync(path.join(root, f), 'utf8');
       const m = text.match(/['"`]APIKey\s+[A-Za-z0-9+/=_-]{20,}['"`]|['"`]AIza[0-9A-Za-z_-]{35}['"`]|['"`]sk-[A-Za-z0-9]{32,}['"`]/);
       if (m) violations.push(`${TAG} Chave de API literal no código (${f}). Leia de process.env e guarde o valor no cofre (node scripts/env-vault.js set NOME).`);

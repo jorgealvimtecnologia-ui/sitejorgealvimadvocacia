@@ -225,7 +225,7 @@ function normalizeJudicialHit(hit, tribunalCode) {
   movements.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Formatar data de distribuição
-  let distDate = src.dataAjuizamento || src.dataDistribuicao || new Date().toISOString().split('T')[0];
+  let distDate = src.dataAjuizamento || src.dataDistribuicao || '';
   if (typeof distDate === 'string' && distDate.length >= 8 && !distDate.includes('-')) {
     distDate = `${distDate.slice(0, 4)}-${distDate.slice(4, 6)}-${distDate.slice(6, 8)}`;
   }
@@ -238,24 +238,20 @@ function normalizeJudicialHit(hit, tribunalCode) {
     tribunal_name: tribunal.name,
     segment: tribunal.segment,
     court_system: tribunal.system || 'PJe',
-    class_name: src.classe?.nome || 'Ação Cível / Procedimento Comum',
-    subject: Array.isArray(src.assuntos) ? src.assuntos.map(a => a.nome).join(', ') : (src.assunto || 'Direito Civil / Consumidor'),
+    // NADA aqui é inventado: o que a base pública do CNJ não informa aparece como "não informado" (ou vazio).
+    class_name: src.classe?.nome || 'Não informado',
+    subject: Array.isArray(src.assuntos) && src.assuntos.length ? src.assuntos.map(a => a.nome).join(', ') : (src.assunto || 'Não informado'),
     distribution_date: distDate,
-    court_branch: src.orgaoJulgador?.nome || 'Vara Cível / Juizado Especial',
-    city: src.orgaoJulgador?.municipio || 'Juiz de Fora - MG',
+    court_branch: src.orgaoJulgador?.nome || 'Não informado',
+    city: src.orgaoJulgador?.municipio || '',
     confidential: !!src.nivelSigilo,
-    polo_ativo: poloAtivo.length > 0 ? poloAtivo : [{ name: 'Autor Identificado nos Autos', document: '' }],
-    polo_passivo: poloPassivo.length > 0 ? poloPassivo : [{ name: 'Réu / Requerido nos Autos', document: '' }],
-    lawyers: advogados.length > 0 ? advogados : [{ name: 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
-    movements: movements.length > 0 ? movements : [
-      { date: new Date().toISOString(), title: 'Processo em Tramitação Regular', details: 'Autos em andamento com prazos vigentes.' }
-    ],
-    direct_portal_url: tribunal.portalUrl ? tribunal.portalUrl(formattedNumber) : `https://pje.tjmg.jus.br/`,
-    public_documents: [
-      { title: 'Petição Inicial / Distribuição', type: 'PDF', is_public: true },
-      { title: 'Despacho / Decisão Interlocutória', type: 'PDF', is_public: true },
-      { title: 'Certidão de Intimação Eletrônica', type: 'PDF', is_public: true }
-    ]
+    polo_ativo: poloAtivo.length > 0 ? poloAtivo : [{ name: 'Não informado pela base pública do CNJ', document: '' }],
+    polo_passivo: poloPassivo.length > 0 ? poloPassivo : [{ name: 'Não informado pela base pública do CNJ', document: '' }],
+    lawyers: advogados,
+    movements,
+    direct_portal_url: tribunal.portalUrl ? tribunal.portalUrl(formattedNumber) : '',
+    public_documents: [],   // a base pública do DataJud não traz documentos: use o portal do tribunal
+    origin: 'datajud'
   };
 }
 
@@ -276,245 +272,191 @@ function runPythonRadarCrawler({ queryType, queryTerm, tribunal = 'all', uf = 'M
     execFile('python3', args, { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
       if (error) {
         console.warn('⚠️ [RADAR PYTHON CRAWLER WARN]', error.message);
-        return resolve(null);
+        return resolve({ success: false, error: `motor Python indisponível (${error.code === 'ENOENT' ? 'python3 não instalado' : error.message})` });
       }
       try {
         const parsed = JSON.parse(stdout);
         resolve(parsed);
       } catch (e) {
         console.warn('⚠️ [RADAR PYTHON PARSE ERROR]', e.message);
-        resolve(null);
+        resolve({ success: false, error: 'o motor Python devolveu uma resposta inválida' });
       }
     });
   });
 }
 
 /**
- * Orquestrador central de busca multi-tribunal com motor Python
+ * Links oficiais de consulta para o(s) tribunal(is) da busca (nunca um "processo de mentira": só o caminho para o portal).
+ */
+function judicialPortalLinks(tribunal, term) {
+  const codes = tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal] ? [tribunal] : ['tjmg', 'trf6', 'trt3', 'tjsp'];
+  return codes
+    .map((c) => JUDICIAL_TRIBUNALS[c])
+    .filter((t) => t && typeof t.portalUrl === 'function')
+    .map((t) => ({ name: t.name, url: t.portalUrl(term) }));
+}
+
+/** Processo do ESCRITÓRIO (tabela lawsuits) no formato do Radar: só campos reais; o que falta aparece como "não informado". */
+function localLawsuitToRadar(lp) {
+  const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(lp.client_id);
+  const movements = db.prepare(`SELECT * FROM lawsuit_movements WHERE lawsuit_id = ? ORDER BY movement_date DESC`).all(lp.id);
+  return {
+    id: lp.id,
+    numero_processo: lp.cnj_number,
+    numero_processo_raw: String(lp.cnj_number || '').replace(/\D/g, ''),
+    tribunal_code: lp.tribunal ? String(lp.tribunal).split(/\s|-/)[0].toLowerCase() : '',
+    tribunal_name: lp.tribunal || 'Não informado',
+    segment: '',
+    court_system: '',
+    class_name: lp.action_type || 'Não informado',
+    subject: lp.subject || lp.notes || 'Não informado',
+    distribution_date: lp.distribution_date || '',
+    court_branch: lp.court_branch || 'Não informado',
+    city: '',
+    confidential: false,
+    polo_ativo: client ? [{ name: client.full_name, document: client.cpf || client.cnpj || '' }] : [{ name: 'Não informado', document: '' }],
+    polo_passivo: [{ name: 'Não informado', document: '' }],
+    lawyers: [],
+    movements: movements.map((m) => ({ date: m.movement_date || m.created_at, title: m.title, details: m.description || '' })),
+    direct_portal_url: '',
+    public_documents: [],
+    origin: 'escritorio',
+    source: 'Base do Escritório'
+  };
+}
+
+/**
+ * Orquestrador central de busca. REGRA DE OURO: só devolve dado REAL (DataJud, DJEN ou o cadastro do próprio
+ * escritório). Quando não acha, devolve lista vazia + o MOTIVO (fontes consultadas) + links do portal oficial.
  */
 async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' }) {
   const cleanTerm = queryTerm.trim();
   const digitsOnly = cleanTerm.replace(/\D/g, '');
   const now = new Date();
+  const sources = []; // { name, ok, detail }: o que foi consultado e o que respondeu
+  const notices = []; // limites da busca, em linguagem simples
 
-  // 1. Verificar Cache SQLite Local
+  if (queryType === 'cpf' || queryType === 'cnpj') {
+    notices.push('Não existe busca por CPF/CNPJ nas bases públicas (DataJud e Diário da Justiça). Esta busca só encontra processos do escritório cadastrados neste sistema; para os demais, use o portal do tribunal.');
+  } else if (queryType === 'name') {
+    notices.push('A busca por nome usa o Diário da Justiça (DJEN): só encontra quem teve intimação publicada. O DataJud público não permite buscar por nome.');
+  } else if (queryType === 'oab') {
+    notices.push('A busca por OAB usa o Diário da Justiça (DJEN): mostra processos com intimações publicadas para essa OAB.');
+  }
+  const portal_links = judicialPortalLinks(tribunal, cleanTerm);
+  const base = { notices, portal_links };
+
+  // 1. Cache local (2 horas). Só guardamos resultados reais de fontes externas.
   try {
     const cached = db.prepare(`
       SELECT * FROM judicial_search_cache 
       WHERE query_type = ? AND query_term = ? AND tribunal = ? AND expires_at > ?
     `).get(queryType, cleanTerm, tribunal, now.toISOString());
-
     if (cached) {
       console.log(`⚡ [RADAR JUDICIAL CACHE HIT] Retornando ${cached.total_results} processo(s) do cache para '${cleanTerm}'`);
-      return { success: true, source: 'cache', total: cached.total_results, processes: JSON.parse(cached.results_json) };
+      return { success: true, source: 'cache', total: cached.total_results, processes: JSON.parse(cached.results_json), sources: [{ name: 'Cache local (2 h)', ok: true, detail: `${cached.total_results} resultado(s)` }], ...base };
     }
   } catch (err) {
     console.warn('Erro ao consultar cache judicial:', err);
   }
 
-  // 2. Executar Motor Especializado em Python (radar_crawler.py)
-  try {
-    const pyResult = await runPythonRadarCrawler({ queryType, queryTerm: cleanTerm, tribunal });
-    if (pyResult && pyResult.success && pyResult.processes && pyResult.processes.length > 0) {
-      console.log(`🐍 [RADAR PYTHON CRAWLER] ${pyResult.processes.length} processo(s) capturados com sucesso para '${cleanTerm}'`);
-
-      // Salvar em Cache (2 horas)
-      try {
-        const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-        db.prepare(`
-          INSERT INTO judicial_search_cache (query_type, query_term, tribunal, total_results, results_json, created_at, expires_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).run(queryType, cleanTerm, tribunal, pyResult.processes.length, JSON.stringify(pyResult.processes), now.toISOString(), expiresAt);
-      } catch (err) {}
-
-      return {
-        success: true,
-        engine: 'Python 3 Radar Crawler (DataJud • DJEN • SQLite)',
-        source: 'python_crawler',
-        total: pyResult.processes.length,
-        processes: pyResult.processes
-      };
-    }
-  } catch (pyErr) {
-    console.warn('Falha ao acionar motor Python:', pyErr.message);
-  }
-
-  let aggregatedProcesses = [];
-
-  // 3. Fallback Nativo JavaScript (se Python não retornar resultados)
-  if (queryType === 'number' && digitsOnly.length >= 8) {
-    let targetTribunals = [];
-    if (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) {
-      targetTribunals = [tribunal];
-    } else {
-      const detected = detectTribunalFromNPU(digitsOnly);
-      targetTribunals = detected ? [detected] : ['tjmg', 'trf6', 'trf1', 'trt3', 'tjsp', 'stj', 'stf', 'tst'];
-    }
-
-    const esQuery = {
-      size: 10,
-      query: {
-        match: {
-          numeroProcesso: digitsOnly
-        }
-      }
-    };
-
-    const apiPromises = targetTribunals.map(async (tribCode) => {
-      try {
-        const res = await callDataJudAPI(tribCode, esQuery);
-        if (res.success && res.data?.hits?.hits?.length > 0) {
-          return res.data.hits.hits.map(hit => normalizeJudicialHit(hit, tribCode));
-        }
-      } catch (e) {
-        console.warn(`Falha na busca remota no tribunal ${tribCode}:`, e.message);
-      }
-      return [];
-    });
-
-    const resultsByTribunal = await Promise.all(apiPromises);
-    resultsByTribunal.forEach(list => {
-      aggregatedProcesses.push(...list);
-    });
-  }
-
-  // 3. BUSCA POR NOME, CPF, CNPJ, OAB OU PROCESSOS DO ESCRITÓRIO:
-  if (aggregatedProcesses.length === 0) {
-    try {
-      let localProcesses = [];
-      const cleanDoc = digitsOnly;
-      const isOabSearch = queryType === 'oab' || cleanTerm.toLowerCase().includes('oab') || cleanTerm.includes('222943') || cleanTerm.includes('222.943');
-
-      if (queryType === 'number') {
-        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE (cnj_number LIKE ? OR cnj_number LIKE ?) AND deleted_at IS NULL`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
-      } else if (isOabSearch) {
-        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC`).all();
-      } else {
-        localProcesses = db.prepare(`
-          SELECT l.* FROM lawsuits l
-          LEFT JOIN clients c ON l.client_id = c.id
-          WHERE (c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ? 
-             OR REPLACE(REPLACE(REPLACE(c.cpf, '.', ''), '-', ''), ' ', '') LIKE ?
-             OR REPLACE(REPLACE(REPLACE(REPLACE(c.cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
-             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?)
-            AND l.deleted_at IS NULL
-        `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
-
-        if (localProcesses.length === 0) {
-          const matchedClients = db.prepare(`
-            SELECT * FROM clients 
-            WHERE full_name LIKE ? OR cpf LIKE ? OR cnpj LIKE ?
-               OR REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?
-               OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
-          `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`);
-
-          matchedClients.forEach(c => {
-            localProcesses.push({
-              id: 'PROC-' + c.id,
-              client_id: c.id,
-              cnj_number: '5007788-99.2026.8.13.0145',
-              tribunal: 'TJMG',
-              instance: '1ª Instância',
-              action_type: 'Ação Cível e de Defesa de Direitos',
-              court_branch: 'Vara Cível da Comarca de Juiz de Fora - MG',
-              subject: 'Direito Civil e Empresarial',
-              distribution_date: '2026-08-20',
-              status: 'Em Andamento',
-              created_at: new Date().toISOString()
-            });
-          });
-        }
-      }
-
-      if (localProcesses.length > 0) {
-        localProcesses.forEach(lp => {
-          const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(lp.client_id) || { full_name: 'Cliente do Escritório' };
-          const movements = db.prepare(`SELECT * FROM lawsuit_movements WHERE lawsuit_id = ? ORDER BY movement_date DESC`).all(lp.id);
-          
-          aggregatedProcesses.push({
-            id: lp.id,
-            numero_processo: lp.cnj_number,
-            numero_processo_raw: lp.cnj_number.replace(/\D/g, ''),
-            tribunal_code: (lp.tribunal && lp.tribunal.toLowerCase().includes('federal')) ? 'trf6' : 'tjmg',
-            tribunal_name: lp.tribunal ? `${lp.tribunal} - Tribunal de Justiça` : 'Tribunal de Justiça de Minas Gerais (TJMG)',
-            segment: 'Justiça Estadual',
-            court_system: 'PJe / MNI',
-            class_name: lp.action_type || 'Ação Cível / Procedimento Comum',
-            subject: lp.subject || lp.notes || 'Defesa do Consumidor / Danos Morais',
-            distribution_date: lp.distribution_date || (lp.created_at ? lp.created_at.split('T')[0] : '2026-01-15'),
-            court_branch: lp.court_branch || 'Vara Cível de Juiz de Fora - MG',
-            city: 'Juiz de Fora - MG',
-            confidential: false,
-            polo_ativo: [{ name: client.full_name, document: client.cpf || client.cnpj || '' }],
-            polo_passivo: [{ name: 'Empresa Requerida / Reclamada', document: '' }],
-            lawyers: [{ name: 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
-            movements: movements.length > 0 ? movements.map(m => ({ date: m.movement_date || m.created_at, title: m.title, details: m.description || '' })) : [
-              { date: lp.distribution_date || '2026-08-20', title: 'Distribuição da Ação Judicial', details: 'Autos distribuídos perante a comarca.' },
-              { date: '2026-08-25', title: 'Conclusos para Despacho Inicial', details: 'Aguardando manifestação judicial.' }
-            ],
-            direct_portal_url: `https://pje.tjmg.jus.br/pje/ConsultaPublica/listView.seam?palavraChave=${encodeURIComponent(lp.cnj_number)}`,
-            public_documents: [
-              { title: 'Petição Inicial Protocolada', type: 'PDF', is_public: true },
-              { title: 'Contrato de Honorários & Procuração', type: 'PDF', is_public: true }
-            ]
-          });
-        });
-      }
-    } catch (e) {
-      console.warn('Erro ao buscar dados locais de fallback:', e);
-    }
-  }
-
-  // 4. SE AINDA NÃO HOUVER RESULTADOS: Criar Cards com Links Diretos de Consulta no Portal Oficial
-  if (aggregatedProcesses.length === 0) {
-    const selectedTrib = (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) ? JUDICIAL_TRIBUNALS[tribunal] : JUDICIAL_TRIBUNALS['tjmg'];
-    
-    aggregatedProcesses.push({
-      id: 'BUSCA-' + Date.now(),
-      numero_processo: queryType === 'number' ? cleanTerm : `Consulta: ${cleanTerm}`,
-      numero_processo_raw: digitsOnly,
-      tribunal_code: selectedTrib.code,
-      tribunal_name: selectedTrib.name,
-      segment: selectedTrib.segment,
-      court_system: selectedTrib.system,
-      class_name: `Consulta Pública de Autos por ${queryType.toUpperCase()}`,
-      subject: `Pesquisa de autos públicos nos tribunais para '${cleanTerm}'`,
-      distribution_date: now.toISOString().split('T')[0],
-      court_branch: 'Tribunais do Brasil / Portal PJe & ESAJ',
-      city: 'Juiz de Fora - MG',
-      confidential: false,
-      polo_ativo: [{ name: queryType === 'name' ? cleanTerm : (queryType === 'cpf' || queryType === 'cnpj' ? `Doc: ${cleanTerm}` : 'Parte Solicitante'), document: digitsOnly }],
-      polo_passivo: [{ name: 'Tribunal de Justiça & Justiça Federal', document: '' }],
-      lawyers: [{ name: queryType === 'oab' ? cleanTerm : 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
-      movements: [
-        { date: now.toISOString(), title: 'Consulta Direcionada aos Tribunais', details: 'Acesse o portal oficial do tribunal clicando no botão abaixo para ver todos os processos públicos vinculados.' }
-      ],
-      direct_portal_url: selectedTrib.portalUrl ? selectedTrib.portalUrl(cleanTerm) : 'https://pje.tjmg.jus.br/',
-      public_documents: [
-        { title: 'Acesso Direto ao Portal do Tribunal', type: 'WEB', is_public: true }
-      ]
-    });
-  }
-
-  // 5. Salvar em Cache (Validade de 2 horas apenas se houver resultados)
-  if (aggregatedProcesses.length > 0) {
+  const saveCache = (processes) => {
+    if (!processes.length || processes.every((p) => p.origin === 'escritorio' || p.source === 'Base do Escritório')) return;
     try {
       const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       db.prepare(`
         INSERT INTO judicial_search_cache (query_type, query_term, tribunal, total_results, results_json, created_at, expires_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(queryType, cleanTerm, tribunal, aggregatedProcesses.length, JSON.stringify(aggregatedProcesses), now.toISOString(), expiresAt);
-    } catch (err) {
-      console.warn('Erro ao salvar no cache judicial:', err);
+      `).run(queryType, cleanTerm, tribunal, processes.length, JSON.stringify(processes), now.toISOString(), expiresAt);
+    } catch (err) { /* cache é opcional */ }
+  };
+
+  // 2. Motor Python (DataJud + DJEN + cadastro do escritório)
+  const pyResult = await runPythonRadarCrawler({ queryType, queryTerm: cleanTerm, tribunal });
+  if (pyResult && pyResult.success) {
+    const n = (pyResult.processes || []).length;
+    sources.push({ name: 'Motor Python (DataJud + Diário da Justiça)', ok: true, detail: `${n} resultado(s)` });
+    (pyResult.errors || []).forEach((e) => sources.push({ name: e.source || 'Consulta externa', ok: false, detail: e.detail }));
+    if (n > 0) {
+      console.log(`🐍 [RADAR PYTHON CRAWLER] ${n} processo(s) capturados com sucesso para '${cleanTerm}'`);
+      saveCache(pyResult.processes);
+      return { success: true, engine: pyResult.engine, source: 'python_crawler', total: n, processes: pyResult.processes, sources, ...base };
+    }
+  } else {
+    sources.push({ name: 'Motor Python (DataJud + Diário da Justiça)', ok: false, detail: (pyResult && pyResult.error) || 'não respondeu' });
+  }
+
+  let aggregated = [];
+
+  // 3. Caminho nativo: DataJud por NÚMERO do processo (é o único tipo de busca que o DataJud público aceita)
+  if (queryType === 'number' && digitsOnly.length >= 8) {
+    const detected = detectTribunalFromNPU(digitsOnly);
+    const targets = tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal] ? [tribunal] : detected ? [detected] : ['tjmg', 'trf6', 'trf1', 'trt3', 'tjsp', 'stj', 'stf', 'tst'];
+    const esQuery = { size: 10, query: { match: { numeroProcesso: digitsOnly } } };
+    const lists = await Promise.all(
+      targets.map(async (code) => {
+        try {
+          const res = await callDataJudAPI(code, esQuery);
+          if (res.success) {
+            const hits = res.data?.hits?.hits || [];
+            sources.push({ name: `DataJud ${code.toUpperCase()}`, ok: true, detail: `${hits.length} resultado(s)` });
+            return hits.map((hit) => normalizeJudicialHit(hit, code));
+          }
+          sources.push({ name: `DataJud ${code.toUpperCase()}`, ok: false, detail: res.status ? `HTTP ${res.status}${res.status === 401 || res.status === 403 ? ' (chave recusada pelo CNJ)' : ''}` : res.error });
+        } catch (e) {
+          sources.push({ name: `DataJud ${code.toUpperCase()}`, ok: false, detail: e.message });
+        }
+        return [];
+      })
+    );
+    lists.forEach((l) => aggregated.push(...l));
+  } else if (queryType === 'number') {
+    notices.push('Informe o número completo do processo (CNJ, 20 dígitos) para consultar o DataJud.');
+  }
+
+  // 4. Cadastro do ESCRITÓRIO (dados reais gravados aqui; nada é inventado)
+  if (aggregated.length === 0) {
+    try {
+      const cleanDoc = digitsOnly;
+      const firmOab = cleanTerm.includes('222943') || cleanTerm.includes('222.943');
+      let local = [];
+      if (queryType === 'number') {
+        local = db.prepare(`SELECT * FROM lawsuits WHERE (cnj_number LIKE ? OR cnj_number LIKE ?) AND deleted_at IS NULL`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
+      } else if (queryType === 'oab') {
+        // Só a OAB do próprio escritório lista os processos dele; a de terceiros não devolve nada daqui.
+        if (firmOab) local = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC`).all();
+      } else if (cleanTerm) {
+        local = db.prepare(`
+          SELECT l.* FROM lawsuits l
+          LEFT JOIN clients c ON l.client_id = c.id
+          WHERE (c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ?
+             OR (? != '' AND REPLACE(REPLACE(REPLACE(c.cpf, '.', ''), '-', ''), ' ', '') LIKE ?)
+             OR (? != '' AND REPLACE(REPLACE(REPLACE(REPLACE(c.cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?)
+             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?)
+            AND l.deleted_at IS NULL
+        `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, cleanDoc, `%${cleanDoc}%`, cleanDoc, `%${cleanDoc}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
+        if (local.length === 0) {
+          const clients = db.prepare(`
+            SELECT full_name FROM clients 
+            WHERE full_name LIKE ? OR cpf LIKE ? OR cnpj LIKE ?
+               OR (? != '' AND REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?)
+               OR (? != '' AND REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?)
+          `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, cleanDoc, `%${cleanDoc}%`, cleanDoc, `%${cleanDoc}%`);
+          if (clients.length) notices.push(`Cliente encontrado no cadastro (${clients.map((c) => c.full_name).join(', ')}), mas sem processo cadastrado neste sistema.`);
+        }
+      }
+      sources.push({ name: 'Cadastro do escritório', ok: true, detail: `${local.length} processo(s) cadastrado(s)` });
+      aggregated = local.map(localLawsuitToRadar);
+    } catch (e) {
+      sources.push({ name: 'Cadastro do escritório', ok: false, detail: e.message });
     }
   }
 
-  return {
-    success: true,
-    source: 'live_network',
-    total: aggregatedProcesses.length,
-    processes: aggregatedProcesses
-  };
+  if (aggregated.length === 0) {
+    notices.push('Nenhum processo encontrado nas fontes consultadas. Isso NÃO prova que o processo não existe: confira as fontes abaixo e use o portal oficial do tribunal.');
+  }
+  saveCache(aggregated);
+  return { success: true, source: 'live_network', total: aggregated.length, processes: aggregated, sources, ...base };
 }
 
 // ---------------- ROTAS DO RADAR JUDICIAL ----------------
@@ -584,7 +526,8 @@ async function syncActiveLawsuitMovements() {
     checked++;
     try {
       const r = await searchJudicialNetwork({ queryType: 'number', queryTerm: ls.cnj_number, tribunal: code });
-      const proc = (r.processes || [])[0];
+      // Só andamentos de fonte REAL (DataJud/DJEN). Nunca o cadastro do próprio escritório nem texto de enchimento.
+      const proc = (r.processes || []).find((p) => p.origin === 'datajud' || p.source === 'DataJud CNJ' || p.source === 'DJEN / ComunicaAPI');
       if (proc && Array.isArray(proc.movements)) {
         for (const m of proc.movements) {
           const mdate = String(m.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
