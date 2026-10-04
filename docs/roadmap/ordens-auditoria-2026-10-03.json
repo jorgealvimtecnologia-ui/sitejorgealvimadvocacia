@@ -138,7 +138,9 @@
       "prioridade": "P2",
       "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
       "descricao": "Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.",
-      "criterios": "Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor."
+      "criterios": "Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar as chaves (passo a passo em docs/INFRA.md)",
+      "nota_entrega": "Backup cifrado com chave PÚBLICA (privada fica com o Dr. Jorge) + SHA-256 + conferência no teste semanal; documentos de clientes/drive cifrados em repouso (AES-256-GCM, chave DOC_ENC_KEY no cofre) com leitura transparente, migração segura dos antigos e verificação; uploads de HTML/SVG recusados. Falta: gerar e guardar as chaves, escolher destino do envio automático (rclone) e rodar a migração."
     },
     {
       "ref": "AUD-13",
@@ -153,7 +155,8 @@
       "prioridade": "P2",
       "titulo": "IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão",
       "descricao": "src/modules/ai/ai.routes.js não chama nenhum modelo: gera minutas a partir de modelos de texto. Rotular como gerador de modelos e planejar IA real com regras de privacidade.",
-      "criterios": "Fornecedor escolhido com contrato que impeça treino com dados do escritório; resumo de andamento em linguagem simples e triagem de leads funcionando; aviso de que não é consultoria jurídica; todo texto passa por revisão humana antes de uso; tela atual renomeada para refletir que são modelos."
+      "criterios": "Fornecedor escolhido com contrato que impeça treino com dados do escritório; resumo de andamento em linguagem simples e triagem de leads funcionando; aviso de que não é consultoria jurídica; todo texto passa por revisão humana antes de uso; tela atual renomeada para refletir que são modelos.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026, para avaliar o custo (uso de IA é pago por consumo). Retomar após a avaliação de custo."
     },
     {
       "ref": "AUD-15",

@@ -88,6 +88,29 @@ rm -rf "${DEST_FOLDER}"
 # 5. Geração de Checksum SHA-256 para Auditoria de Integridade
 sha256sum "${BACKUP_NAME}.tar.gz" > "${BACKUP_NAME}.tar.gz.sha256"
 
+# 5b. Cópia EXTERNA CIFRADA (AUD-12): se a chave pública estiver no servidor, o pacote é cifrado com ela.
+# Só a chave PRIVADA (com o Dr. Jorge, fora do servidor) abre o .enc. Falha aqui não apaga o backup local,
+# mas o teste semanal de restauração acusa a falta da versão cifrada.
+PUB_KEY="${BACKUP_PUBLIC_KEY:-/etc/advocacia/backup-public.pem}"
+if [ -f "${PUB_KEY}" ]; then
+    echo "🔐 Cifrando o pacote para a cópia externa..."
+    if node "${PROJECT_DIR}/scripts/backup-cifrar.js" cifrar "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz" --pub="${PUB_KEY}"; then
+        # Envio automático (opcional): destino configurado em /etc/advocacia/backup-remote.conf (uma linha, ex.: gdrive:Backups-JorgeAlvim)
+        REMOTE_CONF="${BACKUP_REMOTE_CONF:-/etc/advocacia/backup-remote.conf}"
+        if [ -f "${REMOTE_CONF}" ] && command -v rclone >/dev/null 2>&1; then
+            REMOTE="$(head -n1 "${REMOTE_CONF}" | tr -d '\r')"
+            echo "☁️  Enviando a cópia cifrada para ${REMOTE}..."
+            if rclone copy "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz.enc" "${REMOTE}" && rclone copy "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz.enc.sha256" "${REMOTE}"; then
+                echo "   ✓ Cópia externa enviada."
+            else
+                echo "   ⚠️  Falha ao enviar a cópia externa (o pacote cifrado local foi mantido)."
+            fi
+        fi
+    else
+        echo "   ⚠️  Falha ao cifrar o pacote (o pacote local sem cifra foi mantido)."
+    fi
+fi
+
 FINAL_SIZE="$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)"
 echo "   ✓ Pacote gerado: ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz (${FINAL_SIZE})"
 

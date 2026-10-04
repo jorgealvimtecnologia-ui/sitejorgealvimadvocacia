@@ -28,6 +28,11 @@ echo
 
 echo "[1/2] Gerando backup atual no servidor..."
 LATEST=$(ssh "${SSH_OPTS[@]}" "$SRV" "cd $REMOTE && /bin/bash backup.sh >/dev/null 2>&1; ls -t backups/*.tar.gz 2>/dev/null | head -1")
+# Se existir a versão CIFRADA (.enc), é ela que vai para fora do servidor (só a sua chave privada abre).
+if ssh "${SSH_OPTS[@]}" "$SRV" "test -f $REMOTE/${LATEST}.enc"; then
+  LATEST="${LATEST}.enc"
+  echo "  Versão cifrada encontrada: ${LATEST}"
+fi
 
 if [ -z "$LATEST" ]; then
   echo "  Nenhum backup encontrado no servidor. Execute antes ./configurar-backup-automatico.sh"

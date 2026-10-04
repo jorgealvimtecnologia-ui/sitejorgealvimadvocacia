@@ -24,6 +24,7 @@ export function makeFakeProject() {
   fs.mkdirSync(path.join(dir, 'scripts'));
   fs.copyFileSync(path.join(ROOT, 'backup.sh'), path.join(dir, 'backup.sh'));
   fs.copyFileSync(path.join(ROOT, 'scripts', 'backup-scrub-db.js'), path.join(dir, 'scripts', 'backup-scrub-db.js'));
+  fs.copyFileSync(path.join(ROOT, 'scripts', 'backup-cifrar.js'), path.join(dir, 'scripts', 'backup-cifrar.js'));
   fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
   fs.writeFileSync(path.join(dir, '.env'), `PORT=3000\nASAAS_API_KEY=${SEG.env}\n# comentário\nSMTP_PASS=${SEG.env}\n`);
   fs.mkdirSync(path.join(dir, 'storage', 'clients'), { recursive: true });

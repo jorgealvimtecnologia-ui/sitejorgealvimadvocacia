@@ -296,3 +296,43 @@ O comando reencripta o `.env.enc` com uma chave nova, confere que o ambiente fic
 - **Vigia interno** (a cada 10 min): se uma tarefa automática parar, o disco ficar abaixo de 15% livre ou o banco falhar, cria uma notificação para o mestre no painel (uma por problema por dia). Para vigiar o **certificado HTTPS**, defina a variável `CERT_CHECK_HOST` com o domínio do site (só o nome do domínio, sem segredo); avisa quando faltar 15 dias ou menos.
 - **Site fora do ar:** o vigia interno não consegue avisar quando o próprio servidor cai. Configure um monitor **externo** gratuito (por exemplo UptimeRobot ou similar) apontando para `https://<dominio>/health`, com aviso por e-mail ao titular; o monitor deve tratar resposta diferente de 200 como falha.
 - **Erros:** os 100 últimos ficam em memória (contagem em `/health`) e todos vão ao log em JSON com `id`, caminho e começo da pilha. Um serviço de rastreio externo (Sentry ou similar) é um passo opcional futuro.
+
+## Documentos e backups cifrados (AUD-12)
+
+Duas proteções independentes. **Nenhuma** deixa de funcionar sozinha: sem as chaves configuradas, o sistema segue como antes.
+
+### 1) Backup externo cifrado (chave pública / privada)
+
+- **Como funciona:** o servidor guarda só a chave **pública** (`/etc/advocacia/backup-public.pem`). Todo dia, depois do backup, `backup.sh` gera o pacote
+  `.tar.gz.enc` (AES-256-GCM, com a chave do pacote trancada pela chave pública RSA-4096). **Só a chave privada abre.** Se o servidor for invadido, os
+  backups continuam fechados. A chave privada fica com o Dr. Jorge (Bitwarden + cópia impressa), **nunca** no servidor, no GitHub ou em e-mail.
+- **Configurar (uma vez), no notebook, na pasta do projeto:**
+  1. `node scripts/backup-cifrar.js gerar-chaves ~/chaves-backup` — cria `backup-public.pem` e `BACKUP-PRIVADA-NAO-COLOCAR-NO-SERVIDOR.pem`.
+  2. Guarde o conteúdo da **privada** no gerenciador de senhas e imprima uma cópia. Depois mova o arquivo para um pendrive/HD fora do notebook.
+  3. Envie só a pública ao servidor: `scp ~/chaves-backup/backup-public.pem root@161.97.71.14:/etc/advocacia/backup-public.pem`
+  4. Teste: `ssh root@161.97.71.14 "cd /var/www/advocacia && bash backup.sh"` — deve aparecer "Cifrando o pacote para a cópia externa".
+- **Verificar uma cópia (no notebook, com a privada):** `node scripts/backup-cifrar.js verificar backups-offsite/ARQUIVO.tar.gz.enc --priv=CAMINHO/BACKUP-PRIVADA-NAO-COLOCAR-NO-SERVIDOR.pem`
+  (confere o SHA-256 e abre o pacote inteiro). Para restaurar: o mesmo comando com `decifrar` (gera o `.tar.gz`).
+- **Trazer para o notebook:** `./baixar-backup.sh` agora baixa a versão **cifrada** (`.enc`) quando ela existe.
+- **Envio automático para fora (opcional, quando você escolher o destino):** instale o `rclone`, configure o destino (ex.: Google Drive) e grave o nome dele numa linha em
+  `/etc/advocacia/backup-remote.conf` (ex.: `gdrive:Backups-JorgeAlvim`). O `backup.sh` envia o `.enc` sozinho; só sai o arquivo **já cifrado**.
+- **Teste semanal:** o teste de restauração (domingo 04:30) agora também confere que a cópia cifrada existe, tem o cabeçalho certo e bate com o SHA-256 registrado.
+  Se a chave pública estiver configurada e a cópia faltar, o teste **reprova** e avisa por e-mail.
+
+### 2) Documentos cifrados no disco (clientes e drive do escritório)
+
+- **O que é:** cada arquivo em `storage/clients` e `storage/office_drive` é gravado **embaralhado** (AES-256-GCM). Quem copiar a pasta do servidor não lê nada.
+  O sistema decifra na hora de mostrar/baixar ao usuário autorizado, sem mudar nada na tela. Arquivos antigos (ainda em texto puro) continuam abrindo.
+- **A chave** (`DOC_ENC_KEY`) mora no cofre do servidor (`.env.enc`). **Perder a chave = perder os documentos cifrados.** Guarde uma cópia no gerenciador de senhas **antes** de cifrar.
+- **Ligar (no servidor, ou do notebook com `ssh root@161.97.71.14 "cd /var/www/advocacia && COMANDO"`):**
+  1. `node scripts/docs-encrypt-all.js gerar-chave` — mostra uma chave nova. **Anote no Bitwarden.**
+  2. `node scripts/env-vault.js set DOC_ENC_KEY` — cole a chave (vai direto ao cofre; o titular recebe o aviso por e-mail).
+  3. Reinicie o serviço: `systemctl restart advocacia` (novos envios já saem cifrados).
+  4. Faça um backup: `bash backup.sh`.
+  5. `node scripts/docs-encrypt-all.js cifrar` — **simulação**: lista o que seria cifrado, sem alterar nada.
+  6. `node scripts/docs-encrypt-all.js cifrar --aplicar` — cifra os antigos. Cada arquivo é conferido (decifra e compara o SHA-256) antes de trocar; se algo falhar, o original fica intacto.
+  7. `node scripts/docs-encrypt-all.js verificar` — decifra tudo em memória e confere as etiquetas.
+- **Emergência:** `node scripts/docs-encrypt-all.js decifrar --aplicar` devolve tudo ao texto puro (precisa da chave).
+- **Se a chave sumir do servidor:** documentos cifrados dão erro claro (503), e nunca são entregues embaralhados. Recoloque a chave com `env-vault.js set DOC_ENC_KEY`.
+- **Segurança extra desta mudança:** uploads de HTML/SVG/scripts passaram a ser **recusados** nos envios de documentos (antes só um código sem uso bloqueava) e arquivos guardados
+  que o navegador poderia executar são entregues em "sandbox".

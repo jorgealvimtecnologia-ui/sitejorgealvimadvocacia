@@ -68,6 +68,7 @@ import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
+import { serveStoredFiles } from './src/middleware/stored-files.js';
 import './src/db/schema.js'; // esquema do banco (por último entre os imports, como rodava antes no corpo do server.js)
 
 
@@ -95,57 +96,7 @@ if (!fs.existsSync(STORAGE_DRIVE_DIR)) {
   fs.mkdirSync(STORAGE_DRIVE_DIR, { recursive: true });
 }
 
-// Configuração do Multer para o Drive do Escritório (Até 100MB por anexo)
-const driveStorageEngine = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, STORAGE_DRIVE_DIR);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    const safeName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
-    cb(null, `${safeName}-${uniqueSuffix}${ext}`);
-  }
-});
-
-const uploadDrive = multer({
-  storage: driveStorageEngine,
-  limits: { fileSize: 100 * 1024 * 1024 }
-});
-
 // Banco: conexão única importada de src/config/db.js (ver import no topo).
-
-// Configuração do Multer para armazenamento de ficheiros
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const targetId = req.clientId || req.params.id || 'temp';
-    const clientFolder = path.join(STORAGE_DIR, targetId);
-    if (!fs.existsSync(clientFolder)) {
-      fs.mkdirSync(clientFolder, { recursive: true });
-    }
-    cb(null, clientFolder);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.bin';
-    const baseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_') || 'doc';
-    const timestamp = Date.now();
-    const randHex = crypto.randomBytes(3).toString('hex');
-    cb(null, `${timestamp}_${randHex}_${baseName}${ext}`);
-  }
-});
-
-// Bloqueia tipos executáveis/scripts que poderiam ser servidos e executados no navegador.
-const BLOCKED_UPLOAD_EXT = /\.(html?|xhtml|svg|js|mjs|php[0-9]?|phtml|phar|exe|bat|cmd|sh|com|scr|jar|msi|dll|htaccess)$/i;
-const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB por arquivo (suporta fotos de alta resolução de smartphones)
-  fileFilter(req, file, cb) {
-    if (BLOCKED_UPLOAD_EXT.test(file.originalname || '')) {
-      return cb(new Error('Tipo de arquivo não permitido por segurança.'));
-    }
-    cb(null, true);
-  },
-});
 
 // Configuração de Proxy Reverso e Confiança
 app.set('trust proxy', 1);
@@ -238,8 +189,8 @@ app.get('/health', (req, res) => { const h = buildHealth(db); res.status(h.statu
 app.use(rbacGuard);
 
 // Arquivos de clientes e Drive do escritório: exigem sessão (ver src/middleware/storage-guard.js)
-app.use('/storage/clients', requireStorageAccess('clients'), express.static(STORAGE_DIR));
-app.use('/storage/office_drive', requireStorageAccess('drive'), express.static(STORAGE_DRIVE_DIR));
+app.use('/storage/clients', requireStorageAccess('clients'), serveStoredFiles(STORAGE_DIR));
+app.use('/storage/office_drive', requireStorageAccess('drive'), serveStoredFiles(STORAGE_DRIVE_DIR));
 app.use('/storage/marketing', express.static(path.join(__dirname, 'storage', 'marketing')));
 app.use('/img', express.static(path.join(__dirname, 'public', 'img'), { maxAge: '7d' }));
 // /js contém o JS da APLICAÇÃO (painel/*.js, api.js) que muda a cada deploy.

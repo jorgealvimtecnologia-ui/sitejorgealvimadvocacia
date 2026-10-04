@@ -333,6 +333,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
 ### P2 — Normal (14)
 
 - **AUD-12 — Criptografia de documentos em repouso e backup externo automático e criptografado**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar as chaves (passo a passo em docs/INFRA.md)
   - *Situação:* Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.
   - *Pronto quando:* Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor.
 - **AUD-13 — Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor**
@@ -340,6 +341,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* Existem dois módulos (esign e signatures) com assinatura simples/avançada própria (Lei 14.063/2020), sem ICP-Brasil.
   - *Pronto quando:* Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada.
 - **AUD-14 — IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão**
+  - *Estado:* SUSPENSA por decisão do Dr. Jorge em 04/10/2026, para avaliar o custo (uso de IA é pago por consumo). Retomar após a avaliação de custo.
   - *Situação:* src/modules/ai/ai.routes.js não chama nenhum modelo: gera minutas a partir de modelos de texto. Rotular como gerador de modelos e planejar IA real com regras de privacidade.
   - *Pronto quando:* Fornecedor escolhido com contrato que impeça treino com dados do escritório; resumo de andamento em linguagem simples e triagem de leads funcionando; aviso de que não é consultoria jurídica; todo texto passa por revisão humana antes de uso; tela atual renomeada para refletir que são modelos.
 - **AUD-15 — Agendamento online de consulta ligado à agenda e ao CRM**

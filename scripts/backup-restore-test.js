@@ -40,6 +40,19 @@ const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 export const ARCHIVE_RE = /^backup_jorgealvim_.*\.tar\.gz$/;
 export const REQUIRED_TABLES = ['users', 'clients', 'leads', 'lawsuits', 'audit_logs'];
 export const DEFAULT_MAX_AGE_HOURS = 36;
+const PUBLIC_KEY_FILE = process.env.BACKUP_PUBLIC_KEY || '/etc/advocacia/backup-public.pem';
+
+function sha256Sync(file) {
+  const h = crypto.createHash('sha256');
+  const fd = fs.openSync(file, 'r');
+  const buf = Buffer.alloc(1 << 20);
+  try {
+    for (let n; (n = fs.readSync(fd, buf, 0, buf.length, null)) > 0;) h.update(buf.subarray(0, n));
+  } finally {
+    fs.closeSync(fd);
+  }
+  return h.digest('hex');
+}
 const NAME_TS = /backup_jorgealvim_(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/;
 
 const sha256File = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -241,6 +254,31 @@ export function verifyBackup(archive, { now = new Date(), maxAgeHours = DEFAULT_
       docs ? 'ok' : 'aviso',
       docs ? `${docs} arquivo(s)` : 'nenhum documento no pacote (esperado só se não houver anexos)'
     );
+
+    // 10) cópia externa CIFRADA (AUD-12): existe, confere com o SHA-256 registrado e tem o cabeçalho certo.
+    // (A leitura completa só é possível com a chave PRIVADA, que fica com o Dr. Jorge: rode no notebook
+    //  `node scripts/backup-cifrar.js verificar <arquivo.enc> --priv=...`.)
+    const encFile = `${archive}.enc`;
+    const pubConfigurada = fs.existsSync(PUBLIC_KEY_FILE);
+    if (!fs.existsSync(encFile)) {
+      add(
+        'Cópia externa cifrada',
+        pubConfigurada ? 'falha' : 'aviso',
+        pubConfigurada ? 'a chave pública está configurada, mas este pacote não tem a versão cifrada (.enc)' : 'não configurada (veja AUD-12 em docs/INFRA.md)'
+      );
+    } else {
+      const encShaFile = `${encFile}.sha256`;
+      const head = Buffer.alloc(8);
+      const fd = fs.openSync(encFile, 'r');
+      try { fs.readSync(fd, head, 0, 8, 0); } finally { fs.closeSync(fd); }
+      const headerOk = head.toString('latin1') === 'JAWBKP1\0';
+      const registrado = fs.existsSync(encShaFile) ? fs.readFileSync(encShaFile, 'utf8').split(/\s+/)[0] : '';
+      const real = sha256Sync(encFile);
+      if (!headerOk) add('Cópia externa cifrada', 'falha', 'cabeçalho do arquivo .enc inválido');
+      else if (!registrado) add('Cópia externa cifrada', 'aviso', 'arquivo .enc sem .sha256');
+      else if (registrado !== real) add('Cópia externa cifrada', 'falha', 'o .enc não confere com o SHA-256 registrado (corrompido ou adulterado)');
+      else add('Cópia externa cifrada', 'ok', `${(fs.statSync(encFile).size / 1048576).toFixed(1)} MB, íntegra (SHA-256 confere)`);
+    }
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
