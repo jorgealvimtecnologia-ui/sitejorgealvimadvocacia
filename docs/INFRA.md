@@ -287,3 +287,12 @@ chown www-data:www-data /var/www/advocacia/.env.enc /etc/advocacia/env.key   # s
 systemctl restart advocacia && sleep 5 && curl -s http://localhost:3000/health; echo
 ```
 O comando reencripta o `.env.enc` com uma chave nova, confere que o ambiente fica idêntico e que a chave antiga deixa de abrir, e guarda a chave e o cofre antigos em `/etc/advocacia/env.key.anterior` e `env.key.cofre.anterior` para desfazer. Com o site no ar: `shred -u /etc/advocacia/env.key.anterior /etc/advocacia/env.key.cofre.anterior`, guarde a chave NOVA no gerenciador de senhas e, se a chave antiga viajou junto com cópias do cofre (e-mails de aviso, backups), gire também os segredos que estão nele (ex.: nova senha de app do SMTP).
+
+## Observabilidade (AUD-08)
+
+- **Logs em JSON:** cada requisição gera uma linha (`ts`, `level`, `id`, `method`, `path`, `status`, `ms`, `user`). Nunca entram corpo, cabeçalhos, cookies, tokens nem a query string. O mesmo `id` volta no cabeçalho `X-Request-Id` e no campo `request_id` de erros 500: com ele se acha a linha exata no log.
+  Ler no servidor: `journalctl -u advocacia -o cat | grep '"level":"error"'` (ou `docker logs`, conforme a instalação).
+- **`/health`** (público, sem segredos): `status` = `ok` | `degraded` | `fail`; confere o **banco**, o **espaço em disco**, as **tarefas automáticas** (`varredura_prazos`, `alertas_prazo_externos`, `sincronizacao_tribunais`) e conta os erros da última hora. Responde **503** se o banco não responde, para o monitor externo detectar.
+- **Vigia interno** (a cada 10 min): se uma tarefa automática parar, o disco ficar abaixo de 15% livre ou o banco falhar, cria uma notificação para o mestre no painel (uma por problema por dia). Para vigiar o **certificado HTTPS**, defina a variável `CERT_CHECK_HOST` com o domínio do site (só o nome do domínio, sem segredo); avisa quando faltar 15 dias ou menos.
+- **Site fora do ar:** o vigia interno não consegue avisar quando o próprio servidor cai. Configure um monitor **externo** gratuito (por exemplo UptimeRobot ou similar) apontando para `https://<dominio>/health`, com aviso por e-mail ao titular; o monitor deve tratar resposta diferente de 200 como falha.
+- **Erros:** os 100 últimos ficam em memória (contagem em `/health`) e todos vão ao log em JSON com `id`, caminho e começo da pilha. Um serviço de rastreio externo (Sentry ou similar) é um passo opcional futuro.

@@ -1,3 +1,4 @@
+import { registerJob, markJobRun } from '../../shared/observability.js';
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
@@ -356,7 +357,12 @@ export function startSyncScheduler() {
   _started = true;
   const hours = Math.max(1, Number(process.env.SYNC_INTERVAL_HOURS) || 12);
   const intervalMs = hours * 60 * 60 * 1000;
-  const run = () => { runFullSync().catch(e => console.error('[SYNC] Erro no ciclo automático:', e.message)); };
+  registerJob('sincronizacao_tribunais', intervalMs);
+  const run = () => {
+    runFullSync()
+      .then((r) => markJobRun('sincronizacao_tribunais', r?.success !== false, r?.error || ''))
+      .catch(e => { markJobRun('sincronizacao_tribunais', false, e.message); console.error('[SYNC] Erro no ciclo automático:', e.message); });
+  };
   setTimeout(run, 30000).unref?.();        // primeira sync ~30s após o boot
   setInterval(run, intervalMs).unref?.();
   console.log(`🔄 [SYNC] Agendador ativo: sincronização automática a cada ${hours}h.`);

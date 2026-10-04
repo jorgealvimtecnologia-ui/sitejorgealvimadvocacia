@@ -20,7 +20,8 @@ import { rbacGuard } from './src/middleware/rbac.js';
 import { versionAssets, readVersionedHtml } from './src/shared/asset-version.js';
 import { logAudit } from './src/middleware/audit.js';
 import { rocketsRouter } from './src/modules/rockets/rockets.routes.js';
-import { notificationsRouter, startDeadlineScanner } from './src/modules/notifications/notifications.routes.js';
+import { notificationsRouter, startDeadlineScanner, createNotification } from './src/modules/notifications/notifications.routes.js';
+import { requestLogger, buildHealth, recordError, installProcessErrorHandlers, startWatchdog } from './src/shared/observability.js';
 import { esignRouter } from './src/modules/esign/esign.routes.js';
 import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
@@ -1645,11 +1646,12 @@ app.use((req, res, next) => {
     credentials: true
   })(req, res, next);
 });
+app.use(requestLogger()); // id de requisição + uma linha JSON por requisição (sem corpo, token ou query)
 app.use(express.json({ limit: '25mb' })); // lotes de intimações (ingest) podem ser grandes
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
-// Health check (monitoramento externo / uptime)
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString(), uptime_s: Math.round(process.uptime()) }));
+// Health check (monitoramento externo / uptime): checa o banco, o disco e se as tarefas automáticas estão rodando.
+app.get('/health', (req, res) => { const h = buildHealth(db); res.status(h.status === 'fail' ? 503 : 200).json(h); });
 
 // -------- RBAC no backend: FECHADO POR PADRÃO (src/middleware/rbac.js) ----------
 // Toda rota /api é negada, exceto o que estiver explicitamente liberado por perfil.
@@ -3023,8 +3025,8 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: `Erro no upload: ${err.message}` });
   }
   if (err) {
-    console.error('[ERRO NÃO TRATADO]', err);
-    return res.status(500).json({ error: err.message || 'Erro interno no servidor.' });
+    recordError(err, { id: req.id, path: req.path });
+    return res.status(500).json({ error: err.message || 'Erro interno no servidor.', request_id: req.id });
   }
   next();
 });
@@ -3130,6 +3132,7 @@ if (!IS_TEST) {
     // Alertas de prazo por WhatsApp/e-mail (só para advogados), com escalonamento e ciência.
     try { startDeadlineAlerts(); } catch (e) { console.warn('[BOOT] Alertas de prazo externos não iniciados:', e.message); }
     // Vigia do .env: toda alteração gera e-mail ao titular (cofre criptografado + relatório só com nomes).
+    try { installProcessErrorHandlers(); startWatchdog({ db, notify: createNotification }); } catch (e) { console.warn('[BOOT] Vigia de saúde não iniciado:', e.message); }
     try { startEnvWatcher({ dir: __dirname }); } catch (e) { console.warn('[BOOT] Vigia do .env não iniciado:', e.message); }
   });
 

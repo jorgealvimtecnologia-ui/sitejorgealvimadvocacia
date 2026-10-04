@@ -3,6 +3,7 @@
  * A lógica (quem é advogado, escalonamento, ciência, reenvio) está em
  * deadline-alerts.service.js; aqui ficam as rotas, o agendador e a ligação com o painel.
  */
+import { registerJob, markJobRun } from '../../shared/observability.js';
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
@@ -84,15 +85,17 @@ let _started = false;
 export function startDeadlineAlerts({ intervalMs = 60 * 60 * 1000, env = process.env } = {}) {
   if (_started || env.NODE_ENV === 'test' || env.DEADLINE_ALERTS_DISABLED === '1') return false;
   _started = true;
+  registerJob('alertas_prazo_externos', intervalMs);
   const run = () =>
     runAlertsNow()
       .then((r) => {
+        markJobRun('alertas_prazo_externos', true);
         if (r.sent || r.failed)
           console.log(
             `📲 [PRAZOS] Alertas externos: ${r.sent} enviado(s), ${r.failed} falha(s), ${r.gaveUp} desistência(s).`
           );
       })
-      .catch((e) => console.error('[PRAZOS] Erro no envio de alertas:', e.message));
+      .catch((e) => { markJobRun('alertas_prazo_externos', false, e.message); console.error('[PRAZOS] Erro no envio de alertas:', e.message); });
   setTimeout(run, 90 * 1000).unref?.();
   setInterval(run, intervalMs).unref?.();
   return true;

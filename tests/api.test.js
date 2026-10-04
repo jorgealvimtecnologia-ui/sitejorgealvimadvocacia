@@ -54,7 +54,9 @@ describe('Health check', () => {
   it('GET /health responde ok', async () => {
     const r = await request(app).get('/health');
     assert.equal(r.status, 200);
-    assert.equal(r.body.status, 'ok');
+    assert.equal(r.body.db, 'ok');
+    // 'degraded' só se a máquina de teste estiver com pouco disco; 'fail' (banco fora) nunca.
+    assert.ok(['ok', 'degraded'].includes(r.body.status));
   });
 });
 
