@@ -334,6 +334,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.
   - *Pronto quando:* Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor.
 - **AUD-13 — Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor**
+  - *Estado:* SUSPENSA por decisão do Dr. Jorge em 04/10/2026: antes de seguir ele quer saber se terá de pagar algo (certificado ICP-Brasil e/ou provedor de assinatura). A assinatura atual (simples/avançada, Lei 14.063/2020) funciona e não tem custo extra.
   - *Situação:* Existem dois módulos (esign e signatures) com assinatura simples/avançada própria (Lei 14.063/2020), sem ICP-Brasil.
   - *Pronto quando:* Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada.
 - **AUD-14 — IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão**
@@ -359,12 +360,15 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* O staging (homolog.jorgealvimadvocacia.com.br) está no ar e foi usado para validar as correções. Sobra a rotina periódica de verificação da produção.
   - *Pronto quando:* Checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada; staging sem dados reais de clientes.
 - **AUD-21 — Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)**
+  - *Estado:* SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (teste de invasão e revisão de LGPD por especialista; retomar quando ele quiser contratar).
   - *Situação:* Não há registro de teste de invasão autorizado nem de revisão por encarregado de dados ou advogado de privacidade. O sistema já tem módulo LGPD, política de privacidade e trilha de auditoria.
   - *Pronto quando:* Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional.
 - **AUD-22 — Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)**
+  - *Estado:* SUSPENSA por decisão do Dr. Jorge em 04/10/2026: por enquanto a equipe é só ele. Retomar quando houver mais pessoas.
   - *Situação:* Funções que não aparecem em código: produto, UX, segurança, SEO e conteúdo, suporte, treinamento e contabilidade. É preciso definir quem assume cada uma.
   - *Pronto quando:* Tabela papel x responsável aprovada pelo Dr. Jorge; lacunas viram ordens; guias curtos e treinamento de uma tarde para a equipe; canal de suporte definido.
 - **AUD-23 — Pesquisa de UX com usuários reais**
+  - *Estado:* SUSPENSA por decisão do Dr. Jorge em 04/10/2026: ainda não há usuários reais além dele. Retomar quando houver advogados, secretária ou clientes usando.
   - *Situação:* A aba Testes Físicos já coleta falhas, mas não há teste de usabilidade estruturado com advogados, secretária e clientes.
   - *Pronto quando:* Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site).
 - **AUD-24 — Presença no Google e Cloudflare (ações externas do Dr. Jorge)**

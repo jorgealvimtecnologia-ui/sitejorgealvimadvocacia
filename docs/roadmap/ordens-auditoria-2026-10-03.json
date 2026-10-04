@@ -143,7 +143,8 @@
       "prioridade": "P2",
       "titulo": "Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor",
       "descricao": "Existem dois módulos (esign e signatures) com assinatura simples/avançada própria (Lei 14.063/2020), sem ICP-Brasil.",
-      "criterios": "Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada."
+      "criterios": "Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026: antes de seguir ele quer saber se terá de pagar algo (certificado ICP-Brasil e/ou provedor de assinatura). A assinatura atual (simples/avançada, Lei 14.063/2020) funciona e não tem custo extra."
     },
     {
       "ref": "AUD-14",
@@ -200,21 +201,24 @@
       "prioridade": "P2",
       "titulo": "Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)",
       "descricao": "Não há registro de teste de invasão autorizado nem de revisão por encarregado de dados ou advogado de privacidade. O sistema já tem módulo LGPD, política de privacidade e trilha de auditoria.",
-      "criterios": "Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional."
+      "criterios": "Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (teste de invasão e revisão de LGPD por especialista; retomar quando ele quiser contratar)."
     },
     {
       "ref": "AUD-22",
       "prioridade": "P2",
       "titulo": "Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)",
       "descricao": "Funções que não aparecem em código: produto, UX, segurança, SEO e conteúdo, suporte, treinamento e contabilidade. É preciso definir quem assume cada uma.",
-      "criterios": "Tabela papel x responsável aprovada pelo Dr. Jorge; lacunas viram ordens; guias curtos e treinamento de uma tarde para a equipe; canal de suporte definido."
+      "criterios": "Tabela papel x responsável aprovada pelo Dr. Jorge; lacunas viram ordens; guias curtos e treinamento de uma tarde para a equipe; canal de suporte definido.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026: por enquanto a equipe é só ele. Retomar quando houver mais pessoas."
     },
     {
       "ref": "AUD-23",
       "prioridade": "P2",
       "titulo": "Pesquisa de UX com usuários reais",
       "descricao": "A aba Testes Físicos já coleta falhas, mas não há teste de usabilidade estruturado com advogados, secretária e clientes.",
-      "criterios": "Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site)."
+      "criterios": "Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site).",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026: ainda não há usuários reais além dele. Retomar quando houver advogados, secretária ou clientes usando."
     },
     {
       "ref": "AUD-24",
