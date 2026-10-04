@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,13 +10,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/tokens.css">
   <style>
+    /* As cores vêm dos tokens do design system (public/css/tokens.css): fonte única. */
     :root {
-      --navy-950:#060E1A; --navy-900:#0A192F; --navy-800:#132B4D;
-      --gold-700:#996515; --gold-600:#B8860B; --gold-500:#D4AF37; --gold-100:#FAF2D4; --gold-50:#FDFBF4;
-      --ink:#0F172A; --muted:#475569; --line:#E2E8F0; --bg:#FDFBF7; --card:#FFFFFF;
-      --ok:#047857; --ok-bg:#ECFDF5; --err:#B91C1C; --err-bg:#FEF2F2;
-      --radius:16px; --focus:#1D4ED8;
+      --navy-950:var(--ds-navy-950); --navy-900:var(--ds-navy-900); --navy-800:var(--ds-navy-800);
+      --gold-700:var(--ds-accent-text); --gold-600:var(--ds-gold-600); --gold-500:var(--ds-gold-500); --gold-100:var(--ds-gold-100); --gold-50:var(--ds-gold-50);
+      --ink:var(--ds-text); --muted:var(--ds-text-muted); --line:var(--ds-border); --bg:var(--ds-bg); --card:var(--ds-surface);
+      --ok:var(--ds-success); --ok-bg:var(--ds-success-bg); --err:var(--ds-danger); --err-bg:var(--ds-danger-bg);
+      --radius:var(--ds-radius-lg); --focus:var(--ds-focus);
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}

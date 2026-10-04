@@ -190,7 +190,9 @@
       "prioridade": "P2",
       "titulo": "Design system: tokens, componentes e página-catálogo",
       "descricao": "A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.",
-      "criterios": "Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado."
+      "criterios": "Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar. Migração das telas antigas é gradual (docs/DESIGN-SYSTEM.md)",
+      "nota_entrega": "Auditoria visual medida (3 versões do azul da marca, 83 cores soltas, 22 degradês de botão, dourado do texto sem contraste); tokens únicos com modo claro e escuro (contraste AA conferido por teste); componentes .ds-* sem cor solta; lógica única da cor do prazo (DS.deadlineTone); página-catálogo /design-system; agendamento já ligado aos tokens. Modo escuro avaliado: pronto nos tokens, NÃO ligado no painel/site até migrar as telas (evita texto ilegível)."
     },
     {
       "ref": "AUD-19",

@@ -22,6 +22,8 @@ const PAGES_TO_AUDIT = [
   { name: 'Assinatura Eletrônica (Mobile)', path: '/assinar', expectedTitle: /Assinatura/i },
   { name: 'Anexar Documentos (Magic Link)', path: '/anexar', expectedTitle: /Documentos|Envio/i },
   { name: 'Showcase / Teste Prático', path: '/teste-pratico', expectedTitle: /Teste|Prático|Showcase/i },
+  { name: 'Agendamento Online', path: '/agendar', expectedTitle: /Agendar/i },
+  { name: 'Design System (catálogo)', path: '/design-system', expectedTitle: /Design system/i },
 ];
 
 test.describe('Checklist de Produção - Varredura de Páginas', () => {

@@ -357,6 +357,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.
   - *Pronto quando:* Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa.
 - **AUD-18 — Design system: tokens, componentes e página-catálogo**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar. Migração das telas antigas é gradual (docs/DESIGN-SYSTEM.md)
   - *Situação:* A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.
   - *Pronto quando:* Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado.
 - **AUD-19 — Acessibilidade e desempenho com verificação automática**

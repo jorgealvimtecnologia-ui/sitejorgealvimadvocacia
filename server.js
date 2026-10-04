@@ -451,6 +451,11 @@ app.get('/admin', (req, res) => {
   res.redirect('/painel');
 });
 
+// Catálogo do design system (AUD-18): interno, fora dos buscadores
+app.get('/design-system', (req, res) => {
+  sendFreshFile(res, 'design-system.html');
+});
+
 app.get('/cliente', (req, res) => {
   sendFreshFile(res, 'cliente.html');
 });
