@@ -210,6 +210,10 @@
                   <span>📅</span>
                   <span>Andamentos & Prazos Judiciais (${movCount}):</span>
                 </span>
+                <span class="flex items-center gap-3">
+                  <button type="button" onclick="previewClientPortal('${law.id}')" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline">👁️ Ver como o cliente vê</button>
+                  <button type="button" onclick="publishAllToClient('${law.id}', true)" class="text-[11px] font-bold text-slate-600 hover:text-slate-900 underline">Publicar todos</button>
+                </span>
                 <button 
                   onclick="openNewMovementModal('${law.id}')" 
                   class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 underline flex items-center space-x-1"
@@ -234,6 +238,7 @@
                           </span>
                           <strong class="text-xs sm:text-sm text-navy-950 font-semibold">${mov.title}</strong>
                           ${getDeadlineBadge(mov.deadline_date, mov.deadline_status)}
+                          <button type="button" onclick="toggleMovementClientVisible('${mov.id}', ${mov.client_visible ? 1 : 0})" class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${mov.client_visible ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-slate-50 text-slate-500 border-slate-300'}" title="${mov.client_visible ? 'O cliente vê este andamento no portal. Clique para ocultar.' : 'Oculto do cliente. Clique para publicar no portal.'}">${mov.client_visible ? '🌐 Cliente vê' : '🔒 Só o escritório'}</button>
                         </div>
                         ${mov.description ? `
                           <p class="text-xs text-slate-600 pl-1 leading-relaxed">${mov.description}</p>
@@ -429,6 +434,10 @@
       document.getElementById('lawsuit-dist-date').value = law.distribution_date || '';
       document.getElementById('lawsuit-judge').value = law.judge_name || '';
       document.getElementById('lawsuit-notes').value = law.notes || '';
+      document.getElementById('lawsuit-client-visible').checked = law.client_visible !== 0;
+      document.getElementById('lawsuit-client-summary').value = law.client_summary || '';
+      document.getElementById('lawsuit-client-action').value = law.client_next_action || '';
+      document.getElementById('lawsuit-client-action-needed').checked = !!law.client_action_needed;
 
       document.getElementById('lawsuit-modal').classList.remove('hidden');
     }
@@ -455,7 +464,11 @@
         action_type: document.getElementById('lawsuit-action-type').value.trim(),
         distribution_date: document.getElementById('lawsuit-dist-date').value,
         judge_name: document.getElementById('lawsuit-judge').value.trim(),
-        notes: document.getElementById('lawsuit-notes').value.trim()
+        notes: document.getElementById('lawsuit-notes').value.trim(),
+        client_visible: document.getElementById('lawsuit-client-visible').checked,
+        client_summary: document.getElementById('lawsuit-client-summary').value.trim(),
+        client_next_action: document.getElementById('lawsuit-client-action').value.trim(),
+        client_action_needed: document.getElementById('lawsuit-client-action-needed').checked
       };
 
       try {
@@ -537,7 +550,9 @@
         title: document.getElementById('movement-title').value.trim(),
         deadline_date: document.getElementById('movement-deadline-date').value,
         deadline_status: document.getElementById('movement-deadline-status').value,
-        description: document.getElementById('movement-desc').value.trim()
+        description: document.getElementById('movement-desc').value.trim(),
+        client_visible: document.getElementById('movement-client-visible').checked,
+        client_text: document.getElementById('movement-client-text').value.trim()
       };
 
       try {
@@ -783,6 +798,65 @@
   window.openNewMovementModal = typeof openNewMovementModal !== 'undefined' ? openNewMovementModal : window.openNewMovementModal;
   window.closeMovementModal = typeof closeMovementModal !== 'undefined' ? closeMovementModal : window.closeMovementModal;
   window.handleMovementSubmit = typeof handleMovementSubmit !== 'undefined' ? handleMovementSubmit : window.handleMovementSubmit;
+
+    // ===== Portal do cliente (AUD-16) =====
+    async function toggleMovementClientVisible(movementId, current) {
+      try {
+        const res = await fetch(`/api/lawsuits/movements/${movementId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ client_visible: !current })
+        });
+        if (res.ok) await loadLawsuits();
+        else alert('Não foi possível alterar a visibilidade.');
+      } catch (e) { alert('Erro ao conectar ao servidor.'); }
+    }
+
+    async function publishAllToClient(lawsuitId, visible) {
+      if (!confirm(visible ? 'Publicar TODOS os andamentos deste processo no portal do cliente?\n\nConfira antes: use "Ver como o cliente vê". Notas e descrições internas nunca aparecem.' : 'Ocultar todos os andamentos do portal do cliente?')) return;
+      try {
+        const res = await fetch(`/api/lawsuits/${lawsuitId}/portal/publish-all`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ visible })
+        });
+        if (res.ok) await loadLawsuits();
+        else alert('Não foi possível publicar.');
+      } catch (e) { alert('Erro ao conectar ao servidor.'); }
+    }
+
+    function _esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+    async function previewClientPortal(lawsuitId) {
+      try {
+        const res = await fetch(`/api/lawsuits/${lawsuitId}/portal-preview`, { headers: getAuthHeaders() });
+        const d = await res.json();
+        if (!res.ok) return alert(d.error || 'Não foi possível montar a pré-visualização.');
+        const v = d.view;
+        let m = document.getElementById('portal-preview-modal');
+        if (!m) {
+          m = document.createElement('div');
+          m.id = 'portal-preview-modal';
+          m.className = 'fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto';
+          m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+          document.body.appendChild(m);
+        }
+        m.classList.remove('hidden');
+        m.innerHTML = `<div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 relative my-auto space-y-3 text-xs text-slate-700">
+          <button type="button" onclick="document.getElementById('portal-preview-modal').classList.add('hidden')" class="absolute right-4 top-3 text-slate-400 hover:text-slate-700 text-2xl font-bold" aria-label="Fechar">&times;</button>
+          <h3 class="font-serif font-bold text-lg text-navy-950">👁️ Assim o cliente vê este processo</h3>
+          ${d.visible_to_client ? '' : '<div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-bold">Este processo está OCULTO do cliente.</div>'}
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200"><div class="text-[10px] font-extrabold uppercase text-gold-700">Como está o seu processo</div><p class="text-sm font-bold text-navy-950 mt-1">${_esc(v.situation)}</p>${v.situation_source === 'automatico' ? '<p class="text-[11px] text-slate-500 mt-1">Frase geral automática. Escreva a sua no processo para personalizar.</p>' : ''}</div>
+          <div class="p-3 rounded-2xl ${v.action_needed ? 'bg-amber-50 border-2 border-amber-400' : 'bg-emerald-50 border border-emerald-200'}"><div class="text-[10px] font-extrabold uppercase ${v.action_needed ? 'text-amber-800' : 'text-emerald-800'}">O que você precisa fazer</div><p class="text-sm font-semibold text-navy-950 mt-1">${_esc(v.next_action)}</p></div>
+          <div><div class="text-[10px] font-extrabold uppercase text-slate-600 mb-1">Últimas novidades (${v.timeline.length})</div>
+            ${v.timeline.length ? v.timeline.map(t => `<div class="border-l-2 border-gold-500 pl-3 mb-2"><div class="text-[11px] text-slate-500">${_esc(String(t.date).split('-').reverse().join('/'))} • ${_esc(t.title)}</div><p class="text-sm font-semibold text-navy-950">${_esc(t.simple)}</p><div class="text-[10px] text-slate-500">${t.source === 'automatico' ? 'explicação geral automática' : 'texto escrito por você'}</div></div>`).join('') : '<p class="text-slate-400 italic">Nenhum andamento publicado.</p>'}
+          </div></div>`;
+      } catch (e) { alert('Erro ao conectar ao servidor.'); }
+    }
+
+  window.toggleMovementClientVisible = toggleMovementClientVisible;
+  window.publishAllToClient = publishAllToClient;
+  window.previewClientPortal = previewClientPortal;
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;

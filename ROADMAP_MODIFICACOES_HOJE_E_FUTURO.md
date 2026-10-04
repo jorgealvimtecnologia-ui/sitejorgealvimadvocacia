@@ -349,6 +349,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* O site capta contato por formulário e WhatsApp, mas não há marcação de horário pelo próprio visitante.
   - *Pronto quando:* Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis.
 - **AUD-16 — Portal do cliente: andamento em linguagem simples e "o que preciso fazer"**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar. Validar com clientes reais quando houver (hoje só o Dr. Jorge)
   - *Situação:* O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.
   - *Pronto quando:* Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou "nada a fazer agora"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais.
 - **AUD-17 — Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes**

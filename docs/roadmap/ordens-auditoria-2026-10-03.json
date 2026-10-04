@@ -172,7 +172,9 @@
       "prioridade": "P2",
       "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
       "descricao": "O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.",
-      "criterios": "Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou \"nada a fazer agora\"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais."
+      "criterios": "Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou \"nada a fazer agora\"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar. Validar com clientes reais quando houver (hoje só o Dr. Jorge)",
+      "nota_entrega": "Portal: cada processo mostra \"como está\" em uma frase, \"o que você precisa fazer\" (destacado quando há ação), últimas novidades explicadas e dicionário com termos explicados ao toque. O advogado decide o que o cliente vê (processo e andamento a andamento; pré-visualização \"ver como o cliente vê\"; publicar todos). CORREÇÃO DE CONFIDENCIALIDADE: antes o portal enviava ao cliente notas internas, nome do juiz e a descrição interna de todos os andamentos; agora só sai o publicado, com título oficial + explicação simples. Andamentos novos nascem ocultos. Fase estimada sem percentual falso."
     },
     {
       "ref": "AUD-17",

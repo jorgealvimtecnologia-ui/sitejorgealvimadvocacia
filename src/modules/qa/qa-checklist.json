@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T23:12:40.673Z",
-  "total": 911,
+  "generated_at": "2026-10-04T23:17:10.172Z",
+  "total": 914,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -4062,6 +4062,28 @@
       "order": 7003
     },
     {
+      "id": "QA-019A4291E0",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "👁️ Ver como o cliente vê",
+      "action": "previewClientPortal",
+      "how": "Clique em “👁️ Ver como o cliente vê”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
+      "id": "QA-0C50A4892B",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "Publicar todos",
+      "action": "publishAllToClient",
+      "how": "Clique em “Publicar todos”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
       "id": "QA-75718B1128",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -4125,6 +4147,17 @@
       "label": "✅ Autorizar & Disparar no WhatsApp",
       "action": "handleConfirmAuthorizeWhatsApp",
       "how": "Clique em “✅ Autorizar & Disparar no WhatsApp”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
+      "id": "QA-10E47826CE",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "&times;",
+      "action": "document.getElementById",
+      "how": "Clique em “&times;”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7003
     },
     {

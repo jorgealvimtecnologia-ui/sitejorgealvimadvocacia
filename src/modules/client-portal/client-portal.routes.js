@@ -2,6 +2,7 @@
  * Módulo PORTAL DO CLIENTE (client-portal) — cadastro, login, perfil, senha,
  * recuperação, mensagens. Extraído do server.js.
  */
+import { buildClientLawsuitView, GLOSSARY } from '../../shared/plain-language.js';
 import express from 'express';
 import crypto from 'node:crypto';
 import path from 'node:path';
@@ -601,12 +602,16 @@ clientPortalRouter.get('/api/client-portal/me', requireClientAuth, (req, res) =>
       lawsuits = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 5`).all();
     }
 
-    const lawsuitsWithMovements = lawsuits.map(lawsuit => {
-      const movements = db.prepare(`
-        SELECT * FROM lawsuit_movements WHERE lawsuit_id = ? ORDER BY movement_date DESC, created_at DESC
-      `).all(lawsuit.id);
-      return { ...lawsuit, movements };
-    });
+    // Linguagem simples (AUD-16): o cliente recebe só o que o advogado deixou visível, com a situação do processo
+    // em uma frase, a linha do tempo explicada e "o que você precisa fazer". Notas internas, nome do juiz e a
+    // descrição interna dos andamentos NUNCA saem daqui.
+    const movementStmt = db.prepare(`
+      SELECT id, lawsuit_id, movement_date, title, client_visible, client_text FROM lawsuit_movements
+      WHERE lawsuit_id = ? AND client_visible = 1 ORDER BY movement_date DESC, id DESC
+    `);
+    const lawsuitsWithMovements = lawsuits
+      .filter(lawsuit => lawsuit.client_visible !== 0)
+      .map(lawsuit => buildClientLawsuitView(lawsuit, movementStmt.all(lawsuit.id)));
 
     // Parcelas do Contrato & Cobranças
     const installments = db.prepare(`
@@ -622,6 +627,7 @@ clientPortalRouter.get('/api/client-portal/me', requireClientAuth, (req, res) =>
       success: true,
       client,
       lawsuits: lawsuitsWithMovements,
+      glossary: GLOSSARY,
       installments,
       messages
     });

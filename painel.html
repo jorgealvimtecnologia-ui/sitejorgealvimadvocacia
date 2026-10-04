@@ -8609,6 +8609,25 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <textarea id="lawsuit-notes" rows="2" placeholder="Resumo dos pedidos, teses jurídicas ou anotações..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-gold-500 focus:bg-white resize-none"></textarea>
         </div>
 
+        <!-- ===== Portal do cliente (AUD-16): o advogado decide o que o cliente vê, em linguagem simples ===== -->
+        <fieldset class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-3">
+          <legend class="px-2 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">🌐 O que o cliente vê no portal</legend>
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <input type="checkbox" id="lawsuit-client-visible" checked class="w-4 h-4">
+            Mostrar este processo ao cliente
+          </label>
+          <div>
+            <label for="lawsuit-client-summary" class="block text-[11px] font-bold text-slate-700 mb-1">Como está o processo (uma frase simples, sem juridiquês)</label>
+            <textarea id="lawsuit-client-summary" rows="2" maxlength="600" placeholder="Ex: Estamos aguardando a audiência, marcada para 20/10. Se ficar em branco, o sistema escreve uma frase geral a partir do status." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-xs"></textarea>
+          </div>
+          <div>
+            <label for="lawsuit-client-action" class="block text-[11px] font-bold text-slate-700 mb-1">O que o cliente precisa fazer (se nada, deixe em branco)</label>
+            <textarea id="lawsuit-client-action" rows="2" maxlength="600" placeholder="Ex: Envie seu comprovante de residência até sexta-feira." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-xs"></textarea>
+            <label class="mt-1.5 flex items-center gap-2 text-[11px] text-slate-700"><input type="checkbox" id="lawsuit-client-action-needed" class="w-4 h-4"> Há uma ação pendente do cliente (destacar em amarelo)</label>
+          </div>
+          <p class="text-[11px] text-slate-500">Notas internas, o nome do juiz e a descrição dos andamentos <strong>nunca</strong> aparecem para o cliente. Os andamentos só aparecem depois que você os publica.</p>
+        </fieldset>
+
         <div class="pt-4 border-t border-slate-100 flex justify-end space-x-2.5">
           <button type="button" onclick="closeLawsuitModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Cancelar</button>
           <button type="submit" class="px-5 py-2.5 bg-gold-500 hover:bg-gold-400 text-navy-950 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 cursor-pointer">
@@ -8786,6 +8805,15 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <option value="Cumprido">🟢 Cumprido (Petição Protocolada / Finalizado)</option>
             <option value="Informativo">ℹ️ Apenas Informativo (Sem prazo)</option>
           </select>
+        </div>
+
+        <!-- Portal do cliente (AUD-16) -->
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3.5 space-y-2">
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-800"><input type="checkbox" id="movement-client-visible" class="w-4 h-4"> Mostrar este andamento ao cliente no portal</label>
+          <div>
+            <label for="movement-client-text" class="block text-[11px] font-bold text-slate-700 mb-1">Explicação simples para o cliente (opcional; se vazio, usa uma explicação geral automática)</label>
+            <textarea id="movement-client-text" rows="2" maxlength="600" placeholder="Ex: O juiz marcou a audiência para 20/10 às 14h. Chegue 30 minutos antes, com documento com foto." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-xs"></textarea>
+          </div>
         </div>
 
         <!-- Descrição / Detalhes -->
