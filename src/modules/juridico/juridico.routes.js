@@ -114,6 +114,13 @@ function detectTribunalFromNPU(npu) {
   return null;
 }
 
+/** Valor do cabeçalho Authorization do DataJud ("APIKey <chave>"); aceita a chave com ou sem o prefixo. */
+export function datajudAuthHeader(raw) {
+  const v = String(raw || '').trim();
+  if (!v) return '';
+  return /^APIKey\s+/i.test(v) ? v : `APIKey ${v}`;
+}
+
 /**
  * Consulta oficial à API REST / ElasticSearch do DataJud (CNJ)
  */
@@ -121,7 +128,15 @@ async function callDataJudAPI(tribunalCode, esQuery) {
   const tribunal = JUDICIAL_TRIBUNALS[tribunalCode];
   if (!tribunal) throw new Error(`Tribunal '${tribunalCode}' não suportado.`);
 
-  const apiKey = process.env.DATAJUD_API_KEY || 'APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==';
+  // A chave NÃO fica no código: vem só de DATAJUD_API_KEY (cofre do servidor: node scripts/env-vault.js set DATAJUD_API_KEY).
+  const apiKey = datajudAuthHeader(process.env.DATAJUD_API_KEY);
+  if (!apiKey) {
+    if (!callDataJudAPI.avisou) {
+      callDataJudAPI.avisou = true;
+      console.warn('[DATAJUD] DATAJUD_API_KEY não configurada: o Radar Judicial por DataJud fica indisponível até configurar (veja .env.example).');
+    }
+    return { success: false, error: 'Chave do DataJud não configurada no servidor (DATAJUD_API_KEY).' };
+  }
   const url = `https://api-publica.datajud.cnj.jus.br/${tribunal.apiEndpoint}/_search`;
 
   try {
@@ -1311,7 +1326,11 @@ juridicoRouter.post('/api/court/datajud/search', requireAuth, async (req, res) =
 
     const cleanNumber = String(lawsuit_number).replace(/\D/g, '');
     const cleanTribunal = String(tribunal).toLowerCase().replace(/[^a-z0-9]/g, '');
-    const apiKey = custom_api_key || 'APIKey cDZHYzlZa0JadVREZDJCendQbXo6TGdrQHpMUXBScFlXakNZdnMwQUptUQ==';
+    // Chave própria informada na chamada, ou a do servidor (DATAJUD_API_KEY). Nunca uma chave fixa no código.
+    const apiKey = datajudAuthHeader(custom_api_key) || datajudAuthHeader(process.env.DATAJUD_API_KEY);
+    if (!apiKey) {
+      return res.status(503).json({ error: 'Chave do DataJud não configurada no servidor (DATAJUD_API_KEY).' });
+    }
 
     const url = `https://api-publica.datajud.cnj.jus.br/api_publica_${cleanTribunal}/_search`;
 
