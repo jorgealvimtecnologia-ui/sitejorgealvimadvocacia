@@ -305,10 +305,13 @@ let __indexHtmlCache = { mtimeMs: 0, envSig: '', html: null };
 function renderIndexHtml() {
   const file = path.join(__dirname, 'index.html');
   const stat = fs.statSync(file);
-  const pixel = (process.env.META_PIXEL_ID || '1773978237179877').trim();
-  const ga = (process.env.GA_MEASUREMENT_ID || 'G-H4K6S068SW').trim();
-  const gtm = (process.env.GTM_CONTAINER_ID || '').trim();
-  const gads = (process.env.GOOGLE_ADS_ID || 'AW-18491088928').trim();
+  // DISABLE_TRACKING_INJECTION=1: não injeta scripts de terceiros (GA, Ads, Pixel, GTM, reCAPTCHA).
+  // Usado na auditoria Lighthouse da CI para medir o NOSSO site, sem o ruído de scripts externos.
+  const noTracking = process.env.DISABLE_TRACKING_INJECTION === '1';
+  const pixel = noTracking ? '' : (process.env.META_PIXEL_ID || '1773978237179877').trim();
+  const ga = noTracking ? '' : (process.env.GA_MEASUREMENT_ID || 'G-H4K6S068SW').trim();
+  const gtm = noTracking ? '' : (process.env.GTM_CONTAINER_ID || '').trim();
+  const gads = noTracking ? '' : (process.env.GOOGLE_ADS_ID || 'AW-18491088928').trim();
   const mapsKey = (process.env.GOOGLE_MAPS_API_KEY || '').trim();
   const recaptchaKey = (process.env.RECAPTCHA_SITE_KEY || '').trim();
   const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '4muf0aevm7zirobf01gdphiva6op9z').trim();

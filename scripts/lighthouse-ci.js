@@ -29,7 +29,7 @@ if (!process.env.CHROME_PATH || !fs.existsSync(process.env.CHROME_PATH)) {
   } catch { /* segue; o lighthouse tenta o Chrome do sistema */ }
 }
 
-const server = spawn('node', ['server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), DB_PATH: path.join(tmp, 'lh.db'), NODE_ENV: 'development', ENV_WATCH_DISABLED: '1', DEADLINE_ALERTS_DISABLED: '1' }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), DB_PATH: path.join(tmp, 'lh.db'), NODE_ENV: 'development', ENV_WATCH_DISABLED: '1', DEADLINE_ALERTS_DISABLED: '1', DISABLE_TRACKING_INJECTION: '1' }, stdio: 'ignore' });
 
 async function aguardar() {
   for (let i = 0; i < 60; i++) {
