@@ -22,9 +22,10 @@ import { FABRICATED_MOVEMENTS_SQL } from './radar-limpar-fabricados.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = (ok, msg) => console.log(`${ok === true ? '✅' : ok === false ? '🚨' : 'ℹ️ '} ${msg}`);
 
-function describeHttp(status) {
+function describeHttp(status, { usaChave = false } = {}) {
   if (status === 200) return 'respondeu normalmente';
-  if (status === 401 || status === 403) return 'RECUSOU a chave (ela pode ter sido trocada pelo CNJ ou estar errada)';
+  if (usaChave && (status === 401 || status === 403)) return 'RECUSOU a chave (ela pode ter sido trocada pelo CNJ ou estar errada)';
+  if (!usaChave && (status === 401 || status === 403)) return 'BLOQUEOU o acesso desta origem (comum quando o servidor está FORA DO BRASIL ou o IP é de datacenter)';
   if (status === 404) return 'endereço não encontrado';
   if (status === 429) return 'limite de consultas excedido (tente depois)';
   if (status >= 500) return 'o serviço do CNJ está com problema';
@@ -42,6 +43,17 @@ async function probe(url, init) {
 
 console.log('\nDiagnóstico do Radar Judicial\n');
 
+// 0. De onde o servidor "sai" para a internet (os tribunais costumam bloquear quem está fora do Brasil)
+const pais = await (async () => {
+  try {
+    const r = await fetch('https://ipinfo.io/country', { signal: AbortSignal.timeout(8000) });
+    return (await r.text()).trim().slice(0, 2).toUpperCase();
+  } catch {
+    return '';
+  }
+})();
+if (pais) out(pais === 'BR', `Origem do servidor: país ${pais}${pais === 'BR' ? '.' : ' — FORA DO BRASIL: o Diário da Justiça (ComunicaAPI) bloqueia essa origem. Veja a ordem AUD-42 (saída pelo Brasil).'}`);
+
 // 1. DataJud
 const key = String(process.env.DATAJUD_API_KEY || '').trim();
 if (!key) {
@@ -52,10 +64,11 @@ if (!key) {
   const r = await probe('https://api-publica.datajud.cnj.jus.br/api_publica_tjmg/_search', {
     method: 'POST',
     headers: { Authorization: auth, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ size: 1, query: { match_all: {} } }),
+    // consulta LEVE (um número inexistente): confere só se a chave é aceita, sem pesar o índice do tribunal
+    body: JSON.stringify({ size: 1, query: { match: { numeroProcesso: '00000000000000000000' } } }),
   });
   if (r.error) out(false, `DataJud: não consegui conectar (${r.error}). O servidor pode estar sem acesso à internet para esse endereço.`);
-  else out(r.status === 200, `DataJud: ${describeHttp(r.status)} (HTTP ${r.status}).`);
+  else out(r.status === 200, `DataJud: ${describeHttp(r.status, { usaChave: true })} (HTTP ${r.status}).`);
 }
 
 // 2. ComunicaAPI (DJEN)
@@ -63,7 +76,7 @@ const c = await probe('https://comunicaapi.pje.jus.br/api/v1/comunicacao?numeroO
   headers: { Accept: 'application/json', 'User-Agent': 'JorgeAlvimAdvocacia-Diagnostico/1.0' },
 });
 if (c.error) out(false, `ComunicaAPI (DJEN): não consegui conectar (${c.error}).`);
-else out(c.status === 200, `ComunicaAPI (DJEN): ${describeHttp(c.status)} (HTTP ${c.status}).`);
+else out(c.status === 200, `ComunicaAPI (DJEN): ${describeHttp(c.status)} (HTTP ${c.status}).${c.status === 403 ? ' Sem ela, não há busca por nome/OAB e a sincronização das intimações (DJEN) não traz nada.' : ''}`);
 
 // 3. Motor Python
 try {
