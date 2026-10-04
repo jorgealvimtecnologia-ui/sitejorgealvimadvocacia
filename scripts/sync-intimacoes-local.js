@@ -14,8 +14,13 @@
 
 // ===== CONFIGURAÇÃO =====
 const PROD_URL = process.env.PROD_URL || 'https://jorgealvimadvocacia.com.br';
-const USER = process.env.SYNC_USER || 'jorgealvimtecnologia';
-const PASS = process.env.SYNC_PASS || 'jorgealvim';
+// Credenciais SÓ por variável de ambiente (nunca no código): SYNC_USER e SYNC_PASS.
+const USER = process.env.SYNC_USER || '';
+const PASS = process.env.SYNC_PASS || '';
+if (!USER || !PASS) {
+  console.error('✗ Defina SYNC_USER e SYNC_PASS no ambiente (ou no .env local). Nada de senha escrita no código.');
+  process.exit(1);
+}
 
 // OABs do escritório (mesma lista do servidor).
 const OABS = [

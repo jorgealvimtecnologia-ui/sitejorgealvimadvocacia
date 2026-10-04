@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkRbacStatic, checkRbacCoverage, APPROVED_MASTER_EMAILS } from '../scripts/check-rbac-guard.js';
+import { checkRbacStatic, checkRbacCoverage, checkNoWrittenPasswords, APPROVED_MASTER_EMAILS } from '../scripts/check-rbac-guard.js';
 import { ruleFor } from '../src/middleware/rbac-rules.js';
 import { isMasterEmail, MASTER_EMAILS } from '../src/config/master-emails.js';
 
@@ -137,5 +137,18 @@ describe('administração: a API segue a mesma aba do menu', () => {
   });
   it('rota /api/admin nova sem regra é NEGADA (não vira "qualquer operador")', () => {
     assert.equal(ruleFor('/api/admin/rota-nova-sem-regra', 'GET'), undefined);
+  });
+});
+
+describe('guardião: sem senha escrita no código', () => {
+  it('reprova senha literal e senha antiga do mestre, e aceita o código limpo', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'senha-'));
+    fs.mkdirSync(path.join(dir, 'scripts'));
+    fs.writeFileSync(path.join(dir, 'scripts/ok.js'), "const PASS = process.env.SYNC_PASS || '';\nconst apelidos = ['jorgealvim'];\n");
+    assert.deepEqual(checkNoWrittenPasswords(dir), []);
+    fs.writeFileSync(path.join(dir, 'scripts/ruim.js'), "const PASS = 'qualquerSenha1';\n");
+    fs.writeFileSync(path.join(dir, 'scripts/ruim2.js'), "login({ username: 'x', password: 'jorgealvim' });\n");
+    assert.equal(checkNoWrittenPasswords(dir).length, 2);
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

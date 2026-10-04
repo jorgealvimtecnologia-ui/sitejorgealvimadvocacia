@@ -26,11 +26,11 @@ process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
 // A senha do mestre não é mais hardcoded no boot: definimos a senha inicial do
 // banco de teste por MASTER_PASSWORD (o mesmo mecanismo do .env em produção).
-process.env.MASTER_PASSWORD = 'jorgealvim';
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
 
-const MASTER = { username: 'jorgealvimtecnologia', password: 'jorgealvim' };
+const MASTER = { username: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' };
 let masterToken = '';
 
 const auth = (req, token) => req.set('Authorization', `Bearer ${token}`);
@@ -1324,7 +1324,7 @@ describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
     await request(app).post('/api/auth/reset-password').send({
       username: 'jorgealvimtecnologia',
       code: codeBack,
-      new_password: 'jorgealvim'
+      new_password: 'SenhaRealDoMestre#2026'
     });
   });
 

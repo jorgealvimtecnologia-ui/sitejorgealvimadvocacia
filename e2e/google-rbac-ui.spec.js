@@ -27,7 +27,7 @@ test.describe('Login Google obedece o RBAC por usuário', () => {
   test.beforeAll(async ({ playwright, baseURL }) => {
     const api = await playwright.request.newContext({ baseURL });
     const login = await api.post('/api/auth/login', {
-      data: { username: 'jorgealvimtecnologia', password: 'jorgealvim' },
+      data: { username: 'jorgealvimtecnologia', password: process.env.E2E_MASTER_PASSWORD },
     });
     expect(login.ok(), 'login do mestre para preparar o teste').toBeTruthy();
     const { token } = await login.json();

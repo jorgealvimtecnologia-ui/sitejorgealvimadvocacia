@@ -1,4 +1,9 @@
 import http from 'http';
+if (!process.env.TEST_MASTER_PASSWORD) {
+  console.error('✗ Defina TEST_MASTER_PASSWORD (senha do mestre do ambiente a testar). Não há senha padrão no código.');
+  process.exit(1);
+}
+
 
 function request(options, data) {
   return new Promise((resolve, reject) => {
@@ -45,9 +50,9 @@ async function runMasterTestSuite() {
     path: '/api/auth/login',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
-  }, { username: 'jorgealvimtecnologia', password: 'jorgealvim' });
+  }, { username: 'jorgealvimtecnologia', password: process.env.TEST_MASTER_PASSWORD });
 
-  assert(loginRes.status === 200 && loginRes.data.success === true, 'Login Mestre (jorgealvimtecnologia / jorgealvim) retornou HTTP 200');
+  assert(loginRes.status === 200 && loginRes.data.success === true, 'Login Mestre (mestre) retornou HTTP 200');
   const token = loginRes.data.token;
   assert(Boolean(token), 'Token JWT de sessão gerado com sucesso');
 

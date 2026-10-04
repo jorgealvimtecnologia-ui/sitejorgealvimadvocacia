@@ -1,4 +1,9 @@
 import { DatabaseSync } from 'node:sqlite';
+if (!process.env.TEST_MASTER_PASSWORD) {
+  console.error('✗ Defina TEST_MASTER_PASSWORD (senha do mestre do ambiente a testar). Não há senha padrão no código.');
+  process.exit(1);
+}
+
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -83,7 +88,7 @@ async function runTests() {
     const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jorgealvimtecnologia', password: 'jorgealvim' })
+      body: JSON.stringify({ username: 'jorgealvimtecnologia', password: process.env.TEST_MASTER_PASSWORD })
     });
 
     const loginData = await loginRes.json();
@@ -182,7 +187,7 @@ async function runTests() {
         body: JSON.stringify({
           employee_id: hrEmpData.employees?.[0]?.id || 1,
           month: '2026-08',
-          password: 'jorgealvim',
+          password: process.env.TEST_MASTER_PASSWORD,
           signed_by_name: 'Dr. Jorge Alvim'
         })
       });
@@ -218,7 +223,7 @@ async function runTests() {
       const empLoginRes = await fetch(`${baseUrl}/api/hr/employee/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: '321.654.987-33', password: '32165498733' })
+        body: JSON.stringify({ identifier: process.env.TEST_EMPLOYEE_CPF || '', password: (process.env.TEST_EMPLOYEE_CPF || '').replace(/\D/g, '') })
       });
       const empLoginData = await empLoginRes.json();
       logTestResult('API RH - Login do Colaborador (/api/hr/employee/login)', empLoginRes.status === 200 && empLoginData.success, `Token gerado para ${empLoginData.employee?.name || 'Colaborador'}`);

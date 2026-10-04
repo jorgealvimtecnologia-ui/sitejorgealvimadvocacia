@@ -19,6 +19,10 @@
  *  5. RBAC FECHADO POR PADRÃO: rota /api sem regra é negada; TODA rota /api existente tem uma
  *     regra; e nenhuma rota sensível (usuários, financeiro, clientes, processos, RH, admin,
  *     LGPD, alertas de prazo) é pública.
+ *  6. SEM SENHA ESCRITA NO CÓDIGO: nenhum script, módulo, e2e ou configuração carrega senha literal
+ *     (password/PASS = '...') nem a senha antiga do mestre. Senhas vêm do cofre ou do ambiente;
+ *     o login por senha continua existindo, conforme a RHABAC, só que com senhas guardadas fora do código.
+ *     Os testes automáticos (tests/) usam bancos temporários e ficam fora desta regra.
  * ==============================================================================
  */
 import fs from 'node:fs';
@@ -221,8 +225,39 @@ export async function checkRbacCoverage(root = ROOT_DIR) {
 }
 
 /** Tudo junto. @returns {Promise<{violations:string[]}>} */
+const SENHA_LITERAL = /\b(password|passwd|new_password|current_password|[A-Z_]*PASS)\b['"]?\s*[:=]\s*['"][^'"$]{4,}['"]/;
+// a senha antiga só conta quando aparece como senha (o texto "jorgealvim" também é apelido de usuário, o que é permitido)
+const SENHA_ANTIGA = /(password|passwd|pass|senha)[^\n]*['"`]jorgealvim['"`]/i;
+
+/** REGRA 6: nenhuma senha escrita no código (fora de tests/, que usam bancos temporários). */
+export function checkNoWrittenPasswords(root = ROOT_DIR) {
+  const violations = [];
+  const arquivos = [];
+  const walk = (dir) => {
+    if (!fs.existsSync(dir)) return;
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { if (!['node_modules', '.git', 'tests', 'vendor'].includes(e.name)) walk(p); }
+      else if (/\.(js|mjs|py|sh|yml|yaml)$/.test(e.name)) arquivos.push(p);
+    }
+  };
+  ['scripts', 'src', 'e2e', '.github', 'public/js'].forEach((d) => walk(path.join(root, d)));
+  ['server.js', 'playwright.config.js'].forEach((f) => fs.existsSync(path.join(root, f)) && arquivos.push(path.join(root, f)));
+  for (const f of arquivos) {
+    const rel = path.relative(root, f);
+    if (rel === 'scripts/check-rbac-guard.js') continue;
+    fs.readFileSync(f, 'utf8').split('\n').forEach((linha, i) => {
+      if (/^\s*(\/\/|\*|#)/.test(linha)) return;
+      if (SENHA_LITERAL.test(linha) || SENHA_ANTIGA.test(linha)) {
+        violations.push(`${TAG} Senha escrita no código em ${rel}:${i + 1}. Use o cofre/variável de ambiente (o login por senha segue valendo, mas a senha fica fora do código).`);
+      }
+    });
+  }
+  return violations;
+}
+
 export async function checkRbac(root = ROOT_DIR) {
-  return { violations: [...checkRbacStatic(root), ...(await checkRbacCoverage(root))] };
+  return { violations: [...checkRbacStatic(root), ...checkNoWrittenPasswords(root), ...(await checkRbacCoverage(root))] };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
