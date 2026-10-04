@@ -282,9 +282,11 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.
   - *Pronto quando:* Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil.
 - **AUD-06 — Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências**
+  - *Estado:* publicado em produção (multer 2.4.0; auditoria de produção com 0 vulnerabilidades)
   - *Situação:* npm audit acusa 1 vulnerabilidade moderada (multer 2.2.0 a 2.3.0, negação de serviço por upload abortado). docs/SECURITY.md afirma 0 vulnerabilidades. A CI roda o audit com continue-on-error.
   - *Pronto quando:* npm audit --omit=dev sem pendências; docs/SECURITY.md atualizado; CI falha em high ou critical; npm test verde após a atualização.
 - **AUD-07 — Mover a chave do DataJud para variável de ambiente**
+  - *Estado:* publicado em produção (chave do DataJud só pelo cofre; falta confirmar a chave no servidor, ver AUD-40 suspensa)
   - *Situação:* juridico.routes.js mantém um valor padrão fixo para a chave do DataJud. Provavelmente é a chave pública divulgada pelo CNJ, mas deve sair do código.
   - *Pronto quando:* Confirmada a natureza da chave; leitura apenas de DATAJUD_API_KEY (com documentação no .env.example); sem segredo literal no código; sincronização continua funcionando.
 - **AUD-08 — Observabilidade: logs estruturados, rastreamento de erros e alertas**
