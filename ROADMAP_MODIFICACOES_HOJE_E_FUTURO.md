@@ -361,6 +361,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.
   - *Pronto quando:* Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado.
 - **AUD-19 — Acessibilidade e desempenho com verificação automática**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar
   - *Situação:* painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.
   - *Pronto quando:* Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.
 - **AUD-20 — Ambiente de homologação ativo e checklist de verificação da produção**

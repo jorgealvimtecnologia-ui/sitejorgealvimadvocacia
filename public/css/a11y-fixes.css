@@ -1,0 +1,17 @@
+/*
+ * PONTE DE ACESSIBILIDADE (AUD-19) — correções de contraste do Tailwind antigo, num lugar só.
+ * As telas antigas usam cores como text-slate-400 (2,6:1 sobre branco) que não passam no contraste mínimo (4,5:1).
+ * Aqui elas são escurecidas SÓ onde o fundo é claro; sobre fundos escuros (navy/slate-900 etc.) ficam como estão.
+ * Esta ponte é provisória: some conforme as telas migram para os componentes .ds-* (docs/DESIGN-SYSTEM.md).
+ * Conferida por e2e/a11y.spec.js (axe, regras WCAG 2.x A e AA): qualquer novo problema reprova o teste.
+ */
+:root {
+  --a11y-muted: #5B6B84;       /* 5,1:1 sobre branco e sobre slate-50/100 */
+  --a11y-gold-text: #996515;   /* 5,0:1 sobre branco (o dourado 600 só dá 3,3:1) */
+  --a11y-amber-text: #B45309;  /* 5,0:1 sobre branco */
+  --a11y-rose-text: #BE123C;   /* 5,9:1 sobre rose-50 */
+}
+.text-slate-400:not(:is(.bg-navy-950, .bg-navy-900, .bg-navy-850, .bg-navy-800, .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-black, .bg-gray-900, [class*="from-navy"], [class*="from-slate-9"], [class*="bg-[#0"], [class*="bg-[#1"], .a11y-dark)):not(:is(.bg-navy-950, .bg-navy-900, .bg-navy-850, .bg-navy-800, .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-black, .bg-gray-900, [class*="from-navy"], [class*="from-slate-9"], [class*="bg-[#0"], [class*="bg-[#1"], .a11y-dark) *) { color: var(--a11y-muted); }
+.text-gold-600:not(:is(.bg-navy-950, .bg-navy-900, .bg-navy-850, .bg-navy-800, .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-black, [class*="from-navy"], [class*="from-slate-9"], [class*="bg-[#0"], [class*="bg-[#1"], .a11y-dark)):not(:is(.bg-navy-950, .bg-navy-900, .bg-navy-850, .bg-navy-800, .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-black, [class*="from-navy"], [class*="from-slate-9"], [class*="bg-[#0"], [class*="bg-[#1"], .a11y-dark) *) { color: var(--a11y-gold-text); }
+.text-amber-500:not(:is(.bg-navy-950, .bg-navy-900, .bg-navy-850, .bg-navy-800, .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-black, [class*="from-navy"], [class*="from-slate-9"], [class*="bg-[#0"], [class*="bg-[#1"], .a11y-dark)):not(:is(.bg-navy-950, .bg-navy-900, .bg-navy-850, .bg-navy-800, .bg-slate-950, .bg-slate-900, .bg-slate-800, .bg-black, [class*="from-navy"], [class*="from-slate-9"], [class*="bg-[#0"], [class*="bg-[#1"], .a11y-dark) *) { color: var(--a11y-amber-text); }
+.text-rose-600.bg-rose-50 { color: var(--a11y-rose-text); }

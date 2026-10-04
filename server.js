@@ -71,6 +71,7 @@ import { bookingRouter, startBookingReminders } from './src/modules/booking/book
 import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 import { serveStoredFiles } from './src/middleware/stored-files.js';
+import { modernImages } from './src/middleware/modern-images.js';
 import './src/db/schema.js'; // esquema do banco (por último entre os imports, como rodava antes no corpo do server.js)
 
 
@@ -194,6 +195,7 @@ app.use(rbacGuard);
 app.use('/storage/clients', requireStorageAccess('clients'), serveStoredFiles(STORAGE_DIR));
 app.use('/storage/office_drive', requireStorageAccess('drive'), serveStoredFiles(STORAGE_DRIVE_DIR));
 app.use('/storage/marketing', express.static(path.join(__dirname, 'storage', 'marketing')));
+app.use('/img', modernImages(path.join(__dirname, 'public', 'img')));
 app.use('/img', express.static(path.join(__dirname, 'public', 'img'), { maxAge: '7d' }));
 // /js contém o JS da APLICAÇÃO (painel/*.js, api.js) que muda a cada deploy.
 // maxAge:0 + ETag = o browser REVALIDA a cada carga (304 se não mudou, barato) e

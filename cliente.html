@@ -2,7 +2,7 @@
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Área do Cliente • Jorge Alvim Advocacia</title>
   <meta name="description" content="Portal do Cliente de Jorge Alvim Advocacia. Acompanhe seus processos judiciais, andamentos, contrato de honorários, pagamentos e mensagens diretas.">
   <meta name="theme-color" content="#0A192F">
@@ -22,6 +22,7 @@
 
   <!-- Tailwind CSS CDN -->
   <link rel="stylesheet" href="/public/css/app.tailwind.css" />
+  <link rel="stylesheet" href="/public/css/a11y-fixes.css" />
   <script>
     window.tailwind = window.tailwind || {}; tailwind.config = {
       darkMode: 'class',
@@ -241,7 +242,7 @@
                   placeholder="Digite sua senha" 
                   class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
                 />
-                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer" title="Ver/Ocultar senha temporariamente">
+                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-1.5 top-1.5 text-slate-400 hover:text-slate-600 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer" title="Ver/Ocultar senha temporariamente">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </button>
               </div>

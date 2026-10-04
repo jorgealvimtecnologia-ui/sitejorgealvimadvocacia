@@ -42,9 +42,13 @@
     "format:check": "prettier --check .",
     "backup:scrub-old": "node scripts/backup-scrub-old.js",
     "backup:verify": "node scripts/backup-restore-test.js",
-    "env:vault": "node scripts/env-vault.js"
+    "env:vault": "node scripts/env-vault.js",
+    "check:perf": "node scripts/perf-budget.js",
+    "test:a11y": "playwright test e2e/a11y.spec.js",
+    "test:lighthouse:ci": "node scripts/lighthouse-ci.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.49.1",
     "autoprefixer": "^10.4.20",

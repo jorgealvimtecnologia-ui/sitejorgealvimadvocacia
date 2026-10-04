@@ -199,7 +199,9 @@
       "prioridade": "P2",
       "titulo": "Acessibilidade e desempenho com verificação automática",
       "descricao": "painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.",
-      "criterios": "Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados."
+      "criterios": "Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "nota_entrega": "Testes automáticos na CI: axe-core (WCAG A/AA, zero violações nas páginas públicas) + navegação por teclado com foco visível; orçamento de peso por página (gzip, docs/perf-budget.json) que reprova quem engordar; Lighthouse com metas (desempenho 85 / acessib. 95 / boas práticas 90 / SEO 90) — hoje as páginas públicas estão em 98-100 de desempenho e 97-100 de acessibilidade. Imagens em webp/avif na mesma URL (capa do blog 616KB->34KB). Corrigido: contraste do Tailwind antigo (public/css/a11y-fixes.css), zoom no celular reabilitado, alvo de toque do olho da senha."
     },
     {
       "ref": "AUD-20",

@@ -336,3 +336,13 @@ Duas proteções independentes. **Nenhuma** deixa de funcionar sozinha: sem as c
 - **Se a chave sumir do servidor:** documentos cifrados dão erro claro (503), e nunca são entregues embaralhados. Recoloque a chave com `env-vault.js set DOC_ENC_KEY`.
 - **Segurança extra desta mudança:** uploads de HTML/SVG/scripts passaram a ser **recusados** nos envios de documentos (antes só um código sem uso bloqueava) e arquivos guardados
   que o navegador poderia executar são entregues em "sandbox".
+
+## Acessibilidade e desempenho (AUD-19)
+
+Verificações automáticas, rodando na CI (Checklist de Produção) e à mão:
+
+- **Acessibilidade (axe-core / WCAG 2.x A e AA):** `npm run test:a11y` — zero violações nas páginas públicas (contraste, nomes de botões/campos, idioma, estrutura, zoom). Navegação por teclado com foco visível coberta no mesmo arquivo (`e2e/a11y.spec.js`).
+- **Orçamento de peso por página:** `npm run check:perf` — mede o que o visitante baixa do nosso servidor (HTML + CSS/JS locais, gzip) e reprova se passar do orçamento de `docs/perf-budget.json`. O orçamento é a medição atual + 5%: a página pode emagrecer, não engordar. Terceiros (Google Fonts, Chart.js) ficam fora. Para regravar após uma mudança consciente: `node scripts/perf-budget.js --atualizar`.
+- **Lighthouse:** `npm run test:lighthouse:ci` — sobe o servidor num banco temporário e reprova se alguma nota ficar abaixo das metas (`metas_lighthouse` em `docs/perf-budget.json`: desempenho 85, acessibilidade 95, boas práticas 90, SEO 90). Painel e catálogo são `noindex`, então ficam fora da meta de SEO. Hoje: Home/agendar/cliente/colaborador/blog ≥ 98 de desempenho e ≥ 97 de acessibilidade.
+- **Imagens modernas:** quem aceita recebe `.webp`/`.avif` na mesma URL (`src/middleware/modern-images.js`); os outros recebem o original. A capa do blog caiu de 616 KB para 34 KB; a imagem do artigo, de 212 KB para 90 KB.
+- **Correções de contraste do Tailwind antigo:** concentradas em `public/css/a11y-fixes.css` (ponte provisória, some conforme as telas migram para `.ds-*`). O zoom no celular foi reabilitado (removido `user-scalable=no`).
