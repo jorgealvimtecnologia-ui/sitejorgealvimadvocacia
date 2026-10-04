@@ -67,6 +67,7 @@
     .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
     [hidden]{display:none!important}
   </style>
+  <script src="/js/core/attribution.js"></script>
 </head>
 <body>
   <header>
@@ -179,7 +180,7 @@
       recaptchaToken('booking_submit').then(function (tok) {
         return api('/api/booking', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: $('f-nome').value, email: $('f-email').value, phone: $('f-tel').value, area: $('f-area').value, message: $('f-msg').value, slot: slot, consent: $('f-lgpd').checked, website_hp: $('f-hp').value, recaptcha_token: tok })
+          body: JSON.stringify((window.JAAttribution ? window.JAAttribution.into : function (o) { return o; })({ name: $('f-nome').value, email: $('f-email').value, phone: $('f-tel').value, area: $('f-area').value, message: $('f-msg').value, slot: slot, consent: $('f-lgpd').checked, website_hp: $('f-hp').value, recaptcha_token: tok }))
         });
       }).then(function (r) {
         btn.disabled = false; btn.textContent = 'Confirmar agendamento';

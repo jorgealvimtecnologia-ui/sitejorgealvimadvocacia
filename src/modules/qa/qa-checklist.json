@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T23:17:10.172Z",
-  "total": 914,
+  "generated_at": "2026-10-04T23:22:54.786Z",
+  "total": 915,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -4466,6 +4466,17 @@
       "label": "Abrir no celular",
       "action": "abrir-celular",
       "how": "Abra no celular. Confira: nada cortado ou sobreposto, textos legíveis e botões fáceis de tocar.",
+      "order": 7006
+    },
+    {
+      "id": "QA-F06896CBAE",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Financeiro",
+      "kind": "Botão",
+      "label": "📊 Indicadores do dono",
+      "action": "openOwnerIndicators",
+      "how": "Clique em “📊 Indicadores do dono”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7006
     },
     {

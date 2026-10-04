@@ -23,6 +23,7 @@ import { requireRecaptcha } from '../recaptcha/recaptcha.middleware.js';
 import { createNotification } from '../notifications/notifications.routes.js';
 import { sendEmail, isEmailConfigured } from '../../shared/email.js';
 import { generateNextClientId } from '../../shared/ids.js';
+import { classifyOrigin } from '../../shared/lead-origin.js';
 import { registerJob, markJobRun } from '../../shared/observability.js';
 import {
   DEFAULT_CONFIG, normalizeConfig, nowSaoPaulo, busyIntervals, slotsForRange, isSlotFree, addMinutes, minutesOf, buildIcs,
@@ -134,7 +135,7 @@ function slotContext(config, slotDate, excludeEventId = null) {
 }
 
 /** Cria lead + evento + marcação, tudo ou nada. Devolve { ok, appointment, token } ou { ok:false, status, error }. */
-export function createBooking(config, { name, email, phone, area, message, slot }) {
+export function createBooking(config, { name, email, phone, area, message, slot, attribution = {} }) {
   const token = crypto.randomBytes(24).toString('hex');
   const id = newId();
   const now = new Date().toISOString();
@@ -146,9 +147,10 @@ export function createBooking(config, { name, email, phone, area, message, slot 
       return { ok: false, status: 409, error: 'Este horário acabou de ser ocupado. Escolha outro, por favor.' };
     }
     const leadId = generateNextClientId();
-    db.prepare(`INSERT INTO leads (id, created_at, name, phone, area, message, files, status, stage, email, city)
-                VALUES (?, ?, ?, ?, ?, ?, '[]', 'Novo', 'recebido', ?, 'Juiz de Fora')`)
-      .run(leadId, now, name, phone, area || 'Consulta agendada', `Agendamento online para ${brWhen(slot)}.${message ? ` ${message}` : ''}`, email);
+    const o = classifyOrigin(attribution);
+    db.prepare(`INSERT INTO leads (id, created_at, name, phone, area, message, files, status, stage, email, city, origin, origin_detail)
+                VALUES (?, ?, ?, ?, ?, ?, '[]', 'Novo', 'recebido', ?, 'Juiz de Fora', ?, ?)`)
+      .run(leadId, now, name, phone, area || 'Consulta agendada', `Agendamento online para ${brWhen(slot)}.${message ? ` ${message}` : ''}`, email, o.origin, o.detail ? `${o.detail}; via agendamento online` : 'via agendamento online');
     try {
       db.prepare(`INSERT INTO lead_events (lead_id, event_type, detail, performed_by, created_at) VALUES (?, 'recebido', ?, 'agendamento online', ?)`)
         .run(leadId, `Lead criado pelo agendamento online: consulta em ${brWhen(slot)}.`, now);
@@ -236,7 +238,8 @@ function cleanBooking(b = {}) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) errors.push('Informe um e-mail válido (a confirmação vai para ele).');
   if (phoneDigits.length < 10 || phoneDigits.length > 13) errors.push('Informe um telefone com DDD.');
   if (b.consent !== true && b.consent !== 'true' && b.consent !== 1) errors.push('É preciso concordar com o uso dos seus dados para o atendimento (LGPD).');
-  return { name, email, phone, area, message, slot: String(b.slot || ''), errors };
+  const attribution = { utm_source: b.utm_source, utm_medium: b.utm_medium, utm_campaign: b.utm_campaign, referrer: b.referrer };
+  return { name, email, phone, area, message, slot: String(b.slot || ''), attribution, errors };
 }
 
 bookingRouter.post('/api/booking', limit('book', 10), (req, res, next) => {

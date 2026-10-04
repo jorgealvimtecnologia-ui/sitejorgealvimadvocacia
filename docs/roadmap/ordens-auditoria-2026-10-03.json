@@ -181,7 +181,9 @@
       "prioridade": "P2",
       "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
       "descricao": "Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.",
-      "criterios": "Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa."
+      "criterios": "Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar. Os números só ficam ricos conforme houver dados lançados e leads com origem",
+      "nota_entrega": "Painel \"Indicadores do dono\" (Financeiro): receita e margem direta por área, inadimplência (idade e maiores devedores), previsão de caixa 3/6 meses (só entradas contratadas; saídas = maior entre lançadas e média 3 meses), origem dos clientes com conversão (lead→cliente→contrato) e dinheiro de terceiros (alvarás) separado; conferência automática contra o livro caixa (diferença zero). Nova captura de origem no site e no agendamento (UTM e só o domínio de referência, sessionStorage). Leads antigos ficam \"Não informado\". Limitações: área do cliente vem do processo/lead; despesas gerais não são rateadas; previsão não inclui saldo em conta."
     },
     {
       "ref": "AUD-18",

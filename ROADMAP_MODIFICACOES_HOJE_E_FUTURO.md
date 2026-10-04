@@ -353,6 +353,7 @@ Atualizado em 04/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.
   - *Pronto quando:* Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou "nada a fazer agora"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais.
 - **AUD-17 — Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes**
+  - *Estado:* feito no repositório em 04/10/2026; falta publicar. Os números só ficam ricos conforme houver dados lançados e leads com origem
   - *Situação:* Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.
   - *Pronto quando:* Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa.
 - **AUD-18 — Design system: tokens, componentes e página-catálogo**

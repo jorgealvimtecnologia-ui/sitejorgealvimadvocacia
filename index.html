@@ -370,6 +370,7 @@
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGoogleGsiLoaded && window.__onGoogleGsiLoaded()"></script>
   <script src="/js/google-auth-client.js" defer></script>
+  <script src="/js/core/attribution.js"></script>
 </head>
 
 <body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
@@ -2687,6 +2688,7 @@
             if (typeof window.getRecaptchaToken === 'function') {
               const rcToken = await window.getRecaptchaToken('lead_submit');
               if (rcToken) formData.append('recaptcha_token', rcToken);
+              if (window.JAAttribution) window.JAAttribution.appendTo(formData);
             }
 
             // Envia para o servidor local
@@ -2790,6 +2792,7 @@
         if (typeof window.getRecaptchaToken === 'function') {
           const rcToken = await window.getRecaptchaToken('lead_submit');
           if (rcToken) formData.append('recaptcha_token', rcToken);
+              if (window.JAAttribution) window.JAAttribution.appendTo(formData);
         }
 
         const res = await fetch('/api/leads', {

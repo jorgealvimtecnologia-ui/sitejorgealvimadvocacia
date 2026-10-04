@@ -68,6 +68,7 @@ import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { bookingRouter, startBookingReminders } from './src/modules/booking/booking.routes.js';
+import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 import { serveStoredFiles } from './src/middleware/stored-files.js';
 import './src/db/schema.js'; // esquema do banco (por último entre os imports, como rodava antes no corpo do server.js)
@@ -238,6 +239,7 @@ app.use(qaRouter);
 app.use(ocrRouter);
 app.use(recaptchaRouter);
 app.use(bookingRouter);
+app.use(indicatorsRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
