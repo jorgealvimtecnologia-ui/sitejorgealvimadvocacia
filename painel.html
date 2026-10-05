@@ -4775,6 +4775,53 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
+        <!-- Radar automático (Escavador): monitoramento por OAB e por CNJ -->
+        <div id="esc-card" class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <h4 class="font-serif font-bold text-sm sm:text-base text-navy-950">📡 Radar automático (Escavador)</h4>
+              <p class="text-[11px] text-slate-400">Recebe as intimações sozinho e avisa você. Funciona mesmo com o servidor fora do Brasil.</p>
+            </div>
+            <span id="esc-status-line" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">verificando…</span>
+          </div>
+
+          <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] px-3 py-2 mb-4">
+            🔒 As intimações aparecem aqui e o aviso vai <strong>só para o advogado</strong>. Nada é enviado ao cliente automaticamente — você decide o que repassar.
+          </div>
+
+          <div class="grid gap-3 md:grid-cols-2">
+            <!-- Monitorar OAB -->
+            <div class="rounded-2xl border border-slate-200 p-3">
+              <div class="text-xs font-bold text-navy-950 mb-1">Monitorar minha OAB <span class="font-normal text-slate-400">(pega tudo em seu nome)</span></div>
+              <div class="flex gap-2">
+                <input id="esc-oab-input" type="text" inputmode="numeric" placeholder="nº da OAB (ex.: 222943)" class="flex-1 min-w-0 border border-slate-300 rounded-lg px-2 py-1.5 text-sm" />
+                <input id="esc-oab-uf" type="text" maxlength="2" value="MG" class="w-14 border border-slate-300 rounded-lg px-2 py-1.5 text-sm uppercase" />
+                <button type="button" id="esc-oab-btn" onclick="radarEscMonitorarOab()" class="whitespace-nowrap bg-navy-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-blue-900">Monitorar OAB</button>
+              </div>
+            </div>
+            <!-- Monitorar processo -->
+            <div class="rounded-2xl border border-slate-200 p-3">
+              <div class="text-xs font-bold text-navy-950 mb-1">Monitorar este processo <span class="font-normal text-slate-400">(por número CNJ)</span></div>
+              <div class="flex gap-2">
+                <input id="esc-cnj-input" type="text" placeholder="0000000-00.0000.0.00.0000" class="flex-1 min-w-0 border border-slate-300 rounded-lg px-2 py-1.5 text-sm" />
+                <select id="esc-cnj-freq" class="border border-slate-300 rounded-lg px-1.5 py-1.5 text-xs">
+                  <option value="SEMANAL">Semanal</option>
+                  <option value="DIARIO">Diário</option>
+                  <option value="MENSAL">Mensal</option>
+                </select>
+                <button type="button" id="esc-cnj-btn" onclick="radarEscMonitorarProcesso()" class="whitespace-nowrap bg-navy-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-blue-900">Monitorar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+            <button type="button" id="esc-ativos-btn" onclick="radarEscCadastrarAtivos()" class="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-emerald-700">📥 Cadastrar todos os processos ativos (semanal)</button>
+            <span class="text-[11px] text-slate-400">Cadastra de uma vez, por CNJ, todos os processos ativos do escritório — sem repetir os que já estão.</span>
+          </div>
+
+          <div id="esc-msg" class="mt-3 text-xs hidden"></div>
+        </div>
+
         <!-- Painel Gráfico de Consultas no Radar Judicial -->
         <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
           <div class="flex items-center justify-between mb-3">

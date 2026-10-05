@@ -20,6 +20,7 @@
       if (input && !input.value) {
         input.focus();
       }
+      if (typeof radarEscStatus === 'function') radarEscStatus();
     }
 
     function setJudicialSearchType(type) {
@@ -529,10 +530,90 @@
     }
 
     // =========================================================================
+    // RADAR AUTOMÁTICO (ESCAVADOR): monitoramento por OAB e por CNJ
+    // =========================================================================
+    function escMsg(texto, cor) {
+      const el = document.getElementById('esc-msg');
+      if (!el) return;
+      el.textContent = texto;
+      el.className = 'mt-3 text-xs ' + (cor || 'text-slate-600');
+      el.classList.remove('hidden');
+    }
+
+    async function escApi(url, method, body) {
+      const res = await fetch(url, {
+        method: method || 'GET',
+        headers: { 'Content-Type': 'application/json', ...(typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}) },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    async function radarEscStatus() {
+      const badge = document.getElementById('esc-status-line');
+      if (!badge) return;
+      try {
+        const { ok, data } = await escApi('/api/radar/status?refresh=1');
+        if (!ok) { badge.textContent = 'indisponível'; badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500'; return; }
+        if (!data.configurado) {
+          badge.textContent = '● não configurado';
+          badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700';
+          escMsg('A chave do Escavador ainda não foi configurada no servidor. Os botões funcionarão após ligar a chave (veja docs/RADAR-ESCAVADOR.md).', 'text-amber-700');
+          return;
+        }
+        const st = data.status || {};
+        const saldo = (typeof st.saldo_centavos === 'number') ? ('R$ ' + (st.saldo_centavos / 100).toFixed(2)) : '—';
+        const baixo = st.saldo_baixo === true;
+        badge.textContent = '● ativo · saldo ' + saldo;
+        badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full ' + (baixo ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700');
+        if (baixo) escMsg('Saldo baixo — recarregue no painel do Escavador para não interromper o monitoramento.', 'text-rose-700');
+      } catch (e) {
+        badge.textContent = 'erro ao verificar';
+      }
+    }
+
+    async function radarEscMonitorarOab() {
+      const oab = (document.getElementById('esc-oab-input') || {}).value;
+      const uf = ((document.getElementById('esc-oab-uf') || {}).value || 'MG').toUpperCase();
+      if (!oab || !String(oab).trim()) { escMsg('Informe o número da OAB.', 'text-rose-700'); return; }
+      escMsg('Criando o monitoramento da OAB…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/monitoramentos', 'POST', { tipo: 'diario', termo: String(oab).replace(/\D/g, ''), uf });
+      if (ok && data.success) { escMsg('✅ Pronto! A OAB está sendo monitorada. As intimações vão aparecer na lista de Intimações.', 'text-emerald-700'); radarEscStatus(); }
+      else escMsg('Não foi possível criar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    async function radarEscMonitorarProcesso() {
+      const cnj = (document.getElementById('esc-cnj-input') || {}).value;
+      const frequencia = (document.getElementById('esc-cnj-freq') || {}).value || 'SEMANAL';
+      if (!cnj || String(cnj).replace(/\D/g, '').length < 15) { escMsg('Informe um número de processo (CNJ) válido.', 'text-rose-700'); return; }
+      escMsg('Criando o monitoramento do processo…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/monitoramentos', 'POST', { tipo: 'processo', numeroCnj: cnj, frequencia });
+      if (ok && data.success) { escMsg('✅ Processo em monitoramento (' + frequencia.toLowerCase() + ').', 'text-emerald-700'); radarEscStatus(); }
+      else escMsg('Não foi possível criar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    async function radarEscCadastrarAtivos() {
+      const btn = document.getElementById('esc-ativos-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Cadastrando…'; }
+      escMsg('Cadastrando todos os processos ativos por CNJ…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/monitorar-processos-ativos', 'POST', { frequencia: 'SEMANAL' });
+      if (btn) { btn.disabled = false; btn.textContent = '📥 Cadastrar todos os processos ativos (semanal)'; }
+      if (ok && data.success) {
+        escMsg('✅ ' + data.criados + ' novo(s) em monitoramento, ' + data.jaExistiam + ' já estavam' + (data.falhas ? (', ' + data.falhas + ' falha(s)') : '') + '.', 'text-emerald-700');
+        radarEscStatus();
+      } else escMsg('Não foi possível cadastrar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    // =========================================================================
 
   // ==========================================================================
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
   // ==========================================================================
+  window.radarEscStatus = typeof radarEscStatus !== 'undefined' ? radarEscStatus : window.radarEscStatus;
+  window.radarEscMonitorarOab = typeof radarEscMonitorarOab !== 'undefined' ? radarEscMonitorarOab : window.radarEscMonitorarOab;
+  window.radarEscMonitorarProcesso = typeof radarEscMonitorarProcesso !== 'undefined' ? radarEscMonitorarProcesso : window.radarEscMonitorarProcesso;
+  window.radarEscCadastrarAtivos = typeof radarEscCadastrarAtivos !== 'undefined' ? radarEscCadastrarAtivos : window.radarEscCadastrarAtivos;
   window.initJudicialTab = typeof initJudicialTab !== 'undefined' ? initJudicialTab : window.initJudicialTab;
   window.setJudicialSearchType = typeof setJudicialSearchType !== 'undefined' ? setJudicialSearchType : window.setJudicialSearchType;
   window.setJudicialSearchExample = typeof setJudicialSearchExample !== 'undefined' ? setJudicialSearchExample : window.setJudicialSearchExample;

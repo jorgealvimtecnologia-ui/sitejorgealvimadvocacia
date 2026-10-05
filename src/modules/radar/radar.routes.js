@@ -6,20 +6,25 @@
  * funciona do servidor na França — então NÃO precisa de proxy nem de servidor no Brasil.
  *
  * FLUXO HONESTO (só dados reais):
- *   1. O mestre cria um MONITORAMENTO (ex.: a OAB do escritório) — POST /api/radar/monitoramentos.
+ *   1. O mestre cria um MONITORAMENTO (a OAB, e/ou os processos por CNJ).
  *   2. Quando sai uma intimação/publicação, o Escavador AVISA nosso servidor via CALLBACK
  *      (webhook público POST /api/webhooks/escavador, validado por token).
  *   3. A publicação entra na MESMA tabela (court_publications), com o MESMO dedupe, vínculo
- *      ao processo e alerta ao advogado que o motor de sync já faz (ingestComunicaItems).
+ *      ao processo e alerta ao ADVOGADO que o motor de sync já faz (ingestComunicaItems).
+ *
+ * 🚫 PRIVACIDADE/DECISÃO DO ADVOGADO: nada aqui envia andamento, intimação ou aviso ao
+ * CLIENTE (nem WhatsApp, nem e-mail). A ingestão só cria notificação INTERNA do painel para
+ * o advogado; é ele quem decide o que (e se) repassa ao cliente. Nunca chame envio ao cliente daqui.
  *
  * Sem ESCAVADOR_API_TOKEN, o Radar por Escavador fica INDISPONÍVEL (503 claro), sem inventar dado.
- * Chave no cofre: node scripts/env-vault.js set ESCAVADOR_API_TOKEN
- *                 node scripts/env-vault.js set ESCAVADOR_CALLBACK_TOKEN   (valida os callbacks)
+ * Chaves no cofre: node scripts/env-vault.js set ESCAVADOR_API_TOKEN
+ *                  node scripts/env-vault.js set ESCAVADOR_CALLBACK_TOKEN   (valida os callbacks)
  */
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
+import { createNotification } from '../notifications/notifications.routes.js';
 import { registerSyncTask, ingestComunicaItems, reconcileDeadlinesToCalendar, relinkOrphanPublications, resolveLawyers } from '../sync/sync.routes.js';
 import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
@@ -30,7 +35,31 @@ import {
 export const radarRouter = express.Router();
 
 const STATUS_KEY = 'radar_escavador_status';
+const SALDO_MINIMO_PADRAO = 3000; // centavos (R$ 30) — abaixo disso, avisa o mestre
 const INDISPONIVEL = { error: 'Radar por Escavador indisponível: configure ESCAVADOR_API_TOKEN no cofre do servidor (node scripts/env-vault.js set ESCAVADOR_API_TOKEN).' };
+
+// ---------------------------------------------------------------------------
+//  Tabelas locais (criadas na carga): memória dos monitoramentos e registro de gastos.
+// ---------------------------------------------------------------------------
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS radar_monitoramentos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tipo TEXT NOT NULL,              -- 'diario' | 'processo'
+      chave TEXT NOT NULL,             -- a OAB/termo, ou o CNJ (só dígitos)
+      escavador_id TEXT,               -- id devolvido pelo Escavador
+      frequencia TEXT,                 -- para 'processo': diario|semanal|mensal
+      created_at TEXT NOT NULL,
+      UNIQUE(tipo, chave)
+    );
+    CREATE TABLE IF NOT EXISTS radar_gastos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      operacao TEXT NOT NULL,
+      creditos_centavos INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+  `);
+} catch { /* o server.js garante o banco; em import muito cedo, segue */ }
 
 // ---------------------------------------------------------------------------
 //  Status persistido (último contato / saldo), para o painel mostrar sem gastar crédito.
@@ -52,14 +81,55 @@ function lerStatus() {
   return null;
 }
 
-/** Advogado padrão (titular) para publicações cuja OAB não vem no callback. */
+// ---------------------------------------------------------------------------
+//  Controle de gasto (créditos) — tudo sai da MESMA carteira pré-paga do Escavador.
+// ---------------------------------------------------------------------------
+/** Registra o custo de uma operação (centavos), para o painel somar e acompanhar. */
+export function registrarGasto(operacao, creditos) {
+  const c = Number(creditos);
+  if (!Number.isFinite(c) || c <= 0) return;
+  try {
+    db.prepare(`INSERT INTO radar_gastos (operacao, creditos_centavos, created_at) VALUES (?, ?, ?)`)
+      .run(String(operacao || 'operacao'), Math.round(c), new Date().toISOString());
+  } catch { /* best-effort */ }
+}
+function resumoGastos() {
+  try {
+    const total = db.prepare(`SELECT COALESCE(SUM(creditos_centavos), 0) t FROM radar_gastos`).get().t;
+    const ultimos = db.prepare(`SELECT operacao, creditos_centavos, created_at FROM radar_gastos ORDER BY id DESC LIMIT 10`).all();
+    return { gasto_total_centavos: total, ultimos };
+  } catch { return { gasto_total_centavos: 0, ultimos: [] }; }
+}
+
+/** Extrai o saldo (em centavos) de formatos possíveis da resposta do Escavador (tolerante). */
+export function saldoCentavos(saldoData) {
+  const d = saldoData || {};
+  for (const k of ['saldo_centavos', 'saldo', 'creditos', 'credito', 'valor', 'balance']) {
+    if (d[k] != null && Number.isFinite(Number(d[k]))) {
+      const v = Number(d[k]);
+      // Heurística: campos "*_centavos" já vêm em centavos; "saldo/valor" costumam vir em reais.
+      return /cent/i.test(k) ? Math.round(v) : Math.round(v * 100);
+    }
+  }
+  return null;
+}
+/** True se o saldo (centavos) está abaixo do mínimo configurado (ESCAVADOR_SALDO_MINIMO_CENTAVOS). */
+export function saldoBaixo(centavos, env = process.env) {
+  if (centavos == null) return false;
+  const min = Number(env.ESCAVADOR_SALDO_MINIMO_CENTAVOS) || SALDO_MINIMO_PADRAO;
+  return centavos < min;
+}
+
+// ---------------------------------------------------------------------------
+//  Ingestão de ocorrências → tabela de publicações (dedupe/vínculo/alerta AO ADVOGADO).
+// ---------------------------------------------------------------------------
 function advogadoPadrao() {
   try { return resolveLawyers({})[0] || null; } catch { return null; }
 }
 
 /**
- * Ingesta ocorrências do Escavador na tabela de publicações (dedupe/vínculo/alerta),
- * agrupando por OAB, e reconciliando prazos/órfãs quando algo novo entra.
+ * Ingesta ocorrências do Escavador na tabela de publicações, agrupando por OAB, reconciliando
+ * prazos/órfãs quando algo novo entra. NÃO notifica o cliente (só alerta interno ao advogado).
  * @returns {{found:number, saved:number, grupos:number}}
  */
 export function ingestarOcorrencias(ocorrencias = []) {
@@ -86,10 +156,44 @@ export function ingestarOcorrencias(ocorrencias = []) {
 }
 
 // ---------------------------------------------------------------------------
+//  Seleção dos processos ativos do escritório (para o cadastro automático por CNJ).
+// ---------------------------------------------------------------------------
+/** Processos ATIVOS com número CNJ, sem repetir o mesmo número. */
+export function processosAtivosParaMonitorar() {
+  try {
+    const rows = db.prepare(`
+      SELECT id, cnj_number FROM lawsuits
+      WHERE cnj_number IS NOT NULL AND TRIM(cnj_number) != ''
+        AND status NOT IN ('Arquivado', 'Encerrado', 'Baixado', 'Extinto')
+    `).all();
+    const vistos = new Set();
+    const saida = [];
+    for (const r of rows) {
+      const cnj = soDigitos(r.cnj_number);
+      if (!cnj || vistos.has(cnj)) continue;
+      vistos.add(cnj);
+      saida.push({ id: r.id, cnj, cnjMasc: r.cnj_number });
+    }
+    return saida;
+  } catch { return []; }
+}
+
+function jaMonitorado(tipo, chave) {
+  try { return !!db.prepare(`SELECT id FROM radar_monitoramentos WHERE tipo = ? AND chave = ?`).get(tipo, chave); }
+  catch { return false; }
+}
+function lembrarMonitoramento(tipo, chave, escavadorId, frequencia) {
+  try {
+    db.prepare(`INSERT OR IGNORE INTO radar_monitoramentos (tipo, chave, escavador_id, frequencia, created_at) VALUES (?, ?, ?, ?, ?)`)
+      .run(tipo, chave, escavadorId ? String(escavadorId) : null, frequencia || null, new Date().toISOString());
+  } catch { /* best-effort */ }
+}
+
+// ---------------------------------------------------------------------------
 //  ROTAS DO PAINEL (sob a aba tab_radar; ver src/middleware/rbac-rules.js)
 // ---------------------------------------------------------------------------
 
-/** GET /api/radar/status — estado do provedor (configurado?, último contato, saldo). ?refresh=1 consulta o saldo (gasta pouco). */
+/** GET /api/radar/status — provedor configurado?, gasto acumulado, saldo (?refresh=1 consulta o saldo). */
 radarRouter.get('/api/radar/status', requireAuth, async (req, res) => {
   const configurado = escavadorConfigured();
   const cfg = escavadorConfig();
@@ -97,13 +201,16 @@ radarRouter.get('/api/radar/status', requireAuth, async (req, res) => {
     provider: 'escavador',
     configurado,
     callback_configurado: !!cfg.callbackToken,
-    webhook_url: `${process.env.SITE_URL || process.env.PROD_URL || ''}/api/webhooks/escavador`.replace(/^\/+/, ''),
+    webhook_url: `${process.env.SITE_URL || process.env.PROD_URL || ''}/api/webhooks/escavador`,
+    monitoramentos_locais: (() => { try { return db.prepare(`SELECT COUNT(*) n FROM radar_monitoramentos`).get().n; } catch { return 0; } })(),
+    gastos: resumoGastos(),
     status: lerStatus(),
   };
   if (configurado && String(req.query.refresh) === '1') {
     const r = await consultarSaldo();
-    out.saldo = r.ok ? (r.data ?? null) : null;
-    salvarStatus({ ok: r.ok, saldo: out.saldo, checked_at: new Date().toISOString(), error: r.error || null });
+    if (typeof r.creditos === 'number') registrarGasto('consultar_saldo', r.creditos);
+    const centavos = r.ok ? saldoCentavos(r.data) : null;
+    salvarStatus({ ok: r.ok, saldo: r.ok ? (r.data ?? null) : null, saldo_centavos: centavos, saldo_baixo: saldoBaixo(centavos), checked_at: new Date().toISOString(), error: r.error || null });
     out.status = lerStatus();
   }
   return res.json(out);
@@ -113,6 +220,7 @@ radarRouter.get('/api/radar/status', requireAuth, async (req, res) => {
 radarRouter.get('/api/radar/monitoramentos', requireAuth, async (req, res) => {
   if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
   const r = await listarMonitoramentos();
+  if (typeof r.creditos === 'number') registrarGasto('listar_monitoramentos', r.creditos);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
   return res.json({ success: true, monitoramentos: r.itens, creditos: r.creditos });
 });
@@ -122,17 +230,44 @@ radarRouter.post('/api/radar/monitoramentos', requireAuth, async (req, res) => {
   if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
   const b = req.body || {};
   const tipo = String(b.tipo || '').toLowerCase();
-  let r;
+  let r, tipoReg, chave, freq;
   if (tipo === 'processo' || b.numeroCnj) {
-    r = await criarMonitoramentoProcesso({ numeroCnj: b.numeroCnj || b.numero, frequencia: b.frequencia || 'SEMANAL' });
+    chave = soDigitos(b.numeroCnj || b.numero);
+    freq = b.frequencia || 'SEMANAL';
+    r = await criarMonitoramentoProcesso({ numeroCnj: chave, frequencia: freq });
+    tipoReg = 'processo';
   } else {
-    const termo = b.termo || b.oab || '';
-    if (!termo) return res.status(400).json({ error: 'Informe "termo" (ex.: a OAB) ou "numeroCnj".' });
-    r = await criarMonitoramentoDiario({ termo, variacoes: Array.isArray(b.variacoes) ? b.variacoes : [], origensIds: Array.isArray(b.origensIds) ? b.origensIds : [] });
+    chave = String(b.termo || b.oab || '').trim();
+    if (!chave) return res.status(400).json({ error: 'Informe "termo" (ex.: a OAB) ou "numeroCnj".' });
+    r = await criarMonitoramentoDiario({ termo: chave, variacoes: Array.isArray(b.variacoes) ? b.variacoes : [], origensIds: Array.isArray(b.origensIds) ? b.origensIds : [] });
+    tipoReg = 'diario';
   }
+  if (typeof r.creditos === 'number') registrarGasto(`monitorar_${tipoReg}`, r.creditos);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
-  logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAMENTO_CRIADO', module: 'RADAR', resource_id: String(r.data?.id || tipo || 'termo'), description: `Monitoramento criado (${tipo || 'diário'}).` });
+  lembrarMonitoramento(tipoReg, soDigitos(chave) || chave, r.data?.id, freq);
+  logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAMENTO_CRIADO', module: 'RADAR', resource_id: String(r.data?.id || chave), description: `Monitoramento criado (${tipoReg}).` });
   return res.json({ success: true, monitoramento: r.data, creditos: r.creditos });
+});
+
+/**
+ * POST /api/radar/monitorar-processos-ativos — cadastra TODOS os processos ativos (com CNJ) no
+ * monitoramento por CNJ (padrão SEMANAL, o mais barato). Não recadastra o que já está monitorado.
+ */
+radarRouter.post('/api/radar/monitorar-processos-ativos', requireAuth, async (req, res) => {
+  if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
+  const frequencia = String((req.body || {}).frequencia || 'SEMANAL').toUpperCase();
+  const processos = processosAtivosParaMonitorar();
+  let criados = 0, jaExistiam = 0, falhas = 0, creditos = 0;
+  const erros = [];
+  for (const p of processos) {
+    if (jaMonitorado('processo', p.cnj)) { jaExistiam++; continue; }
+    const r = await criarMonitoramentoProcesso({ numeroCnj: p.cnj, frequencia });
+    if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('monitorar_processo', r.creditos); }
+    if (r.ok) { lembrarMonitoramento('processo', p.cnj, r.data?.id, frequencia); criados++; }
+    else { falhas++; erros.push(`${p.cnjMasc}: ${r.error}`); }
+  }
+  logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAR_ATIVOS', module: 'RADAR', resource_id: 'lote', description: `Cadastro automático por CNJ: ${criados} criado(s), ${jaExistiam} já existia(m), ${falhas} falha(s).` });
+  return res.json({ success: true, total: processos.length, criados, jaExistiam, falhas, creditos, erros: erros.slice(0, 20) });
 });
 
 /** DELETE /api/radar/monitoramentos/:id — remove um monitoramento. */
@@ -140,6 +275,7 @@ radarRouter.delete('/api/radar/monitoramentos/:id', requireAuth, async (req, res
   if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
   const r = await removerMonitoramento(req.params.id);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
+  try { db.prepare(`DELETE FROM radar_monitoramentos WHERE escavador_id = ?`).run(String(req.params.id)); } catch { /* ok */ }
   logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAMENTO_REMOVIDO', module: 'RADAR', resource_id: String(req.params.id), description: 'Monitoramento removido.' });
   return res.json({ success: true });
 });
@@ -150,6 +286,7 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
   const b = req.body || {};
   if (!b.oab && !b.nome && !b.cpfCnpj && !b.numeroCnj) return res.status(400).json({ error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' });
   const r = await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG', nome: b.nome, cpfCnpj: b.cpfCnpj, numeroCnj: b.numeroCnj });
+  if (typeof r.creditos === 'number') registrarGasto('busca', r.creditos);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
   logAudit(req, { event_type: 'RADAR', event_name: 'BUSCA', module: 'RADAR', resource_id: soDigitos(b.oab || b.cpfCnpj || b.numeroCnj || '') || 'nome', description: 'Busca de processos no Escavador.' });
   return res.json({ success: true, resultado: r.data ?? r.itens, creditos: r.creditos });
@@ -157,7 +294,7 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
 
 // ---------------------------------------------------------------------------
 //  WEBHOOK (público; validado por token). Recebe os avisos do Escavador em tempo real.
-//  Rota já é PUBLIC em rbac-rules (/api/webhooks/...). A segurança é o token do callback.
+//  Só alerta o ADVOGADO (notificação interna) — NUNCA envia nada ao cliente.
 // ---------------------------------------------------------------------------
 radarRouter.post('/api/webhooks/escavador', (req, res) => {
   const cfg = escavadorConfig();
@@ -173,18 +310,28 @@ radarRouter.post('/api/webhooks/escavador', (req, res) => {
     return res.json({ success: true, recebidas: ocorrencias.length, salvas: r.saved });
   } catch (err) {
     console.error('[RADAR] Falha ao processar callback do Escavador:', err.message);
-    return res.status(200).json({ success: false, error: 'processamento adiado' }); // 200 evita reentrega infinita; registramos a falha
+    return res.status(200).json({ success: false, error: 'processamento adiado' }); // 200 evita reentrega infinita; a falha fica no log
   }
 });
 
 // ---------------------------------------------------------------------------
-//  TAREFA PERIÓDICA (rede de segurança): confirma que o provedor está vivo e guarda o saldo.
-//  A ingestão em tempo real é via callback; esta tarefa só verifica conectividade.
+//  TAREFA PERIÓDICA (rede de segurança): confirma o provedor, guarda o saldo e AVISA O MESTRE
+//  quando o saldo fica baixo. A ingestão em tempo real é via callback.
 // ---------------------------------------------------------------------------
 registerSyncTask('escavador_radar', async () => {
   if (!escavadorConfigured()) return { skipped: true, reason: 'ESCAVADOR_API_TOKEN ausente' };
   const r = await consultarSaldo();
-  const status = { ok: r.ok, saldo: r.ok ? (r.data ?? null) : null, checked_at: new Date().toISOString(), error: r.error || null };
-  salvarStatus(status);
-  return status;
+  if (typeof r.creditos === 'number') registrarGasto('consultar_saldo', r.creditos);
+  const centavos = r.ok ? saldoCentavos(r.data) : null;
+  const baixo = saldoBaixo(centavos);
+  salvarStatus({ ok: r.ok, saldo: r.ok ? (r.data ?? null) : null, saldo_centavos: centavos, saldo_baixo: baixo, checked_at: new Date().toISOString(), error: r.error || null });
+  if (baixo) {
+    createNotification({
+      category: 'geral', level: 'warning',
+      title: '💳 Saldo do Radar (Escavador) baixo',
+      message: `O crédito do Radar está em R$ ${(centavos / 100).toFixed(2)}. Recarregue no painel do Escavador para não interromper o monitoramento.`,
+      link: '#tab:radar', dedupe_key: `radar:saldo-baixo:${new Date().toISOString().slice(0, 10)}`,
+    });
+  }
+  return { ok: r.ok, saldo_centavos: centavos, saldo_baixo: baixo };
 });

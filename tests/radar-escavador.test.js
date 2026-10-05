@@ -18,6 +18,7 @@ delete process.env.ESCAVADOR_API_TOKEN;
 delete process.env.ESCAVADOR_CALLBACK_TOKEN;
 
 const { app, db } = await import('../server.js');
+const { processosAtivosParaMonitorar, saldoCentavos, saldoBaixo, registrarGasto } = await import('../src/modules/radar/radar.routes.js');
 
 after(() => {
   try { db?.close?.(); } catch {}
@@ -88,5 +89,46 @@ describe('Radar/Escavador — webhook (callback)', () => {
     assert.equal(db.prepare(`SELECT COUNT(*) n FROM court_publications WHERE comunicacao_id = 'ESC-7001'`).get().n, 1);
 
     delete process.env.ESCAVADOR_CALLBACK_TOKEN;
+  });
+});
+
+describe('Radar/Escavador — controle de gasto (saldo)', () => {
+  it('saldoCentavos entende reais e centavos; saldoBaixo respeita o mínimo', () => {
+    assert.equal(saldoCentavos({ saldo: 12.5 }), 1250);          // reais → centavos
+    assert.equal(saldoCentavos({ saldo_centavos: 800 }), 800);   // já em centavos
+    assert.equal(saldoCentavos({}), null);
+    assert.equal(saldoBaixo(2000, { ESCAVADOR_SALDO_MINIMO_CENTAVOS: '3000' }), true);
+    assert.equal(saldoBaixo(5000, { ESCAVADOR_SALDO_MINIMO_CENTAVOS: '3000' }), false);
+    assert.equal(saldoBaixo(null), false); // sem saldo conhecido não dispara alarme falso
+  });
+  it('o gasto registrado aparece no total do status', async () => {
+    registrarGasto('teste', 37);
+    const r = await request(app).get('/api/radar/status').set('Authorization', `Bearer ${token}`);
+    assert.ok(r.body.gastos.gasto_total_centavos >= 37, JSON.stringify(r.body.gastos));
+  });
+});
+
+describe('Radar/Escavador — cadastro automático por CNJ', () => {
+  before(() => {
+    const now = new Date().toISOString();
+    db.prepare(`INSERT INTO clients (id, client_type, full_name, cpf, email, phone, contract_status, created_at, updated_at) VALUES ('CLI-AUTO-1','PF','Cliente Auto','529.982.247-25','cliente.auto@teste.com','(32) 99999-0003','Ativo',?,?)`).run(now, now);
+    const ins = db.prepare(`INSERT INTO lawsuits (id, client_id, cnj_number, tribunal, status, created_at, updated_at) VALUES (?, 'CLI-AUTO-1', ?, 'TJMG', ?, ?, ?)`);
+    ins.run('LAW-AUTO-1', '5001111-11.2026.8.13.0145', 'Em Andamento', now, now);
+    ins.run('LAW-AUTO-2', '5002222-22.2026.8.13.0145', 'Em Andamento', now, now);
+    ins.run('LAW-AUTO-3', '5002222-22.2026.8.13.0145', 'Em Andamento', now, now); // CNJ repetido
+    ins.run('LAW-AUTO-4', '5003333-33.2026.8.13.0145', 'Arquivado', now, now);     // inativo
+  });
+  it('seleciona só os ativos e não repete o mesmo número', () => {
+    const lista = processosAtivosParaMonitorar();
+    const cnjs = lista.map((p) => p.cnj);
+    assert.ok(cnjs.includes('50011111120268130145'));
+    assert.ok(cnjs.includes('50022222220268130145'));
+    assert.equal(cnjs.filter((c) => c === '50022222220268130145').length, 1, 'CNJ repetido deve entrar uma vez só');
+    assert.ok(!cnjs.includes('50033333330268130145'), 'processo arquivado não deve ser monitorado');
+  });
+  it('sem chave da API, o cadastro automático responde 503 (não finge)', async () => {
+    const r = await request(app).post('/api/radar/monitorar-processos-ativos').set('Authorization', `Bearer ${token}`).send({});
+    assert.equal(r.status, 503);
+    assert.match(r.body.error, /ESCAVADOR_API_TOKEN/);
   });
 });

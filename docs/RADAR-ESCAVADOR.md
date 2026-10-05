@@ -86,8 +86,30 @@ agenda) não muda. Os extratores já são **tolerantes** a variações comuns de
 | `GET /api/radar/status` | Provedor configurado?, saldo (`?refresh=1`), último callback |
 | `GET /api/radar/monitoramentos` | Lista os monitoramentos na conta do Escavador |
 | `POST /api/radar/monitoramentos` | Cria monitoramento (diário por termo ou processo por CNJ) |
+| `POST /api/radar/monitorar-processos-ativos` | Cadastra de uma vez, por CNJ (semanal), todos os processos ativos do escritório |
 | `DELETE /api/radar/monitoramentos/:id` | Remove um monitoramento |
 | `POST /api/radar/buscar` | Busca sob demanda (OAB, nome, CPF/CNPJ, CNJ) — consome créditos |
 | `POST /api/webhooks/escavador` | **Público**, validado por token: recebe os avisos do Escavador |
 
 Tudo sob a permissão da aba **Radar** (`tab_radar`), exceto o webhook público.
+
+## Privacidade: o cliente nunca é avisado automaticamente
+
+Quando chega uma intimação/andamento, o sistema cria **apenas um alerta interno para o advogado**
+(na tela de Intimações do painel). **Nada** é enviado ao cliente — nem WhatsApp, nem e-mail. É o
+advogado quem decide o que (e se) repassa. Essa regra está no código do webhook e da ingestão.
+
+## Controle de gasto (saldo)
+
+Tudo sai da mesma carteira pré-paga do Escavador. O sistema:
+
+- **soma o custo** de cada chamada (cabeçalho `Creditos-Utilizados`) e mostra o total no status;
+- guarda o **saldo** a cada verificação periódica (`GET /api/radar/status?refresh=1`);
+- **avisa o mestre** quando o saldo fica abaixo do mínimo (padrão R$ 30; ajuste com
+  `ESCAVADOR_SALDO_MINIMO_CENTAVOS`), para recarregar antes de interromper o monitoramento.
+
+## Painel
+
+Na aba **Radar** há um cartão "Radar automático (Escavador)" com: o **saldo** no topo, e os botões
+**Monitorar minha OAB**, **Monitorar este processo** (com a frequência) e **Cadastrar todos os
+processos ativos**. O cartão avisa, em destaque, que nada é enviado ao cliente automaticamente.
