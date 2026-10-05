@@ -237,7 +237,7 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 — só o que ainda NÃO foi feito
 
-Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P1, 14 do P2 e 3 do P3.
+Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P1, 17 do P2 e 0 do P3.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada por `node scripts/roadmap-gerar-md.js`; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
@@ -330,7 +330,7 @@ Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Situação:* Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.
   - *Pronto quando:* Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado).
 
-### P2 — Normal (14)
+### P2 — Normal (17)
 
 - **AUD-12 — Criptografia de documentos em repouso e backup externo automático e criptografado**
   - *Estado:* feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar as chaves (passo a passo em docs/INFRA.md)
@@ -384,13 +384,6 @@ Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Estado:* guia pronto (docs/GUIA-GOOGLE-CLOUDFLARE.md); ações externas a cargo do Dr. Jorge
   - *Situação:* Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.
   - *Pronto quando:* Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.
-- **AUD-41 — Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento**
-  - *Estado:* pendente: decisão do Dr. Jorge
-  - *Situação:* As bases públicas (DataJud e Diário da Justiça) não permitem busca por CPF/CNPJ nem por nome de parte em todos os tribunais. Quem precisa disso hoje usa provedores comerciais de dados processuais, com custo e contrato (e cuidados de LGPD e sigilo).
-  - *Pronto quando:* Comparativo de provedores (custo, cobertura de tribunais, termos de uso, LGPD); decisão do Dr. Jorge; se aprovado, integração com a chave guardada no cofre e o mesmo princípio: só dado real, com a fonte indicada.
-
-### P3 — Baixo (3)
-
 - **AUD-36 — Instalar o pacote "compression" no servidor (resposta com gzip na origem)**
   - *Estado:* pendente
   - *Situação:* O log de inicialização avisa que o pacote compression não está instalado: a origem responde sem gzip (a Cloudflare entrega Brotli, então o usuário não sente).
@@ -403,6 +396,13 @@ Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
   - *Estado:* pendente: depende da AUD-27
   - *Situação:* No cadastro de operadores, "Administrador Geral" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta "mariana" ou "gabriela" por pedaço do texto digitado (ainda exige a senha da pessoa).
   - *Pronto quando:* Perfil do Administrador Geral definido pelo Dr. Jorge; login por senha só por usuário ou e-mail exatos; guardião reprova a volta dos apelidos.
+- **AUD-41 — Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento**
+  - *Estado:* pendente: decisão do Dr. Jorge
+  - *Situação:* As bases públicas (DataJud e Diário da Justiça) não permitem busca por CPF/CNPJ nem por nome de parte em todos os tribunais. Quem precisa disso hoje usa provedores comerciais de dados processuais, com custo e contrato (e cuidados de LGPD e sigilo).
+  - *Pronto quando:* Comparativo de provedores (custo, cobertura de tribunais, termos de uso, LGPD); decisão do Dr. Jorge; se aprovado, integração com a chave guardada no cofre e o mesmo princípio: só dado real, com a fonte indicada.
+
+### P3 — Baixo (0)
+
 
 ### Observação sobre o backlog da seção 8
 

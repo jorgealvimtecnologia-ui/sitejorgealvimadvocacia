@@ -247,7 +247,7 @@
     },
     {
       "ref": "AUD-36",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "estado": "pendente",
       "titulo": "Instalar o pacote \"compression\" no servidor (resposta com gzip na origem)",
       "descricao": "O log de inicialização avisa que o pacote compression não está instalado: a origem responde sem gzip (a Cloudflare entrega Brotli, então o usuário não sente).",
@@ -255,7 +255,7 @@
     },
     {
       "ref": "AUD-37",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "estado": "pendente",
       "titulo": "Teste de navegador do menu para cada função",
       "descricao": "O teste por perfil cobre API, Visão Geral e cockpit para todos os perfis, mas o teste de navegador (Playwright) só confere o menu da secretária.",
@@ -263,7 +263,7 @@
     },
     {
       "ref": "AUD-38",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "estado": "pendente: depende da AUD-27",
       "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
       "descricao": "No cadastro de operadores, \"Administrador Geral\" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta \"mariana\" ou \"gabriela\" por pedaço do texto digitado (ainda exige a senha da pessoa).",
