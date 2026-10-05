@@ -178,6 +178,36 @@ accessRouter.delete('/api/users/:id', requireAuth, (req, res) => {
 // 🛡️ MATRIZ DE CONTROLE DE ACESSO & PERMISSÕES GRANULARES (RBAC/ABAC HÍBRIDO)
 // =============================================================================
 
+/**
+ * Função (perfil de acesso) a partir do CARGO registrado da pessoa (RHABAC por FUNÇÃO, AUD-27).
+ * Olha SÓ o cargo/posição — nunca o nome próprio nem o login. Cargo que não bate com nenhuma função
+ * conhecida vira 'sem_perfil' (NEGADO POR PADRÃO): o mestre escolhe a função na tela Usuários & Senhas.
+ */
+/**
+ * Função a partir do PAPEL escolhido no cadastro do operador (campo `role`), por FUNÇÃO — nunca por nome.
+ * Apelidos herdados: 'atendente' -> secretária; 'admin' -> advogado. 'master'/'cliente' são tratados antes.
+ * Devolve a chave da função, ou null quando o papel não indica função (aí decide o cargo do RH).
+ */
+export function roleFromUserRole(role) {
+  const r = String(role || '').toLowerCase().trim();
+  if (!r) return null;
+  if (r === 'atendente') return 'secretaria';
+  if (r === 'admin') return 'advogado';
+  return ROLE_TEMPLATES[r] && r !== 'master' && r !== 'cliente' ? r : null;
+}
+
+export function roleFromPosition(position) {
+  const pos = String(position || '').toLowerCase();
+  if (!pos) return 'sem_perfil';
+  if (/estagi/.test(pos)) return 'estagiario';
+  if (/secret|recepc|atendiment/.test(pos)) return 'secretaria';
+  if (/motorist|motoboy|externo|entreg/.test(pos)) return 'motorista';
+  if (/gerente|financ|administrativ|contab|dp\b|departamento pessoal/.test(pos)) return 'gerente';
+  if (/s[oó]ci|titular|propriet/.test(pos)) return 'dono_escritorio';
+  if (/advog|jur[ií]dic/.test(pos)) return 'advogado';
+  return 'sem_perfil';
+}
+
 const ROLE_TEMPLATES = {
   master: {
     key: 'master',
@@ -308,47 +338,35 @@ export function syncAllAccessPermissions() {
     const users = db.prepare(`SELECT * FROM users`).all();
     for (const u of users) {
       const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.role === 'master';
-      const isDraMariana = u.name.toLowerCase().includes('mariana') || u.username.includes('mariana');
-      const isDraGabriela = u.name.toLowerCase().includes('gabriela') || u.username.includes('gabriela');
-      
-      // Buscar colaborador correspondente no RH para herdar cargo real
+
+      // Colaborador correspondente no RH (vínculo EXATO) para herdar o CARGO real.
       let linkedEmp = null;
       try {
         linkedEmp = findEmployeeForUser(db, u);
       } catch (e) {}
 
-      const pos = ((linkedEmp && linkedEmp.position) || '').toLowerCase();
-      const uname = (u.username || '').toLowerCase();
-      const urole = (u.role || '').toLowerCase();
-
-      let tplKey = 'sem_perfil';
-      let userType = 'admin';
-
+      // RHABAC POR FUNÇÃO (AUD-27): a função vem, nesta ordem, SEM nome próprio nem trecho de login:
+      //   1) mestre (id/login/role do mestre);
+      //   2) cliente;
+      //   3) 'custom' já gravado = ajuste MANUAL do mestre, NUNCA sobrescrito;
+      //   4) papel escolhido no cadastro do operador (campo role, com os apelidos atendente->secretária, admin->advogado);
+      //   5) cargo registrado do colaborador no RH;
+      //   6) nada disso => sem_perfil (NEGADO POR PADRÃO).
+      const current = db.prepare(`SELECT role_template FROM access_permissions WHERE user_id = ?`).get(u.id)?.role_template;
+      let tplKey, userType;
       if (isMaster) {
-        tplKey = 'master';
-        userType = 'master';
-      } else if (urole === 'cliente' || u.id.includes('CLI-')) {
-        tplKey = 'cliente';
-        userType = 'cliente';
-      } else if (isDraMariana || isDraGabriela || pos.includes('sóci') || pos.includes('socio') || pos.includes('titular')) {
-        tplKey = 'dono_escritorio';
-        userType = 'dono_escritorio';
-      } else if (pos.includes('motorist') || pos.includes('externo') || uname.includes('motorista') || urole === 'motorista') {
-        tplKey = 'motorista';
-        userType = 'motorista';
-      } else if (pos.includes('secret') || pos.includes('recepc') || uname.includes('secretaria') || uname.includes('recepcao') || urole === 'secretaria' || urole === 'atendente') {
-        tplKey = 'secretaria';
-        userType = 'secretaria';
-      } else if (pos.includes('estagi') || uname.includes('estagiario') || uname.includes('estagio') || urole === 'estagiario') {
-        tplKey = 'estagiario';
-        userType = 'estagiario';
-      } else if (pos.includes('gerente') || pos.includes('financ') || uname.includes('adm') || urole === 'gerente') {
-        tplKey = 'gerente';
-        userType = 'gerente';
-      } else if (pos.includes('advog') || uname.includes('adv') || urole === 'advogado' || urole === 'admin') {
-        tplKey = 'advogado';   // "Administrador Geral" do cadastro de operadores segue como estava (decisão do mestre se muda)
-        userType = 'advogado';
+        tplKey = 'master'; userType = 'master';
+      } else if ((u.role || '').toLowerCase() === 'cliente' || String(u.id).includes('CLI-')) {
+        tplKey = 'cliente'; userType = 'cliente';
+      } else if (current === 'custom') {
+        tplKey = 'custom'; userType = 'custom';
+      } else {
+        tplKey = roleFromUserRole(u.role) || roleFromPosition((linkedEmp && linkedEmp.position) || '');
+        userType = tplKey;
       }
+
+      // 'custom' = o mestre mexeu nas abas individualmente: preserva a linha como está.
+      if (tplKey === 'custom') continue;
 
       const tpl = ROLE_TEMPLATES[tplKey];
 
@@ -378,8 +396,9 @@ export function syncAllAccessPermissions() {
               is_active = 1, data_scope = 'all', updated_at = ?
           WHERE user_id = ?
         `).run(now, u.id);
-      } else if (exists.role_template === 'advogado' && tplKey !== 'advogado') {
-        // Corrige operadores que haviam caído indevidamente no perfil genérico 'advogado'
+      } else if (exists.role_template !== tplKey && exists.role_template !== 'custom') {
+        // Mantém a FUNÇÃO em dia: re-aplica o perfil derivado quando difere do gravado (exceto ajuste manual 'custom').
+        // Corrige, entre outros, quem caíra no perfil genérico 'advogado' pelas antigas regras por nome/login.
         db.prepare(`
           UPDATE access_permissions 
           SET role_template = ?, user_type = ?,
@@ -401,29 +420,9 @@ export function syncAllAccessPermissions() {
     // 2. Sincronizar Colaboradores do RH (CLT, Estágio, Associados)
     const employees = db.prepare(`SELECT * FROM hr_employees`).all();
     for (const emp of employees) {
-      const pos = (emp.position || '').toLowerCase();
-      let tplKey = 'sem_perfil';
-      let userType = 'empregado';
-
-      if (pos.includes('estagi')) {
-        tplKey = 'estagiario';
-        userType = 'estagiario';
-      } else if (pos.includes('secret') || pos.includes('recepc')) {
-        tplKey = 'secretaria';
-        userType = 'secretaria';
-      } else if (pos.includes('gerente') || pos.includes('financ')) {
-        tplKey = 'gerente';
-        userType = 'gerente';
-      } else if (pos.includes('motorist') || pos.includes('externo')) {
-        tplKey = 'motorista';
-        userType = 'motorista';
-      } else if (pos.includes('sóci') || pos.includes('socio') || pos.includes('titular')) {
-        tplKey = 'dono_escritorio';
-        userType = 'dono_escritorio';
-      } else if (pos.includes('advog')) {
-        tplKey = 'advogado';
-        userType = 'advogado';
-      }
+      // Função pela função registrada (cargo) do colaborador. Sem nome próprio.
+      const tplKey = roleFromPosition(emp.position || '');
+      const userType = tplKey;
 
       const tpl = ROLE_TEMPLATES[tplKey];
       const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(emp.id);

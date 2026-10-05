@@ -1,7 +1,20 @@
-# Papéis e permissões por FUNÇÃO — situação atual e PROPOSTA
+# Papéis e permissões por FUNÇÃO — decisões e implementação
 
-> **Estado: PROPOSTA para aprovação do Dr. Jorge. Nada disto está aplicado ao sistema.**
-> A matriz da seção 3 é um ponto de partida meu, a partir dos perfis que já existem. Os pontos marcados com ❓ dependem de decisão do escritório.
+> **Decisões do Dr. Jorge (04/10/2026):**
+> 1. **Nomes próprios eram FICTÍCIOS** (Mariana, Gabriela): REMOVIDOS da RHABAC. Só o mestre (Dr. Jorge Eduardo da Silva Alvim) é reconhecido, por e-mail/login — nunca por nome.
+> 2. Advogado **sócio** (função 3) **vê o financeiro**.
+> 3. Advogado de escritório (4) e estagiário (5): **só os processos deles** (escopo de dados).
+> 4. Chefe de RH (7): **folha completa**.
+> 5. Chefe de marketing (9): **Meta Ads e blog**.
+> 6. **Sem exceções**: cada pessoa fica exatamente com o acesso da função dela.
+>
+> **Parte 1 FEITA (04/10/2026):** removidas todas as regras por nome próprio e por trecho de login da atribuição de função
+> (`src/modules/access/access.routes.js`, `src/modules/auth/auth.routes.js`). A função passa a vir, nesta ordem, por FUNÇÃO:
+> mestre → cliente → ajuste manual do mestre ('custom', nunca sobrescrito) → papel do cadastro (atendente=secretária, admin=advogado)
+> → cargo registrado no RH → senão **sem_perfil (negado por padrão)**. O guardião (`npm run check:rbac`) agora **reprova** qualquer nome próprio no código de acesso.
+>
+> **Parte 2 (a fazer):** criar as 13 novas funções como perfis na matriz (hoje são 8), aplicar o escopo de dados no servidor
+> (processos filtrados pelo advogado responsável) e a matriz como dados editável pelo mestre.
 
 ## 1. Como funciona hoje (verificado no código)
 

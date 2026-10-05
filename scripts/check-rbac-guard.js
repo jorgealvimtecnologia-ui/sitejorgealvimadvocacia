@@ -106,8 +106,14 @@ export function checkRbacStatic(root = ROOT_DIR) {
   for (const rel of ['src/modules/auth/auth.routes.js', 'src/modules/hr/hr.routes.js', 'src/modules/access/access.routes.js']) {
     const t = read(rel);
     if (t === null) { violations.push(`${TAG} ${rel} não existe.`); continue; }
-    if (/FROM (hr_employees|users)\s+WHERE[^`]*name\)?\s+LIKE/i.test(t.replace(/FROM users WHERE username LIKE '%(mariana|gabriela)%' OR name LIKE '%(mariana|gabriela)%'/g, ''))) {
+    if (/FROM (hr_employees|users)\s+WHERE[^`]*name\)?\s+LIKE/i.test(t)) {
       violations.push(`${TAG} ${rel} vincula pessoas por PEDAÇO do nome (LIKE): a operadora "Ana" receberia a sessão/dados de RH da "Mariana". Use src/shared/identity-link.js (vínculo exato).`);
+    }
+    // AUD-27: a RHABAC decide o acesso por FUNÇÃO (cargo), nunca por NOME PRÓPRIO.
+    const semComentario = t.split('\n').filter((l) => !/^\s*(\/\/|\*)/.test(l)).join('\n');
+    const nomeProprio = semComentario.match(/\b(mariana|gabriela|carlos|patricia|roberto|fernanda|camila)\b/i);
+    if (nomeProprio) {
+      violations.push(`${TAG} ${rel} decide acesso/identidade por NOME PRÓPRIO ("${nomeProprio[0]}"): proibido (AUD-27). A função vem do cargo/perfil, nunca do nome. Só o mestre é reconhecido (por e-mail/login).`);
     }
   }
   const authT = read('src/modules/auth/auth.routes.js');

@@ -56,10 +56,6 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     if (!user) {
       if (['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
         user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
-      } else if (compactUsername.includes('mariana')) {
-        user = db.prepare(`SELECT * FROM users WHERE username LIKE '%mariana%' OR name LIKE '%mariana%'`).get();
-      } else if (compactUsername.includes('gabriela')) {
-        user = db.prepare(`SELECT * FROM users WHERE username LIKE '%gabriela%' OR name LIKE '%gabriela%'`).get();
       } else {
         // Nome COMPLETO exato (sem busca parcial: um pedaço do nome não localiza contas)
         user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(name)) = ?`).get(cleanUsername);
