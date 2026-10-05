@@ -315,13 +315,183 @@
     },
     {
       "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",
-      "status": "em_curso",
-      "nota": "No ar em 03/10/2026. Falta ligar o cron semanal no servidor (setup-backup-cron.sh) e o Dr. Jorge confirmar RPO 24 h e RTO 4 h."
+      "status": "conforme",
+      "nota": "[AUD-03] publicado em produção (03/10); sobra ação no servidor e decisão do Dr. Jorge"
     },
     {
       "titulo": "Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto",
+      "status": "conforme",
+      "nota": "[AUD-04] publicado em produção (03/10); sobra configuração pelo Dr. Jorge"
+    },
+    {
+      "titulo": "Fechar a migração do .env: conferir o nginx e girar a senha do SMTP (ação do Dr. Jorge)",
       "status": "em_curso",
-      "nota": "No ar em 03/10/2026, só para advogados. Falta definir o titular e os substitutos no painel e configurar o gateway de WhatsApp."
+      "nota": "[AUD-26] Feito no código (testado, CI verde); aguardando publicação no servidor. feito em 03/10 (cofre, chave guardada, chave trocada); sobra conferir o nginx e girar a senha do SMTP"
+    },
+    {
+      "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
+      "status": "planejado",
+      "nota": "[AUD-27] proposta enviada (17 funções); aguardando as 5 respostas do Dr. Jorge"
+    },
+    {
+      "titulo": "Mesclar o PR #8 na main (a produção roda o código da branch)",
+      "status": "planejado",
+      "nota": "[AUD-33] pendente: decisão do Dr. Jorge"
+    },
+    {
+      "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
+      "status": "em_curso",
+      "nota": "[AUD-05] Feito no código (testado, CI verde); aguardando publicação no servidor. Calendário gerado por regra (Páscoa) e estendido a cada partida até 4 anos à frente (hoje até 2030), sem apagar o que o escritório cadastrou; aviso de cobertura; feriados locais cadastráveis no painel (calculadora de pr"
+    },
+    {
+      "titulo": "Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências",
+      "status": "conforme",
+      "nota": "[AUD-06] publicado em produção (multer 2.4.0; auditoria de produção com 0 vulnerabilidades)"
+    },
+    {
+      "titulo": "Mover a chave do DataJud para variável de ambiente",
+      "status": "conforme",
+      "nota": "[AUD-07] Publicado: chave do DataJud só pelo cofre. (A consulta por número depende da confirmação da chave no servidor; a busca por nome/OAB é a AUD-40, suspensa.)"
+    },
+    {
+      "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
+      "status": "em_curso",
+      "nota": "[AUD-08] Feito no código (testado, CI verde); aguardando publicação no servidor. Logs JSON com id de requisição (X-Request-Id) sem corpo/token/query; /health checa banco, disco e tarefas automáticas (503 se o banco cair); vigia a cada 10 min avisa o mestre (tarefa parada, disco baixo, certificado); "
+    },
+    {
+      "titulo": "Migrações de banco versionadas",
+      "status": "bloqueado",
+      "nota": "[AUD-09] SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (mexe na base do banco; retomar só quando ele mandar). Já ajudou: o esquema inteiro saiu do server.js para src/db/schema.js (AUD-11), o primeiro passo para as migrações."
+    },
+    {
+      "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
+      "status": "em_curso",
+      "nota": "[AUD-10] Feito no código (testado, CI verde); aguardando publicação no servidor. Node 24 em todo lugar (CI, Dockerfile, .nvmrc, engines, README) com teste que reprova divergência; o build do Vite já compila o HTML legado e agora BLOQUEIA a CI (sem continue-on-error)."
+    },
+    {
+      "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
+      "status": "em_curso",
+      "nota": "[AUD-11] Feito no código (testado, CI verde); aguardando publicação no servidor. server.js de 3.141 para ~1.720 linhas (esquema do banco movido para src/db/schema.js, mesma ordem de execução); teto do guardião baixado para 2.000; switchTab de 300 para 241 linhas (permissões e reset de abas em funçõe"
+    },
+    {
+      "titulo": "Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)",
+      "status": "planejado",
+      "nota": "[AUD-31] pendente"
+    },
+    {
+      "titulo": "Registrar estas ordens no Roadmap Vivo do site",
+      "status": "planejado",
+      "nota": "[AUD-32] pendente: falta a chave do agente no ambiente"
+    },
+    {
+      "titulo": "Reiniciar o servidor Contabo para aplicar as atualizações de sistema",
+      "status": "planejado",
+      "nota": "[AUD-34] pendente: horário combinado com o Dr. Jorge"
+    },
+    {
+      "titulo": "Trocar a senha da conta Google mestra e conferir as outras duas contas mestras",
+      "status": "planejado",
+      "nota": "[AUD-35] pendente: ação do Dr. Jorge"
+    },
+    {
+      "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
+      "status": "em_curso",
+      "nota": "[AUD-12] Feito no código (testado, CI verde); aguardando publicação no servidor. Backup cifrado com chave PÚBLICA (privada fica com o Dr. Jorge) + SHA-256 + conferência no teste semanal; documentos de clientes/drive cifrados em repouso (AES-256-GCM, chave DOC_ENC_KEY no cofre) com leitura transparen"
+    },
+    {
+      "titulo": "Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor",
+      "status": "bloqueado",
+      "nota": "[AUD-13] SUSPENSA por decisão do Dr. Jorge em 04/10/2026: antes de seguir ele quer saber se terá de pagar algo (certificado ICP-Brasil e/ou provedor de assinatura). A assinatura atual (simples/avançada, Lei 14.063/2020) funciona e não tem custo extra."
+    },
+    {
+      "titulo": "IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão",
+      "status": "bloqueado",
+      "nota": "[AUD-14] SUSPENSA por decisão do Dr. Jorge em 04/10/2026, para avaliar o custo (uso de IA é pago por consumo). Retomar após a avaliação de custo."
+    },
+    {
+      "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
+      "status": "em_curso",
+      "nota": "[AUD-15] Feito no código (testado, CI verde); aguardando publicação no servidor. Página pública /agendar (dia + horário livre da agenda do advogado, dados com consentimento LGPD, reCAPTCHA quando configurado); cada marcação vira lead no funil + evento \"consulta\" na agenda (que bloqueia o horário) + "
+    },
+    {
+      "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
+      "status": "em_curso",
+      "nota": "[AUD-16] Feito no código (testado, CI verde); aguardando publicação no servidor. Portal: cada processo mostra \"como está\" em uma frase, \"o que você precisa fazer\" (destacado quando há ação), últimas novidades explicadas e dicionário com termos explicados ao toque. O advogado decide o que o cliente v"
+    },
+    {
+      "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
+      "status": "em_curso",
+      "nota": "[AUD-17] Feito no código (testado, CI verde); aguardando publicação no servidor. Painel \"Indicadores do dono\" (Financeiro): receita e margem direta por área, inadimplência (idade e maiores devedores), previsão de caixa 3/6 meses (só entradas contratadas; saídas = maior entre lançadas e média 3 meses"
+    },
+    {
+      "titulo": "Design system: tokens, componentes e página-catálogo",
+      "status": "em_curso",
+      "nota": "[AUD-18] Feito no código (testado, CI verde); aguardando publicação no servidor. Auditoria visual medida (3 versões do azul da marca, 83 cores soltas, 22 degradês de botão, dourado do texto sem contraste); tokens únicos com modo claro e escuro (contraste AA conferido por teste); componentes .ds-* se"
+    },
+    {
+      "titulo": "Acessibilidade e desempenho com verificação automática",
+      "status": "em_curso",
+      "nota": "[AUD-19] Feito no código (testado, CI verde); aguardando publicação no servidor. Testes automáticos na CI: axe-core (WCAG A/AA, zero violações nas páginas públicas) + navegação por teclado com foco visível; orçamento de peso por página (gzip, docs/perf-budget.json) que reprova quem engordar; Lightho"
+    },
+    {
+      "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
+      "status": "em_curso",
+      "nota": "[AUD-20] Feito no código (testado, CI verde); aguardando publicação no servidor. scripts/producao-checklist.js: confere site/health, certificado HTTPS, backup diário recente, cópia externa cifrada, teste de restauração, disco, tarefas automáticas e versão publicada; reprova (exit 1) em problema grav"
+    },
+    {
+      "titulo": "Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)",
+      "status": "bloqueado",
+      "nota": "[AUD-21] SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (teste de invasão e revisão de LGPD por especialista; retomar quando ele quiser contratar)."
+    },
+    {
+      "titulo": "Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)",
+      "status": "bloqueado",
+      "nota": "[AUD-22] SUSPENSA por decisão do Dr. Jorge em 04/10/2026: por enquanto a equipe é só ele. Retomar quando houver mais pessoas."
+    },
+    {
+      "titulo": "Pesquisa de UX com usuários reais",
+      "status": "bloqueado",
+      "nota": "[AUD-23] SUSPENSA por decisão do Dr. Jorge em 04/10/2026: ainda não há usuários reais além dele. Retomar quando houver advogados, secretária ou clientes usando."
+    },
+    {
+      "titulo": "Presença no Google e Cloudflare (ações externas do Dr. Jorge)",
+      "status": "em_curso",
+      "nota": "[AUD-24] Feito no código (testado, CI verde); aguardando publicação no servidor. Passo a passo: Perfil da Empresa no Google (com regras da OAB sobre avaliações), Search Console (GSC_VERIFICATION + sitemap.xml), GA4 (GA_MEASUREMENT_ID, respeitando o banner LGPD), Cloudflare Free (SSL Full strict, nam"
+    },
+    {
+      "titulo": "Instalar o pacote \"compression\" no servidor (resposta com gzip na origem)",
+      "status": "planejado",
+      "nota": "[AUD-36] pendente"
+    },
+    {
+      "titulo": "Teste de navegador do menu para cada função",
+      "status": "planejado",
+      "nota": "[AUD-37] pendente"
+    },
+    {
+      "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
+      "status": "planejado",
+      "nota": "[AUD-38] pendente: depende da AUD-27"
+    },
+    {
+      "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
+      "status": "planejado",
+      "nota": "[AUD-39] pendente: revisão combinada com o Dr. Jorge"
+    },
+    {
+      "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
+      "status": "bloqueado",
+      "nota": "[AUD-40] SUSPENSA por decisão do Dr. Jorge em 04/10/2026. Publicado: nada mais é inventado. Causa do vazio: o servidor (Contabo, França) é bloqueado pelo Diário da Justiça (ComunicaAPI, HTTP 403); o DataJud é alcançável e só falta confirmar a chave. Caminhos avaliados: (1) ponte/VPS em Sã"
+    },
+    {
+      "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",
+      "status": "planejado",
+      "nota": "[AUD-41] pendente: decisão do Dr. Jorge"
+    },
+    {
+      "titulo": "WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)",
+      "status": "planejado",
+      "nota": "[AUD-42] pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)"
     }
   ]
 }
