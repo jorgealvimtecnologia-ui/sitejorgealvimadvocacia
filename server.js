@@ -27,6 +27,7 @@ import { lgpdRouter } from './src/modules/lgpd/lgpd.routes.js';
 import { dashboardRouter } from './src/modules/dashboard/dashboard.routes.js';
 import { analyticsRouter } from './src/modules/analytics/analytics.routes.js';
 import { syncRouter, syncComunicaApi, startSyncScheduler, registerSyncTask } from './src/modules/sync/sync.routes.js';
+import { radarRouter } from './src/modules/radar/radar.routes.js';
 import { startEnvWatcher } from './src/shared/env-watch.js';
 import { deadlineAlertsRouter, startDeadlineAlerts } from './src/modules/deadline-alerts/deadline-alerts.routes.js';
 import { adminRequestsRouter } from './src/modules/adminrequests/adminrequests.routes.js';
@@ -242,6 +243,7 @@ app.use(ocrRouter);
 app.use(recaptchaRouter);
 app.use(bookingRouter);
 app.use(indicatorsRouter);
+app.use(radarRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console

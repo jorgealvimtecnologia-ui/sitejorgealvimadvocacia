@@ -86,7 +86,7 @@ export const RULES = [
   [/^\/api\/hr(\/|$)/, tab('tab_hr')],
   [/^\/api\/drive(\/|$)/, tab('tab_drive')],
   [/^\/api\/offices(\/|$)/, tab('tab_offices')],
-  [/^\/api\/(judicial|juridico)(\/|$)/, tab('tab_radar')],
+  [/^\/api\/(judicial|juridico|radar)(\/|$)/, tab('tab_radar')],
   [/^\/api\/(admin-requests|adminrequests)(\/|$)/, tab('tab_lawsuits')],
   [/^\/api\/(meta-ads|explorer)(\/|$)/, tab('tab_settings')],
 

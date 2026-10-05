@@ -1,0 +1,92 @@
+/**
+ * Radar via Escavador (ponta a ponta): o webhook valida o token do callback e grava a
+ * publicação REAL na mesma tabela (court_publications), com dedupe, vínculo e alerta.
+ * Sem chave, as rotas devolvem 503 claro (nunca dado inventado); sem login, RBAC nega.
+ */
+import { describe, it, after, before } from 'node:test';
+import assert from 'node:assert/strict';
+import request from 'supertest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const TMP_DB = path.join(os.tmpdir(), `jaw-radar-esc-${Date.now()}.db`);
+process.env.NODE_ENV = 'test';
+process.env.DB_PATH = TMP_DB;
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
+delete process.env.ESCAVADOR_API_TOKEN;
+delete process.env.ESCAVADOR_CALLBACK_TOKEN;
+
+const { app, db } = await import('../server.js');
+
+after(() => {
+  try { db?.close?.(); } catch {}
+  for (const f of [TMP_DB, `${TMP_DB}-wal`, `${TMP_DB}-shm`]) { try { fs.unlinkSync(f); } catch {} }
+});
+
+let token;
+before(async () => {
+  token = (await request(app).post('/api/auth/login').send({ identifier: 'jorgealvimtecnologia', password: process.env.MASTER_PASSWORD })).body.token;
+});
+
+const OCORRENCIA = {
+  id: 7001, numero_processo: '5009999-11.2026.8.13.0145', sigla_tribunal: 'TJMG',
+  nome_orgao: '1ª Vara Cível de Juiz de Fora', tipo_comunicacao: 'Intimação',
+  data_disponibilizacao: '2026-10-02', texto: 'Fica a parte intimada a se manifestar em 15 dias.',
+  nome_classe: 'Procedimento Comum', numero_oab: '222943', uf_oab: 'MG',
+};
+
+describe('Radar/Escavador — gating sem chave', () => {
+  it('status reporta não configurado (honesto, sem inventar)', async () => {
+    const r = await request(app).get('/api/radar/status').set('Authorization', `Bearer ${token}`);
+    assert.equal(r.status, 200);
+    assert.equal(r.body.configurado, false);
+    assert.equal(r.body.provider, 'escavador');
+  });
+  it('listar monitoramentos sem token da API → 503 com instrução', async () => {
+    const r = await request(app).get('/api/radar/monitoramentos').set('Authorization', `Bearer ${token}`);
+    assert.equal(r.status, 503);
+    assert.match(r.body.error, /ESCAVADOR_API_TOKEN/);
+  });
+  it('RBAC: sem login o Radar é negado', async () => {
+    const r = await request(app).get('/api/radar/status');
+    assert.ok(r.status === 401 || r.status === 403, `esperava 401/403, veio ${r.status}`);
+  });
+});
+
+describe('Radar/Escavador — webhook (callback)', () => {
+  it('sem ESCAVADOR_CALLBACK_TOKEN configurado → 503', async () => {
+    const r = await request(app).post('/api/webhooks/escavador').send({ aparicoes: [OCORRENCIA] });
+    assert.equal(r.status, 503);
+  });
+
+  it('com token configurado: valida, recusa token errado e ingere publicação real', async () => {
+    process.env.ESCAVADOR_CALLBACK_TOKEN = 'callback-secreto-123';
+
+    // token errado → 401
+    const errado = await request(app).post('/api/webhooks/escavador').set('Authorization', 'Bearer token-errado').send({ aparicoes: [OCORRENCIA] });
+    assert.equal(errado.status, 401);
+
+    // token certo → ingere
+    const ok = await request(app).post('/api/webhooks/escavador').set('Authorization', 'Bearer callback-secreto-123').send({ aparicoes: [OCORRENCIA] });
+    assert.equal(ok.status, 200, JSON.stringify(ok.body));
+    assert.equal(ok.body.success, true);
+    assert.equal(ok.body.recebidas, 1);
+    assert.equal(ok.body.salvas, 1);
+
+    // gravou na tabela real, com os campos certos
+    const row = db.prepare(`SELECT * FROM court_publications WHERE comunicacao_id = 'ESC-7001'`).get();
+    assert.ok(row, 'a publicação deveria estar em court_publications');
+    assert.equal(row.numero_processo, '50099991120268130145');
+    assert.equal(row.sigla_tribunal, 'TJMG');
+    assert.equal(row.tipo_comunicacao, 'Intimação');
+    assert.equal(row.advogado_oab, 'OAB/MG 222943');
+
+    // reenvio idêntico não duplica (dedupe)
+    const denovo = await request(app).post('/api/webhooks/escavador').set('Authorization', 'Bearer callback-secreto-123').send({ aparicoes: [OCORRENCIA] });
+    assert.equal(denovo.body.salvas, 0, 'o mesmo callback não pode duplicar a publicação');
+    assert.equal(db.prepare(`SELECT COUNT(*) n FROM court_publications WHERE comunicacao_id = 'ESC-7001'`).get().n, 1);
+
+    delete process.env.ESCAVADOR_CALLBACK_TOKEN;
+  });
+});
