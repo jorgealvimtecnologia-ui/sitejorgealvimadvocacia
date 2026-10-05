@@ -2,6 +2,22 @@
   "origem": "Auditoria do repositório vs. capacidades discutidas (03/10/2026), atualizada ao fim do dia: só o que NÃO foi feito (sobras do P0 e P1, P2, P3)",
   "ordens": [
     {
+      "ref": "AUD-01",
+      "prioridade": "P0",
+      "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
+      "descricao": "Senha do painel passou a exigir de 10 a 64 caracteres, aplicada no backend, nos formulários e nos scripts. Já publicado em produção.",
+      "criterios": "Backend, formulários e scripts recusam senha fora de 10–64 caracteres; testes cobrindo o limite passam no npm test.",
+      "estado": "publicado em produção (03/10, versão f158399)"
+    },
+    {
+      "ref": "AUD-02",
+      "prioridade": "P0",
+      "titulo": "Tirar o .env do backup (ou criptografar o conjunto)",
+      "descricao": "O backup não copia mais o .env nem chaves; o .env fica no cofre criptografado e o guardião reprova qualquer exposição. Já publicado em produção.",
+      "criterios": "backup.sh não copia .env/chaves; cofre .env.enc em uso; npm run check:architecture reprova .env exposto.",
+      "estado": "publicado em produção (03/10)"
+    },
+    {
       "ref": "AUD-03",
       "prioridade": "P0",
       "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",

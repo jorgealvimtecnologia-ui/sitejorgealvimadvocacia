@@ -237,7 +237,7 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 ## 🔎 11. Ordens da Auditoria de 03/10/2026 — só o que ainda NÃO foi feito
 
-Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P1, 17 do P2 e 0 do P3.
+Atualizado em 05/10/2026. **38 ordens abertas**: 8 do P0 (o que sobrou), 13 do P1, 17 do P2 e 0 do P3.
 
 **Fonte única das ordens:** [`docs/roadmap/ordens-auditoria-2026-10-03.json`](docs/roadmap/ordens-auditoria-2026-10-03.json). Esta seção é gerada por `node scripts/roadmap-gerar-md.js`; o site recebe as mesmas ordens por `npm run roadmap:register-batch -- --aplicar`.
 
@@ -248,8 +248,16 @@ Atualizado em 05/10/2026. **36 ordens abertas**: 6 do P0 (o que sobrou), 13 do P
 - **AUD-01** política de senha 10 a 64 · **AUD-02** backup sem segredos · **AUD-25** guardião do `.env` · **AUD-28** testes estáveis · **AUD-29** login Google forjado corrigido (sem sinal de exploração: nenhum `google_id` suspeito, IPs conferidos) · **AUD-30** guardião do RBAC e contas mestras.
 - **Também entregue, sem ordem prévia:** matriz de acessos com 26 colunas; menu e API na mesma permissão; painel fechado por padrão; Visão Geral e cockpit filtrados por aba; operador suspenso não entra; vínculo operador-colaborador exato; papel desconhecido sem acesso; teste automático por perfil; `.env` no cofre criptografado, chave guardada fora do servidor e chave trocada (`rotate-key`); correção do dono dos arquivos do cofre (o site caiu por alguns minutos na migração).
 
-### P0 — Urgente (sobras) (6)
+### P0 — Urgente (sobras) (8)
 
+- **AUD-01 — Reforçar a política de senha (mínimo e máximo de caracteres)**
+  - *Estado:* publicado em produção (03/10, versão f158399)
+  - *Situação:* Senha do painel passou a exigir de 10 a 64 caracteres, aplicada no backend, nos formulários e nos scripts. Já publicado em produção.
+  - *Pronto quando:* Backend, formulários e scripts recusam senha fora de 10–64 caracteres; testes cobrindo o limite passam no npm test.
+- **AUD-02 — Tirar o .env do backup (ou criptografar o conjunto)**
+  - *Estado:* publicado em produção (03/10)
+  - *Situação:* O backup não copia mais o .env nem chaves; o .env fica no cofre criptografado e o guardião reprova qualquer exposição. Já publicado em produção.
+  - *Pronto quando:* backup.sh não copia .env/chaves; cofre .env.enc em uso; npm run check:architecture reprova .env exposto.
 - **AUD-03 — Teste de restauração de backup e metas de recuperação (RPO/RTO)**
   - *Estado:* publicado em produção (03/10); sobra ação no servidor e decisão do Dr. Jorge
   - *Situação:* O teste de restauração, o manifesto e a limpeza de segredos dos backups já estão no ar. Sobra ligar a verificação semanal no servidor e fixar as metas de recuperação.
