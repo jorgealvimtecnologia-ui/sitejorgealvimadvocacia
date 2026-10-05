@@ -153,8 +153,17 @@
                 <span>Novo Andamento</span>
               </button>
 
-              <button 
-                onclick="openEditLawsuitModal('${law.id}')" 
+              <button
+                onclick="monitorarProcessoRadar('${law.cnj_number}')"
+                class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                title="Monitorar este processo no Radar (Escavador). O aviso vem só para o advogado — nada é enviado ao cliente."
+              >
+                <span>📡</span>
+                <span>Monitorar</span>
+              </button>
+
+              <button
+                onclick="openEditLawsuitModal('${law.id}')"
                 class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                 title="Editar dados do processo"
               >
@@ -860,4 +869,25 @@
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;
+
+  // Monitorar um processo no Radar (Escavador), direto do card do processo.
+  // Só alerta o ADVOGADO — nada é enviado ao cliente.
+  window.monitorarProcessoRadar = async function (cnj) {
+    const numero = String(cnj || '').trim();
+    if (!numero) { alert('Este processo não tem número CNJ para monitorar.'); return; }
+    if (!confirm(`Monitorar o processo ${numero} no Radar (semanal)?\n\nOs andamentos chegam só para o advogado — nada é enviado ao cliente.`)) return;
+    try {
+      const res = await fetch('/api/radar/monitoramentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}) },
+        body: JSON.stringify({ tipo: 'processo', numeroCnj: numero, frequencia: 'SEMANAL' })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) alert('✅ Processo em monitoramento no Radar (semanal).');
+      else if (res.status === 503) alert('O Radar (Escavador) ainda não está ligado no servidor. Configure a chave para usar este botão.');
+      else alert('Não foi possível monitorar: ' + (data.error || 'erro'));
+    } catch (e) {
+      alert('Falha de conexão ao monitorar o processo.');
+    }
+  };
 })();

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T23:38:37.282Z",
-  "total": 915,
+  "generated_at": "2026-10-05T14:44:34.200Z",
+  "total": 919,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -4040,6 +4040,17 @@
       "order": 7003
     },
     {
+      "id": "QA-A90BC8AED6",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "📡 Monitorar",
+      "action": "monitorarProcessoRadar",
+      "how": "Clique em “📡 Monitorar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
       "id": "QA-509E28084A",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -5280,6 +5291,39 @@
       "label": "Abrir no celular",
       "action": "abrir-celular",
       "how": "Abra no celular. Confira: nada cortado ou sobreposto, textos legíveis e botões fáceis de tocar.",
+      "order": 7012
+    },
+    {
+      "id": "QA-A009FA8CD0",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Radar Judicial",
+      "kind": "Botão",
+      "label": "Monitorar OAB",
+      "action": "radarEscMonitorarOab",
+      "how": "Clique em “Monitorar OAB”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7012
+    },
+    {
+      "id": "QA-9BDDB2542C",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Radar Judicial",
+      "kind": "Botão",
+      "label": "Monitorar",
+      "action": "radarEscMonitorarProcesso",
+      "how": "Clique em “Monitorar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7012
+    },
+    {
+      "id": "QA-3135FE77F7",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Radar Judicial",
+      "kind": "Botão",
+      "label": "📥 Cadastrar todos os processos ativos (semanal)",
+      "action": "radarEscCadastrarAtivos",
+      "how": "Clique em “📥 Cadastrar todos os processos ativos (semanal)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7012
     },
     {
