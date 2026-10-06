@@ -118,3 +118,18 @@ describe('escopo de dados — processos', () => {
     assert.ok(!idsB.includes(B1), 'B não vê mais o que passou para A');
   });
 });
+
+describe('lista de responsáveis (para o seletor do card)', () => {
+  it('mestre pode atribuir e recebe a lista de operadores', async () => {
+    const r = await request(app).get('/api/lawsuits/responsaveis').set(auth(masterToken));
+    assert.equal(r.status, 200);
+    assert.equal(r.body.canAssign, true);
+    assert.ok(r.body.operators.some((o) => o.id === idA) && r.body.operators.some((o) => o.id === idB));
+  });
+  it('advogado comum NÃO pode atribuir (canAssign false, lista vazia)', async () => {
+    const r = await request(app).get('/api/lawsuits/responsaveis').set(auth(tokenA));
+    assert.equal(r.status, 200);
+    assert.equal(r.body.canAssign, false);
+    assert.deepEqual(r.body.operators, []);
+  });
+});

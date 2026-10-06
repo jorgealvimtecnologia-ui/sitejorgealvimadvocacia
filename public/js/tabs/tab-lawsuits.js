@@ -10,6 +10,20 @@
 
     // ================= 3. GESTÃO DE PROCESSOS JUDICIAIS & ANDAMENTOS (CNJ) =================
 
+    // Responsável pelo processo (AUD-27 Parte 2): lista de operadores e se o usuário pode atribuir.
+    let lawsuitResponsaveis = [];
+    let lawsuitCanAssign = false;
+
+    async function loadLawsuitResponsaveis() {
+      try {
+        const res = await fetch('/api/lawsuits/responsaveis', { headers: getAuthHeaders() });
+        if (!res.ok) { lawsuitCanAssign = false; lawsuitResponsaveis = []; return; }
+        const data = await res.json();
+        lawsuitCanAssign = !!data.canAssign;
+        lawsuitResponsaveis = data.operators || [];
+      } catch { lawsuitCanAssign = false; lawsuitResponsaveis = []; }
+    }
+
     function getDeadlineBadge(deadlineDate, deadlineStatus) {
       if (deadlineStatus === 'Cumprido') {
         return `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-[11px]">
@@ -131,6 +145,17 @@
                   <span>🔗 Consultar Tribunal</span>
                 </button>
               </div>
+            </div>
+
+            <!-- Responsável pelo processo (AUD-27 Parte 2) -->
+            <div class="w-full md:w-auto flex items-center gap-2 text-[11px] text-slate-600">
+              <span class="font-bold text-slate-500">👤 Responsável:</span>
+              ${lawsuitCanAssign ? `
+                <select onchange="atribuirResponsavel('${law.id}', this.value)" class="border border-slate-300 rounded-lg px-2 py-1 text-[11px] bg-white" title="Atribuir o advogado responsável por este processo">
+                  <option value="">— Sem responsável (pool) —</option>
+                  ${lawsuitResponsaveis.map(o => `<option value="${o.id}" ${o.id === law.responsible_user_id ? 'selected' : ''}>${o.name}</option>`).join('')}
+                </select>` : `
+                <span class="font-semibold text-navy-950">${law.responsible_name || 'Sem responsável (pool do escritório)'}</span>`}
             </div>
 
             <!-- Botões de Ação do Processo -->
@@ -298,6 +323,7 @@
 
     async function loadLawsuits() {
       try {
+        await loadLawsuitResponsaveis();
         const res = await fetch('/api/lawsuits', { headers: getAuthHeaders() });
         if (res.status === 401) {
           handleLogout();
@@ -869,6 +895,26 @@
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;
+
+  // Atribuir/mudar o advogado responsável por um processo (só mestre/sócio). AUD-27 Parte 2.
+  window.atribuirResponsavel = async function (lawsuitId, userId) {
+    try {
+      const res = await fetch(`/api/lawsuits/${lawsuitId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}) },
+        body: JSON.stringify({ responsible_user_id: userId || null })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        if (typeof showToast === 'function') showToast('Responsável atualizado.', 'success');
+        if (typeof loadLawsuits === 'function') loadLawsuits();
+      } else {
+        alert('Não foi possível atribuir o responsável: ' + (data.error || 'erro'));
+      }
+    } catch (e) {
+      alert('Falha de conexão ao atribuir o responsável.');
+    }
+  };
 
   // Monitorar um processo no Radar (Escavador), direto do card do processo.
   // Só alerta o ADVOGADO — nada é enviado ao cliente.

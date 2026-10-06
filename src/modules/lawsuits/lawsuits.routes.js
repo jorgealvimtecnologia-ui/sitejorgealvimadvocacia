@@ -22,6 +22,27 @@ function lawsuitParaEscopo(lawsuitId) {
   catch { return null; }
 }
 
+/**
+ * GET /api/lawsuits/responsaveis — lista os operadores que podem ser responsáveis por um processo
+ * (para o seletor no card). Só quem pode atribuir (mestre/sócio) recebe a lista; os demais recebem
+ * canAssign=false e lista vazia (a tela mostra o responsável só para leitura).
+ */
+lawsuitsRouter.get('/api/lawsuits/responsaveis', requireAuth, (req, res) => {
+  const canAssign = podeAtribuirResponsavel(req.user);
+  if (!canAssign) return res.json({ success: true, canAssign: false, operators: [] });
+  let operators = [];
+  try {
+    operators = db.prepare(`
+      SELECT u.id, COALESCE(u.name, ap.user_name, u.username) AS name, ap.role_template
+      FROM access_permissions ap
+      JOIN users u ON u.id = ap.user_id
+      WHERE ap.user_type = 'admin' AND ap.is_active = 1 AND ap.role_template != 'cliente'
+      ORDER BY name COLLATE NOCASE ASC
+    `).all();
+  } catch { operators = []; }
+  return res.json({ success: true, canAssign: true, operators });
+});
+
 // ================= ROTAS DE PROCESSOS JUDICIAIS & ANDAMENTOS (CNJ) =================
 
 /**
