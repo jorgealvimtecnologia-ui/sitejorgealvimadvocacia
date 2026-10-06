@@ -61,12 +61,11 @@ async function comunicaFetch(url, opts) {
   return fetch(url, opts);
 }
 
+// Advogados cujas OABs o motor monitora. Apenas os REAIS do escritório — as OABs fictícias
+// de demonstração (que puxavam intimações de terceiros) foram removidas. Novos advogados
+// reais entram pela aba "Equipe" (office_members), que resolveLawyers() também considera.
 const OFFICE_LAWYERS = [
-  { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
-  { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
-  { id: 'MEM-2026-0002', name: 'Dra. Mariana Fonseca Alvim', oab: '210450', uf: 'MG' },
-  { id: 'MEM-2026-0006', name: 'Dr. Roberto Medeiros Fonseca', oab: '165430', uf: 'MG' },
-  { id: 'MEM-2026-0007', name: 'Dra. Camila Vasconcelos', oab: '225890', uf: 'MG' }
+  { id: 'dr-jorge-alvim', name: 'Dr. Jorge Eduardo da Silva Alvim', oab: '222943', uf: 'MG' }
 ];
 
 /** Monta a lista de advogados a sincronizar (padrão do escritório + office_members, ou uma OAB-alvo). */

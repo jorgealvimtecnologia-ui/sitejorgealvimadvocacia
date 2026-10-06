@@ -1244,9 +1244,12 @@ try {
 }
 
 // Inicialização / Seeder de Compromissos e Prazos da Agenda Jurídica
+// SEGURANÇA: só semeia a agenda FICTÍCIA de demonstração quando pedido explicitamente
+// (SEED_DEMO_AGENDA=true). Antes recriava os 3 eventos de demo a cada boot em que a
+// agenda estivesse vazia — o que desfazia a limpeza de produção.
 try {
   const eventCount = db.prepare(`SELECT COUNT(*) as count FROM calendar_events`).get().count;
-  if (eventCount === 0) {
+  if (eventCount === 0 && process.env.SEED_DEMO_AGENDA === 'true') {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     const y = now.getFullYear();
