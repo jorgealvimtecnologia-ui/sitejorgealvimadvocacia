@@ -278,6 +278,19 @@ export function ocorrenciaParaComunicaItem(oc, idx = 0) {
  */
 export function processoParaImport(p) {
   const o = p || {};
+  // Já normalizado (veio de uma busca que normalizamos)? Mantém como está — idempotente.
+  if (Array.isArray(o.polo_ativo) || Array.isArray(o.polo_passivo)) {
+    return {
+      numero_processo: o.numero_processo || primeiro(o, WIRE.campos.numero) || '',
+      tribunal_code: String(o.tribunal_code || primeiro(o, WIRE.campos.tribunalSigla) || '').toUpperCase(),
+      tribunal_name: o.tribunal_name || o.tribunal_code || 'Tribunal',
+      class_name: o.class_name || primeiro(o, WIRE.campos.classe) || 'Ação Judicial',
+      subject: o.subject || '',
+      court_branch: o.court_branch || '',
+      polo_ativo: toArray(o.polo_ativo),
+      polo_passivo: toArray(o.polo_passivo),
+    };
+  }
   const numero = primeiro(o, WIRE.campos.numero) || o.numero_cnj || o.numeroProcessoUnico || '';
   const envolvidos = toArray(primeiro(o, ['envolvidos', 'partes', 'destinatarios', 'advogados']));
   const doLado = (re) => envolvidos

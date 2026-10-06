@@ -372,7 +372,10 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
   if (typeof r.creditos === 'number') registrarGasto('busca', r.creditos);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
   logAudit(req, { event_type: 'RADAR', event_name: 'BUSCA', module: 'RADAR', resource_id: soDigitos(b.oab || b.cpfCnpj || b.numeroCnj || '') || 'nome', description: 'Busca de processos no Escavador.' });
-  return res.json({ success: true, resultado: r.data ?? r.itens, creditos: r.creditos });
+  // Lista normalizada (process_data) pronta para exibir e para o botão "Adicionar ao sistema".
+  const bruto = Array.isArray(r.itens) ? r.itens : (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : (r.data ? [r.data] : [])));
+  const processos = bruto.map(processoParaImport).filter((p) => p.numero_processo);
+  return res.json({ success: true, processos, resultado: r.data ?? r.itens, creditos: r.creditos });
 });
 
 // ---------------------------------------------------------------------------

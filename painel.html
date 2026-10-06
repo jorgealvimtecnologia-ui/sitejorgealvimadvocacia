@@ -4824,6 +4824,22 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <span class="text-[11px] text-slate-400">Para trazer os processos ANTIGOS que ainda não estão cadastrados. Usa a OAB do campo acima.</span>
           </div>
 
+          <!-- Busca avulsa com "Adicionar ao sistema" em cada resultado -->
+          <div class="mt-4 border-t border-slate-100 pt-3">
+            <div class="text-xs font-bold text-navy-950 mb-1">🔎 Buscar um processo e adicionar ao sistema</div>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <select id="esc-busca-tipo" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs">
+                <option value="numeroCnj">Número CNJ</option>
+                <option value="nome">Nome</option>
+                <option value="cpfCnpj">CPF/CNPJ</option>
+                <option value="oab">OAB</option>
+              </select>
+              <input id="esc-busca-input" type="text" placeholder="digite o termo da busca" class="flex-1 min-w-0 border border-slate-300 rounded-lg px-2 py-1.5 text-sm" />
+              <button type="button" id="esc-busca-btn" onclick="radarEscBuscar()" class="whitespace-nowrap bg-navy-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-blue-900">Buscar</button>
+            </div>
+            <div id="esc-busca-res" class="mt-3 space-y-2"></div>
+          </div>
+
           <div id="esc-msg" class="mt-3 text-xs hidden"></div>
         </div>
 

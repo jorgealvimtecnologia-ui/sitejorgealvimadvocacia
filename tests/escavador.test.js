@@ -117,6 +117,14 @@ describe('Escavador — mapeamento para importar processo', () => {
     const pd = processoParaImport({ numero: '1', envolvidos: [{ nome: 'Única Parte' }] });
     assert.equal(pd.polo_ativo[0].name, 'Única Parte');
   });
+  it('é idempotente: já normalizado passa de novo sem perder nada', () => {
+    const uma = processoParaImport({ numero_processo: '9', sigla_tribunal: 'TRT3', classe: 'Reclamatória', envolvidos: [{ nome: 'A', polo: 'ATIVO' }, { nome: 'B', polo: 'PASSIVO' }] });
+    const duas = processoParaImport(uma); // reaplicar não pode estragar (busca → adicionar)
+    assert.deepEqual(duas.polo_ativo, uma.polo_ativo);
+    assert.equal(duas.numero_processo, '9');
+    assert.equal(duas.tribunal_code, 'TRT3');
+    assert.equal(duas.class_name, 'Reclamatória');
+  });
 });
 
 describe('Escavador — utilitários', () => {

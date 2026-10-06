@@ -620,11 +620,64 @@
       } else escMsg('Não foi possível importar: ' + (data.error || 'erro'), 'text-rose-700');
     }
 
+    // Busca avulsa + "Adicionar ao sistema" em cada resultado.
+    let escResultados = [];
+
+    function escEscapar(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderEscResultados() {
+      const box = document.getElementById('esc-busca-res');
+      if (!box) return;
+      if (!escResultados.length) { box.innerHTML = '<div class="text-[11px] text-slate-400">Nenhum processo encontrado.</div>'; return; }
+      box.innerHTML = escResultados.map((p, i) => {
+        const autor = (p.polo_ativo && p.polo_ativo[0] && p.polo_ativo[0].name) || '—';
+        const reu = (p.polo_passivo && p.polo_passivo[0] && p.polo_passivo[0].name) || '—';
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-slate-200 rounded-xl p-2.5">
+            <div class="min-w-0">
+              <div class="font-mono text-xs text-navy-950">${escEscapar(p.numero_processo)}</div>
+              <div class="text-[11px] text-slate-500 truncate">${escEscapar(p.tribunal_code || '')} • ${escEscapar(p.class_name || '')} • ${escEscapar(autor)} × ${escEscapar(reu)}</div>
+            </div>
+            <button type="button" id="esc-add-${i}" onclick="radarEscAdicionarUm(${i})" class="whitespace-nowrap bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700">📥 Adicionar ao sistema</button>
+          </div>`;
+      }).join('');
+    }
+
+    async function radarEscBuscar() {
+      const tipo = (document.getElementById('esc-busca-tipo') || {}).value || 'numeroCnj';
+      const termo = ((document.getElementById('esc-busca-input') || {}).value || '').trim();
+      if (!termo) { escMsg('Digite um termo para buscar.', 'text-rose-700'); return; }
+      const box = document.getElementById('esc-busca-res');
+      if (box) box.innerHTML = '<div class="text-[11px] text-slate-400">Buscando…</div>';
+      const { ok, data } = await escApi('/api/radar/buscar', 'POST', { [tipo]: termo });
+      if (!ok) { if (box) box.innerHTML = ''; escMsg('Não foi possível buscar: ' + (data.error || 'erro'), 'text-rose-700'); return; }
+      escResultados = data.processos || [];
+      renderEscResultados();
+    }
+
+    async function radarEscAdicionarUm(i) {
+      const p = escResultados[i];
+      if (!p) return;
+      const btn = document.getElementById('esc-add-' + i);
+      if (btn) { btn.disabled = true; btn.textContent = 'Adicionando…'; }
+      const { ok, data } = await escApi('/api/radar/importar-processos', 'POST', { processos: [p] });
+      if (ok && data.success) {
+        if (btn) { btn.textContent = data.importados ? '✅ Adicionado' : '✔ Já estava no sistema'; btn.className = 'whitespace-nowrap bg-slate-200 text-slate-600 text-[11px] font-bold px-3 py-1.5 rounded-lg'; }
+      } else {
+        if (btn) { btn.disabled = false; btn.textContent = '📥 Adicionar ao sistema'; }
+        escMsg('Não foi possível adicionar: ' + (data.error || 'erro'), 'text-rose-700');
+      }
+    }
+
     // =========================================================================
 
   // ==========================================================================
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
   // ==========================================================================
+  window.radarEscBuscar = typeof radarEscBuscar !== 'undefined' ? radarEscBuscar : window.radarEscBuscar;
+  window.radarEscAdicionarUm = typeof radarEscAdicionarUm !== 'undefined' ? radarEscAdicionarUm : window.radarEscAdicionarUm;
   window.radarEscImportarPorOab = typeof radarEscImportarPorOab !== 'undefined' ? radarEscImportarPorOab : window.radarEscImportarPorOab;
   window.radarEscStatus = typeof radarEscStatus !== 'undefined' ? radarEscStatus : window.radarEscStatus;
   window.radarEscMonitorarOab = typeof radarEscMonitorarOab !== 'undefined' ? radarEscMonitorarOab : window.radarEscMonitorarOab;
