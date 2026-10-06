@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
+  detalharProcesso, detalheParaImport, grauParaInstancia,
 } from '../src/shared/escavador.js';
 
 // Resposta falsa no formato do fetch (headers case-insensitive, .json()).
@@ -147,6 +148,71 @@ describe('Escavador — mapeamento para importar processo', () => {
     assert.equal(duas.numero_processo, '9');
     assert.equal(duas.tribunal_code, 'TRT3');
     assert.equal(duas.class_name, 'Reclamatória');
+  });
+});
+
+describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo"', () => {
+  // Resposta V2 típica: fontes[].capa (dados do processo) + fontes[].envolvidos (partes+advogados).
+  const DETALHE = {
+    numero_cnj: '5009999-11.2026.8.13.0145', id: 123,
+    fontes: [{
+      sigla: 'TJMG', nome: 'Tribunal de Justiça de Minas Gerais', grau: 1,
+      capa: {
+        classe: 'Procedimento Comum Cível', assunto: 'Indenização por Dano Moral',
+        orgao_julgador: '2ª Vara Cível de Juiz de Fora', data_distribuicao: '2024-03-10',
+        valor_causa: { valor: '15000.00', moeda: 'R$' }, situacao: 'Ativo', juiz: 'Dra. Fulana de Tal',
+      },
+      envolvidos: [
+        { nome: 'Maria Cliente', polo: 'ATIVO', cpf: '529.982.247-25', advogados: [{ nome: 'Dr. Jorge Alvim', oabs: [{ numero: 222943, uf: 'MG' }] }] },
+        { nome: 'Banco Réu S.A.', polo: 'PASSIVO', cnpj: '11.444.777/0001-61', advogados: [{ nome: 'Outro Adv', oabs: [{ numero: 111111, uf: 'SP' }] }] },
+      ],
+    }],
+  };
+
+  it('detalharProcesso monta a URL V2 com o CNJ mascarado e manda o Bearer', async () => {
+    let capturado = null;
+    const fetchImpl = async (url, opts) => { capturado = { url, opts }; return fakeResponse({ body: DETALHE }); };
+    const r = await detalharProcesso({ numeroCnj: '50099991120268130145', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.match(capturado.url, /\/api\/v2\/processos\/numero_cnj\/5009999-11\.2026\.8\.13\.0145$/);
+    assert.equal(capturado.opts.headers.Authorization, 'Bearer t');
+  });
+
+  it('mapeia capa (classe/assunto/vara/juiz/distribuição/valor) e separa as partes', () => {
+    const pd = detalheParaImport(DETALHE, { oab: '222943', uf: 'MG' });
+    assert.equal(pd.numero_processo, '50099991120268130145');
+    assert.equal(pd.tribunal_code, 'TJMG');
+    assert.equal(pd.class_name, 'Procedimento Comum Cível');
+    assert.equal(pd.subject, 'Indenização por Dano Moral');
+    assert.equal(pd.court_branch, '2ª Vara Cível de Juiz de Fora');
+    assert.equal(pd.judge_name, 'Dra. Fulana de Tal');
+    assert.equal(pd.distribution_date, '2024-03-10');
+    assert.equal(pd.valor_causa, '15000.00');
+    assert.equal(pd.situacao, 'Ativo');
+    assert.equal(pd.polo_ativo[0].name, 'Maria Cliente');
+    assert.equal(pd.polo_passivo[0].name, 'Banco Réu S.A.');
+    assert.equal(pd.detalhado, true);
+  });
+
+  it('detecta o CLIENTE pela OAB do dono e aponta a PARTE CONTRÁRIA', () => {
+    const pd = detalheParaImport(DETALHE, { oab: '222943', uf: 'MG' });
+    assert.equal(pd.cliente_sugerido.name, 'Maria Cliente');          // a parte que ELE representa
+    assert.equal(pd.cliente_sugerido.document, '52998224725');
+    assert.equal(pd.parte_contraria, 'Banco Réu S.A.');               // o polo oposto
+  });
+
+  it('sem a OAB do dono entre os advogados: não chuta cliente nem parte contrária', () => {
+    const pd = detalheParaImport(DETALHE, { oab: '999999', uf: 'MG' });
+    assert.equal(pd.cliente_sugerido, null);
+    assert.equal(pd.parte_contraria, '');
+  });
+
+  it('grauParaInstancia traduz grau/recurso para o rótulo do sistema', () => {
+    assert.equal(grauParaInstancia(1), '1ª Instância');
+    assert.equal(grauParaInstancia('2'), '2ª Instância');
+    assert.equal(grauParaInstancia('Recurso'), '2ª Instância');
+    assert.equal(grauParaInstancia('STJ'), 'Instância Superior');
+    assert.equal(grauParaInstancia(''), '1ª Instância');
   });
 });
 

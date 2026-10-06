@@ -34,6 +34,7 @@ import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
   criarMonitoramentoDiario, removerMonitoramento, buscarProcessos,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
+  detalharProcesso, detalheParaImport,
 } from '../../shared/escavador.js';
 
 export const radarRouter = express.Router();
@@ -290,6 +291,38 @@ radarRouter.post('/api/radar/monitorar-processos-ativos', requireAuth, async (re
  * Importa UM processo (já no formato process_data) para a base do escritório: cria/acha o cliente,
  * cria o processo com dedupe por CNJ e define o responsável conforme quem importa. Não envia nada ao cliente.
  */
+/**
+ * Mescla o process_data da BUSCA (base) com o do DETALHE (rico): o detalhe COMPLETA campo a
+ * campo, mas nunca apaga o que a busca já tinha (ex.: o resumo/link da publicação). Idempotente.
+ */
+export function mesclarProcesso(base, rico) {
+  const b = base || {};
+  const r = rico || {};
+  const pick = (campo, vazio = '') => (r[campo] != null && r[campo] !== '' && r[campo] !== vazio ? r[campo] : b[campo]);
+  const lista = (campo) => (Array.isArray(r[campo]) && r[campo].length ? r[campo] : (Array.isArray(b[campo]) ? b[campo] : []));
+  return {
+    ...b,
+    numero_processo: b.numero_processo || r.numero_processo,
+    tribunal_code: pick('tribunal_code'),
+    tribunal_name: pick('tribunal_name'),
+    class_name: r.class_name && r.class_name !== 'Ação Judicial' ? r.class_name : (b.class_name || r.class_name),
+    subject: pick('subject'),
+    court_branch: pick('court_branch'),
+    judge_name: pick('judge_name'),
+    distribution_date: pick('distribution_date'),
+    instance: pick('instance'),
+    valor_causa: pick('valor_causa'),
+    situacao: pick('situacao'),
+    polo_ativo: lista('polo_ativo'),
+    polo_passivo: lista('polo_passivo'),
+    parte_contraria: pick('parte_contraria'),
+    cliente_sugerido: r.cliente_sugerido || b.cliente_sugerido || null,
+    resumo: b.resumo || r.resumo || '',
+    link: b.link || r.link || '',
+    detalhado: !!(r.detalhado || b.detalhado),
+  };
+}
+
 function importarProcessoEscritorio(pd, session) {
   const numero = String(pd.numero_processo || '').trim();
   if (!numero) return { ok: false, reason: 'sem número' };
@@ -297,15 +330,19 @@ function importarProcessoEscritorio(pd, session) {
   if (existente) return { ok: true, jaExistia: true, lawsuitId: existente.id };
 
   const now = new Date().toISOString();
-  const autorNome = (pd.polo_ativo?.[0]?.name || 'Parte importada (Radar)').trim();
-  const autorDoc = soDigitos(pd.polo_ativo?.[0]?.document || '');
+  // O CLIENTE é, de preferência, a parte que o advogado representa (detectada pela OAB no
+  // detalhe); se não houver, cai no 1º do polo ativo (ou um marcador, para o advogado conferir).
+  const clienteBase = pd.cliente_sugerido
+    || (pd.polo_ativo?.[0] ? { name: pd.polo_ativo[0].name, document: pd.polo_ativo[0].document } : null);
+  const cliNome = (clienteBase?.name || 'Parte importada (Radar)').trim();
+  const cliDoc = soDigitos(clienteBase?.document || '');
 
   let cli = null;
-  if (autorDoc.length >= 11) {
+  if (cliDoc.length >= 11) {
     cli = db.prepare(`SELECT id FROM clients WHERE REPLACE(REPLACE(REPLACE(cpf,'.',''),'-',''),' ','') = ?
-                      OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj,'.',''),'/',''),'-',''),' ','') = ?`).get(autorDoc, autorDoc);
+                      OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj,'.',''),'/',''),'-',''),' ','') = ?`).get(cliDoc, cliDoc);
   }
-  if (!cli) cli = db.prepare(`SELECT id FROM clients WHERE LOWER(TRIM(full_name)) = ?`).get(autorNome.toLowerCase());
+  if (!cli) cli = db.prepare(`SELECT id FROM clients WHERE LOWER(TRIM(full_name)) = ?`).get(cliNome.toLowerCase());
   let clientId = cli ? cli.id : null;
   if (!clientId) {
     clientId = generateNextClientFullId();
@@ -313,20 +350,29 @@ function importarProcessoEscritorio(pd, session) {
     const s = hashPassword(crypto.randomBytes(18).toString('base64') + 'Aa1!');
     db.prepare(`INSERT INTO clients (id, client_type, full_name, cpf, cnpj, email, phone, contract_status, password_hash, salt, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, 'Ativo', ?, ?, ?, ?)`).run(
-      clientId, autorDoc.length === 14 ? 'PJ' : 'PF', autorNome,
-      autorDoc.length === 11 ? autorDoc : '', autorDoc.length === 14 ? autorDoc : '',
+      clientId, cliDoc.length === 14 ? 'PJ' : 'PF', cliNome,
+      cliDoc.length === 11 ? cliDoc : '', cliDoc.length === 14 ? cliDoc : '',
       '', '', s.hash, s.salt, now, now);
   }
+
+  // Observações: tudo que ajuda o advogado a CONFERIR se o processo é dele (parte contrária,
+  // valor, situação, resumo da publicação e link para abrir no Escavador).
+  const obs = ['Importado do Radar (Escavador).'];
+  if (pd.parte_contraria) obs.push(`Parte contrária: ${pd.parte_contraria}.`);
+  if (pd.valor_causa) obs.push(`Valor da causa: ${pd.valor_causa}.`);
+  if (pd.situacao) obs.push(`Situação: ${pd.situacao}.`);
+  if (pd.resumo) obs.push(`Publicação: ${pd.resumo}`);
+  if (pd.link) obs.push(`Conferir: ${pd.link}`);
 
   const resp = responsavelAoCriar(session, undefined);
   const lawsuitId = generateNextLawsuitId();
   db.prepare(`INSERT INTO lawsuits (id, client_id, cnj_number, tribunal, instance, action_type, court_branch,
-                subject, status, notes, responsible_user_id, responsible_name, created_at, updated_at)
-              VALUES (?, ?, ?, ?, '1ª Instância', ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
-    lawsuitId, clientId, numero, pd.tribunal_code || 'TJMG',
-    pd.class_name || 'Ação Judicial', pd.court_branch || '', pd.subject || 'Importado do Radar (Escavador)',
-    `Importado do Radar (Escavador).${pd.resumo ? ' Publicação: ' + pd.resumo : ''}`,
-    resp.id, resp.name, now, now);
+                subject, judge_name, distribution_date, status, notes, responsible_user_id, responsible_name, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
+    lawsuitId, clientId, numero, pd.tribunal_code || 'TJMG', pd.instance || '1ª Instância',
+    pd.class_name || 'Ação Judicial', pd.court_branch || '',
+    pd.subject || 'Importado do Radar (Escavador)', pd.judge_name || '', pd.distribution_date || '',
+    obs.join(' '), resp.id, resp.name, now, now);
   return { ok: true, lawsuitId, clientId };
 }
 
@@ -352,17 +398,38 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
     return res.status(400).json({ error: 'Informe "oab" (para buscar e importar) ou "processos".' });
   }
 
-  let importados = 0, jaExistiam = 0, falhas = 0;
+  // OAB do dono (p/ detectar o cliente = a parte que ELE representa). Do pedido ou do advogado padrão.
+  const padrao = advogadoPadrao();
+  const oabDono = soDigitos(b.oab || padrao?.oab || '');
+  const ufDono = String(b.uf || padrao?.uf || 'MG').toUpperCase();
+  // Enriquecer = buscar o detalhe estruturado do processo (consome crédito). Ligado por padrão;
+  // o chamador pode desligar (enriquecer:false) para só cadastrar sem conferir.
+  const enriquecer = b.enriquecer !== false;
+
+  let importados = 0, jaExistiam = 0, falhas = 0, enriquecidos = 0;
   for (const p of encontrados) {
-    const pd = processoParaImport(p);
+    let pd = processoParaImport(p);
     if (!pd.numero_processo) { falhas++; continue; }
+    // Só gasta crédito com o detalhe se o processo ainda NÃO existe (evita re-cobrar os antigos).
+    const existe = db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(soDigitos(pd.numero_processo))
+      || db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(pd.numero_processo);
+    if (enriquecer && !existe) {
+      const d = await detalharProcesso({ numeroCnj: pd.numero_processo });
+      if (typeof d.creditos === 'number') { creditos += d.creditos; registrarGasto('detalhar_processo', d.creditos); }
+      if (d.ok && d.data) {
+        const rico = detalheParaImport(d.data, { oab: oabDono, uf: ufDono });
+        // O detalhe COMPLETA: só sobrescreve quando trouxe valor (não apaga o que a busca já tinha).
+        pd = mesclarProcesso(pd, rico);
+        enriquecidos++;
+      }
+    }
     const r = importarProcessoEscritorio(pd, req.user);
     if (!r.ok) falhas++;
     else if (r.jaExistia) jaExistiam++;
     else importados++;
   }
-  logAudit(req, { event_type: 'RADAR', event_name: 'IMPORTAR_PROCESSOS', module: 'RADAR', resource_id: soDigitos(b.oab || '') || 'lote', description: `Importação do Radar: ${importados} novo(s), ${jaExistiam} já existia(m), ${falhas} falha(s).` });
-  return res.json({ success: true, total: encontrados.length, importados, jaExistiam, falhas, creditos });
+  logAudit(req, { event_type: 'RADAR', event_name: 'IMPORTAR_PROCESSOS', module: 'RADAR', resource_id: soDigitos(b.oab || '') || 'lote', description: `Importação do Radar: ${importados} novo(s), ${jaExistiam} já existia(m), ${enriquecidos} detalhado(s), ${falhas} falha(s).` });
+  return res.json({ success: true, total: encontrados.length, importados, jaExistiam, enriquecidos, falhas, creditos });
 });
 
 /** DELETE /api/radar/monitoramentos/:id — remove um monitoramento. */

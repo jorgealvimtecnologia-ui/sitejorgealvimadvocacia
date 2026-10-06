@@ -18,7 +18,7 @@ delete process.env.ESCAVADOR_API_TOKEN;
 delete process.env.ESCAVADOR_CALLBACK_TOKEN;
 
 const { app, db } = await import('../server.js');
-const { processosAtivosParaMonitorar, saldoCentavos, saldoBaixo, registrarGasto } = await import('../src/modules/radar/radar.routes.js');
+const { processosAtivosParaMonitorar, saldoCentavos, saldoBaixo, registrarGasto, mesclarProcesso } = await import('../src/modules/radar/radar.routes.js');
 
 after(() => {
   try { db?.close?.(); } catch {}
@@ -138,20 +138,81 @@ describe('Radar/Escavador — adicionar processos ao sistema (importar)', () => 
     const r = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ oab: '222943' });
     assert.equal(r.status, 503);
   });
-  it('com chave: importa de uma lista, cria o processo e não duplica', async () => {
+  it('com chave: importa de uma lista, cria o processo e não duplica (sem enriquecer = sem rede)', async () => {
     process.env.ESCAVADOR_API_TOKEN = 'token-teste';
     const proc = { numero_processo: '7777777-77.2026.8.13.0145', sigla_tribunal: 'TJMG', classe: 'Ação de Teste', envolvidos: [{ nome: 'Cliente Importado', polo: 'ATIVO', cpf: '111.444.777-35' }] };
 
-    const r1 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc] });
+    const r1 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc], enriquecer: false });
     assert.equal(r1.status, 200, JSON.stringify(r1.body));
     assert.equal(r1.body.importados, 1);
     const row = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number = '7777777-77.2026.8.13.0145'`).get();
     assert.ok(row, 'o processo deveria ter sido criado');
     assert.ok(row.client_id, 'deveria ter criado/achado um cliente');
 
-    const r2 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc] });
+    const r2 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc], enriquecer: false });
     assert.equal(r2.body.importados, 0, 'não pode duplicar');
     assert.equal(r2.body.jaExistiam, 1);
     delete process.env.ESCAVADOR_API_TOKEN;
+  });
+});
+
+describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecimento)', () => {
+  it('mesclarProcesso: o detalhe completa, mas não apaga o que a busca já tinha', () => {
+    const base = { numero_processo: '1', tribunal_code: 'TJMG', class_name: 'Ação Judicial', subject: '', resumo: 'trecho do diário', link: 'https://x/diario' };
+    const rico = { numero_processo: '1', tribunal_code: 'TJMG', class_name: 'Execução Fiscal', subject: 'ISS', court_branch: '1ª Vara', parte_contraria: 'Município', link: '', detalhado: true };
+    const m = mesclarProcesso(base, rico);
+    assert.equal(m.class_name, 'Execução Fiscal');   // detalhe completa a classe genérica
+    assert.equal(m.subject, 'ISS');
+    assert.equal(m.court_branch, '1ª Vara');
+    assert.equal(m.parte_contraria, 'Município');
+    assert.equal(m.resumo, 'trecho do diário');       // não perdeu o resumo da publicação
+    assert.equal(m.link, 'https://x/diario');          // manteve o link que já existia
+    assert.equal(m.detalhado, true);
+  });
+
+  it('importar com enriquecer: busca o detalhe, detecta o cliente pela OAB e preenche a ficha', async () => {
+    process.env.ESCAVADOR_API_TOKEN = 'token-teste';
+    const CNJ = '8888888-88.2026.8.13.0145';
+    const detalhe = {
+      numero_cnj: CNJ, id: 999,
+      fontes: [{
+        sigla: 'TJMG', nome: 'TJMG', grau: 1,
+        capa: { classe: 'Execução Fiscal', assunto: 'ISS', orgao_julgador: '3ª Vara da Fazenda', data_distribuicao: '2023-05-01', valor_causa: { valor: '9000.00' }, situacao: 'Ativo', juiz: 'Dr. Juiz' },
+        envolvidos: [
+          { nome: 'Empresa do Dr. Jorge', polo: 'ATIVO', cnpj: '11.444.777/0001-61', advogados: [{ nome: 'Jorge', oabs: [{ numero: 222943, uf: 'MG' }] }] },
+          { nome: 'Município de Juiz de Fora', polo: 'PASSIVO' },
+        ],
+      }],
+    };
+    const realFetch = global.fetch;
+    global.fetch = async (url) => {
+      const u = String(url);
+      const body = u.includes('/api/v2/processos/numero_cnj/') ? detalhe : {};
+      return { ok: true, status: 200, headers: { get: (n) => (String(n).toLowerCase() === 'creditos-utilizados' ? '12' : null) }, json: async () => body };
+    };
+    try {
+      const proc = { numero_processo: CNJ, sigla_tribunal: 'TJMG' }; // a busca traz pouco; o detalhe completa
+      const r = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc], oab: '222943', uf: 'MG' });
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+      assert.equal(r.body.importados, 1);
+      assert.equal(r.body.enriquecidos, 1);
+
+      const row = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number = ?`).get(CNJ);
+      assert.ok(row, 'o processo deveria ter sido criado');
+      assert.equal(row.action_type, 'Execução Fiscal');
+      assert.equal(row.subject, 'ISS');
+      assert.equal(row.court_branch, '3ª Vara da Fazenda');
+      assert.equal(row.judge_name, 'Dr. Juiz');
+      assert.equal(row.distribution_date, '2023-05-01');
+      assert.match(row.notes, /Parte contrária: Município de Juiz de Fora/);
+      assert.match(row.notes, /Valor da causa: 9000\.00/);
+
+      // o cliente é a parte que o Dr. Jorge representa (detectada pela OAB), não a parte contrária
+      const cli = db.prepare(`SELECT full_name FROM clients WHERE id = ?`).get(row.client_id);
+      assert.equal(cli.full_name, 'Empresa do Dr. Jorge');
+    } finally {
+      global.fetch = realFetch;
+      delete process.env.ESCAVADOR_API_TOKEN;
+    }
   });
 });

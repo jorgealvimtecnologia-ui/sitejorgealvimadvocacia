@@ -49,6 +49,36 @@ export const WIRE = {
   listasOcorrencia: ['aparicoes', 'ocorrencias', 'publicacoes', 'itens', 'items', 'data', 'resultados'],
   // Cabeçalho com o custo da requisição (em centavos).
   headerCreditos: 'creditos-utilizados',
+  // -------------------------------------------------------------------------
+  //  V2 — DETALHE ESTRUTURADO do processo (classe, assunto, vara, valor, partes,
+  //  advogados). É o que permite "completar o máximo de dados" quando o Radar acha
+  //  um processo. Rotas ABSOLUTAS (base é v1). Conferir no teste de fumaça com o token.
+  // -------------------------------------------------------------------------
+  rotasV2: {
+    processoPorCnj: 'https://api.escavador.com/api/v2/processos/numero_cnj/',
+  },
+  // Dentro do detalhe: a "capa" (dados do processo) e os "envolvidos" (partes + advogados).
+  fontes: ['fontes', 'tribunais', 'fonte'],
+  capa: {
+    classe: ['classe', 'nome_classe', 'classe_processual'],
+    assunto: ['assunto', 'assunto_principal', 'nome_assunto'],
+    orgao: ['orgao_julgador', 'orgao', 'vara', 'nome_orgao'],
+    valor: ['valor_causa', 'valor_da_causa', 'valor'],
+    distribuicao: ['data_distribuicao', 'data_inicio', 'data_distribuicao_processo'],
+    situacao: ['situacao', 'status', 'fase'],
+    juiz: ['juiz', 'relator', 'magistrado', 'juiz_relator'],
+    instancia: ['grau', 'instancia', 'instancia_descricao'],
+  },
+  envolvido: {
+    nome: ['nome', 'name', 'nome_normalizado'],
+    polo: ['polo', 'tipo_polo', 'posicao', 'tipo'],
+    cpf: ['cpf', 'cpf_cnpj', 'documento'],
+    cnpj: ['cnpj'],
+    advogados: ['advogados', 'advogado', 'representantes'],
+    oabs: ['oabs', 'oab', 'numero_oab'],
+    oabNum: ['numero', 'numero_oab', 'oab'],
+    oabUf: ['uf', 'estado', 'uf_oab'],
+  },
 };
 
 // Número CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO) — para extrair de dentro do texto da publicação.
@@ -242,6 +272,20 @@ export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj
   return { ok: true, itens, creditos: r.creditos };
 }
 
+/**
+ * Detalha UM processo pelo número CNJ (API V2 do Escavador) para "completar o máximo de dados":
+ * classe, assunto, órgão/vara, valor da causa, distribuição, situação, juiz/relator, partes e
+ * advogados. É o que o Radar usa ao ACHAR um processo para preencher a ficha do escritório.
+ * Tolerante: se a rota/campos vierem diferentes, devolve ok:false e o importador segue com o
+ * que já tinha — nunca inventa dado.
+ */
+export async function detalharProcesso({ numeroCnj, env = process.env, fetchImpl = fetch }) {
+  const masc = mascaraCnj(numeroCnj) || String(numeroCnj || '').trim();
+  if (!masc) return { ok: false, status: 0, error: 'numeroCnj obrigatório.' };
+  const url = `${WIRE.rotasV2.processoPorCnj}${encodeURIComponent(masc)}`;
+  return escavadorFetch(url, { env, fetchImpl });
+}
+
 // ---------------------------------------------------------------------------
 //  Normalização → formato que o motor de sync já grava (court_publications)
 // ---------------------------------------------------------------------------
@@ -339,6 +383,84 @@ export function processoParaImport(p) {
     resumo: resumoTexto(texto),
     link: o.link || o.link_api || '',
   };
+}
+
+/**
+ * Converte o DETALHE V2 (detalharProcesso) no process_data rico que o importador do escritório
+ * grava. Preenche classe/assunto/vara/juiz/distribuição/valor/instância e separa as partes.
+ * Se a OAB do dono (a que o Radar monitora) aparecer entre os advogados de uma parte, essa
+ * parte vira o CLIENTE sugerido e a do polo oposto vira a PARTE CONTRÁRIA — o "encaixe" do
+ * processo que completa o cliente no sistema. Tolerante a nomes de campo (ver WIRE).
+ */
+export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
+  const d = data || {};
+  const fontes = toArray(pegaLista(d, WIRE.fontes) || (d.fonte ? [d.fonte] : []));
+  const fonte = fontes[0] || d;                 // tolera resposta já "achatada" (sem fontes[])
+  const capa = fonte.capa || fonte || {};
+  const envolvidos = toArray(fonte.envolvidos || d.envolvidos || d.partes);
+  const oabNum = soDigitos(oab);
+  const ufDono = String(uf || '').toUpperCase().slice(0, 2);
+
+  const poloDe = (e) => String(primeiro(e, WIRE.envolvido.polo) || '').toUpperCase();
+  const docDe = (e) => soDigitos(primeiro(e, WIRE.envolvido.cnpj) || primeiro(e, WIRE.envolvido.cpf) || '');
+  const nomeDe = (e) => String(primeiro(e, WIRE.envolvido.nome) || '').trim();
+  const mapParte = (e) => ({ name: nomeDe(e), document: docDe(e) });
+  const temOabDono = (e) => toArray(primeiro(e, WIRE.envolvido.advogados)).some((a) =>
+    toArray(primeiro(a, WIRE.envolvido.oabs) || a).some((o) =>
+      soDigitos(primeiro(o, WIRE.envolvido.oabNum) || o) === oabNum
+      && (!ufDono || String(primeiro(o, WIRE.envolvido.oabUf) || '').toUpperCase().slice(0, 2) === ufDono)));
+
+  const partes = envolvidos.filter((e) => nomeDe(e));
+  const ativos = partes.filter((e) => /ATIV|AUTOR|EXEQ|REQUERENTE|RECLAMANTE|IMPETRANTE|REQTE/.test(poloDe(e)));
+  const passivos = partes.filter((e) => /PASSIV|RÉU|REU|EXECUT|REQUERID|RECLAMAD|IMPETRAD|REQDO/.test(poloDe(e)));
+
+  // Qual parte o advogado dono (a OAB monitorada) representa? Vira o CLIENTE sugerido.
+  let clienteSugerido = null;
+  let parteContraria = '';
+  if (oabNum) {
+    const repr = partes.find(temOabDono);
+    if (repr) {
+      clienteSugerido = mapParte(repr);
+      const reprPolo = poloDe(repr);
+      const oposto = partes.find((e) => e !== repr && poloDe(e) && poloDe(e) !== reprPolo);
+      parteContraria = oposto ? nomeDe(oposto) : '';
+    }
+  }
+
+  const valorRaw = primeiro(capa, WIRE.capa.valor);
+  const valor = (valorRaw && typeof valorRaw === 'object') ? (valorRaw.valor || valorRaw.quantia || '') : (valorRaw || '');
+  const numero = soDigitos(d.numero_cnj || d.numeroProcessoUnico || primeiro(d, WIRE.campos.numero) || numeroCnj(fonte) || '');
+  const sigla = String(fonte.sigla || fonte.sigla_tribunal || primeiro(fonte, WIRE.campos.tribunalSigla) || '').toUpperCase();
+  return {
+    numero_processo: numero,
+    tribunal_code: sigla,
+    tribunal_name: fonte.nome || sigla || 'Tribunal',
+    class_name: primeiro(capa, WIRE.capa.classe) || 'Ação Judicial',
+    subject: primeiro(capa, WIRE.capa.assunto) || '',
+    court_branch: primeiro(capa, WIRE.capa.orgao) || '',
+    judge_name: primeiro(capa, WIRE.capa.juiz) || '',
+    distribution_date: normalizaData(primeiro(capa, WIRE.capa.distribuicao)),
+    instance: grauParaInstancia(primeiro(capa, WIRE.capa.instancia)),
+    valor_causa: valor ? String(valor) : '',
+    situacao: primeiro(capa, WIRE.capa.situacao) || '',
+    polo_ativo: ativos.map(mapParte),
+    polo_passivo: passivos.map(mapParte),
+    parte_contraria: parteContraria,
+    cliente_sugerido: clienteSugerido,
+    link: d.link || d.url || (d.id ? `https://www.escavador.com/processos/${d.id}` : ''),
+    detalhado: true,
+  };
+}
+
+/** Lê o número CNJ de uma fonte/objeto, por campo próprio. */
+function numeroCnj(o) { return primeiro(o || {}, ['numero_cnj', ...WIRE.campos.numero]); }
+
+/** Converte "grau"/instância do Escavador em rótulo do sistema. */
+export function grauParaInstancia(g) {
+  const s = String(g == null ? '' : g).toLowerCase();
+  if (/2|segund|recur|apel/.test(s)) return '2ª Instância';
+  if (/sup|stj|stf|superior/.test(s)) return 'Instância Superior';
+  return '1ª Instância';
 }
 
 /** Trecho curto e limpo do texto da publicação (para exibir e guardar nas observações). */
