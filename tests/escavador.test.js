@@ -84,6 +84,18 @@ describe('Escavador — normalização de publicações (tolerante a nomes de ca
     assert.equal(item.data_disponibilizacao, '2026-10-01');
     assert.equal(item.texto, 'teor');
   });
+  it('item de DIÁRIO (Escavador): extrai o CNJ do texto e mapeia diario_sigla/diario_data/caderno', () => {
+    const item = ocorrenciaParaComunicaItem({
+      id: 757007, diario_sigla: 'DJSP', diario_data: '2018-12-18', caderno: 'Primeira Instancia da Capital',
+      texto: '(OAB 222943/MG) Processo 0024251-28.2013.8.26.0002 - Procedimento Comum - Fulano - Amil Saúde', tipo_resultado: 'Diario',
+    });
+    assert.equal(item.id, 'ESC-757007');
+    assert.equal(item.numero_processo, '00242512820138260002'); // extraído do texto
+    assert.equal(item.numeroprocessocommascara, '0024251-28.2013.8.26.0002');
+    assert.equal(item.siglaTribunal, 'DJSP');
+    assert.equal(item.nomeOrgao, 'Primeira Instancia da Capital');
+    assert.equal(item.data_disponibilizacao, '2018-12-18');
+  });
   it('sem id: gera id estável a partir de data+número (dedupe não quebra)', () => {
     const a = ocorrenciaParaComunicaItem({ numero: '123', data: '2026-10-01', texto: 't' }, 0);
     assert.match(a.id, /^ESC-2026-10-01-123-0$/);

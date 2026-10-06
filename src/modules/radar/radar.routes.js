@@ -32,7 +32,7 @@ import { hashPassword } from '../../shared/password-crypto.js';
 import { responsavelAoCriar } from '../../middleware/data-scope.js';
 import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
-  criarMonitoramentoDiario, criarMonitoramentoProcesso, removerMonitoramento, buscarProcessos,
+  criarMonitoramentoDiario, removerMonitoramento, buscarProcessos,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
 } from '../../shared/escavador.js';
 
@@ -236,13 +236,17 @@ radarRouter.post('/api/radar/monitoramentos', requireAuth, async (req, res) => {
   const tipo = String(b.tipo || '').toLowerCase();
   let r, tipoReg, chave, freq;
   if (tipo === 'processo' || b.numeroCnj) {
-    chave = soDigitos(b.numeroCnj || b.numero);
+    // Monitora o PROCESSO como termo (o número CNJ) nos diários — captura as publicações dele.
+    chave = String(b.numeroCnj || b.numero || '').trim();
     freq = b.frequencia || 'SEMANAL';
-    r = await criarMonitoramentoProcesso({ numeroCnj: chave, frequencia: freq });
+    if (!chave) return res.status(400).json({ error: 'Informe o número do processo (numeroCnj).' });
+    r = await criarMonitoramentoDiario({ termo: chave });
     tipoReg = 'processo';
   } else {
-    chave = String(b.termo || b.oab || '').trim();
-    if (!chave) return res.status(400).json({ error: 'Informe "termo" (ex.: a OAB) ou "numeroCnj".' });
+    // OAB vira o termo "<numero>/<UF>" (ex.: 222943/MG) — evita o homônimo de outro estado.
+    const oab = b.oab ? `${soDigitos(b.oab)}/${String(b.uf || 'MG').toUpperCase()}` : '';
+    chave = oab || String(b.termo || '').trim();
+    if (!chave) return res.status(400).json({ error: 'Informe "oab" (com uf) ou "termo", ou "numeroCnj".' });
     r = await criarMonitoramentoDiario({ termo: chave, variacoes: Array.isArray(b.variacoes) ? b.variacoes : [], origensIds: Array.isArray(b.origensIds) ? b.origensIds : [] });
     tipoReg = 'diario';
   }
@@ -259,18 +263,26 @@ radarRouter.post('/api/radar/monitoramentos', requireAuth, async (req, res) => {
  */
 radarRouter.post('/api/radar/monitorar-processos-ativos', requireAuth, async (req, res) => {
   if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
-  const frequencia = String((req.body || {}).frequencia || 'SEMANAL').toUpperCase();
+  const b = req.body || {};
   const processos = processosAtivosParaMonitorar();
+  // PROTEÇÃO DE CUSTO: cada processo monitorado como termo custa R$ 2,20/mês. A OAB já captura
+  // as intimações de TODOS por R$ 2,20 no total. Só cria um a um se confirmar: true.
+  if (!b.confirmar) {
+    return res.json({
+      success: false, requer_confirmacao: true, total: processos.length,
+      aviso: `Monitorar ${processos.length} processo(s) um a um custaria cerca de R$ ${(processos.length * 2.2).toFixed(2)}/mês. O monitoramento da sua OAB já captura as intimações de todos por R$ 2,20/mês no total. Só confirme se realmente quiser monitorar individualmente.`,
+    });
+  }
   let criados = 0, jaExistiam = 0, falhas = 0, creditos = 0;
   const erros = [];
   for (const p of processos) {
     if (jaMonitorado('processo', p.cnj)) { jaExistiam++; continue; }
-    const r = await criarMonitoramentoProcesso({ numeroCnj: p.cnj, frequencia });
+    const r = await criarMonitoramentoDiario({ termo: p.cnjMasc });
     if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('monitorar_processo', r.creditos); }
-    if (r.ok) { lembrarMonitoramento('processo', p.cnj, r.data?.id, frequencia); criados++; }
+    if (r.ok) { lembrarMonitoramento('processo', p.cnj, r.data?.id, 'termo'); criados++; }
     else { falhas++; erros.push(`${p.cnjMasc}: ${r.error}`); }
   }
-  logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAR_ATIVOS', module: 'RADAR', resource_id: 'lote', description: `Cadastro automático por CNJ: ${criados} criado(s), ${jaExistiam} já existia(m), ${falhas} falha(s).` });
+  logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAR_ATIVOS', module: 'RADAR', resource_id: 'lote', description: `Monitoramento por processo: ${criados} criado(s), ${jaExistiam} já existia(m), ${falhas} falha(s).` });
   return res.json({ success: true, total: processos.length, criados, jaExistiam, falhas, creditos, erros: erros.slice(0, 20) });
 });
 

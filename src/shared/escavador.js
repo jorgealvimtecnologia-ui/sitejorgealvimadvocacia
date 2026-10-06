@@ -27,22 +27,18 @@ const DEFAULT_TIMEOUT_MS = 20000;
 export const WIRE = {
   // Rotas da V1 (relativas ao base). Conferir na doc oficial ao ligar o token.
   rotas: {
-    saldo: '/saldo',
+    saldo: '/quantidade-creditos',   // {"quantidade_creditos":N,"saldo":200,"saldo_descricao":"R$ 200,00"}
     monitoramentos: '/monitoramentos',
-    monitoramentoDiario: '/monitoramentos',          // POST (tipo "DIARIO")
-    monitoramentoProcesso: '/monitoramentos',        // POST (tipo "UNICO")
-    buscaProcessosPorOab: '/advogado/processos',
-    buscaProcessosPorNome: '/busca',
-    buscaProcessoPorNumero: '/processos/numero',
+    busca: '/busca',                 // full-text em DIÁRIOS: ?q=<termo>&qo=t -> items[] (publicações)
   },
-  // Chaves de campo que podem vir na publicação/ocorrência (tentadas em ordem).
+  // Chaves de campo tentadas em ordem — cobrem o item de DIÁRIO do Escavador e a ComunicaAPI.
   campos: {
-    id: ['id', 'ocorrencia_id', 'aparicao_id', 'publicacao_id'],
+    id: ['id', 'diario_id', 'ocorrencia_id', 'aparicao_id', 'publicacao_id'],
     numero: ['numero_processo', 'numero_unico', 'numero', 'numeroProcesso'],
-    tribunalSigla: ['sigla_tribunal', 'siglaTribunal', 'tribunal_sigla'],
-    orgao: ['nome_orgao', 'orgao', 'vara', 'caderno', 'nomeOrgao'],
-    tipo: ['tipo_comunicacao', 'tipo', 'tipoComunicacao', 'especie'],
-    data: ['data_disponibilizacao', 'data_publicacao', 'data', 'dataDisponibilizacao'],
+    tribunalSigla: ['diario_sigla', 'sigla_tribunal', 'siglaTribunal', 'tribunal_sigla'],
+    orgao: ['caderno', 'nome_orgao', 'orgao', 'vara', 'nomeOrgao'],
+    tipo: ['tipo_comunicacao', 'tipoComunicacao', 'especie'],
+    data: ['diario_data', 'data_disponibilizacao', 'data_publicacao', 'data', 'dataDisponibilizacao'],
     texto: ['texto', 'conteudo', 'trecho', 'inteiro_teor', 'conteudo_publicacao'],
     classe: ['nome_classe', 'classe', 'nomeClasse'],
     partes: ['destinatarios', 'envolvidos', 'partes', 'advogados'],
@@ -53,9 +49,10 @@ export const WIRE = {
   listasOcorrencia: ['aparicoes', 'ocorrencias', 'publicacoes', 'itens', 'items', 'data', 'resultados'],
   // Cabeçalho com o custo da requisição (em centavos).
   headerCreditos: 'creditos-utilizados',
-  // Nome do campo de tribunais/origens ao criar monitoramento de diário.
-  origensCampo: 'origens_ids',
 };
+
+// Número CNJ (NNNNNNN-DD.AAAA.J.TR.OOOO) — para extrair de dentro do texto da publicação.
+export const CNJ_RE = /\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}/;
 
 // ---------------------------------------------------------------------------
 //  Configuração (vem do ambiente/cofre)
@@ -143,7 +140,7 @@ export async function escavadorFetch(caminho, {
     return {
       ok: res.ok, status: res.status, data,
       creditos: headerCreditos(res.headers),
-      error: res.ok ? null : (data?.message || data?.error || `HTTP ${res.status}`),
+      error: res.ok ? null : (data?.message || data?.error || (Array.isArray(data?.errors) ? data.errors.join(' | ') : null) || `HTTP ${res.status}`),
     };
   } catch (e) {
     return { ok: false, status: 0, data: null, creditos: null, error: e.name === 'TimeoutError' ? 'tempo esgotado' : e.message };
@@ -188,22 +185,24 @@ export async function listarMonitoramentos({ env = process.env, fetchImpl = fetc
 }
 
 /**
- * Cria um monitoramento de DIÁRIO OFICIAL por termo (OAB, nome, CPF/CNPJ).
- * É a "rede" mais barata: 1 termo (a OAB) captura todas as intimações em nome do advogado.
+ * Cria um monitoramento de DIÁRIO OFICIAL por termo (ex.: a OAB "222943/MG").
+ * É a "rede" das intimações: o termo é casado nos diários e as publicações chegam no callback.
+ * A API exige: tipo + termo + onde monitorar (todos os diários, ou estados/origens).
  */
-export async function criarMonitoramentoDiario({ termo, variacoes = [], origensIds = [], env = process.env, fetchImpl = fetch }) {
-  const body = { tipo: 'DIARIO', termo: String(termo || '').trim(), variacoes };
-  if (origensIds.length) body[WIRE.origensCampo] = origensIds;
-  if (!body.termo) return { ok: false, status: 0, error: 'termo obrigatório.' };
-  return escavadorFetch(WIRE.rotas.monitoramentoDiario, { method: 'POST', body, env, fetchImpl });
+export async function criarMonitoramentoDiario({ termo, variacoes = [], estadosIds = [], origensIds = [], todosDiarios = true, tipo = 'UNICO', env = process.env, fetchImpl = fetch }) {
+  const t = String(termo || '').trim();
+  if (!t) return { ok: false, status: 0, error: 'termo obrigatório.' };
+  const body = { tipo, termo: t, variacoes };
+  if (origensIds.length) body.origens_ids = origensIds;
+  else if (estadosIds.length) body.estados_ids = estadosIds;
+  else body.monitorar_em_todos_diarios = !!todosDiarios;
+  return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body, env, fetchImpl });
 }
 
-/** Cria um monitoramento de PROCESSO específico pelo número CNJ. */
-export async function criarMonitoramentoProcesso({ numeroCnj, frequencia = 'SEMANAL', env = process.env, fetchImpl = fetch }) {
-  const numero = soDigitos(numeroCnj);
-  if (!numero) return { ok: false, status: 0, error: 'numeroCnj obrigatório.' };
-  const body = { tipo: 'UNICO', numero_processo: numero, frequencia };
-  return escavadorFetch(WIRE.rotas.monitoramentoProcesso, { method: 'POST', body, env, fetchImpl });
+/** Cria um monitoramento de PROCESSO pelo id interno do Escavador (processo_id). */
+export async function criarMonitoramentoProcesso({ processoId, tipo = 'UNICO', env = process.env, fetchImpl = fetch }) {
+  if (!processoId) return { ok: false, status: 0, error: 'processo_id obrigatório (resolva o CNJ antes).' };
+  return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body: { tipo, processo_id: processoId }, env, fetchImpl });
 }
 
 /** Remove um monitoramento pelo id. */
@@ -212,13 +211,28 @@ export async function removerMonitoramento(id, { env = process.env, fetchImpl = 
   return escavadorFetch(`${WIRE.rotas.monitoramentos}/${encodeURIComponent(id)}`, { method: 'DELETE', env, fetchImpl });
 }
 
-/** Busca processos por OAB, nome, CPF/CNPJ ou número CNJ (consome créditos). */
-export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj, env = process.env, fetchImpl = fetch }) {
-  if (numeroCnj) return escavadorFetch(`${WIRE.rotas.buscaProcessoPorNumero}/${soDigitos(numeroCnj)}`, { env, fetchImpl });
-  if (oab) return escavadorPaginar(WIRE.rotas.buscaProcessosPorOab, { query: { oab: soDigitos(oab), estado: uf }, env, fetchImpl, max: 500 });
-  if (cpfCnpj) return escavadorPaginar(WIRE.rotas.buscaProcessosPorNome, { query: { cpf_cnpj: soDigitos(cpfCnpj) }, env, fetchImpl, max: 500 });
-  if (nome) return escavadorPaginar(WIRE.rotas.buscaProcessosPorNome, { query: { q: String(nome).trim() }, env, fetchImpl, max: 500 });
-  return { ok: false, status: 0, error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' };
+/**
+ * Busca PUBLICAÇÕES de diário no Escavador (full-text, rota /busca?q=&qo=t). O número do
+ * processo vem dentro do texto. Para OAB, casa "<numero>/<UF>" no texto (evita o homônimo de
+ * outro estado — ex.: OAB 222943/SP é outra pessoa). Só mantém itens de diário com texto.
+ */
+export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj, env = process.env, fetchImpl = fetch, max = 200 }) {
+  let termo = '';
+  let filtroUf = null;
+  if (numeroCnj) termo = String(numeroCnj).trim();
+  else if (oab) { termo = soDigitos(oab); filtroUf = String(uf || '').toUpperCase(); }
+  else if (cpfCnpj) termo = soDigitos(cpfCnpj);
+  else if (nome) termo = String(nome).trim();
+  else return { ok: false, status: 0, error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' };
+
+  const r = await escavadorPaginar(WIRE.rotas.busca, { query: { q: termo, qo: 't' }, env, fetchImpl, max });
+  if (!r.ok) return r;
+  let itens = r.itens.filter((it) => it && (it.tipo_resultado === 'Diario' || primeiro(it, WIRE.campos.texto)));
+  if (filtroUf) {
+    const re = new RegExp(`${termo}\\s*/\\s*${filtroUf}\\b`, 'i');
+    itens = itens.filter((it) => re.test(primeiro(it, WIRE.campos.texto) || ''));
+  }
+  return { ok: true, itens, creditos: r.creditos };
 }
 
 // ---------------------------------------------------------------------------
@@ -250,7 +264,9 @@ export function extrairOcorrencias(payload) {
  */
 export function ocorrenciaParaComunicaItem(oc, idx = 0) {
   const o = oc || {};
-  const numeroMasc = primeiro(o, WIRE.campos.numero) || '';
+  const texto = primeiro(o, WIRE.campos.texto) || '';
+  // O número do processo vem em campo próprio OU dentro do texto da publicação do diário.
+  const numeroMasc = primeiro(o, WIRE.campos.numero) || (texto.match(CNJ_RE) || [''])[0];
   const numero = soDigitos(numeroMasc);
   const data = normalizaData(primeiro(o, WIRE.campos.data));
   const idBruto = primeiro(o, WIRE.campos.id);
@@ -291,7 +307,9 @@ export function processoParaImport(p) {
       polo_passivo: toArray(o.polo_passivo),
     };
   }
-  const numero = primeiro(o, WIRE.campos.numero) || o.numero_cnj || o.numeroProcessoUnico || '';
+  const texto = primeiro(o, WIRE.campos.texto) || '';
+  // Número em campo próprio OU extraído do texto do diário (publicação do Escavador).
+  const numero = primeiro(o, WIRE.campos.numero) || o.numero_cnj || o.numeroProcessoUnico || (texto.match(CNJ_RE) || [''])[0];
   const envolvidos = toArray(primeiro(o, ['envolvidos', 'partes', 'destinatarios', 'advogados']));
   const doLado = (re) => envolvidos
     .filter((e) => re.test(String(e.polo || e.tipo || e.tipo_parte || e.posicao || '')))

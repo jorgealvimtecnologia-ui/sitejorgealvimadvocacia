@@ -597,8 +597,16 @@
       const btn = document.getElementById('esc-ativos-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Cadastrando…'; }
       escMsg('Cadastrando todos os processos ativos por CNJ…', 'text-slate-500');
-      const { ok, data } = await escApi('/api/radar/monitorar-processos-ativos', 'POST', { frequencia: 'SEMANAL' });
-      if (btn) { btn.disabled = false; btn.textContent = '📥 Cadastrar todos os processos ativos (semanal)'; }
+      let resp = await escApi('/api/radar/monitorar-processos-ativos', 'POST', {});
+      // Proteção de custo: o servidor pede confirmação antes de monitorar um a um.
+      if (resp.ok && resp.data && resp.data.requer_confirmacao) {
+        if (btn) { btn.disabled = false; btn.textContent = '📡 Monitorar todos os processos ativos (semanal)'; }
+        if (!confirm(resp.data.aviso + '\n\nDeseja continuar mesmo assim?')) { escMsg('Cancelado. Dica: monitore a sua OAB — pega todos por R$ 2,20/mês.', 'text-slate-600'); return; }
+        if (btn) { btn.disabled = true; btn.textContent = 'Monitorando…'; }
+        resp = await escApi('/api/radar/monitorar-processos-ativos', 'POST', { confirmar: true });
+      }
+      const { ok, data } = resp;
+      if (btn) { btn.disabled = false; btn.textContent = '📡 Monitorar todos os processos ativos (semanal)'; }
       if (ok && data.success) {
         escMsg('✅ ' + data.criados + ' novo(s) em monitoramento, ' + data.jaExistiam + ' já estavam' + (data.falhas ? (', ' + data.falhas + ' falha(s)') : '') + '.', 'text-emerald-700');
         radarEscStatus();
