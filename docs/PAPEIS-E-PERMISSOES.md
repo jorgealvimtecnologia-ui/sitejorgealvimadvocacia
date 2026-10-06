@@ -13,8 +13,17 @@
 > mestre → cliente → ajuste manual do mestre ('custom', nunca sobrescrito) → papel do cadastro (atendente=secretária, admin=advogado)
 > → cargo registrado no RH → senão **sem_perfil (negado por padrão)**. O guardião (`npm run check:rbac`) agora **reprova** qualquer nome próprio no código de acesso.
 >
-> **Parte 2 (a fazer):** criar as 13 novas funções como perfis na matriz (hoje são 8), aplicar o escopo de dados no servidor
-> (processos filtrados pelo advogado responsável) e a matriz como dados editável pelo mestre.
+> **Parte 2 — escopo de dados FEITO (06/10/2026):** o servidor agora **aplica** o `data_scope` nos PROCESSOS.
+> Cada processo tem um **advogado responsável** (`lawsuits.responsible_user_id`, migration `008_processo_responsavel.sql`).
+> Quem tem escopo `assigned`/`own` (advogado, estagiário) só vê/edita/exclui/lança andamento nos processos **dele** mais os
+> **sem dono** (pool do escritório, para não esconder o que já existe); `all`/`office` (mestre, sócio, gerente, secretária) veem tudo.
+> Um processo **nasce no nome de quem o cria** (se for advogado/estagiário); o mestre/sócio pode **atribuir** o responsável
+> (campo `responsible_user_id` no PUT). Regra central em `src/middleware/data-scope.js`, aplicada em todas as rotas de
+> `src/modules/lawsuits/lawsuits.routes.js`; testes em `tests/data-scope.test.js`.
+>
+> **Parte 2 — ainda a fazer:** estender o mesmo escopo a clientes e às publicações/Radar; criar as 13 novas funções como
+> perfis na matriz (hoje são 8); e a matriz como dados editável pelo mestre. (O portal do cliente já mostra só os dados do
+> próprio cliente, por sessão separada.)
 
 ## 1. Como funciona hoje (verificado no código)
 
@@ -23,7 +32,7 @@
 | A permissão é conferida por função ou por pessoa? | **Por pessoa.** Cada operador tem uma linha própria em `access_permissions` com as suas chaves (`tab_leads`, `tab_clients`…). O servidor consulta **essa linha** (`rbac.js` → `operatorHasTab`). O interruptor da tela `Usuários & Senhas` liga/desliga **uma aba de uma pessoa**. |
 | E o "perfil" (Sócio Titular, Advogado, Secretária…)? | É só um **modelo de partida** (`ROLE_TEMPLATES`): ao criar/sincronizar a pessoa, copia as chaves do modelo. Depois cada pessoa pode ser alterada individualmente e **deixa de seguir a função**. |
 | Quem recebe qual perfil? | Decidido por **texto**, não por função cadastrada: o nome ou login contendo `mariana` ou `gabriela` vira **"dono de escritório"** (acesso total: financeiro, RH, usuários, configurações); trechos do login (`adm`, `adv`, `secretaria`…) e palavras do cargo no RH definem os demais. O mestre é reconhecido pelo login `jorgealvimtecnologia`. Qualquer funcionário do RH cujo cargo não bata com nenhuma palavra cai em **`advogado`** (é o valor padrão da coluna). |
-| O escopo de dados (`data_scope`: tudo / só os seus / escritório / próprio) funciona? | **Não.** O valor é gravado, mas **nenhum trecho do servidor o aplica**. Um advogado com a aba "Processos" vê **todos** os processos, não só os dele. |
+| O escopo de dados (`data_scope`: tudo / só os seus / escritório / próprio) funciona? | **Sim, nos PROCESSOS** (desde 06/10/2026, AUD-27 Parte 2): advogado/estagiário só veem/editam os processos deles + os sem dono; mestre/sócio/gerente/secretária veem tudo (`src/middleware/data-scope.js`). Ainda **não** aplicado a clientes e publicações/Radar — próximo passo. |
 | E as pastas de arquivos? | Só **dois portões**: `/storage/office_drive` exige a aba "Drive"; `/storage/clients` exige a aba "Clientes" (e o cliente só abre a própria pasta). Não há acesso por pasta nem por função além disso. |
 | Quantas funções existem? | **8 modelos:** mestre, dono de escritório, advogado, estagiário, secretária, gerente administrativo-financeiro, motorista, cliente. |
 

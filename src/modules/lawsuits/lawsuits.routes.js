@@ -7,8 +7,20 @@ import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { generateNextLawsuitId } from '../../shared/ids.js';
+import { processoVisivel, responsavelAoCriar, podeAtribuirResponsavel, nomeDoResponsavel } from '../../middleware/data-scope.js';
 
 export const lawsuitsRouter = express.Router();
+
+/** 403 padrão quando o processo existe mas está fora do escopo da pessoa (não é dela). */
+function negarForaDeEscopo(res) {
+  return res.status(403).json({ error: 'Este processo está sob responsabilidade de outro advogado. Fale com o responsável ou com a administração.' });
+}
+
+/** Carrega o mínimo do processo (id + responsável) para checar o escopo. */
+function lawsuitParaEscopo(lawsuitId) {
+  try { return db.prepare(`SELECT id, responsible_user_id FROM lawsuits WHERE id = ?`).get(lawsuitId); }
+  catch { return null; }
+}
 
 // ================= ROTAS DE PROCESSOS JUDICIAIS & ANDAMENTOS (CNJ) =================
 
@@ -38,6 +50,9 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
         ORDER BY l.updated_at DESC
       `).all();
     }
+
+    // Escopo de dados (AUD-27 Parte 2): advogado/estagiário só veem os seus + os sem dono (pool).
+    lawsuits = lawsuits.filter(law => processoVisivel(req.user, law));
 
     const movementStmt = db.prepare(`
       SELECT * FROM lawsuit_movements
@@ -88,11 +103,16 @@ lawsuitsRouter.post('/api/lawsuits', requireAuth, (req, res) => {
     const id = generateNextLawsuitId();
     const now = new Date().toISOString();
 
+    // Responsável (AUD-27 Parte 2): quem cria vira o dono (se for advogado/estagiário), ou o
+    // mestre/sócio pode informar outro; mestre/sócio sem informar = pool (sem dono).
+    const resp = responsavelAoCriar(req.user, req.body.responsible_user_id);
+
     const insertStmt = db.prepare(`
       INSERT INTO lawsuits (
         id, client_id, cnj_number, tribunal, instance, action_type, court_branch,
-        subject, judge_name, distribution_date, status, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        subject, judge_name, distribution_date, status, notes,
+        responsible_user_id, responsible_name, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     insertStmt.run(
@@ -108,6 +128,8 @@ lawsuitsRouter.post('/api/lawsuits', requireAuth, (req, res) => {
       distribution_date || '',
       status || 'Em Andamento',
       notes ? notes.trim() : '',
+      resp.id,
+      resp.name,
       now,
       now
     );
@@ -162,8 +184,16 @@ lawsuitsRouter.put('/api/lawsuits/:id', requireAuth, (req, res) => {
     if (!law) {
       return res.status(404).json({ error: 'Processo não encontrado.' });
     }
+    if (!processoVisivel(req.user, law)) return negarForaDeEscopo(res);
 
     const now = new Date().toISOString();
+
+    // Atribuir/mudar o advogado responsável: só mestre/sócio (visão total). AUD-27 Parte 2.
+    if (req.body.responsible_user_id !== undefined && podeAtribuirResponsavel(req.user)) {
+      const novoId = req.body.responsible_user_id || null;
+      db.prepare(`UPDATE lawsuits SET responsible_user_id = ?, responsible_name = ?, updated_at = ? WHERE id = ?`)
+        .run(novoId, novoId ? nomeDoResponsavel(novoId) : null, now, id);
+    }
 
     const updateStmt = db.prepare(`
       UPDATE lawsuits SET
@@ -226,6 +256,7 @@ lawsuitsRouter.delete('/api/lawsuits/:id', requireAuth, (req, res) => {
     if (!law) {
       return res.status(404).json({ error: 'Processo judicial não encontrado.' });
     }
+    if (!processoVisivel(req.user, law)) return negarForaDeEscopo(res);
 
     const force = req.query.force === 'true' || req.body?.force === true;
     const now = new Date().toISOString();
@@ -282,10 +313,11 @@ lawsuitsRouter.post('/api/lawsuits/:id/movements', requireAuth, (req, res) => {
       return res.status(400).json({ error: 'Data do andamento e título são obrigatórios.' });
     }
 
-    const law = db.prepare(`SELECT id, cnj_number FROM lawsuits WHERE id = ?`).get(id);
+    const law = db.prepare(`SELECT id, cnj_number, responsible_user_id FROM lawsuits WHERE id = ?`).get(id);
     if (!law) {
       return res.status(404).json({ error: 'Processo não encontrado.' });
     }
+    if (!processoVisivel(req.user, law)) return negarForaDeEscopo(res);
 
     const now = new Date().toISOString();
 
@@ -342,6 +374,7 @@ lawsuitsRouter.put('/api/lawsuits/movements/:movementId', requireAuth, (req, res
     if (!mov) {
       return res.status(404).json({ error: 'Andamento não encontrado.' });
     }
+    if (!processoVisivel(req.user, lawsuitParaEscopo(mov.lawsuit_id))) return negarForaDeEscopo(res);
 
     const updateStmt = db.prepare(`
       UPDATE lawsuit_movements SET
@@ -382,8 +415,9 @@ lawsuitsRouter.put('/api/lawsuits/movements/:movementId', requireAuth, (req, res
  * body: { visible: true|false }. A explicação simples é gerada automaticamente quando o advogado não escreve uma.
  */
 lawsuitsRouter.post('/api/lawsuits/:id/portal/publish-all', requireAuth, (req, res) => {
-  const law = db.prepare(`SELECT id, cnj_number FROM lawsuits WHERE id = ?`).get(req.params.id);
+  const law = db.prepare(`SELECT id, cnj_number, responsible_user_id FROM lawsuits WHERE id = ?`).get(req.params.id);
   if (!law) return res.status(404).json({ error: 'Processo não encontrado.' });
+  if (!processoVisivel(req.user, law)) return negarForaDeEscopo(res);
   const visible = req.body && req.body.visible === false ? 0 : 1;
   const r = db.prepare(`UPDATE lawsuit_movements SET client_visible = ? WHERE lawsuit_id = ?`).run(visible, law.id);
   db.prepare(`UPDATE lawsuits SET client_updated_at = ? WHERE id = ?`).run(new Date().toISOString(), law.id);
@@ -395,6 +429,7 @@ lawsuitsRouter.post('/api/lawsuits/:id/portal/publish-all', requireAuth, (req, r
 lawsuitsRouter.get('/api/lawsuits/:id/portal-preview', requireAuth, (req, res) => {
   const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(req.params.id);
   if (!law) return res.status(404).json({ error: 'Processo não encontrado.' });
+  if (!processoVisivel(req.user, law)) return negarForaDeEscopo(res);
   const movs = db.prepare(`SELECT id, lawsuit_id, movement_date, title, client_visible, client_text FROM lawsuit_movements WHERE lawsuit_id = ? AND client_visible = 1 ORDER BY movement_date DESC, id DESC`).all(law.id);
   return res.json({ success: true, visible_to_client: law.client_visible !== 0, view: buildClientLawsuitView(law, movs) });
 });
@@ -406,6 +441,7 @@ lawsuitsRouter.delete('/api/lawsuits/movements/:movementId', requireAuth, (req, 
   try {
     const { movementId } = req.params;
     const mov = db.prepare(`SELECT * FROM lawsuit_movements WHERE id = ?`).get(movementId);
+    if (mov && !processoVisivel(req.user, lawsuitParaEscopo(mov.lawsuit_id))) return negarForaDeEscopo(res);
 
     db.prepare(`DELETE FROM lawsuit_movements WHERE id = ?`).run(movementId);
 
@@ -445,6 +481,7 @@ lawsuitsRouter.get('/api/lawsuits/movements/:movementId/preview-whatsapp', requi
     if (!law) {
       return res.status(404).json({ error: 'Processo não encontrado.' });
     }
+    if (!processoVisivel(req.user, law)) return negarForaDeEscopo(res);
 
     const client = law.client_id ? db.prepare(`SELECT * FROM clients WHERE id = ?`).get(law.client_id) : null;
     const clientName = client ? client.full_name : 'Cliente';
@@ -495,6 +532,7 @@ lawsuitsRouter.post('/api/lawsuits/movements/:movementId/authorize-whatsapp', re
     }
 
     const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(mov.lawsuit_id);
+    if (law && !processoVisivel(req.user, law)) return negarForaDeEscopo(res);
     const client = law && law.client_id ? db.prepare(`SELECT * FROM clients WHERE id = ?`).get(law.client_id) : null;
 
     const destPhone = (phone || (client ? client.phone : '') || '').replace(/\D/g, '');
