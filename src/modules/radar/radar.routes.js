@@ -325,7 +325,7 @@ function importarProcessoEscritorio(pd, session) {
               VALUES (?, ?, ?, ?, '1ª Instância', ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
     lawsuitId, clientId, numero, pd.tribunal_code || 'TJMG',
     pd.class_name || 'Ação Judicial', pd.court_branch || '', pd.subject || 'Importado do Radar (Escavador)',
-    `Importado do Radar (Escavador). Réu: ${pd.polo_passivo?.[0]?.name || 'não informado'}`,
+    `Importado do Radar (Escavador).${pd.resumo ? ' Publicação: ' + pd.resumo : ''}`,
     resp.id, resp.name, now, now);
   return { ok: true, lawsuitId, clientId };
 }
@@ -386,8 +386,17 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
   logAudit(req, { event_type: 'RADAR', event_name: 'BUSCA', module: 'RADAR', resource_id: soDigitos(b.oab || b.cpfCnpj || b.numeroCnj || '') || 'nome', description: 'Busca de processos no Escavador.' });
   // Lista normalizada (process_data) pronta para exibir e para o botão "Adicionar ao sistema".
   const bruto = Array.isArray(r.itens) ? r.itens : (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : (r.data ? [r.data] : [])));
-  const processos = bruto.map(processoParaImport).filter((p) => p.numero_processo);
-  return res.json({ success: true, processos, resultado: r.data ?? r.itens, creditos: r.creditos });
+  // Agrupa por NÚMERO do processo: a busca traz 1 linha por publicação, então o mesmo
+  // processo repete. Mostramos cada processo UMA vez (mantém o 1º, que é o mais recente).
+  const vistos = new Set();
+  const processos = [];
+  for (const it of bruto) {
+    const p = processoParaImport(it);
+    if (!p.numero_processo || vistos.has(p.numero_processo)) continue;
+    vistos.add(p.numero_processo);
+    processos.push(p);
+  }
+  return res.json({ success: true, processos, creditos: r.creditos });
 });
 
 // ---------------------------------------------------------------------------

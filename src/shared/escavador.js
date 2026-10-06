@@ -216,22 +216,29 @@ export async function removerMonitoramento(id, { env = process.env, fetchImpl = 
  * processo vem dentro do texto. Para OAB, casa "<numero>/<UF>" no texto (evita o homônimo de
  * outro estado — ex.: OAB 222943/SP é outra pessoa). Só mantém itens de diário com texto.
  */
-export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj, env = process.env, fetchImpl = fetch, max = 200 }) {
+export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj, env = process.env, fetchImpl = fetch, max = 300 }) {
   let termo = '';
-  let filtroUf = null;
-  if (numeroCnj) termo = String(numeroCnj).trim();
-  else if (oab) { termo = soDigitos(oab); filtroUf = String(uf || '').toUpperCase(); }
-  else if (cpfCnpj) termo = soDigitos(cpfCnpj);
-  else if (nome) termo = String(nome).trim();
-  else return { ok: false, status: 0, error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' };
+  let filtroRe = null; // quando setado, só mantém publicações cujo texto casa (ex.: a OAB com a UF)
+  if (numeroCnj) {
+    termo = String(numeroCnj).trim();
+  } else if (oab) {
+    const u = String(uf || 'MG').toUpperCase();
+    const num = soDigitos(oab);
+    termo = `${num}/${u}`;                 // busca "222943/MG" (narra na origem, evita SP)
+    filtroRe = new RegExp(`\\b${num}\\s*/\\s*${u}\\b`, 'i');
+  } else if (cpfCnpj) {
+    termo = soDigitos(cpfCnpj);
+  } else if (nome) {
+    termo = String(nome).trim();
+  } else {
+    return { ok: false, status: 0, error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' };
+  }
 
   const r = await escavadorPaginar(WIRE.rotas.busca, { query: { q: termo, qo: 't' }, env, fetchImpl, max });
   if (!r.ok) return r;
+  // Só publicações de diário (que têm texto); descarta resultados de pessoa/empresa.
   let itens = r.itens.filter((it) => it && (it.tipo_resultado === 'Diario' || primeiro(it, WIRE.campos.texto)));
-  if (filtroUf) {
-    const re = new RegExp(`${termo}\\s*/\\s*${filtroUf}\\b`, 'i');
-    itens = itens.filter((it) => re.test(primeiro(it, WIRE.campos.texto) || ''));
-  }
+  if (filtroRe) itens = itens.filter((it) => filtroRe.test(primeiro(it, WIRE.campos.texto) || ''));
   return { ok: true, itens, creditos: r.creditos };
 }
 
@@ -305,6 +312,8 @@ export function processoParaImport(p) {
       court_branch: o.court_branch || '',
       polo_ativo: toArray(o.polo_ativo),
       polo_passivo: toArray(o.polo_passivo),
+      resumo: o.resumo || resumoTexto(primeiro(o, WIRE.campos.texto)),
+      link: o.link || o.link_api || '',
     };
   }
   const texto = primeiro(o, WIRE.campos.texto) || '';
@@ -327,7 +336,15 @@ export function processoParaImport(p) {
     court_branch: primeiro(o, WIRE.campos.orgao) || '',
     polo_ativo: ativo,
     polo_passivo: passivo,
+    resumo: resumoTexto(texto),
+    link: o.link || o.link_api || '',
   };
+}
+
+/** Trecho curto e limpo do texto da publicação (para exibir e guardar nas observações). */
+export function resumoTexto(texto, max = 200) {
+  const s = String(texto || '').replace(/\s+/g, ' ').trim();
+  return s.length > max ? s.slice(0, max).trim() + '…' : s;
 }
 
 // ---------------------------------------------------------------------------

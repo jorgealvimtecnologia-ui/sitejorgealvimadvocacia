@@ -640,15 +640,15 @@
       if (!box) return;
       if (!escResultados.length) { box.innerHTML = '<div class="text-[11px] text-slate-400">Nenhum processo encontrado.</div>'; return; }
       box.innerHTML = escResultados.map((p, i) => {
-        const autor = (p.polo_ativo && p.polo_ativo[0] && p.polo_ativo[0].name) || '—';
-        const reu = (p.polo_passivo && p.polo_passivo[0] && p.polo_passivo[0].name) || '—';
+        const resumo = p.resumo || '(sem trecho disponível)';
         return `
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-slate-200 rounded-xl p-2.5">
             <div class="min-w-0">
               <div class="font-mono text-xs text-navy-950">${escEscapar(p.numero_processo)}</div>
-              <div class="text-[11px] text-slate-500 truncate">${escEscapar(p.tribunal_code || '')} • ${escEscapar(p.class_name || '')} • ${escEscapar(autor)} × ${escEscapar(reu)}</div>
+              <div class="text-[11px] text-slate-500">${escEscapar(p.tribunal_code || '')} • ${escEscapar(p.class_name || '')}${p.link ? ` • <a href="${escEscapar(p.link)}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline font-semibold">🔗 ver publicação</a>` : ''}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">${escEscapar(resumo)}</div>
             </div>
-            <button type="button" id="esc-add-${i}" onclick="radarEscAdicionarUm(${i})" class="whitespace-nowrap bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700">📥 Adicionar ao sistema</button>
+            <button type="button" id="esc-add-${i}" onclick="radarEscAdicionarUm(${i})" class="whitespace-nowrap bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700 self-start sm:self-center">📥 Adicionar ao sistema</button>
           </div>`;
       }).join('');
     }

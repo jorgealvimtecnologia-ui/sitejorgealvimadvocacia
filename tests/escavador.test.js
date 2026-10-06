@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
-  extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, normalizaData, mascaraCnj, soDigitos,
+  extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
 } from '../src/shared/escavador.js';
 
 // Resposta falsa no formato do fetch (headers case-insensitive, .json()).
@@ -128,6 +128,17 @@ describe('Escavador — mapeamento para importar processo', () => {
   it('sem lado definido, usa o primeiro envolvido como autor', () => {
     const pd = processoParaImport({ numero: '1', envolvidos: [{ nome: 'Única Parte' }] });
     assert.equal(pd.polo_ativo[0].name, 'Única Parte');
+  });
+  it('traz o trecho (resumo) e o link da publicação para conferência', () => {
+    const pd = processoParaImport({ numero: '5', sigla_tribunal: 'DJMG', texto: '  Processo 1234567-89.2024.8.13.0145   -   intimação   ', link: 'https://www.escavador.com/diarios/1/x' });
+    assert.equal(pd.link, 'https://www.escavador.com/diarios/1/x');
+    assert.match(pd.resumo, /Processo 1234567-89\.2024\.8\.13\.0145 - intima/);
+    assert.ok(!/\s{2,}/.test(pd.resumo), 'o resumo não deve ter espaços duplicados');
+  });
+  it('resumoTexto limpa espaços e corta no tamanho', () => {
+    assert.equal(resumoTexto('  a   b  c '), 'a b c');
+    assert.equal(resumoTexto('abcdef', 3), 'abc…');
+    assert.equal(resumoTexto(''), '');
   });
   it('é idempotente: já normalizado passa de novo sem perder nada', () => {
     const uma = processoParaImport({ numero_processo: '9', sigla_tribunal: 'TRT3', classe: 'Reclamatória', envolvidos: [{ nome: 'A', polo: 'ATIVO' }, { nome: 'B', polo: 'PASSIVO' }] });
