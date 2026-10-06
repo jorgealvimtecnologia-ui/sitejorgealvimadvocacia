@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
-  extrairOcorrencias, ocorrenciaParaComunicaItem, normalizaData, mascaraCnj, soDigitos,
+  extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, normalizaData, mascaraCnj, soDigitos,
 } from '../src/shared/escavador.js';
 
 // Resposta falsa no formato do fetch (headers case-insensitive, .json()).
@@ -97,6 +97,25 @@ describe('Escavador — extração de ocorrências do callback', () => {
     assert.equal(extrairOcorrencias([{ id: 9 }]).length, 1);
     assert.equal(extrairOcorrencias({ texto: 'uma publicação só' }).length, 1);
     assert.deepEqual(extrairOcorrencias({ nada: true }), []);
+  });
+});
+
+describe('Escavador — mapeamento para importar processo', () => {
+  it('mapeia número, tribunal, classe e separa autor/réu (tolerante)', () => {
+    const pd = processoParaImport({
+      numero_processo: '5009999-11.2026.8.13.0145', sigla_tribunal: 'TJMG', classe: 'Execução Fiscal',
+      assunto: 'ISS', envolvidos: [{ nome: 'Fulano', polo: 'ATIVO', cpf: '529.982.247-25' }, { nome: 'Município', polo: 'PASSIVO' }],
+    });
+    assert.equal(pd.numero_processo, '5009999-11.2026.8.13.0145');
+    assert.equal(pd.tribunal_code, 'TJMG');
+    assert.equal(pd.class_name, 'Execução Fiscal');
+    assert.equal(pd.polo_ativo[0].name, 'Fulano');
+    assert.equal(pd.polo_ativo[0].document, '52998224725');
+    assert.equal(pd.polo_passivo[0].name, 'Município');
+  });
+  it('sem lado definido, usa o primeiro envolvido como autor', () => {
+    const pd = processoParaImport({ numero: '1', envolvidos: [{ nome: 'Única Parte' }] });
+    assert.equal(pd.polo_ativo[0].name, 'Única Parte');
   });
 });
 

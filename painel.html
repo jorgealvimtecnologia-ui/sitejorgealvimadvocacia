@@ -4815,8 +4815,13 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
 
           <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-            <button type="button" id="esc-ativos-btn" onclick="radarEscCadastrarAtivos()" class="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-emerald-700">📥 Cadastrar todos os processos ativos (semanal)</button>
-            <span class="text-[11px] text-slate-400">Cadastra de uma vez, por CNJ, todos os processos ativos do escritório — sem repetir os que já estão.</span>
+            <button type="button" id="esc-ativos-btn" onclick="radarEscCadastrarAtivos()" class="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-emerald-700">📡 Monitorar todos os processos ativos (semanal)</button>
+            <span class="text-[11px] text-slate-400">Coloca no Radar, por CNJ, todos os processos ativos que JÁ estão no sistema — sem repetir.</span>
+          </div>
+
+          <div class="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 border-t border-slate-100 pt-3">
+            <button type="button" id="esc-importar-btn" onclick="radarEscImportarPorOab()" class="bg-blue-900 text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-blue-800">📥 Buscar meus processos (pela OAB) e adicionar ao sistema</button>
+            <span class="text-[11px] text-slate-400">Para trazer os processos ANTIGOS que ainda não estão cadastrados. Usa a OAB do campo acima.</span>
           </div>
 
           <div id="esc-msg" class="mt-3 text-xs hidden"></div>

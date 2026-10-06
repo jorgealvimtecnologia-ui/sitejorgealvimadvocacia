@@ -20,16 +20,20 @@
  * Chaves no cofre: node scripts/env-vault.js set ESCAVADOR_API_TOKEN
  *                  node scripts/env-vault.js set ESCAVADOR_CALLBACK_TOKEN   (valida os callbacks)
  */
+import crypto from 'node:crypto';
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { createNotification } from '../notifications/notifications.routes.js';
 import { registerSyncTask, ingestComunicaItems, reconcileDeadlinesToCalendar, relinkOrphanPublications, resolveLawyers } from '../sync/sync.routes.js';
+import { generateNextClientFullId, generateNextLawsuitId } from '../../shared/ids.js';
+import { hashPassword } from '../../shared/password-crypto.js';
+import { responsavelAoCriar } from '../../middleware/data-scope.js';
 import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
   criarMonitoramentoDiario, criarMonitoramentoProcesso, removerMonitoramento, buscarProcessos,
-  extrairOcorrencias, ocorrenciaParaComunicaItem, soDigitos,
+  extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
 } from '../../shared/escavador.js';
 
 export const radarRouter = express.Router();
@@ -268,6 +272,85 @@ radarRouter.post('/api/radar/monitorar-processos-ativos', requireAuth, async (re
   }
   logAudit(req, { event_type: 'RADAR', event_name: 'MONITORAR_ATIVOS', module: 'RADAR', resource_id: 'lote', description: `Cadastro automático por CNJ: ${criados} criado(s), ${jaExistiam} já existia(m), ${falhas} falha(s).` });
   return res.json({ success: true, total: processos.length, criados, jaExistiam, falhas, creditos, erros: erros.slice(0, 20) });
+});
+
+/**
+ * Importa UM processo (já no formato process_data) para a base do escritório: cria/acha o cliente,
+ * cria o processo com dedupe por CNJ e define o responsável conforme quem importa. Não envia nada ao cliente.
+ */
+function importarProcessoEscritorio(pd, session) {
+  const numero = String(pd.numero_processo || '').trim();
+  if (!numero) return { ok: false, reason: 'sem número' };
+  const existente = db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(numero);
+  if (existente) return { ok: true, jaExistia: true, lawsuitId: existente.id };
+
+  const now = new Date().toISOString();
+  const autorNome = (pd.polo_ativo?.[0]?.name || 'Parte importada (Radar)').trim();
+  const autorDoc = soDigitos(pd.polo_ativo?.[0]?.document || '');
+
+  let cli = null;
+  if (autorDoc.length >= 11) {
+    cli = db.prepare(`SELECT id FROM clients WHERE REPLACE(REPLACE(REPLACE(cpf,'.',''),'-',''),' ','') = ?
+                      OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj,'.',''),'/',''),'-',''),' ','') = ?`).get(autorDoc, autorDoc);
+  }
+  if (!cli) cli = db.prepare(`SELECT id FROM clients WHERE LOWER(TRIM(full_name)) = ?`).get(autorNome.toLowerCase());
+  let clientId = cli ? cli.id : null;
+  if (!clientId) {
+    clientId = generateNextClientFullId();
+    // Senha ALEATÓRIA e forte (nunca "123456"): o cliente define a dele por "esqueci a senha".
+    const s = hashPassword(crypto.randomBytes(18).toString('base64') + 'Aa1!');
+    db.prepare(`INSERT INTO clients (id, client_type, full_name, cpf, cnpj, email, phone, contract_status, password_hash, salt, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'Ativo', ?, ?, ?, ?)`).run(
+      clientId, autorDoc.length === 14 ? 'PJ' : 'PF', autorNome,
+      autorDoc.length === 11 ? autorDoc : '', autorDoc.length === 14 ? autorDoc : '',
+      '', '', s.hash, s.salt, now, now);
+  }
+
+  const resp = responsavelAoCriar(session, undefined);
+  const lawsuitId = generateNextLawsuitId();
+  db.prepare(`INSERT INTO lawsuits (id, client_id, cnj_number, tribunal, instance, action_type, court_branch,
+                subject, status, notes, responsible_user_id, responsible_name, created_at, updated_at)
+              VALUES (?, ?, ?, ?, '1ª Instância', ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
+    lawsuitId, clientId, numero, pd.tribunal_code || 'TJMG',
+    pd.class_name || 'Ação Judicial', pd.court_branch || '', pd.subject || 'Importado do Radar (Escavador)',
+    `Importado do Radar (Escavador). Réu: ${pd.polo_passivo?.[0]?.name || 'não informado'}`,
+    resp.id, resp.name, now, now);
+  return { ok: true, lawsuitId, clientId };
+}
+
+/**
+ * POST /api/radar/importar-processos — ADICIONA processos ao sistema a partir do Escavador.
+ *  - body { oab, uf }     → busca os processos do advogado e importa TODOS (os antigos de uma vez);
+ *  - body { processos:[]} → importa uma lista já encontrada (ex.: botão "Adicionar" num resultado).
+ * Dedupe por CNJ (não duplica os que já existem). Nada é enviado ao cliente.
+ */
+radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) => {
+  if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
+  const b = req.body || {};
+  let encontrados = [];
+  let creditos = 0;
+  if (Array.isArray(b.processos) && b.processos.length) {
+    encontrados = b.processos;
+  } else if (b.oab) {
+    const r = await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG' });
+    if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('busca', r.creditos); }
+    if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
+    encontrados = Array.isArray(r.itens) ? r.itens : (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : []));
+  } else {
+    return res.status(400).json({ error: 'Informe "oab" (para buscar e importar) ou "processos".' });
+  }
+
+  let importados = 0, jaExistiam = 0, falhas = 0;
+  for (const p of encontrados) {
+    const pd = processoParaImport(p);
+    if (!pd.numero_processo) { falhas++; continue; }
+    const r = importarProcessoEscritorio(pd, req.user);
+    if (!r.ok) falhas++;
+    else if (r.jaExistia) jaExistiam++;
+    else importados++;
+  }
+  logAudit(req, { event_type: 'RADAR', event_name: 'IMPORTAR_PROCESSOS', module: 'RADAR', resource_id: soDigitos(b.oab || '') || 'lote', description: `Importação do Radar: ${importados} novo(s), ${jaExistiam} já existia(m), ${falhas} falha(s).` });
+  return res.json({ success: true, total: encontrados.length, importados, jaExistiam, falhas, creditos });
 });
 
 /** DELETE /api/radar/monitoramentos/:id — remove um monitoramento. */

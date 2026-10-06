@@ -605,11 +605,27 @@
       } else escMsg('Não foi possível cadastrar: ' + (data.error || 'erro'), 'text-rose-700');
     }
 
+    async function radarEscImportarPorOab() {
+      const oab = (document.getElementById('esc-oab-input') || {}).value;
+      const uf = ((document.getElementById('esc-oab-uf') || {}).value || 'MG').toUpperCase();
+      if (!oab || !String(oab).trim()) { escMsg('Informe o número da OAB no campo acima para buscar os seus processos.', 'text-rose-700'); return; }
+      if (!confirm('Buscar no Escavador todos os processos da OAB ' + oab + ' e adicionar ao sistema os que ainda não estão?\n\nOs que já existem não são duplicados.')) return;
+      const btn = document.getElementById('esc-importar-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Buscando e importando…'; }
+      escMsg('Buscando seus processos e adicionando ao sistema…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/importar-processos', 'POST', { oab: String(oab).replace(/\D/g, ''), uf });
+      if (btn) { btn.disabled = false; btn.textContent = '📥 Buscar meus processos (pela OAB) e adicionar ao sistema'; }
+      if (ok && data.success) {
+        escMsg('✅ ' + data.importados + ' processo(s) adicionado(s), ' + data.jaExistiam + ' já estavam no sistema' + (data.falhas ? (', ' + data.falhas + ' não puderam ser lidos') : '') + '. Abra a aba Processos para ver.', 'text-emerald-700');
+      } else escMsg('Não foi possível importar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
     // =========================================================================
 
   // ==========================================================================
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
   // ==========================================================================
+  window.radarEscImportarPorOab = typeof radarEscImportarPorOab !== 'undefined' ? radarEscImportarPorOab : window.radarEscImportarPorOab;
   window.radarEscStatus = typeof radarEscStatus !== 'undefined' ? radarEscStatus : window.radarEscStatus;
   window.radarEscMonitorarOab = typeof radarEscMonitorarOab !== 'undefined' ? radarEscMonitorarOab : window.radarEscMonitorarOab;
   window.radarEscMonitorarProcesso = typeof radarEscMonitorarProcesso !== 'undefined' ? radarEscMonitorarProcesso : window.radarEscMonitorarProcesso;

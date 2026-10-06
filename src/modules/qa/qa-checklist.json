@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T00:52:45.939Z",
-  "total": 919,
+  "generated_at": "2026-10-06T01:00:06.562Z",
+  "total": 920,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -5316,14 +5316,25 @@
       "order": 7012
     },
     {
-      "id": "QA-3135FE77F7",
+      "id": "QA-1DD03FF065",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Radar Judicial",
       "kind": "Botão",
-      "label": "📥 Cadastrar todos os processos ativos (semanal)",
+      "label": "📡 Monitorar todos os processos ativos (semanal)",
       "action": "radarEscCadastrarAtivos",
-      "how": "Clique em “📥 Cadastrar todos os processos ativos (semanal)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “📡 Monitorar todos os processos ativos (semanal)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7012
+    },
+    {
+      "id": "QA-E759567E1D",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Radar Judicial",
+      "kind": "Botão",
+      "label": "📥 Buscar meus processos (pela OAB) e adicionar ao sistema",
+      "action": "radarEscImportarPorOab",
+      "how": "Clique em “📥 Buscar meus processos (pela OAB) e adicionar ao sistema”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7012
     },
     {

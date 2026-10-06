@@ -272,6 +272,33 @@ export function ocorrenciaParaComunicaItem(oc, idx = 0) {
   };
 }
 
+/**
+ * Converte um processo retornado pela BUSCA do Escavador no formato que o importador do
+ * escritório espera (process_data). Tolerante a variações de nome de campo (ver WIRE).
+ */
+export function processoParaImport(p) {
+  const o = p || {};
+  const numero = primeiro(o, WIRE.campos.numero) || o.numero_cnj || o.numeroProcessoUnico || '';
+  const envolvidos = toArray(primeiro(o, ['envolvidos', 'partes', 'destinatarios', 'advogados']));
+  const doLado = (re) => envolvidos
+    .filter((e) => re.test(String(e.polo || e.tipo || e.tipo_parte || e.posicao || '')))
+    .map((e) => ({ name: e.nome || e.name || '', document: soDigitos(e.cpf || e.cnpj || e.documento || '') }));
+  let ativo = doLado(/ativ|autor|exequ|reclamante|requerente|impetrante/i);
+  let passivo = doLado(/passiv|réu|reu|execut|reclamad|requerid|impetrad/i);
+  if (!ativo.length && envolvidos.length) ativo = [{ name: envolvidos[0].nome || envolvidos[0].name || '', document: '' }];
+  const sigla = primeiro(o, WIRE.campos.tribunalSigla) || '';
+  return {
+    numero_processo: numero,
+    tribunal_code: String(sigla).toUpperCase(),
+    tribunal_name: sigla || 'Tribunal',
+    class_name: primeiro(o, WIRE.campos.classe) || 'Ação Judicial',
+    subject: primeiro(o, ['assunto', 'subject', 'objeto']) || '',
+    court_branch: primeiro(o, WIRE.campos.orgao) || '',
+    polo_ativo: ativo,
+    polo_passivo: passivo,
+  };
+}
+
 // ---------------------------------------------------------------------------
 //  Utilitários puros
 // ---------------------------------------------------------------------------

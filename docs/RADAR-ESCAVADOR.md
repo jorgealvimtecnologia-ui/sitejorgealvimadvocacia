@@ -86,7 +86,8 @@ agenda) não muda. Os extratores já são **tolerantes** a variações comuns de
 | `GET /api/radar/status` | Provedor configurado?, saldo (`?refresh=1`), último callback |
 | `GET /api/radar/monitoramentos` | Lista os monitoramentos na conta do Escavador |
 | `POST /api/radar/monitoramentos` | Cria monitoramento (diário por termo ou processo por CNJ) |
-| `POST /api/radar/monitorar-processos-ativos` | Cadastra de uma vez, por CNJ (semanal), todos os processos ativos do escritório |
+| `POST /api/radar/monitorar-processos-ativos` | Monitora de uma vez, por CNJ (semanal), todos os processos ativos que JÁ estão no sistema |
+| `POST /api/radar/importar-processos` | ADICIONA ao sistema os processos encontrados na busca (por OAB, ou uma lista) — traz os antigos; dedupe por CNJ |
 | `DELETE /api/radar/monitoramentos/:id` | Remove um monitoramento |
 | `POST /api/radar/buscar` | Busca sob demanda (OAB, nome, CPF/CNPJ, CNJ) — consome créditos |
 | `POST /api/webhooks/escavador` | **Público**, validado por token: recebe os avisos do Escavador |

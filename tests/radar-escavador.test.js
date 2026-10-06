@@ -132,3 +132,26 @@ describe('Radar/Escavador — cadastro automático por CNJ', () => {
     assert.match(r.body.error, /ESCAVADOR_API_TOKEN/);
   });
 });
+
+describe('Radar/Escavador — adicionar processos ao sistema (importar)', () => {
+  it('sem chave da API → 503', async () => {
+    const r = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ oab: '222943' });
+    assert.equal(r.status, 503);
+  });
+  it('com chave: importa de uma lista, cria o processo e não duplica', async () => {
+    process.env.ESCAVADOR_API_TOKEN = 'token-teste';
+    const proc = { numero_processo: '7777777-77.2026.8.13.0145', sigla_tribunal: 'TJMG', classe: 'Ação de Teste', envolvidos: [{ nome: 'Cliente Importado', polo: 'ATIVO', cpf: '111.444.777-35' }] };
+
+    const r1 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc] });
+    assert.equal(r1.status, 200, JSON.stringify(r1.body));
+    assert.equal(r1.body.importados, 1);
+    const row = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number = '7777777-77.2026.8.13.0145'`).get();
+    assert.ok(row, 'o processo deveria ter sido criado');
+    assert.ok(row.client_id, 'deveria ter criado/achado um cliente');
+
+    const r2 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [proc] });
+    assert.equal(r2.body.importados, 0, 'não pode duplicar');
+    assert.equal(r2.body.jaExistiam, 1);
+    delete process.env.ESCAVADOR_API_TOKEN;
+  });
+});
