@@ -9,6 +9,7 @@ import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
   detalharProcesso, detalheParaImport, grauParaInstancia,
+  criarMonitoramentoDiario, criarMonitoramentoProcesso,
 } from '../src/shared/escavador.js';
 
 // Resposta falsa no formato do fetch (headers case-insensitive, .json()).
@@ -148,6 +149,26 @@ describe('Escavador — mapeamento para importar processo', () => {
     assert.equal(duas.numero_processo, '9');
     assert.equal(duas.tribunal_code, 'TRT3');
     assert.equal(duas.class_name, 'Reclamatória');
+  });
+});
+
+describe('Escavador — criação de monitoramento (tipo correto, minúsculo)', () => {
+  it('monitoramento por TERMO (OAB): tipo="termo" e termo no corpo', async () => {
+    let corpo = null;
+    const fetchImpl = async (url, opts) => { corpo = JSON.parse(opts.body); return fakeResponse({ body: { id: 1 } }); };
+    const r = await criarMonitoramentoDiario({ termo: '222943/MG', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.equal(corpo.tipo, 'termo', 'o tipo precisa ser "termo" (minúsculo), não "UNICO"');
+    assert.equal(corpo.termo, '222943/MG');
+    assert.equal(corpo.monitorar_em_todos_diarios, true);
+  });
+  it('monitoramento por PROCESSO: tipo="processo" e processo_id no corpo', async () => {
+    let corpo = null;
+    const fetchImpl = async (url, opts) => { corpo = JSON.parse(opts.body); return fakeResponse({ body: { id: 2 } }); };
+    const r = await criarMonitoramentoProcesso({ processoId: 55, env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.equal(corpo.tipo, 'processo');
+    assert.equal(corpo.processo_id, 55);
   });
 });
 

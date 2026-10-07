@@ -218,8 +218,10 @@ export async function listarMonitoramentos({ env = process.env, fetchImpl = fetc
  * Cria um monitoramento de DIÁRIO OFICIAL por termo (ex.: a OAB "222943/MG").
  * É a "rede" das intimações: o termo é casado nos diários e as publicações chegam no callback.
  * A API exige: tipo + termo + onde monitorar (todos os diários, ou estados/origens).
+ * ⚠️ `tipo` é MINÚSCULO no Escavador ('termo' | 'processo') — conferido no SDK oficial
+ * (TiposMonitoramentosDiario). Valores em CAIXA ALTA devolvem "opção de tipo inválida".
  */
-export async function criarMonitoramentoDiario({ termo, variacoes = [], estadosIds = [], origensIds = [], todosDiarios = true, tipo = 'UNICO', env = process.env, fetchImpl = fetch }) {
+export async function criarMonitoramentoDiario({ termo, variacoes = [], estadosIds = [], origensIds = [], todosDiarios = true, tipo = 'termo', env = process.env, fetchImpl = fetch }) {
   const t = String(termo || '').trim();
   if (!t) return { ok: false, status: 0, error: 'termo obrigatório.' };
   const body = { tipo, termo: t, variacoes };
@@ -229,10 +231,13 @@ export async function criarMonitoramentoDiario({ termo, variacoes = [], estadosI
   return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body, env, fetchImpl });
 }
 
-/** Cria um monitoramento de PROCESSO pelo id interno do Escavador (processo_id). */
-export async function criarMonitoramentoProcesso({ processoId, tipo = 'UNICO', env = process.env, fetchImpl = fetch }) {
+/** Cria um monitoramento de PROCESSO pelo id interno do Escavador (processo_id). tipo='processo'. */
+export async function criarMonitoramentoProcesso({ processoId, origensIds = [], todosDiarios = true, tipo = 'processo', env = process.env, fetchImpl = fetch }) {
   if (!processoId) return { ok: false, status: 0, error: 'processo_id obrigatório (resolva o CNJ antes).' };
-  return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body: { tipo, processo_id: processoId }, env, fetchImpl });
+  const body = { tipo, processo_id: processoId };
+  if (origensIds.length) body.origens_ids = origensIds;
+  else body.monitorar_em_todos_diarios = !!todosDiarios;
+  return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body, env, fetchImpl });
 }
 
 /** Remove um monitoramento pelo id. */
