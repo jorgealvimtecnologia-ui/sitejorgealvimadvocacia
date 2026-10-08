@@ -229,6 +229,24 @@
                   <strong class="text-slate-900">${law.judge_name}</strong>
                 </div>
               ` : ''}
+              ${law.valor_causa ? `
+                <div>
+                  <span class="text-slate-400 block text-[10px] uppercase font-bold">Valor da Causa</span>
+                  <strong class="text-slate-900">R$ ${law.valor_causa}</strong>
+                </div>
+              ` : ''}
+              ${law.situacao ? `
+                <div>
+                  <span class="text-slate-400 block text-[10px] uppercase font-bold">Situação</span>
+                  <strong class="text-slate-900">${law.situacao}</strong>
+                </div>
+              ` : ''}
+              ${law.fase ? `
+                <div>
+                  <span class="text-slate-400 block text-[10px] uppercase font-bold">Fase</span>
+                  <strong class="text-slate-900">${law.fase}</strong>
+                </div>
+              ` : ''}
               ${law.notes ? `
                 <div class="sm:col-span-2 md:col-span-3 bg-amber-50/40 p-2.5 rounded-xl border border-amber-200/70 text-slate-700">
                   <span class="text-amber-900 block text-[10px] uppercase font-bold mb-0.5">Observações Estratégicas</span>
@@ -236,6 +254,31 @@
                 </div>
               ` : ''}
             </div>
+
+            ${(() => {
+              const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+              const partes = Array.isArray(law.parties) ? law.parties : [];
+              if (!partes.length) return '';
+              return `
+              <div class="pt-3 border-t border-slate-100">
+                <span class="text-slate-600 block text-xs uppercase font-bold mb-2 flex items-center space-x-1.5"><span>👥</span><span>Partes do Processo (${partes.length})</span></span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  ${partes.map(p => {
+                    const advs = Array.isArray(p.advogados) ? p.advogados : [];
+                    const advTxt = advs.map(a => esc(a.nome) + (a.oab ? ` <span class="text-slate-400">(OAB ${esc(a.oab)})</span>` : '')).join(', ');
+                    return `
+                    <div class="border border-slate-200 rounded-xl p-2.5 text-xs">
+                      <div class="flex items-center gap-2">
+                        <strong class="text-slate-900">${esc(p.name)}</strong>
+                        ${Number(p.is_client) ? '<span class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">cliente</span>' : ''}
+                      </div>
+                      <div class="text-[11px] text-slate-500">${esc(p.tipo || p.polo || '')}</div>
+                      ${advTxt ? `<div class="text-[11px] text-slate-600 mt-1">⚖️ ${advTxt}</div>` : ''}
+                    </div>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            })()}
 
             <!-- Tabela / Linhas de Andamentos do Processo -->
             <div class="pt-3 border-t border-slate-100 space-y-2">
