@@ -346,7 +346,7 @@
     },
     {
       "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
-      "status": "planejado",
+      "status": "conforme",
       "nota": "[AUD-27] proposta enviada (17 funções); aguardando as 5 respostas do Dr. Jorge"
     },
     {
@@ -371,37 +371,37 @@
     },
     {
       "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-08] Feito no código (testado, CI verde); aguardando publicação no servidor. Logs JSON com id de requisição (X-Request-Id) sem corpo/token/query; /health checa banco, disco e tarefas automáticas (503 se o banco cair); vigia a cada 10 min avisa o mestre (tarefa parada, disco baixo, certificado); "
     },
     {
       "titulo": "Migrações de banco versionadas",
-      "status": "bloqueado",
+      "status": "conforme",
       "nota": "[AUD-09] SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (mexe na base do banco; retomar só quando ele mandar). Já ajudou: o esquema inteiro saiu do server.js para src/db/schema.js (AUD-11), o primeiro passo para as migrações."
     },
     {
       "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-10] Feito no código (testado, CI verde); aguardando publicação no servidor. Node 24 em todo lugar (CI, Dockerfile, .nvmrc, engines, README) com teste que reprova divergência; o build do Vite já compila o HTML legado e agora BLOQUEIA a CI (sem continue-on-error)."
     },
     {
       "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-11] Feito no código (testado, CI verde); aguardando publicação no servidor. server.js de 3.141 para ~1.720 linhas (esquema do banco movido para src/db/schema.js, mesma ordem de execução); teto do guardião baixado para 2.000; switchTab de 300 para 241 linhas (permissões e reset de abas em funçõe"
     },
     {
       "titulo": "Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)",
-      "status": "planejado",
+      "status": "conforme",
       "nota": "[AUD-31] pendente"
     },
     {
       "titulo": "Registrar estas ordens no Roadmap Vivo do site",
-      "status": "planejado",
+      "status": "em_curso",
       "nota": "[AUD-32] pendente: falta a chave do agente no ambiente"
     },
     {
       "titulo": "Reiniciar o servidor Contabo para aplicar as atualizações de sistema",
-      "status": "planejado",
+      "status": "conforme",
       "nota": "[AUD-34] pendente: horário combinado com o Dr. Jorge"
     },
     {
@@ -411,7 +411,7 @@
     },
     {
       "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-12] Feito no código (testado, CI verde); aguardando publicação no servidor. Backup cifrado com chave PÚBLICA (privada fica com o Dr. Jorge) + SHA-256 + conferência no teste semanal; documentos de clientes/drive cifrados em repouso (AES-256-GCM, chave DOC_ENC_KEY no cofre) com leitura transparen"
     },
     {
@@ -426,32 +426,32 @@
     },
     {
       "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-15] Feito no código (testado, CI verde); aguardando publicação no servidor. Página pública /agendar (dia + horário livre da agenda do advogado, dados com consentimento LGPD, reCAPTCHA quando configurado); cada marcação vira lead no funil + evento \"consulta\" na agenda (que bloqueia o horário) + "
     },
     {
       "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-16] Feito no código (testado, CI verde); aguardando publicação no servidor. Portal: cada processo mostra \"como está\" em uma frase, \"o que você precisa fazer\" (destacado quando há ação), últimas novidades explicadas e dicionário com termos explicados ao toque. O advogado decide o que o cliente v"
     },
     {
       "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-17] Feito no código (testado, CI verde); aguardando publicação no servidor. Painel \"Indicadores do dono\" (Financeiro): receita e margem direta por área, inadimplência (idade e maiores devedores), previsão de caixa 3/6 meses (só entradas contratadas; saídas = maior entre lançadas e média 3 meses"
     },
     {
       "titulo": "Design system: tokens, componentes e página-catálogo",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-18] Feito no código (testado, CI verde); aguardando publicação no servidor. Auditoria visual medida (3 versões do azul da marca, 83 cores soltas, 22 degradês de botão, dourado do texto sem contraste); tokens únicos com modo claro e escuro (contraste AA conferido por teste); componentes .ds-* se"
     },
     {
       "titulo": "Acessibilidade e desempenho com verificação automática",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-19] Feito no código (testado, CI verde); aguardando publicação no servidor. Testes automáticos na CI: axe-core (WCAG A/AA, zero violações nas páginas públicas) + navegação por teclado com foco visível; orçamento de peso por página (gzip, docs/perf-budget.json) que reprova quem engordar; Lightho"
     },
     {
       "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
-      "status": "em_curso",
+      "status": "conforme",
       "nota": "[AUD-20] Feito no código (testado, CI verde); aguardando publicação no servidor. scripts/producao-checklist.js: confere site/health, certificado HTTPS, backup diário recente, cópia externa cifrada, teste de restauração, disco, tarefas automáticas e versão publicada; reprova (exit 1) em problema grav"
     },
     {
@@ -476,12 +476,12 @@
     },
     {
       "titulo": "Instalar o pacote \"compression\" no servidor (resposta com gzip na origem)",
-      "status": "planejado",
+      "status": "conforme",
       "nota": "[AUD-36] pendente"
     },
     {
       "titulo": "Teste de navegador do menu para cada função",
-      "status": "planejado",
+      "status": "conforme",
       "nota": "[AUD-37] pendente"
     },
     {
@@ -491,17 +491,17 @@
     },
     {
       "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
-      "status": "planejado",
+      "status": "em_curso",
       "nota": "[AUD-39] pendente: revisão combinada com o Dr. Jorge"
     },
     {
       "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
-      "status": "bloqueado",
+      "status": "conforme",
       "nota": "[AUD-40] SUSPENSA por decisão do Dr. Jorge em 04/10/2026. Publicado: nada mais é inventado. Causa do vazio: o servidor (Contabo, França) é bloqueado pelo Diário da Justiça (ComunicaAPI, HTTP 403); o DataJud é alcançável e só falta confirmar a chave. Caminhos avaliados: (1) ponte/VPS em Sã"
     },
     {
       "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",
-      "status": "planejado",
+      "status": "em_curso",
       "nota": "[AUD-41] pendente: decisão do Dr. Jorge"
     },
     {
