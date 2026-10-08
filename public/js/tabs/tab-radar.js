@@ -653,13 +653,33 @@
       }).join('');
     }
 
+    // Mostra o campo de Estado (UF) só quando a busca é por OAB (evita o homônimo de outro estado).
+    function radarEscBuscaTipoMudou() {
+      const tipo = (document.getElementById('esc-busca-tipo') || {}).value || 'numeroCnj';
+      const uf = document.getElementById('esc-busca-uf');
+      const input = document.getElementById('esc-busca-input');
+      if (uf) uf.classList.toggle('hidden', tipo !== 'oab');
+      if (input) {
+        input.placeholder = tipo === 'oab' ? 'nº da OAB (ex.: 222943)'
+          : tipo === 'nome' ? 'nome da pessoa/empresa'
+          : tipo === 'cpfCnpj' ? 'CPF ou CNPJ' : '0000000-00.0000.0.00.0000';
+      }
+    }
+
     async function radarEscBuscar() {
       const tipo = (document.getElementById('esc-busca-tipo') || {}).value || 'numeroCnj';
       const termo = ((document.getElementById('esc-busca-input') || {}).value || '').trim();
       if (!termo) { escMsg('Digite um termo para buscar.', 'text-rose-700'); return; }
+      const payload = { [tipo]: termo };
+      // Busca por OAB precisa do ESTADO (UF) para trazer a OAB certa (evita o homônimo de outro estado).
+      if (tipo === 'oab') {
+        const uf = ((document.getElementById('esc-busca-uf') || {}).value || 'MG').trim().toUpperCase().slice(0, 2);
+        if (!uf) { escMsg('Informe o estado (UF) da OAB.', 'text-rose-700'); return; }
+        payload.uf = uf;
+      }
       const box = document.getElementById('esc-busca-res');
       if (box) box.innerHTML = '<div class="text-[11px] text-slate-400">Buscando…</div>';
-      const { ok, data } = await escApi('/api/radar/buscar', 'POST', { [tipo]: termo });
+      const { ok, data } = await escApi('/api/radar/buscar', 'POST', payload);
       if (!ok) { if (box) box.innerHTML = ''; escMsg('Não foi possível buscar: ' + (data.error || 'erro'), 'text-rose-700'); return; }
       escResultados = data.processos || [];
       renderEscResultados();
@@ -685,6 +705,7 @@
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
   // ==========================================================================
   window.radarEscBuscar = typeof radarEscBuscar !== 'undefined' ? radarEscBuscar : window.radarEscBuscar;
+  window.radarEscBuscaTipoMudou = typeof radarEscBuscaTipoMudou !== 'undefined' ? radarEscBuscaTipoMudou : window.radarEscBuscaTipoMudou;
   window.radarEscAdicionarUm = typeof radarEscAdicionarUm !== 'undefined' ? radarEscAdicionarUm : window.radarEscAdicionarUm;
   window.radarEscImportarPorOab = typeof radarEscImportarPorOab !== 'undefined' ? radarEscImportarPorOab : window.radarEscImportarPorOab;
   window.radarEscStatus = typeof radarEscStatus !== 'undefined' ? radarEscStatus : window.radarEscStatus;
