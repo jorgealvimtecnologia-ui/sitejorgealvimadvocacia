@@ -509,6 +509,22 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
     }
   }
 
+  // Todas as partes (estruturadas) com seus advogados (OAB "NNN/UF"), e a FASE processual.
+  const oabStr = (o) => {
+    const n = soDigitos(primeiro(o, WIRE.envolvido.oabNum) || o);
+    const u = String(primeiro(o, WIRE.envolvido.oabUf) || '').toUpperCase().slice(0, 2);
+    return n ? (u ? `${n}/${u}` : n) : '';
+  };
+  const advDe = (e) => toArray(primeiro(e, WIRE.envolvido.advogados))
+    .map((a) => ({ nome: String(primeiro(a, WIRE.envolvido.nome) || '').trim(), oab: toArray(primeiro(a, WIRE.envolvido.oabs) || a).map(oabStr).find(Boolean) || '' }))
+    .filter((a) => a.nome);
+  const partesDetalhadas = partes.map((e) => ({
+    name: nomeDe(e), document: docDe(e), polo: poloDe(e),
+    tipo: String(primeiro(e, ['tipo_normalizado', 'tipo']) || '').trim(), advogados: advDe(e),
+  }));
+  const infos = toArray(primeiro(capa, ['informacoes_complementares']));
+  const fase = String((infos.find((i) => /fase/i.test(String(i?.tipo || ''))) || {}).valor || '').trim();
+
   const valorRaw = primeiro(capa, WIRE.capa.valor);
   const valor = (valorRaw && typeof valorRaw === 'object')
     ? (valorRaw.valor_formatado || valorRaw.valor || valorRaw.quantia || '')
@@ -530,8 +546,10 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
     situacao: primeiro(capa, WIRE.capa.situacao) || fonte.status_predito || '',
     polo_ativo: ativos.map(mapParte),
     polo_passivo: passivos.map(mapParte),
+    partes: partesDetalhadas,
     parte_contraria: parteContraria,
     cliente_sugerido: clienteSugerido,
+    fase,
     link: fonte.url || d.url || d.link || (d.id ? `https://www.escavador.com/processos/${d.id}` : ''),
     detalhado: true,
   };

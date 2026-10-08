@@ -223,7 +223,7 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
       numero_cnj: CNJ,
       fontes: [{
         sigla: 'TJMG', grau: 1,
-        capa: { classe: 'Execução Fiscal', assunto: 'ISS', orgao_julgador: '1ª Vara da Fazenda', valor_causa: { valor_formatado: '5.000,00' }, data_distribuicao: '2024-02-02', situacao: 'Tramitando' },
+        capa: { classe: 'Execução Fiscal', assunto: 'ISS', orgao_julgador: '1ª Vara da Fazenda', valor_causa: { valor_formatado: '5.000,00' }, data_distribuicao: '2024-02-02', situacao: 'Tramitando', informacoes_complementares: [{ tipo: 'Fase', valor: 'EXECUÇÃO' }] },
         envolvidos: [
           { nome: 'Cliente da OAB do Jorge', tipo: 'AUTOR', polo: 'ATIVO', cnpj: '22333444000155', advogados: [{ nome: 'Jorge', polo: 'ADVOGADO', oabs: [{ uf: 'MG', numero: 222943 }] }] },
           { nome: 'Município X', tipo: 'RÉU', polo: 'PASSIVO' },
@@ -256,6 +256,16 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
       assert.equal(cli.full_name, 'Cliente da OAB do Jorge');
       const movs = db.prepare(`SELECT COUNT(*) n FROM lawsuit_movements WHERE lawsuit_id = ?`).get(row.id).n;
       assert.equal(movs, 2, 'os andamentos devem estar gravados no histórico do processo');
+
+      // Campos próprios (saíram do texto) e TODAS as partes com advogados
+      assert.equal(row.valor_causa, '5.000,00');
+      assert.equal(row.situacao, 'Tramitando');
+      assert.equal(row.fase, 'EXECUÇÃO');
+      const partes = db.prepare(`SELECT name, is_client, advogados FROM lawsuit_parties WHERE lawsuit_id = ? ORDER BY is_client DESC`).all(row.id);
+      assert.equal(partes.length, 2, 'as duas partes devem estar gravadas');
+      assert.equal(partes[0].name, 'Cliente da OAB do Jorge');
+      assert.equal(partes[0].is_client, 1, 'a parte representada pela OAB é o cliente');
+      assert.match(partes[0].advogados, /222943\/MG/);
     } finally {
       global.fetch = realFetch;
       delete process.env.ESCAVADOR_API_TOKEN;

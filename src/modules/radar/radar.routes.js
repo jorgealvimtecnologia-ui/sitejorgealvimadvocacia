@@ -313,8 +313,10 @@ export function mesclarProcesso(base, rico) {
     instance: pick('instance'),
     valor_causa: pick('valor_causa'),
     situacao: pick('situacao'),
+    fase: pick('fase'),
     polo_ativo: lista('polo_ativo'),
     polo_passivo: lista('polo_passivo'),
+    partes: lista('partes'),
     parte_contraria: pick('parte_contraria'),
     cliente_sugerido: r.cliente_sugerido || b.cliente_sugerido || null,
     resumo: b.resumo || r.resumo || '',
@@ -385,13 +387,39 @@ function importarProcessoEscritorio(pd, session) {
   const resp = responsavelAoCriar(session, undefined);
   const lawsuitId = generateNextLawsuitId();
   db.prepare(`INSERT INTO lawsuits (id, client_id, cnj_number, tribunal, instance, action_type, court_branch,
-                subject, judge_name, distribution_date, status, notes, responsible_user_id, responsible_name, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
+                subject, judge_name, distribution_date, valor_causa, situacao, fase, status, notes,
+                responsible_user_id, responsible_name, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
     lawsuitId, clientId, numero, pd.tribunal_code || 'TJMG', pd.instance || '1ª Instância',
     pd.class_name || 'Ação Judicial', pd.court_branch || '',
     pd.subject || 'Importado do Radar (Escavador)', pd.judge_name || '', pd.distribution_date || '',
+    pd.valor_causa || '', pd.situacao || '', pd.fase || '',
     obs.join(' '), resp.id, resp.name, now, now);
+
+  // TODAS as partes do processo (com seus advogados/OAB), de forma estruturada.
+  inserirPartes(lawsuitId, pd.partes, { clienteNome: cliNome, clienteDoc: cliDoc });
   return { ok: true, lawsuitId, clientId };
+}
+
+/** Grava as partes do processo (com advogados/OAB) em lawsuit_parties. Marca o cliente (is_client). */
+function inserirPartes(lawsuitId, partes, { clienteNome = '', clienteDoc = '' } = {}) {
+  if (!lawsuitId || !Array.isArray(partes) || !partes.length) return 0;
+  const now = new Date().toISOString();
+  const stmt = db.prepare(`INSERT INTO lawsuit_parties (lawsuit_id, name, document, polo, tipo, is_client, advogados, source, created_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, 'escavador', ?)`);
+  let n = 0;
+  for (const p of partes) {
+    const name = String(p?.name || '').trim();
+    if (!name) continue;
+    const doc = soDigitos(p.document || '');
+    const ehCliente = (clienteDoc && doc && doc === clienteDoc) || (!!clienteNome && name.toLowerCase() === clienteNome.toLowerCase()) ? 1 : 0;
+    const advs = Array.isArray(p.advogados) ? p.advogados : [];
+    try {
+      stmt.run(lawsuitId, name, doc, String(p.polo || ''), String(p.tipo || ''), ehCliente, JSON.stringify(advs), now);
+      n++;
+    } catch { /* best-effort por parte */ }
+  }
+  return n;
 }
 
 /**

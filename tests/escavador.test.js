@@ -281,7 +281,8 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     const COM_JORGE = {
       numero_cnj: '0000001-00.2023.8.13.0145',
       fontes: [{ sigla: 'TJMG', grau: 2,
-        capa: { classe: 'Execução de Título', assunto: 'Contratos', valor_causa: { valor_formatado: '1.000,00' }, data_distribuicao: '2023-01-02' },
+        capa: { classe: 'Execução de Título', assunto: 'Contratos', valor_causa: { valor_formatado: '1.000,00' }, data_distribuicao: '2023-01-02',
+          informacoes_complementares: [{ tipo: 'Fase', valor: 'CONHECIMENTO' }, { tipo: 'Jurisdição', valor: 'JUIZ DE FORA' }] },
         envolvidos: [
           { nome: 'Cliente do Jorge', tipo: 'AUTOR', polo: 'ATIVO', cnpj: '11444777000161',
             advogados: [{ nome: 'Jorge Alvim', polo: 'ADVOGADO', oabs: [{ uf: 'MG', numero: 222943 }] }] },
@@ -295,6 +296,13 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.equal(pd.parte_contraria, 'Banco Réu S.A.');
     assert.equal(pd.instance, '2ª Instância');
     assert.equal(pd.valor_causa, '1.000,00');
+    assert.equal(pd.fase, 'CONHECIMENTO');
+    // Todas as partes, com os advogados (OAB "NNN/UF")
+    assert.equal(pd.partes.length, 2);
+    assert.equal(pd.partes[0].name, 'Cliente do Jorge');
+    assert.equal(pd.partes[0].advogados[0].oab, '222943/MG');
+    assert.equal(pd.partes[1].name, 'Banco Réu S.A.');
+    assert.equal(pd.partes[1].advogados[0].oab, '111111/SP');
   });
 
   it('buscarProcessosPorOab monta a URL V2 com oab_numero/oab_estado e devolve os processos', async () => {

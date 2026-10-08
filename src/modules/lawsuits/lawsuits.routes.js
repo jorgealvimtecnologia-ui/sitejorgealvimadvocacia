@@ -81,9 +81,23 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
       ORDER BY movement_date DESC, id DESC
     `);
 
+    // Partes do processo (com advogados/OAB), quando houver. Tolerante se a tabela ainda não existir.
+    let partyStmt = null;
+    try {
+      partyStmt = db.prepare(`SELECT id, name, document, polo, tipo, is_client, advogados
+                              FROM lawsuit_parties WHERE lawsuit_id = ? ORDER BY is_client DESC, id ASC`);
+    } catch { partyStmt = null; }
+    const partiesDe = (id) => {
+      if (!partyStmt) return [];
+      try {
+        return partyStmt.all(id).map(p => ({ ...p, advogados: (() => { try { return JSON.parse(p.advogados || '[]'); } catch { return []; } })() }));
+      } catch { return []; }
+    };
+
     const result = lawsuits.map(law => ({
       ...law,
-      movements: movementStmt.all(law.id)
+      movements: movementStmt.all(law.id),
+      parties: partiesDe(law.id),
     }));
 
     return res.json({ success: true, lawsuits: result });
