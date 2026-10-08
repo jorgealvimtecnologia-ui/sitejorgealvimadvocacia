@@ -153,14 +153,25 @@ describe('Escavador — mapeamento para importar processo', () => {
 });
 
 describe('Escavador — criação de monitoramento (tipo correto, minúsculo)', () => {
-  it('monitoramento por TERMO (OAB): tipo="termo" e termo no corpo', async () => {
+  it('monitoramento por TERMO (OAB): tipo="termo", termo e origens_ids (todos os diários)', async () => {
     let corpo = null;
-    const fetchImpl = async (url, opts) => { corpo = JSON.parse(opts.body); return fakeResponse({ body: { id: 1 } }); };
+    const fetchImpl = async (url, opts) => {
+      // GET /origens -> grupos por estado com a lista de diários
+      if (String(url).includes('/origens')) {
+        return fakeResponse({ body: [
+          { nome: 'Minas Gerais', diarios: [{ id: 10, estado: 'MG' }, { id: 11, estado: 'MG' }] },
+          { nome: 'São Paulo', diarios: [{ id: 32, estado: 'SP' }] },
+        ] });
+      }
+      corpo = JSON.parse(opts.body); // POST /monitoramentos
+      return fakeResponse({ body: { status: 'success', id: 1 } });
+    };
     const r = await criarMonitoramentoDiario({ termo: '222943/MG', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
     assert.equal(r.ok, true);
     assert.equal(corpo.tipo, 'termo', 'o tipo precisa ser "termo" (minúsculo), não "UNICO"');
     assert.equal(corpo.termo, '222943/MG');
-    assert.equal(corpo.monitorar_em_todos_diarios, true);
+    assert.deepEqual(corpo.origens_ids, [10, 11, 32], 'deve enviar os IDs dos diários (origens_ids)');
+    assert.equal(corpo.monitorar_em_todos_diarios, undefined, 'esse campo não existe na API oficial');
   });
   it('monitoramento por PROCESSO: tipo="processo" e processo_id no corpo', async () => {
     let corpo = null;

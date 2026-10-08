@@ -30,6 +30,7 @@ export const WIRE = {
     saldo: '/quantidade-creditos',   // {"quantidade_creditos":N,"saldo":200,"saldo_descricao":"R$ 200,00"}
     monitoramentos: '/monitoramentos',
     busca: '/busca',                 // full-text em DIÁRIOS: ?q=<termo>&qo=t -> items[] (publicações)
+    origens: '/origens',             // lista TODOS os diários oficiais (id/sigla/estado) p/ origens_ids
   },
   // Chaves de campo tentadas em ordem — cobrem o item de DIÁRIO do Escavador e a ComunicaAPI.
   campos: {
@@ -215,29 +216,61 @@ export async function listarMonitoramentos({ env = process.env, fetchImpl = fetc
 }
 
 /**
+ * Lista TODOS os diários oficiais disponíveis (GET /api/v1/origens), já "achatando" os grupos
+ * por estado em uma lista de diários { id, sigla, nome, estado, categoria }.
+ */
+export async function listarOrigens({ env = process.env, fetchImpl = fetch } = {}) {
+  const r = await escavadorFetch(WIRE.rotas.origens, { env, fetchImpl });
+  if (!r.ok) return { ok: false, status: r.status, error: r.error, diarios: [] };
+  const grupos = Array.isArray(r.data) ? r.data : toArray(r.data?.data || r.data?.origens);
+  const diarios = [];
+  for (const g of grupos) for (const d of toArray(g?.diarios)) if (d && d.id != null) diarios.push(d);
+  return { ok: true, diarios, creditos: r.creditos };
+}
+
+// Cache em memória dos diários (as origens mudam raríssimo; evita refazer a chamada a cada uso).
+let _origensCache = null;
+/** IDs dos diários para `origens_ids`. Sem `uf` = TODOS os diários (cobertura nacional). */
+export async function origensIds({ uf = '', env = process.env, fetchImpl = fetch } = {}) {
+  if (!_origensCache) {
+    const r = await listarOrigens({ env, fetchImpl });
+    if (!r.ok) return { ok: false, error: r.error, ids: [] };
+    _origensCache = r.diarios;
+  }
+  const u = String(uf || '').toUpperCase().slice(0, 2);
+  const ids = _origensCache
+    .filter((d) => !u || String(d.estado || '').toUpperCase() === u)
+    .map((d) => d.id);
+  return { ok: true, ids };
+}
+
+/**
  * Cria um monitoramento de DIÁRIO OFICIAL por termo (ex.: a OAB "222943/MG").
  * É a "rede" das intimações: o termo é casado nos diários e as publicações chegam no callback.
- * A API exige: tipo + termo + onde monitorar (todos os diários, ou estados/origens).
- * ⚠️ `tipo` é MINÚSCULO no Escavador ('termo' | 'processo') — conferido no SDK oficial
- * (TiposMonitoramentosDiario). Valores em CAIXA ALTA devolvem "opção de tipo inválida".
+ * ⚠️ Conforme o OpenAPI oficial da v1: `tipo` é MINÚSCULO ('termo' | 'processo') e, para
+ * `tipo=termo`, `origens_ids` (lista de diários) é OBRIGATÓRIO — NÃO existe
+ * "monitorar_em_todos_diarios". Sem origensIds, monitoramos TODOS os diários (via /origens).
  */
-export async function criarMonitoramentoDiario({ termo, variacoes = [], estadosIds = [], origensIds = [], todosDiarios = true, tipo = 'termo', env = process.env, fetchImpl = fetch }) {
+export async function criarMonitoramentoDiario({ termo, variacoes = [], origensIds: origens = [], uf = '', limiteAparicoes = null, tipo = 'termo', env = process.env, fetchImpl = fetch }) {
   const t = String(termo || '').trim();
   if (!t) return { ok: false, status: 0, error: 'termo obrigatório.' };
-  const body = { tipo, termo: t, variacoes };
-  if (origensIds.length) body.origens_ids = origensIds;
-  else if (estadosIds.length) body.estados_ids = estadosIds;
-  else body.monitorar_em_todos_diarios = !!todosDiarios;
+  let origensLista = Array.isArray(origens) ? origens.slice() : [];
+  if (!origensLista.length) {
+    const r = await origensIds({ uf, env, fetchImpl });
+    if (!r.ok) return { ok: false, status: 0, error: `não foi possível listar os diários (origens): ${r.error}` };
+    origensLista = r.ids;
+  }
+  if (!origensLista.length) return { ok: false, status: 0, error: 'nenhum diário (origem) disponível para monitorar.' };
+  const body = { tipo, termo: t, origens_ids: origensLista };
+  if (Array.isArray(variacoes) && variacoes.length) body.variacoes = variacoes.slice(0, 3);
+  if (limiteAparicoes) body.limite_aparicoes = limiteAparicoes;
   return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body, env, fetchImpl });
 }
 
 /** Cria um monitoramento de PROCESSO pelo id interno do Escavador (processo_id). tipo='processo'. */
-export async function criarMonitoramentoProcesso({ processoId, origensIds = [], todosDiarios = true, tipo = 'processo', env = process.env, fetchImpl = fetch }) {
+export async function criarMonitoramentoProcesso({ processoId, tipo = 'processo', env = process.env, fetchImpl = fetch }) {
   if (!processoId) return { ok: false, status: 0, error: 'processo_id obrigatório (resolva o CNJ antes).' };
-  const body = { tipo, processo_id: processoId };
-  if (origensIds.length) body.origens_ids = origensIds;
-  else body.monitorar_em_todos_diarios = !!todosDiarios;
-  return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body, env, fetchImpl });
+  return escavadorFetch(WIRE.rotas.monitoramentos, { method: 'POST', body: { tipo, processo_id: processoId }, env, fetchImpl });
 }
 
 /** Remove um monitoramento pelo id. */
