@@ -9,7 +9,7 @@ import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
   detalharProcesso, detalheParaImport, grauParaInstancia,
-  criarMonitoramentoDiario, criarMonitoramentoProcesso,
+  criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab,
 } from '../src/shared/escavador.js';
 
 // Resposta falsa no formato do fetch (headers case-insensitive, .json()).
@@ -212,7 +212,7 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
 
   it('mapeia capa (classe/assunto/vara/juiz/distribuição/valor) e separa as partes', () => {
     const pd = detalheParaImport(DETALHE, { oab: '222943', uf: 'MG' });
-    assert.equal(pd.numero_processo, '50099991120268130145');
+    assert.equal(pd.numero_processo, '5009999-11.2026.8.13.0145');
     assert.equal(pd.tribunal_code, 'TJMG');
     assert.equal(pd.class_name, 'Procedimento Comum Cível');
     assert.equal(pd.subject, 'Indenização por Dano Moral');
@@ -261,7 +261,7 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
       ],
     };
     const pd = detalheParaImport(REAL, { oab: '222943', uf: 'MG' });
-    assert.equal(pd.numero_processo, '50157876020248130145');
+    assert.equal(pd.numero_processo, '5015787-60.2024.8.13.0145');
     assert.equal(pd.tribunal_code, 'TJMG');
     assert.equal(pd.class_name, '[CÍVEL] USUCAPIÃO (49)');
     assert.equal(pd.subject, 'Usucapião Extraordinária');
@@ -294,6 +294,20 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.equal(pd.parte_contraria, 'Banco Réu S.A.');
     assert.equal(pd.instance, '2ª Instância');
     assert.equal(pd.valor_causa, '1.000,00');
+  });
+
+  it('buscarProcessosPorOab monta a URL V2 com oab_numero/oab_estado e devolve os processos', async () => {
+    let capturado = null;
+    const fetchImpl = async (url) => {
+      capturado = String(url);
+      return fakeResponse({ body: { advogado_encontrado: { nome: 'JORGE' }, items: [{ numero_cnj: '1' }, { numero_cnj: '2' }] } });
+    };
+    const r = await buscarProcessosPorOab({ oab: '222.943', uf: 'mg', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.equal(r.itens.length, 2);
+    assert.match(capturado, /\/api\/v2\/advogado\/processos\?/);
+    assert.match(capturado, /oab_numero=222943/);
+    assert.match(capturado, /oab_estado=MG/);
   });
 
   it('grauParaInstancia traduz grau/recurso para o rótulo do sistema', () => {

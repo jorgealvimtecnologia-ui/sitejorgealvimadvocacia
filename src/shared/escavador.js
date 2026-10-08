@@ -57,6 +57,7 @@ export const WIRE = {
   // -------------------------------------------------------------------------
   rotasV2: {
     processoPorCnj: 'https://api.escavador.com/api/v2/processos/numero_cnj/',
+    advogadoProcessos: 'https://api.escavador.com/api/v2/advogado/processos', // ?oab_numero=&oab_estado=
   },
   // Dentro do detalhe: a "capa" (dados do processo) e os "envolvidos" (partes + advogados).
   fontes: ['fontes', 'tribunais', 'fonte'],
@@ -324,6 +325,22 @@ export async function detalharProcesso({ numeroCnj, env = process.env, fetchImpl
   return escavadorFetch(url, { env, fetchImpl });
 }
 
+/**
+ * Lista os PROCESSOS de um advogado pela OAB (API V2 /advogado/processos), já ESTRUTURADOS
+ * (mesmo formato do detalhe: capa + envolvidos). É a forma correta de "buscar meus processos
+ * pela OAB" — diferente do full-text em diários, traz os processos de verdade, com partes.
+ * @returns {{ok, itens, creditos, advogado}}
+ */
+export async function buscarProcessosPorOab({ oab, uf = 'MG', status = '', max = 300, env = process.env, fetchImpl = fetch }) {
+  const num = soDigitos(oab);
+  const u = String(uf || 'MG').toUpperCase().slice(0, 2);
+  if (!num) return { ok: false, status: 0, error: 'OAB obrigatória.' };
+  const query = { oab_numero: num, oab_estado: u, limit: 100 };
+  if (status) query.status = status; // 'ATIVO' | 'INATIVO'
+  const r = await escavadorPaginar(WIRE.rotasV2.advogadoProcessos, { query, env, fetchImpl, max });
+  return r;
+}
+
 // ---------------------------------------------------------------------------
 //  Normalização → formato que o motor de sync já grava (court_publications)
 // ---------------------------------------------------------------------------
@@ -474,7 +491,8 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
   const valor = (valorRaw && typeof valorRaw === 'object')
     ? (valorRaw.valor_formatado || valorRaw.valor || valorRaw.quantia || '')
     : (valorRaw || '');
-  const numero = soDigitos(d.numero_cnj || d.numeroProcessoUnico || primeiro(d, WIRE.campos.numero) || numeroCnj(fonte) || '');
+  const numeroDig = soDigitos(d.numero_cnj || d.numeroProcessoUnico || primeiro(d, WIRE.campos.numero) || numeroCnj(fonte) || '');
+  const numero = mascaraCnj(numeroDig) || numeroDig; // padrão do sistema é o CNJ COM máscara
   const sigla = String(fonte.sigla || fonte.sigla_tribunal || d.estado_origem?.sigla || primeiro(fonte, WIRE.campos.tribunalSigla) || '').toUpperCase();
   return {
     numero_processo: numero,

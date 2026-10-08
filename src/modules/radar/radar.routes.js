@@ -32,7 +32,7 @@ import { hashPassword } from '../../shared/password-crypto.js';
 import { responsavelAoCriar } from '../../middleware/data-scope.js';
 import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
-  criarMonitoramentoDiario, removerMonitoramento, buscarProcessos,
+  criarMonitoramentoDiario, removerMonitoramento, buscarProcessos, buscarProcessosPorOab,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
   detalharProcesso, detalheParaImport,
 } from '../../shared/escavador.js';
@@ -390,10 +390,11 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
   if (Array.isArray(b.processos) && b.processos.length) {
     encontrados = b.processos;
   } else if (b.oab) {
-    const r = await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG' });
-    if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('busca', r.creditos); }
+    // Processos do advogado pela OAB (V2) — já estruturados (capa + partes), sem consulta extra.
+    const r = await buscarProcessosPorOab({ oab: b.oab, uf: b.uf || 'MG' });
+    if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('busca_oab', r.creditos); }
     if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
-    encontrados = Array.isArray(r.itens) ? r.itens : (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : []));
+    encontrados = (r.itens || []).map((it) => detalheParaImport(it, { oab: b.oab, uf: b.uf || 'MG' }));
   } else {
     return res.status(400).json({ error: 'Informe "oab" (para buscar e importar) ou "processos".' });
   }
@@ -408,12 +409,14 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
 
   let importados = 0, jaExistiam = 0, falhas = 0, enriquecidos = 0;
   for (const p of encontrados) {
-    let pd = processoParaImport(p);
+    // Já normalizado/enriquecido (veio da busca por OAB V2 ou de um resultado)? Usa como está,
+    // sem perder os campos ricos. Caso contrário (publicação crua), normaliza.
+    let pd = (p && (p.detalhado || Array.isArray(p.polo_ativo) || Array.isArray(p.polo_passivo))) ? p : processoParaImport(p);
     if (!pd.numero_processo) { falhas++; continue; }
-    // Só gasta crédito com o detalhe se o processo ainda NÃO existe (evita re-cobrar os antigos).
+    // Só gasta crédito com o detalhe se o processo ainda NÃO existe e ainda não veio detalhado.
     const existe = db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(soDigitos(pd.numero_processo))
       || db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(pd.numero_processo);
-    if (enriquecer && !existe) {
+    if (enriquecer && !existe && !pd.detalhado) {
       const d = await detalharProcesso({ numeroCnj: pd.numero_processo });
       if (typeof d.creditos === 'number') { creditos += d.creditos; registrarGasto('detalhar_processo', d.creditos); }
       if (d.ok && d.data) {
@@ -447,19 +450,27 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
   if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
   const b = req.body || {};
   if (!b.oab && !b.nome && !b.cpfCnpj && !b.numeroCnj) return res.status(400).json({ error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' });
-  const r = await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG', nome: b.nome, cpfCnpj: b.cpfCnpj, numeroCnj: b.numeroCnj });
-  if (typeof r.creditos === 'number') registrarGasto('busca', r.creditos);
+
+  // Por OAB: processos ESTRUTURADOS do advogado (V2). Demais: full-text em diários (V1).
+  const porOab = !!b.oab && !b.nome && !b.cpfCnpj && !b.numeroCnj;
+  const r = porOab
+    ? await buscarProcessosPorOab({ oab: b.oab, uf: b.uf || 'MG' })
+    : await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG', nome: b.nome, cpfCnpj: b.cpfCnpj, numeroCnj: b.numeroCnj });
+  if (typeof r.creditos === 'number') registrarGasto(porOab ? 'busca_oab' : 'busca', r.creditos);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
   logAudit(req, { event_type: 'RADAR', event_name: 'BUSCA', module: 'RADAR', resource_id: soDigitos(b.oab || b.cpfCnpj || b.numeroCnj || '') || 'nome', description: 'Busca de processos no Escavador.' });
-  // Lista normalizada (process_data) pronta para exibir e para o botão "Adicionar ao sistema".
+
   const bruto = Array.isArray(r.itens) ? r.itens : (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : (r.data ? [r.data] : [])));
-  // Agrupa por NÚMERO do processo: a busca traz 1 linha por publicação, então o mesmo
-  // processo repete. Mostramos cada processo UMA vez (mantém o 1º, que é o mais recente).
+  // Cada processo UMA vez (full-text repete por publicação). Por OAB já vem estruturado.
   const vistos = new Set();
   const processos = [];
   for (const it of bruto) {
-    const p = processoParaImport(it);
+    const p = porOab ? detalheParaImport(it, { oab: b.oab, uf: b.uf || 'MG' }) : processoParaImport(it);
     if (!p.numero_processo || vistos.has(p.numero_processo)) continue;
+    if (porOab && !p.resumo) {
+      p.resumo = [p.class_name, p.subject, p.parte_contraria ? `réu: ${p.parte_contraria}` : '']
+        .filter(Boolean).join(' • ');
+    }
     vistos.add(p.numero_processo);
     processos.push(p);
   }

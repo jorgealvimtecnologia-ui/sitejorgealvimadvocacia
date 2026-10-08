@@ -215,4 +215,41 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
       delete process.env.ESCAVADOR_API_TOKEN;
     }
   });
+
+  it('importar por OAB usa a busca estruturada (V2) e já vem completo (sem consulta extra)', async () => {
+    process.env.ESCAVADOR_API_TOKEN = 'token-teste';
+    const CNJ = '9090909-09.2024.8.13.0145';
+    const item = {
+      numero_cnj: CNJ,
+      fontes: [{
+        sigla: 'TJMG', grau: 1,
+        capa: { classe: 'Execução Fiscal', assunto: 'ISS', orgao_julgador: '1ª Vara da Fazenda', valor_causa: { valor_formatado: '5.000,00' }, data_distribuicao: '2024-02-02', situacao: 'Tramitando' },
+        envolvidos: [
+          { nome: 'Cliente da OAB do Jorge', tipo: 'AUTOR', polo: 'ATIVO', cnpj: '22333444000155', advogados: [{ nome: 'Jorge', polo: 'ADVOGADO', oabs: [{ uf: 'MG', numero: 222943 }] }] },
+          { nome: 'Município X', tipo: 'RÉU', polo: 'PASSIVO' },
+        ],
+      }],
+    };
+    const realFetch = global.fetch;
+    global.fetch = async (url) => {
+      const body = String(url).includes('/api/v2/advogado/processos') ? { advogado_encontrado: { nome: 'JORGE' }, items: [item] } : {};
+      return { ok: true, status: 200, headers: { get: () => null }, json: async () => body };
+    };
+    try {
+      const r = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ oab: '222943', uf: 'MG' });
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+      assert.equal(r.body.importados, 1);
+      assert.equal(r.body.enriquecidos, 0, 'não precisa de consulta extra: já veio estruturado');
+
+      const row = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number = ?`).get(CNJ);
+      assert.ok(row);
+      assert.equal(row.action_type, 'Execução Fiscal');
+      assert.match(row.notes, /Parte contrária: Município X/);
+      const cli = db.prepare(`SELECT full_name FROM clients WHERE id = ?`).get(row.client_id);
+      assert.equal(cli.full_name, 'Cliente da OAB do Jorge');
+    } finally {
+      global.fetch = realFetch;
+      delete process.env.ESCAVADOR_API_TOKEN;
+    }
+  });
 });
