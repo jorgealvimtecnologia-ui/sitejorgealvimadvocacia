@@ -400,7 +400,8 @@ export function processoParaImport(p) {
 export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
   const d = data || {};
   const fontes = toArray(pegaLista(d, WIRE.fontes) || (d.fonte ? [d.fonte] : []));
-  const fonte = fontes[0] || d;                 // tolera resposta já "achatada" (sem fontes[])
+  // Preferimos a fonte do TRIBUNAL (a que tem "capa"); a do diário oficial não traz a capa.
+  const fonte = fontes.find((f) => f && f.capa) || fontes[0] || d;
   const capa = fonte.capa || fonte || {};
   const envolvidos = toArray(fonte.envolvidos || d.envolvidos || d.partes);
   const oabNum = soDigitos(oab);
@@ -410,32 +411,38 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
   const docDe = (e) => soDigitos(primeiro(e, WIRE.envolvido.cnpj) || primeiro(e, WIRE.envolvido.cpf) || '');
   const nomeDe = (e) => String(primeiro(e, WIRE.envolvido.nome) || '').trim();
   const mapParte = (e) => ({ name: nomeDe(e), document: docDe(e) });
+  const ehAdvogado = (e) => /ADVOGAD/.test(poloDe(e)) || /advogad/i.test(String(primeiro(e, ['tipo', 'tipo_normalizado']) || ''));
   const temOabDono = (e) => toArray(primeiro(e, WIRE.envolvido.advogados)).some((a) =>
     toArray(primeiro(a, WIRE.envolvido.oabs) || a).some((o) =>
       soDigitos(primeiro(o, WIRE.envolvido.oabNum) || o) === oabNum
       && (!ufDono || String(primeiro(o, WIRE.envolvido.oabUf) || '').toUpperCase().slice(0, 2) === ufDono)));
 
-  const partes = envolvidos.filter((e) => nomeDe(e));
+  // Só PARTES (exclui os advogados, que no Escavador também vêm na lista de envolvidos).
+  const partes = envolvidos.filter((e) => nomeDe(e) && !ehAdvogado(e));
   const ativos = partes.filter((e) => /ATIV|AUTOR|EXEQ|REQUERENTE|RECLAMANTE|IMPETRANTE|REQTE/.test(poloDe(e)));
   const passivos = partes.filter((e) => /PASSIV|RÉU|REU|EXECUT|REQUERID|RECLAMAD|IMPETRAD|REQDO/.test(poloDe(e)));
 
-  // Qual parte o advogado dono (a OAB monitorada) representa? Vira o CLIENTE sugerido.
+  // Réu/parte contrária: título do polo passivo, ou o 1º do polo passivo (quando houver).
+  let parteContraria = String(d.titulo_polo_passivo || '').trim() || (passivos[0] ? nomeDe(passivos[0]) : '');
+  // Qual parte o advogado dono (a OAB monitorada) representa? Vira o CLIENTE sugerido,
+  // e a parte contrária passa a ser a do polo OPOSTO ao do cliente.
   let clienteSugerido = null;
-  let parteContraria = '';
   if (oabNum) {
     const repr = partes.find(temOabDono);
     if (repr) {
       clienteSugerido = mapParte(repr);
       const reprPolo = poloDe(repr);
-      const oposto = partes.find((e) => e !== repr && poloDe(e) && poloDe(e) !== reprPolo);
-      parteContraria = oposto ? nomeDe(oposto) : '';
+      const oposto = partes.find((e) => e !== repr && poloDe(e) && poloDe(e) !== reprPolo && poloDe(e) !== 'DESCONHECIDO');
+      if (oposto) parteContraria = nomeDe(oposto);
     }
   }
 
   const valorRaw = primeiro(capa, WIRE.capa.valor);
-  const valor = (valorRaw && typeof valorRaw === 'object') ? (valorRaw.valor || valorRaw.quantia || '') : (valorRaw || '');
+  const valor = (valorRaw && typeof valorRaw === 'object')
+    ? (valorRaw.valor_formatado || valorRaw.valor || valorRaw.quantia || '')
+    : (valorRaw || '');
   const numero = soDigitos(d.numero_cnj || d.numeroProcessoUnico || primeiro(d, WIRE.campos.numero) || numeroCnj(fonte) || '');
-  const sigla = String(fonte.sigla || fonte.sigla_tribunal || primeiro(fonte, WIRE.campos.tribunalSigla) || '').toUpperCase();
+  const sigla = String(fonte.sigla || fonte.sigla_tribunal || d.estado_origem?.sigla || primeiro(fonte, WIRE.campos.tribunalSigla) || '').toUpperCase();
   return {
     numero_processo: numero,
     tribunal_code: sigla,
@@ -444,15 +451,15 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
     subject: primeiro(capa, WIRE.capa.assunto) || '',
     court_branch: primeiro(capa, WIRE.capa.orgao) || '',
     judge_name: primeiro(capa, WIRE.capa.juiz) || '',
-    distribution_date: normalizaData(primeiro(capa, WIRE.capa.distribuicao)),
-    instance: grauParaInstancia(primeiro(capa, WIRE.capa.instancia)),
+    distribution_date: normalizaData(primeiro(capa, WIRE.capa.distribuicao) || d.data_inicio),
+    instance: grauParaInstancia(fonte.grau ?? fonte.grau_formatado ?? primeiro(capa, WIRE.capa.instancia)),
     valor_causa: valor ? String(valor) : '',
-    situacao: primeiro(capa, WIRE.capa.situacao) || '',
+    situacao: primeiro(capa, WIRE.capa.situacao) || fonte.status_predito || '',
     polo_ativo: ativos.map(mapParte),
     polo_passivo: passivos.map(mapParte),
     parte_contraria: parteContraria,
     cliente_sugerido: clienteSugerido,
-    link: d.link || d.url || (d.id ? `https://www.escavador.com/processos/${d.id}` : ''),
+    link: fonte.url || d.url || d.link || (d.id ? `https://www.escavador.com/processos/${d.id}` : ''),
     detalhado: true,
   };
 }

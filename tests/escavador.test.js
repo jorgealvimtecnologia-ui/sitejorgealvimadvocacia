@@ -222,10 +222,67 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.equal(pd.parte_contraria, 'Banco Réu S.A.');               // o polo oposto
   });
 
-  it('sem a OAB do dono entre os advogados: não chuta cliente nem parte contrária', () => {
+  it('sem a OAB do dono entre os advogados: não chuta o cliente, mas informa o réu (polo passivo)', () => {
     const pd = detalheParaImport(DETALHE, { oab: '999999', uf: 'MG' });
-    assert.equal(pd.cliente_sugerido, null);
-    assert.equal(pd.parte_contraria, '');
+    assert.equal(pd.cliente_sugerido, null);                 // não sabemos quem o Dr. Jorge representa
+    assert.equal(pd.parte_contraria, 'Banco Réu S.A.');      // mas o réu é fato (polo passivo), não chute
+  });
+
+  it('resposta REAL do Escavador (Usucapião): escolhe a fonte com capa, exclui advogados, preenche capa', () => {
+    const REAL = {
+      numero_cnj: '5015787-60.2024.8.13.0145',
+      titulo_polo_ativo: 'Lessandro Hebert Zacaron Gomes e outros', titulo_polo_passivo: null,
+      data_inicio: '2024-04-17', estado_origem: { sigla: 'MG' },
+      fontes: [
+        { tipo: 'DIARIO_OFICIAL', sigla: 'DJMG', grau: 1, capa: null,
+          envolvidos: [{ nome: 'Francisco Carlos Oliveira Ladeira', tipo: 'Advogado', polo: 'ADVOGADO', oabs: [{ uf: 'MG', numero: 63175 }] }] },
+        { tipo: 'TRIBUNAL', sigla: 'TJMG', nome: 'Tribunal de Justiça do Minas Gerais', grau: 1,
+          url: 'https://pje-consulta-publica.tjmg.jus.br/pje/ConsultaPublica/listView.seam',
+          capa: { classe: '[CÍVEL] USUCAPIÃO (49)', assunto: 'Usucapião Extraordinária',
+            orgao_julgador: 'Vara de Sucessões, Empresarial e de Registros Públicos da Comarca de Juiz de Fora',
+            valor_causa: { valor: '20000.0000', moeda: null, valor_formatado: '20.000,00' },
+            data_distribuicao: '2024-04-17', situacao: 'Tramitando' },
+          envolvidos: [
+            { nome: 'Lessandro Hebert Zacaron Gomes', tipo: 'AUTOR', tipo_normalizado: 'Autor', polo: 'ATIVO', cpf: '00573244685',
+              advogados: [{ nome: 'Diogo Teixeira Simoes', polo: 'ADVOGADO', oabs: [{ uf: 'MG', numero: 106846 }] }] },
+            { nome: 'Luiz Carlos Adum Mockdeci', tipo: 'TERCEIRO INTERESSADO', polo: 'DESCONHECIDO', cpf: '20976283620', advogados: [] },
+          ] },
+      ],
+    };
+    const pd = detalheParaImport(REAL, { oab: '222943', uf: 'MG' });
+    assert.equal(pd.numero_processo, '50157876020248130145');
+    assert.equal(pd.tribunal_code, 'TJMG');
+    assert.equal(pd.class_name, '[CÍVEL] USUCAPIÃO (49)');
+    assert.equal(pd.subject, 'Usucapião Extraordinária');
+    assert.match(pd.court_branch, /Vara de Sucessões/);
+    assert.equal(pd.valor_causa, '20.000,00');            // usa o valor_formatado
+    assert.equal(pd.distribution_date, '2024-04-17');
+    assert.equal(pd.polo_ativo.length, 1);                 // advogado e terceiro não entram como parte ativa
+    assert.equal(pd.polo_ativo[0].name, 'Lessandro Hebert Zacaron Gomes');
+    assert.equal(pd.polo_passivo.length, 0);
+    assert.equal(pd.parte_contraria, '');                  // não há polo passivo (réu) -> correto ficar vazio
+    assert.equal(pd.cliente_sugerido, null);               // a OAB 222943 não está no processo -> não chuta cliente
+    assert.match(pd.link, /pje-consulta-publica\.tjmg\.jus\.br/);
+  });
+
+  it('quando a OAB do dono representa uma parte: detecta cliente, réu e instância (grau 2)', () => {
+    const COM_JORGE = {
+      numero_cnj: '0000001-00.2023.8.13.0145',
+      fontes: [{ sigla: 'TJMG', grau: 2,
+        capa: { classe: 'Execução de Título', assunto: 'Contratos', valor_causa: { valor_formatado: '1.000,00' }, data_distribuicao: '2023-01-02' },
+        envolvidos: [
+          { nome: 'Cliente do Jorge', tipo: 'AUTOR', polo: 'ATIVO', cnpj: '11444777000161',
+            advogados: [{ nome: 'Jorge Alvim', polo: 'ADVOGADO', oabs: [{ uf: 'MG', numero: 222943 }] }] },
+          { nome: 'Banco Réu S.A.', tipo: 'RÉU', polo: 'PASSIVO',
+            advogados: [{ nome: 'Outro Adv', polo: 'ADVOGADO', oabs: [{ uf: 'SP', numero: 111111 }] }] },
+        ] }],
+    };
+    const pd = detalheParaImport(COM_JORGE, { oab: '222943', uf: 'MG' });
+    assert.equal(pd.cliente_sugerido.name, 'Cliente do Jorge');
+    assert.equal(pd.cliente_sugerido.document, '11444777000161');
+    assert.equal(pd.parte_contraria, 'Banco Réu S.A.');
+    assert.equal(pd.instance, '2ª Instância');
+    assert.equal(pd.valor_causa, '1.000,00');
   });
 
   it('grauParaInstancia traduz grau/recurso para o rótulo do sistema', () => {
