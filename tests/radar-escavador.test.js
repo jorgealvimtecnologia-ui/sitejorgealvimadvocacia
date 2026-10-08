@@ -232,7 +232,13 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
     };
     const realFetch = global.fetch;
     global.fetch = async (url) => {
-      const body = String(url).includes('/api/v2/advogado/processos') ? { advogado_encontrado: { nome: 'JORGE' }, items: [item] } : {};
+      const u = String(url);
+      let body = {};
+      if (u.includes('/api/v2/advogado/processos')) body = { advogado_encontrado: { nome: 'JORGE' }, items: [item] };
+      else if (u.includes('/movimentacoes')) body = { items: [
+        { id: 1, data: '2024-02-02', tipo: 'ANDAMENTO', classificacao_predita: { nome: 'Distribuição' }, conteudo: 'Autos distribuídos' },
+        { id: 2, data: '2024-03-10', tipo: 'PUBLICAÇÃO', tipo_publicacao: 'Despacho', conteudo: 'Vistos. Cite-se.' },
+      ] };
       return { ok: true, status: 200, headers: { get: () => null }, json: async () => body };
     };
     try {
@@ -240,6 +246,7 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
       assert.equal(r.status, 200, JSON.stringify(r.body));
       assert.equal(r.body.importados, 1);
       assert.equal(r.body.enriquecidos, 0, 'não precisa de consulta extra: já veio estruturado');
+      assert.equal(r.body.andamentos, 2, 'deve trazer o histórico (andamentos)');
 
       const row = db.prepare(`SELECT * FROM lawsuits WHERE cnj_number = ?`).get(CNJ);
       assert.ok(row);
@@ -247,6 +254,8 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
       assert.match(row.notes, /Parte contrária: Município X/);
       const cli = db.prepare(`SELECT full_name FROM clients WHERE id = ?`).get(row.client_id);
       assert.equal(cli.full_name, 'Cliente da OAB do Jorge');
+      const movs = db.prepare(`SELECT COUNT(*) n FROM lawsuit_movements WHERE lawsuit_id = ?`).get(row.id).n;
+      assert.equal(movs, 2, 'os andamentos devem estar gravados no histórico do processo');
     } finally {
       global.fetch = realFetch;
       delete process.env.ESCAVADOR_API_TOKEN;

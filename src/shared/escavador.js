@@ -326,6 +326,28 @@ export async function detalharProcesso({ numeroCnj, env = process.env, fetchImpl
 }
 
 /**
+ * Lista as MOVIMENTAÇÕES (andamentos/histórico) de um processo pelo CNJ (API V2).
+ * Cada item é um andamento/publicação (distribuição, despacho, decisão, intimação…).
+ */
+export async function listarMovimentacoes({ numeroCnj, ordem = 'asc', max = 1000, env = process.env, fetchImpl = fetch }) {
+  const masc = mascaraCnj(numeroCnj) || String(numeroCnj || '').trim();
+  if (!masc) return { ok: false, status: 0, error: 'numeroCnj obrigatório.', itens: [] };
+  const url = `${WIRE.rotasV2.processoPorCnj}${encodeURIComponent(masc)}/movimentacoes`;
+  return escavadorPaginar(url, { query: { limit: 100, ordem }, env, fetchImpl, max });
+}
+
+/** Converte UMA movimentação do Escavador no formato do lawsuit_movements do sistema. */
+export function movimentacaoParaMovimento(m) {
+  const o = m || {};
+  const titulo = o.classificacao_predita?.nome || o.tipo_publicacao || o.tipo || 'Movimentação';
+  return {
+    movement_date: normalizaData(o.data || o.data_movimentacao || o.data_publicacao) || '',
+    title: String(titulo).trim().slice(0, 200),
+    description: String(o.conteudo || o.texto || '').replace(/\s+/g, ' ').trim().slice(0, 2000),
+  };
+}
+
+/**
  * Lista os PROCESSOS de um advogado pela OAB (API V2 /advogado/processos), já ESTRUTURADOS
  * (mesmo formato do detalhe: capa + envolvidos). É a forma correta de "buscar meus processos
  * pela OAB" — diferente do full-text em diários, traz os processos de verdade, com partes.

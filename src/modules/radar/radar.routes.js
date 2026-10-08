@@ -34,7 +34,7 @@ import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
   criarMonitoramentoDiario, removerMonitoramento, buscarProcessos, buscarProcessosPorOab,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
-  detalharProcesso, detalheParaImport,
+  detalharProcesso, detalheParaImport, listarMovimentacoes, movimentacaoParaMovimento,
 } from '../../shared/escavador.js';
 
 export const radarRouter = express.Router();
@@ -323,6 +323,24 @@ export function mesclarProcesso(base, rico) {
   };
 }
 
+/** Grava as movimentações (andamentos) de um processo no histórico do sistema. Idempotente por
+ *  processo novo (só é chamado para processos recém-criados). Retorna quantos andamentos entraram. */
+function inserirMovimentacoes(lawsuitId, movs) {
+  if (!lawsuitId || !Array.isArray(movs) || !movs.length) return 0;
+  const now = new Date().toISOString();
+  const stmt = db.prepare(`INSERT INTO lawsuit_movements (lawsuit_id, movement_date, title, description, created_at)
+                           VALUES (?, ?, ?, ?, ?)`);
+  let n = 0;
+  for (const m of movs) {
+    if (!m || (!m.movement_date && !m.description)) continue;
+    try {
+      stmt.run(lawsuitId, m.movement_date || now.slice(0, 10), m.title || 'Movimentação', m.description || '', now);
+      n++;
+    } catch { /* best-effort por item */ }
+  }
+  return n;
+}
+
 function importarProcessoEscritorio(pd, session) {
   const numero = String(pd.numero_processo || '').trim();
   if (!numero) return { ok: false, reason: 'sem número' };
@@ -407,7 +425,9 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
   // o chamador pode desligar (enriquecer:false) para só cadastrar sem conferir.
   const enriquecer = b.enriquecer !== false;
 
-  let importados = 0, jaExistiam = 0, falhas = 0, enriquecidos = 0;
+  // Trazer os andamentos (histórico) dos processos novos? Ligado por padrão (custo baixo p/ poucos processos).
+  const trazerAndamentos = b.andamentos !== false;
+  let importados = 0, jaExistiam = 0, falhas = 0, enriquecidos = 0, andamentos = 0;
   for (const p of encontrados) {
     // Já normalizado/enriquecido (veio da busca por OAB V2 ou de um resultado)? Usa como está,
     // sem perder os campos ricos. Caso contrário (publicação crua), normaliza.
@@ -427,12 +447,22 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
       }
     }
     const r = importarProcessoEscritorio(pd, req.user);
-    if (!r.ok) falhas++;
-    else if (r.jaExistia) jaExistiam++;
-    else importados++;
+    if (!r.ok) { falhas++; continue; }
+    if (r.jaExistia) { jaExistiam++; continue; }
+    importados++;
+    // Andamentos (histórico) do processo recém-criado — só para os NOVOS (não re-cobra os antigos).
+    if (trazerAndamentos) {
+      try {
+        const mv = await listarMovimentacoes({ numeroCnj: pd.numero_processo });
+        if (typeof mv.creditos === 'number') { creditos += mv.creditos; registrarGasto('movimentacoes', mv.creditos); }
+        if (mv.ok && Array.isArray(mv.itens) && mv.itens.length) {
+          andamentos += inserirMovimentacoes(r.lawsuitId, mv.itens.map(movimentacaoParaMovimento));
+        }
+      } catch { /* best-effort: o processo entra mesmo sem o histórico */ }
+    }
   }
-  logAudit(req, { event_type: 'RADAR', event_name: 'IMPORTAR_PROCESSOS', module: 'RADAR', resource_id: soDigitos(b.oab || '') || 'lote', description: `Importação do Radar: ${importados} novo(s), ${jaExistiam} já existia(m), ${enriquecidos} detalhado(s), ${falhas} falha(s).` });
-  return res.json({ success: true, total: encontrados.length, importados, jaExistiam, enriquecidos, falhas, creditos });
+  logAudit(req, { event_type: 'RADAR', event_name: 'IMPORTAR_PROCESSOS', module: 'RADAR', resource_id: soDigitos(b.oab || '') || 'lote', description: `Importação do Radar: ${importados} novo(s), ${jaExistiam} já existia(m), ${enriquecidos} detalhado(s), ${andamentos} andamento(s), ${falhas} falha(s).` });
+  return res.json({ success: true, total: encontrados.length, importados, jaExistiam, enriquecidos, andamentos, falhas, creditos });
 });
 
 /** DELETE /api/radar/monitoramentos/:id — remove um monitoramento. */

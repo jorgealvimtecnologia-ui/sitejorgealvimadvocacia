@@ -10,6 +10,7 @@ import {
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
   detalharProcesso, detalheParaImport, grauParaInstancia,
   criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab,
+  listarMovimentacoes, movimentacaoParaMovimento,
 } from '../src/shared/escavador.js';
 
 // Resposta falsa no formato do fetch (headers case-insensitive, .json()).
@@ -308,6 +309,24 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.match(capturado, /\/api\/v2\/advogado\/processos\?/);
     assert.match(capturado, /oab_numero=222943/);
     assert.match(capturado, /oab_estado=MG/);
+  });
+
+  it('listarMovimentacoes monta a URL /movimentacoes do CNJ; movimentacaoParaMovimento mapeia', async () => {
+    let capturado = null;
+    const fetchImpl = async (url) => {
+      capturado = String(url);
+      return fakeResponse({ body: { items: [
+        { id: 1, data: '2024-04-17', tipo: 'ANDAMENTO', classificacao_predita: { nome: 'Distribuição' }, conteudo: '  Autos   distribuídos  ' },
+      ] } });
+    };
+    const r = await listarMovimentacoes({ numeroCnj: '50157876020248130145', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.equal(r.itens.length, 1);
+    assert.match(capturado, /\/api\/v2\/processos\/numero_cnj\/5015787-60\.2024\.8\.13\.0145\/movimentacoes\?/);
+    const m = movimentacaoParaMovimento(r.itens[0]);
+    assert.equal(m.movement_date, '2024-04-17');
+    assert.equal(m.title, 'Distribuição');
+    assert.equal(m.description, 'Autos distribuídos');  // espaços normalizados
   });
 
   it('grauParaInstancia traduz grau/recurso para o rótulo do sistema', () => {
