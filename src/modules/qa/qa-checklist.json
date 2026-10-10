@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T22:35:07.954Z",
-  "total": 922,
+  "generated_at": "2026-10-10T15:22:54.086Z",
+  "total": 927,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -3897,6 +3897,17 @@
       "order": 7002
     },
     {
+      "id": "QA-C9AADE1477",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "💬 Mensagens … ` : ''}",
+      "action": "openClientMessages",
+      "how": "Clique em “💬 Mensagens … ` : ''}”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
       "id": "QA-5FA74CBFED",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -4070,6 +4081,17 @@
       "label": "🗑️ Excluir",
       "action": "deleteLawsuit",
       "how": "Clique em “🗑️ Excluir”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
+      "id": "QA-4BDEA46A2B",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "🔄 Atualizar andamentos",
+      "action": "atualizarProcessoRadar",
+      "how": "Clique em “🔄 Atualizar andamentos”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7003
     },
     {
@@ -8261,6 +8283,39 @@
       "label": "Fechar",
       "action": "closeAuditModal",
       "how": "Clique em “Fechar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-38E45B70E1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: client messages modal",
+      "kind": "Botão",
+      "label": "&times;",
+      "action": "closeClientMessages",
+      "how": "Clique em “&times;”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-2031592328",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: client messages modal",
+      "kind": "Formulário",
+      "label": "formulário",
+      "action": "enviar",
+      "how": "Preencha os campos com dados de teste e envie. Confira: mensagem de sucesso, dados gravados e nenhum erro na tela.",
+      "order": 7090
+    },
+    {
+      "id": "QA-365AE464A5",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: client messages modal",
+      "kind": "Botão",
+      "label": "Enviar →",
+      "action": "enviar formulário",
+      "how": "Clique em “Enviar →”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7090
     },
     {

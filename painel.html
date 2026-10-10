@@ -7908,6 +7908,41 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <!-- ================= MODAIS DE CLIENTES & CONTRATOS ================= -->
 
   <!-- Modal: Incluir / Editar Cliente Completo & Contrato -->
+  <!-- Modal de Mensagens do Cliente (conversa pelo Portal do Cliente) -->
+  <div id="client-messages-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" style="z-index: 999999 !important;">
+    <div class="bg-slate-50 rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
+      <!-- Topo -->
+      <div class="flex justify-between items-center border-b border-slate-200 px-5 py-4 bg-white rounded-t-3xl">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl">💬</div>
+          <div>
+            <h3 class="font-bold text-navy-950 leading-tight">Mensagens do Cliente</h3>
+            <p class="text-xs text-slate-500" id="cmsg-client-name">—</p>
+          </div>
+        </div>
+        <button onclick="closeClientMessages()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none font-bold" title="Fechar">&times;</button>
+      </div>
+      <!-- Aviso de privacidade -->
+      <div class="px-5 pt-3 pb-1">
+        <p class="text-[11px] text-slate-500 flex items-start gap-1.5">
+          <span>🔒</span>
+          <span>Conversa visível apenas para o advogado responsável, o dono do escritório e a secretaria. O cliente é avisado por e-mail quando você responde. Andamentos do processo <strong>não</strong> são enviados automaticamente.</span>
+        </p>
+      </div>
+      <!-- Feed de mensagens -->
+      <div id="cmsg-feed" class="flex-1 overflow-y-auto px-5 py-3 space-y-3 min-h-[200px]"></div>
+      <!-- Caixa de resposta -->
+      <form onsubmit="sendOfficeMessage(event)" class="border-t border-slate-200 bg-white px-4 py-3 rounded-b-3xl flex items-end gap-2">
+        <textarea id="cmsg-input" rows="2" required placeholder="Escreva sua resposta ao cliente…"
+          class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none"></textarea>
+        <button type="submit" id="cmsg-send-btn"
+          class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-sm transition-colors flex items-center gap-1 disabled:opacity-60 disabled:cursor-not-allowed">
+          <span>Enviar</span><span>→</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <div id="client-modal" class="hidden fixed inset-0 z-[999999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-8 shadow-2xl space-y-5 border border-slate-200 max-h-[92vh] overflow-y-auto my-auto">
       

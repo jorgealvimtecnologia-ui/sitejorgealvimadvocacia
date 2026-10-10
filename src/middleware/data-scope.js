@@ -52,6 +52,20 @@ export function processoVisivel(session, lawsuit) {
 }
 
 /**
+ * Um CLIENTE é visível para a sessão? Mesma regra do processo, por `responsible_lawyer_id`:
+ *  - all/office → vê todos os clientes do escritório;
+ *  - assigned/own → vê só os clientes em seu nome MAIS os sem responsável (pool).
+ * Usado para que a conversa do cliente só apareça para o advogado responsável, o dono e a
+ * secretária (que têm escopo amplo) — e não para um advogado qualquer.
+ */
+export function clienteVisivel(session, client) {
+  if (!client) return false;
+  if (!limitaAoResponsavel(dataScopeOf(session))) return true; // all/office: vê tudo
+  const dono = client.responsible_lawyer_id;
+  return !dono || dono === session.userId; // sem dono = pool; com dono = só o dono
+}
+
+/**
  * Responsável a gravar ao CRIAR um processo:
  *  - se quem cria pode atribuir (mestre/sócio) e informou um responsável, usa o informado;
  *  - senão, se o escopo de quem cria é restrito (advogado/estagiário), o dono é ele mesmo;

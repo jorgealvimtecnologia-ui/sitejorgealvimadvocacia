@@ -11,6 +11,8 @@ import { uploadClientDoc } from '../../middleware/upload.js';
 import { STORAGE_DIR } from '../../config/constants.js';
 import { generateNextClientFullId, generateNextClientId } from '../../shared/ids.js';
 import { hashPassword } from '../../shared/password-crypto.js';
+import { clienteVisivel } from '../../middleware/data-scope.js';
+import { notificarClienteResposta } from '../../shared/client-messaging.js';
 
 export const clientsRouter = express.Router();
 
@@ -26,10 +28,20 @@ clientsRouter.get('/api/clients', requireAuth, (req, res) => {
 
     const rows = db.prepare(query).all();
 
+    // Quantas mensagens do cliente ainda não foram lidas pelo escritório (para o selo "💬 N").
+    const naoLidas = {};
+    try {
+      const counts = db.prepare(
+        `SELECT client_id, COUNT(*) AS c FROM client_messages WHERE sender = 'client' AND read_status = 0 GROUP BY client_id`
+      ).all();
+      for (const r of counts) naoLidas[r.client_id] = r.c;
+    } catch { /* tabela pode não existir em bancos antigos */ }
+
     const clients = rows.map(c => ({
       ...c,
       files: c.files ? JSON.parse(c.files) : [],
-      is_deleted: !!c.deleted_at
+      is_deleted: !!c.deleted_at,
+      unread_messages: naoLidas[c.id] || 0
     }));
 
     return res.json({ success: true, clients });
@@ -54,6 +66,103 @@ clientsRouter.get('/api/clients/:id', requireAuth, (req, res) => {
   } catch (error) {
     console.error('[ERRO] Falha ao consultar cliente por ID:', error);
     return res.status(500).json({ error: 'Erro ao consultar cliente.' });
+  }
+});
+
+// ============================================================================
+//  MENSAGENS CLIENTE ↔ ESCRITÓRIO (o cliente "no foguete", pela aba do portal)
+//  Só quem PODE ver o cliente conversa com ele: advogado responsável, dono e secretária
+//  (o escopo de dados cuida disso). Nenhum andamento automático é enviado ao cliente.
+// ============================================================================
+
+/** Resumo das conversas com mensagens do cliente ainda não lidas (selo do painel). */
+clientsRouter.get('/api/clients/messages/unread', requireAuth, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT m.client_id AS client_id, COUNT(*) AS unread, c.full_name AS client_name,
+             c.responsible_lawyer_id AS responsible_lawyer_id, MAX(m.created_at) AS last_at
+        FROM client_messages m
+        JOIN clients c ON c.id = m.client_id
+       WHERE m.sender = 'client' AND m.read_status = 0 AND c.deleted_at IS NULL
+       GROUP BY m.client_id
+       ORDER BY last_at DESC
+    `).all();
+    // Mostra só as conversas que esta pessoa pode ver (responsável/dono/secretária).
+    const visiveis = rows.filter(r => clienteVisivel(req.user, r));
+    const total = visiveis.reduce((s, r) => s + r.unread, 0);
+    return res.json({ success: true, total, conversas: visiveis });
+  } catch (error) {
+    console.error('[ERRO] Falha ao contar mensagens não lidas:', error);
+    return res.status(500).json({ error: 'Erro ao consultar mensagens.' });
+  }
+});
+
+/** Lê a conversa de um cliente (os dois lados) e marca as mensagens do cliente como lidas. */
+clientsRouter.get('/api/clients/:id/messages', requireAuth, (req, res) => {
+  try {
+    const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(req.params.id);
+    if (!client) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    if (!clienteVisivel(req.user, client)) {
+      return res.status(403).json({ error: 'Sem permissão para ver as mensagens deste cliente.' });
+    }
+    const messages = db.prepare(
+      `SELECT id, sender, sender_name, subject, message, created_at, read_status
+         FROM client_messages WHERE client_id = ? ORDER BY created_at ASC`
+    ).all(client.id);
+
+    // Abrir a conversa marca como lidas as mensagens que o cliente mandou.
+    db.prepare(`UPDATE client_messages SET read_status = 1 WHERE client_id = ? AND sender = 'client' AND read_status = 0`).run(client.id);
+
+    return res.json({ success: true, client_id: client.id, client_name: client.full_name, messages });
+  } catch (error) {
+    console.error('[ERRO] Falha ao ler conversa do cliente:', error);
+    return res.status(500).json({ error: 'Erro ao ler mensagens.' });
+  }
+});
+
+/** Escritório responde ao cliente. Avisa o cliente por e-mail (se ele permitir). */
+clientsRouter.post('/api/clients/:id/messages', requireAuth, (req, res) => {
+  try {
+    const { message, subject } = req.body || {};
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({ error: 'Digite o conteúdo da mensagem.' });
+    }
+    const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(req.params.id);
+    if (!client) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    if (!clienteVisivel(req.user, client)) {
+      return res.status(403).json({ error: 'Sem permissão para responder a este cliente.' });
+    }
+
+    const now = new Date().toISOString();
+    const senderName = req.user?.name || 'Escritório Jorge Alvim Advocacia';
+    const texto = String(message).trim();
+    const assunto = String(subject || 'Resposta do escritório').trim();
+
+    const result = db.prepare(`
+      INSERT INTO client_messages (client_id, sender, sender_name, subject, message, created_at, read_status)
+      VALUES (?, 'office', ?, ?, ?, ?, 1)
+    `).run(client.id, senderName, assunto, texto, now);
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'RESPONDER_MENSAGEM_CLIENTE',
+      module: 'CLIENTES',
+      resource_id: client.id,
+      description: `Resposta enviada ao cliente ${client.full_name} por ${senderName}.`
+    });
+
+    // Avisa o cliente por e-mail (decisão humana do advogado; nunca andamento automático).
+    notificarClienteResposta({ client, senderName, mensagem: texto })
+      .catch(() => { /* sendEmail já trata as falhas */ });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Resposta enviada ao cliente.',
+      data: { id: result.lastInsertRowid, sender: 'office', sender_name: senderName, subject: assunto, message: texto, created_at: now }
+    });
+  } catch (error) {
+    console.error('[ERRO] Falha ao responder cliente:', error);
+    return res.status(500).json({ error: 'Erro ao enviar resposta.' });
   }
 });
 

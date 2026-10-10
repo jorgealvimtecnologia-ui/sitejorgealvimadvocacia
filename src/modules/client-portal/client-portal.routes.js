@@ -18,6 +18,7 @@ import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { deliverAccessCode } from '../../shared/access-codes.js';
 import { loginRateLimit, guardLoginStart, guardLoginFailure, guardLoginSuccess } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
+import { notificarEscritorioNovaMensagem } from '../../shared/client-messaging.js';
 
 export const clientPortalRouter = express.Router();
 
@@ -1058,10 +1059,12 @@ clientPortalRouter.post('/api/client-portal/messages', requireClientAuth, (req, 
     }
 
     const now = new Date().toISOString();
+    const assunto = (subject || 'Mensagem do Cliente').trim();
+    const texto = message.trim();
     const result = db.prepare(`
       INSERT INTO client_messages (client_id, sender, sender_name, subject, message, created_at)
       VALUES (?, 'client', ?, ?, ?, ?)
-    `).run(clientId, clientName, (subject || 'Mensagem do Cliente').trim(), message.trim(), now);
+    `).run(clientId, clientName, assunto, texto, now);
 
     logAudit(req, {
       event_type: 'CRIACAO',
@@ -1072,6 +1075,16 @@ clientPortalRouter.post('/api/client-portal/messages', requireClientAuth, (req, 
       user_role: 'client',
       description: `Mensagem enviada pelo cliente ${clientName}: '${subject || 'Mensagem'}' ao escritório.`
     });
+
+    // Avisa o escritório (sino + e-mail), mas só o advogado responsável, o dono e a secretária.
+    try {
+      const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(clientId);
+      if (client) {
+        notificarEscritorioNovaMensagem({ client, messageId: result.lastInsertRowid, subject: assunto, mensagem: texto });
+      }
+    } catch (e) {
+      console.error('[PORTAL] Falha ao avisar o escritório da nova mensagem:', e.message);
+    }
 
     res.status(201).json({
       success: true,
