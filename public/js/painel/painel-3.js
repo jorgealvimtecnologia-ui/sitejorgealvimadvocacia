@@ -991,14 +991,19 @@
     }
 
     // ---- Controle de acesso (RBAC): restringe módulos por perfil do usuário ----
-    var WM_MASTER=true, WM_ALLOWED=null;
+    // FECHADO POR PADRÃO: até as permissões do usuário chegarem do servidor (ou se falharem), só o que é de todos abre.
+    var WM_MASTER=false, WM_ALLOWED={};
     var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', clients:'tab_clients', docs:'tab_clients',
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       colaborador:'tab_colaborador',
-      finance:'tab_financial', nfse:'tab_financial', esign:'tab_financial', users:'tab_users',
-      audit:'tab_settings', lgpd:'tab_settings', blog:'tab_settings', faq:'tab_settings', 'site-boxes':'tab_settings', explorer:'tab_settings', maintenance:'tab_settings', 'meta-ads':'tab_settings' };
-    var ALWAYS_ALLOWED={dashboard:1,editor:1,calc:1,kanban:1,notifications:1,rockets:1};
+      finance:'tab_financial', nfse:'tab_nfse', esign:'tab_esign', users:'tab_users',
+      audit:'tab_audit', lgpd:'tab_audit', blog:'tab_blog', faq:'tab_blog', 'site-boxes':'tab_blog',
+      notifications:'tab_alerts', dashboard:'tab_dashboard', kanban:'tab_kanban', editor:'tab_tools', calc:'tab_tools',
+      explorer:'tab_settings', 'meta-ads':'tab_settings' };
+    // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM e Radar & Roadmap.
+    var MASTER_ONLY={maintenance:1,roadmap:1};
+    var ALWAYS_ALLOWED={rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){
       // 1. Menu Bar do Desktop
@@ -1042,23 +1047,32 @@
         });
       }
 
+      gateByModule();
+
       // 4. Fechar janelas ativas não autorizadas
       order.slice().forEach(function(id){ if(!moduleAllowed(id)) closeWin(id); });
     }
+    // Esconde atalhos/cartões de módulos que a pessoa não pode abrir (data-need-module="clients", "finance"...)
+    function gateByModule(){
+      document.querySelectorAll('[data-need-module]').forEach(function(el){
+        el.style.display = moduleAllowed(el.getAttribute('data-need-module')) ? '' : 'none';
+      });
+    }
+    window.gateByModule=gateByModule;
     function fetchPerms(){
       try{
         fetch('/api/access-control/my-permissions',{headers:(typeof getAuthHeaders==='function'?getAuthHeaders():{})})
           .then(function(r){return r.json();}).then(function(d){
-            if(!d||!d.success) return;
+            if(!d||!d.success){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); return; }
             if(d.is_master){ WM_MASTER=true; WM_ALLOWED=null; }
             else { WM_MASTER=false; WM_ALLOWED={}; var p=d.permissions||{};
               Object.keys(MODULE_PERM).forEach(function(id){ if(p[MODULE_PERM[id]]) WM_ALLOWED[id]=1; }); }
             applyPerms();
             if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})){
-              var defMod = (!moduleAllowed('lawsuits') && moduleAllowed('colaborador')) ? 'colaborador' : 'dashboard';
-              openModule(defMod);
+              var defMod = ['dashboard','calendar','clients','leads','colaborador','rockets'].filter(moduleAllowed)[0];
+              if(defMod) openModule(defMod);
             }
-          }).catch(function(){});
+          }).catch(function(){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); });
       }catch(e){}
     }
 
@@ -1096,10 +1110,10 @@
       window.applyPerms=applyPerms;
       window.moduleAllowed=moduleAllowed;
       updateEmpty();
-      if(typeof getToken==='function' && getToken()){ openModule('dashboard'); fetchPerms(); }
+      if(typeof getToken==='function' && getToken()){ fetchPerms(); }
       if(typeof window.showPanelScreen==='function'){
         var _sps=window.showPanelScreen;
-        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); if(!order.length) openModule('dashboard'); fetchPerms(); return r; };
+        window.showPanelScreen=function(u){ var r=_sps.apply(this,arguments); fetchPerms(); return r; };
       }
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();

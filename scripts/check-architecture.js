@@ -11,12 +11,18 @@
  * 2. Novas rotas de API devem residir em `src/modules/<modulo>/<modulo>.routes.js`.
  * 3. Novas abas do painel devem residir em `public/js/tabs/tab-<modulo>.js`.
  * 4. Teto máximo de linhas em arquivos legados (Ceiling Check).
+ * 5. O .env NUNCA fica exposto (GitHub, imagem Docker, servidor): segredos só
+ *    criptografados em .env.enc (ver scripts/check-env-exposure.js).
+ * 6. RBAC: senha do painel e senha Google só abrem abas conforme a função; mestres
+ *    são só as 3 contas aprovadas (ver scripts/check-rbac-guard.js).
  * ==============================================================================
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkRepo as checkEnvExposure } from './check-env-exposure.js';
+import { checkRbac } from './check-rbac-guard.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,7 +46,7 @@ console.log(`\n${BOLD}${CYAN}🔍 INICIANDO AUDITORIA ARQUITETURAL DE MODULARIDA
 // REGRA 1: Checagem de Teto Monolítico (Ceiling Check)
 // ------------------------------------------------------------------------------
 const CEILINGS = [
-  { file: 'server.js', maxLines: 3200, label: 'Backend Server Core' },
+  { file: 'server.js', maxLines: 2000, label: 'Backend Server Core' },
   { file: 'public/js/painel/painel-1-app.js', maxLines: 1800, label: 'Frontend Painel Monolith (Decomposto)' },
 ];
 
@@ -173,6 +179,32 @@ function checkLargeFunctions(filePath, relName, maxLines = 250) {
 
 checkLargeFunctions(path.join(ROOT_DIR, 'server.js'), 'server.js', 300);
 checkLargeFunctions(path.join(ROOT_DIR, 'public/js/painel/painel-1-app.js'), 'painel-1-app.js', 250);
+
+// ------------------------------------------------------------------------------
+// REGRA 7: O .env NUNCA fica exposto — nem no GitHub, nem na imagem Docker, nem no
+// servidor Contabo. Segredos só criptografados (.env.enc, scripts/env-vault.js).
+// No servidor, o deploy roda a mesma verificação (scripts/deploy-remote.sh).
+// ------------------------------------------------------------------------------
+{
+  const envCheck = checkEnvExposure(ROOT_DIR);
+  envCheck.violations.forEach(v => violations.push(v));
+  envCheck.warnings.forEach(w => warnings.push(w));
+  if (envCheck.violations.length === 0) {
+    console.log(`  ${GREEN}✓${RESET} Proteção do .env: nada versionado/embutido em texto puro, nginx e backup sem exposição — ${BOLD}OK${RESET}`);
+  }
+}
+
+// ------------------------------------------------------------------------------
+// REGRA 8: RBAC — login por senha e por Google só abre as abas da função do usuário;
+// contas mestras = as 3 aprovadas; toda rota /api tem regra (negado por padrão).
+// ------------------------------------------------------------------------------
+{
+  const rbac = await checkRbac(ROOT_DIR);
+  rbac.violations.forEach(v => violations.push(v));
+  if (rbac.violations.length === 0) {
+    console.log(`  ${GREEN}✓${RESET} RBAC: senha e Google só entram nas abas da função; 3 contas mestras aprovadas — ${BOLD}OK${RESET}`);
+  }
+}
 
 // ------------------------------------------------------------------------------
 // RESULTADO FINAL DA AUDITORIA

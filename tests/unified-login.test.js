@@ -16,7 +16,7 @@ import fs from 'node:fs';
 const TMP_DB = path.join(os.tmpdir(), `jaw-unified-test-${Date.now()}.db`);
 process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
-process.env.MASTER_PASSWORD = 'jorgealvim';
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
 const { hashPassword } = await import('../src/shared/password-crypto.js');
@@ -33,7 +33,7 @@ describe('Entrada Unificada (Identity-First Login)', () => {
   it('1. Login de Operador / Mestre via /api/auth/login -> redireciona para /painel', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'jorgealvimtecnologia', password: 'jorgealvim' });
+      .send({ identifier: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' });
 
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
@@ -187,7 +187,7 @@ describe('Entrada Unificada (Identity-First Login)', () => {
   it('10. Mestre (Dr. Jorge Alvim) via login unificado -> recebe permissão irrestrita para TODAS as abas (is_master: true)', async () => {
     const loginRes = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'jorgealvimtecnologia', password: 'jorgealvim' });
+      .send({ identifier: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' });
 
     assert.equal(loginRes.status, 200);
     const permRes = await request(app)
@@ -432,18 +432,14 @@ describe('Entrada Unificada (Identity-First Login)', () => {
       )
     `).run(`PERM-${susId}`, susId);
 
+    // Suspenso na matriz: nem a senha abre mais o sistema (antes só as permissões davam 403 depois do login).
     const loginRes = await request(app)
       .post('/api/auth/login')
       .send({ identifier: 'operador.suspenso', password: 'sus12345' });
 
-    assert.equal(loginRes.status, 200);
-
-    const permRes = await request(app)
-      .get('/api/access-control/my-permissions')
-      .set('Authorization', `Bearer ${loginRes.body.token}`);
-
-    assert.equal(permRes.status, 403, 'Operador suspenso deve ser bloqueado com 403');
-    assert.match(permRes.body.error, /desativado/i);
+    assert.equal(loginRes.status, 403);
+    assert.ok(!loginRes.body.token);
+    assert.match(loginRes.body.error, /RBAC|desativado/i);
   });
 
   it('16. Cliente autenticado -> BLOQUEADO de rotas administrativas do painel com 401', async () => {

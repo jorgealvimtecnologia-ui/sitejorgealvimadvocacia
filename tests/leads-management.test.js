@@ -17,7 +17,7 @@ import fs from 'node:fs';
 const TMP_DB = path.join(os.tmpdir(), `jaw-leads-mgmt-${Date.now()}.db`);
 process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
-process.env.MASTER_PASSWORD = 'jorgealvim';
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
 const { createSession } = await import('../src/middleware/auth.js');
@@ -28,7 +28,7 @@ let advToken = '';
 let leadId = '';
 
 before(async () => {
-  const r = await request(app).post('/api/auth/login').send({ username: 'jorgealvimtecnologia', password: 'jorgealvim' });
+  const r = await request(app).post('/api/auth/login').send({ username: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' });
   assert.equal(r.status, 200);
   masterToken = r.body.token;
   // Sessão de um advogado comum (não-mestre) para testar o veto de distribuição.

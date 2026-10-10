@@ -8,6 +8,8 @@ import { requireAuth, validateToken } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { hashPassword } from '../../shared/password-crypto.js';
 import { validatePassword } from '../../shared/password-policy.js';
+import { effectivePerms } from '../../shared/permissions.js';
+import { findEmployeeForUser } from '../../shared/identity-link.js';
 
 export const accessRouter = express.Router();
 
@@ -176,6 +178,36 @@ accessRouter.delete('/api/users/:id', requireAuth, (req, res) => {
 // 🛡️ MATRIZ DE CONTROLE DE ACESSO & PERMISSÕES GRANULARES (RBAC/ABAC HÍBRIDO)
 // =============================================================================
 
+/**
+ * Função (perfil de acesso) a partir do CARGO registrado da pessoa (RHABAC por FUNÇÃO, AUD-27).
+ * Olha SÓ o cargo/posição — nunca o nome próprio nem o login. Cargo que não bate com nenhuma função
+ * conhecida vira 'sem_perfil' (NEGADO POR PADRÃO): o mestre escolhe a função na tela Usuários & Senhas.
+ */
+/**
+ * Função a partir do PAPEL escolhido no cadastro do operador (campo `role`), por FUNÇÃO — nunca por nome.
+ * Apelidos herdados: 'atendente' -> secretária; 'admin' -> advogado. 'master'/'cliente' são tratados antes.
+ * Devolve a chave da função, ou null quando o papel não indica função (aí decide o cargo do RH).
+ */
+export function roleFromUserRole(role) {
+  const r = String(role || '').toLowerCase().trim();
+  if (!r) return null;
+  if (r === 'atendente') return 'secretaria';
+  if (r === 'admin') return 'advogado';
+  return ROLE_TEMPLATES[r] && r !== 'master' && r !== 'cliente' ? r : null;
+}
+
+export function roleFromPosition(position) {
+  const pos = String(position || '').toLowerCase();
+  if (!pos) return 'sem_perfil';
+  if (/estagi/.test(pos)) return 'estagiario';
+  if (/secret|recepc|atendiment/.test(pos)) return 'secretaria';
+  if (/motorist|motoboy|externo|entreg/.test(pos)) return 'motorista';
+  if (/gerente|financ|administrativ|contab|dp\b|departamento pessoal/.test(pos)) return 'gerente';
+  if (/s[oó]ci|titular|propriet/.test(pos)) return 'dono_escritorio';
+  if (/advog|jur[ií]dic/.test(pos)) return 'advogado';
+  return 'sem_perfil';
+}
+
 const ROLE_TEMPLATES = {
   master: {
     key: 'master',
@@ -268,6 +300,21 @@ const ROLE_TEMPLATES = {
       tab_users: 0, tab_settings: 0
     }
   },
+  // Quem NÃO se encaixa em nenhuma função fica SEM acesso até o mestre escolher o perfil
+  // (antes caía no perfil Advogado: processos, radar, drive, agenda... sem ninguém ter decidido).
+  sem_perfil: {
+    key: 'sem_perfil',
+    name: 'Sem perfil definido (o mestre precisa escolher)',
+    badge_label: '⛔ Sem perfil',
+    badge_class: 'bg-slate-100 text-slate-700 border-slate-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 0, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 0, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
   cliente: {
     key: 'cliente',
     name: 'Cliente (PF / PJ)',
@@ -291,47 +338,35 @@ export function syncAllAccessPermissions() {
     const users = db.prepare(`SELECT * FROM users`).all();
     for (const u of users) {
       const isMaster = u.id === 'USR-MASTER-01' || u.username === 'jorgealvimtecnologia' || u.role === 'master';
-      const isDraMariana = u.name.toLowerCase().includes('mariana') || u.username.includes('mariana');
-      const isDraGabriela = u.name.toLowerCase().includes('gabriela') || u.username.includes('gabriela');
-      
-      // Buscar colaborador correspondente no RH para herdar cargo real
+
+      // Colaborador correspondente no RH (vínculo EXATO) para herdar o CARGO real.
       let linkedEmp = null;
       try {
-        linkedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) = ? OR LOWER(name) LIKE ?`).get(u.name.toLowerCase(), `%${u.name.toLowerCase()}%`);
+        linkedEmp = findEmployeeForUser(db, u);
       } catch (e) {}
 
-      const pos = ((linkedEmp && linkedEmp.position) || '').toLowerCase();
-      const uname = (u.username || '').toLowerCase();
-      const urole = (u.role || '').toLowerCase();
-
-      let tplKey = 'advogado';
-      let userType = 'admin';
-
+      // RHABAC POR FUNÇÃO (AUD-27): a função vem, nesta ordem, SEM nome próprio nem trecho de login:
+      //   1) mestre (id/login/role do mestre);
+      //   2) cliente;
+      //   3) 'custom' já gravado = ajuste MANUAL do mestre, NUNCA sobrescrito;
+      //   4) papel escolhido no cadastro do operador (campo role, com os apelidos atendente->secretária, admin->advogado);
+      //   5) cargo registrado do colaborador no RH;
+      //   6) nada disso => sem_perfil (NEGADO POR PADRÃO).
+      const current = db.prepare(`SELECT role_template FROM access_permissions WHERE user_id = ?`).get(u.id)?.role_template;
+      let tplKey, userType;
       if (isMaster) {
-        tplKey = 'master';
-        userType = 'master';
-      } else if (urole === 'cliente' || u.id.includes('CLI-')) {
-        tplKey = 'cliente';
-        userType = 'cliente';
-      } else if (isDraMariana || isDraGabriela || pos.includes('sóci') || pos.includes('socio') || pos.includes('titular')) {
-        tplKey = 'dono_escritorio';
-        userType = 'dono_escritorio';
-      } else if (pos.includes('motorist') || pos.includes('externo') || uname.includes('motorista') || urole === 'motorista') {
-        tplKey = 'motorista';
-        userType = 'motorista';
-      } else if (pos.includes('secret') || pos.includes('recepc') || uname.includes('secretaria') || uname.includes('recepcao') || urole === 'secretaria') {
-        tplKey = 'secretaria';
-        userType = 'secretaria';
-      } else if (pos.includes('estagi') || uname.includes('estagiario') || uname.includes('estagio') || urole === 'estagiario') {
-        tplKey = 'estagiario';
-        userType = 'estagiario';
-      } else if (pos.includes('gerente') || pos.includes('financ') || uname.includes('adm') || urole === 'gerente') {
-        tplKey = 'gerente';
-        userType = 'gerente';
-      } else if (pos.includes('advog') || uname.includes('adv') || urole === 'advogado') {
-        tplKey = 'advogado';
-        userType = 'advogado';
+        tplKey = 'master'; userType = 'master';
+      } else if ((u.role || '').toLowerCase() === 'cliente' || String(u.id).includes('CLI-')) {
+        tplKey = 'cliente'; userType = 'cliente';
+      } else if (current === 'custom') {
+        tplKey = 'custom'; userType = 'custom';
+      } else {
+        tplKey = roleFromUserRole(u.role) || roleFromPosition((linkedEmp && linkedEmp.position) || '');
+        userType = tplKey;
       }
+
+      // 'custom' = o mestre mexeu nas abas individualmente: preserva a linha como está.
+      if (tplKey === 'custom') continue;
 
       const tpl = ROLE_TEMPLATES[tplKey];
 
@@ -361,8 +396,9 @@ export function syncAllAccessPermissions() {
               is_active = 1, data_scope = 'all', updated_at = ?
           WHERE user_id = ?
         `).run(now, u.id);
-      } else if (exists.role_template === 'advogado' && tplKey !== 'advogado') {
-        // Corrige operadores que haviam caído indevidamente no perfil genérico 'advogado'
+      } else if (exists.role_template !== tplKey && exists.role_template !== 'custom') {
+        // Mantém a FUNÇÃO em dia: re-aplica o perfil derivado quando difere do gravado (exceto ajuste manual 'custom').
+        // Corrige, entre outros, quem caíra no perfil genérico 'advogado' pelas antigas regras por nome/login.
         db.prepare(`
           UPDATE access_permissions 
           SET role_template = ?, user_type = ?,
@@ -384,29 +420,9 @@ export function syncAllAccessPermissions() {
     // 2. Sincronizar Colaboradores do RH (CLT, Estágio, Associados)
     const employees = db.prepare(`SELECT * FROM hr_employees`).all();
     for (const emp of employees) {
-      const pos = (emp.position || '').toLowerCase();
-      let tplKey = 'advogado';
-      let userType = 'empregado';
-
-      if (pos.includes('estagi')) {
-        tplKey = 'estagiario';
-        userType = 'estagiario';
-      } else if (pos.includes('secret') || pos.includes('recepc')) {
-        tplKey = 'secretaria';
-        userType = 'secretaria';
-      } else if (pos.includes('gerente') || pos.includes('financ')) {
-        tplKey = 'gerente';
-        userType = 'gerente';
-      } else if (pos.includes('motorist') || pos.includes('externo')) {
-        tplKey = 'motorista';
-        userType = 'motorista';
-      } else if (pos.includes('sóci') || pos.includes('socio') || pos.includes('titular')) {
-        tplKey = 'dono_escritorio';
-        userType = 'dono_escritorio';
-      } else if (pos.includes('advog')) {
-        tplKey = 'advogado';
-        userType = 'advogado';
-      }
+      // Função pela função registrada (cargo) do colaborador. Sem nome próprio.
+      const tplKey = roleFromPosition(emp.position || '');
+      const userType = tplKey;
 
       const tpl = ROLE_TEMPLATES[tplKey];
       const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(emp.id);
@@ -494,9 +510,10 @@ accessRouter.get('/api/access-control/matrix', requireAuth, (req, res) => {
 
     // SEGURANÇA: a matriz não expõe senhas. Para trocar, usa-se "Redefinir senha".
     const matrix = rows.map(r => {
-      const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.advogado;
+      const tpl = ROLE_TEMPLATES[r.role_template] || ROLE_TEMPLATES.sem_perfil;
       return {
         ...r,
+        ...effectivePerms(r),
         is_master: r.role_template === 'master' || r.user_id === 'USR-MASTER-01',
         badge_label: tpl.badge_label,
         badge_class: tpl.badge_class,
@@ -530,7 +547,9 @@ accessRouter.post('/api/access-control/toggle', requireAuth, (req, res) => {
     const validTabs = [
       'tab_leads', 'tab_clients', 'tab_lawsuits', 'tab_radar', 'tab_offices',
       'tab_drive', 'tab_calendar', 'tab_publications', 'tab_hr', 'tab_financial',
-      'tab_colaborador', 'tab_portal_cliente', 'tab_users', 'tab_settings'
+      'tab_colaborador', 'tab_portal_cliente', 'tab_users', 'tab_settings',
+      'tab_nfse', 'tab_esign', 'tab_blog', 'tab_audit', 'tab_alerts',
+      'tab_dashboard', 'tab_kanban', 'tab_tools'
     ];
 
     if (!validTabs.includes(tab_key)) {
@@ -615,6 +634,8 @@ accessRouter.post('/api/access-control/apply-template', requireAuth, (req, res) 
       tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
       tpl.tabs.tab_users, tpl.tabs.tab_settings, tpl.data_scope, now, user_id
     );
+    // Aplicar um perfil modelo volta as abas granulares a "herdar" (o perfil define tudo de novo)
+    db.prepare(`UPDATE access_permissions SET tab_nfse = NULL, tab_esign = NULL, tab_blog = NULL, tab_audit = NULL, tab_alerts = NULL, tab_dashboard = NULL, tab_kanban = NULL, tab_tools = NULL WHERE user_id = ?`).run(user_id);
 
     logAudit(req, {
       event_type: 'ALTERACAO_PERMISSAO',
@@ -701,19 +722,15 @@ accessRouter.get('/api/access-control/my-permissions', (req, res) => {
         success: true,
         is_master: perm.role_template === 'master',
         role_name: perm.role_template,
-        permissions: {
-          tab_leads: perm.tab_leads, tab_clients: perm.tab_clients, tab_lawsuits: perm.tab_lawsuits,
-          tab_radar: perm.tab_radar, tab_offices: perm.tab_offices, tab_drive: perm.tab_drive,
-          tab_calendar: perm.tab_calendar, tab_publications: perm.tab_publications, tab_hr: perm.tab_hr,
-          tab_financial: perm.tab_financial, tab_colaborador: perm.tab_colaborador,
-          tab_portal_cliente: perm.tab_portal_cliente, tab_users: perm.tab_users, tab_settings: perm.tab_settings
-        }
+        permissions: effectivePerms(perm)
       });
     }
 
     // 4. Fallback estrito ao template do cargo do usuário (session.role)
-    const roleKey = session.role || 'advogado';
-    const tpl = ROLE_TEMPLATES[roleKey] || ROLE_TEMPLATES.advogado;
+    // Papel desconhecido => SEM acesso (nunca "Advogado" por omissão); "atendente" é a secretária/recepção.
+    const rawRole = String(session.role || '').toLowerCase();
+    const roleKey = rawRole === 'atendente' ? 'secretaria' : rawRole === 'admin' ? 'advogado' : ROLE_TEMPLATES[rawRole] ? rawRole : 'sem_perfil';
+    const tpl = ROLE_TEMPLATES[roleKey];
 
     // Auto-registrar na matriz access_permissions para manter rastreabilidade
     try {
@@ -738,7 +755,7 @@ accessRouter.get('/api/access-control/my-permissions', (req, res) => {
       success: true,
       is_master: false,
       role_name: roleKey,
-      permissions: tpl.tabs
+      permissions: effectivePerms({ ...tpl.tabs, role_template: roleKey })
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });

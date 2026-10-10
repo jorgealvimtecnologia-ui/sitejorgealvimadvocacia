@@ -10,6 +10,20 @@
 
     // ================= 3. GESTÃO DE PROCESSOS JUDICIAIS & ANDAMENTOS (CNJ) =================
 
+    // Responsável pelo processo (AUD-27 Parte 2): lista de operadores e se o usuário pode atribuir.
+    let lawsuitResponsaveis = [];
+    let lawsuitCanAssign = false;
+
+    async function loadLawsuitResponsaveis() {
+      try {
+        const res = await fetch('/api/lawsuits/responsaveis', { headers: getAuthHeaders() });
+        if (!res.ok) { lawsuitCanAssign = false; lawsuitResponsaveis = []; return; }
+        const data = await res.json();
+        lawsuitCanAssign = !!data.canAssign;
+        lawsuitResponsaveis = data.operators || [];
+      } catch { lawsuitCanAssign = false; lawsuitResponsaveis = []; }
+    }
+
     function getDeadlineBadge(deadlineDate, deadlineStatus) {
       if (deadlineStatus === 'Cumprido') {
         return `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-[11px]">
@@ -133,6 +147,17 @@
               </div>
             </div>
 
+            <!-- Responsável pelo processo (AUD-27 Parte 2) -->
+            <div class="w-full md:w-auto flex items-center gap-2 text-[11px] text-slate-600">
+              <span class="font-bold text-slate-500">👤 Responsável:</span>
+              ${lawsuitCanAssign ? `
+                <select onchange="atribuirResponsavel('${law.id}', this.value)" class="border border-slate-300 rounded-lg px-2 py-1 text-[11px] bg-white" title="Atribuir o advogado responsável por este processo">
+                  <option value="">— Sem responsável (pool) —</option>
+                  ${lawsuitResponsaveis.map(o => `<option value="${o.id}" ${o.id === law.responsible_user_id ? 'selected' : ''}>${o.name}</option>`).join('')}
+                </select>` : `
+                <span class="font-semibold text-navy-950">${law.responsible_name || 'Sem responsável (pool do escritório)'}</span>`}
+            </div>
+
             <!-- Botões de Ação do Processo -->
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
               <button 
@@ -153,8 +178,17 @@
                 <span>Novo Andamento</span>
               </button>
 
-              <button 
-                onclick="openEditLawsuitModal('${law.id}')" 
+              <button
+                onclick="monitorarProcessoRadar('${law.cnj_number}')"
+                class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                title="Monitorar este processo no Radar (Escavador). O aviso vem só para o advogado — nada é enviado ao cliente."
+              >
+                <span>📡</span>
+                <span>Monitorar</span>
+              </button>
+
+              <button
+                onclick="openEditLawsuitModal('${law.id}')"
                 class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                 title="Editar dados do processo"
               >
@@ -195,6 +229,24 @@
                   <strong class="text-slate-900">${law.judge_name}</strong>
                 </div>
               ` : ''}
+              ${law.valor_causa ? `
+                <div>
+                  <span class="text-slate-400 block text-[10px] uppercase font-bold">Valor da Causa</span>
+                  <strong class="text-slate-900">R$ ${law.valor_causa}</strong>
+                </div>
+              ` : ''}
+              ${law.situacao ? `
+                <div>
+                  <span class="text-slate-400 block text-[10px] uppercase font-bold">Situação</span>
+                  <strong class="text-slate-900">${law.situacao}</strong>
+                </div>
+              ` : ''}
+              ${law.fase ? `
+                <div>
+                  <span class="text-slate-400 block text-[10px] uppercase font-bold">Fase</span>
+                  <strong class="text-slate-900">${law.fase}</strong>
+                </div>
+              ` : ''}
               ${law.notes ? `
                 <div class="sm:col-span-2 md:col-span-3 bg-amber-50/40 p-2.5 rounded-xl border border-amber-200/70 text-slate-700">
                   <span class="text-amber-900 block text-[10px] uppercase font-bold mb-0.5">Observações Estratégicas</span>
@@ -203,12 +255,42 @@
               ` : ''}
             </div>
 
+            ${(() => {
+              const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+              const partes = Array.isArray(law.parties) ? law.parties : [];
+              if (!partes.length) return '';
+              return `
+              <div class="pt-3 border-t border-slate-100">
+                <span class="text-slate-600 block text-xs uppercase font-bold mb-2 flex items-center space-x-1.5"><span>👥</span><span>Partes do Processo (${partes.length})</span></span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  ${partes.map(p => {
+                    const advs = Array.isArray(p.advogados) ? p.advogados : [];
+                    const advTxt = advs.map(a => esc(a.nome) + (a.oab ? ` <span class="text-slate-400">(OAB ${esc(a.oab)})</span>` : '')).join(', ');
+                    return `
+                    <div class="border border-slate-200 rounded-xl p-2.5 text-xs">
+                      <div class="flex items-center gap-2">
+                        <strong class="text-slate-900">${esc(p.name)}</strong>
+                        ${Number(p.is_client) ? '<span class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">cliente</span>' : ''}
+                      </div>
+                      <div class="text-[11px] text-slate-500">${esc(p.tipo || p.polo || '')}</div>
+                      ${advTxt ? `<div class="text-[11px] text-slate-600 mt-1">⚖️ ${advTxt}</div>` : ''}
+                    </div>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            })()}
+
             <!-- Tabela / Linhas de Andamentos do Processo -->
             <div class="pt-3 border-t border-slate-100 space-y-2">
               <div class="flex items-center justify-between">
                 <span class="text-slate-600 block text-xs uppercase font-bold flex items-center space-x-1.5">
                   <span>📅</span>
                   <span>Andamentos & Prazos Judiciais (${movCount}):</span>
+                </span>
+                <span class="flex items-center gap-3">
+                  ${law.cnj_number ? `<button type="button" id="radar-upd-${law.id}" onclick="atualizarProcessoRadar('${law.id}')" class="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline" title="Re-busca os andamentos novos no Escavador (consome crédito)">🔄 Atualizar andamentos</button>` : ''}
+                  <button type="button" onclick="previewClientPortal('${law.id}')" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline">👁️ Ver como o cliente vê</button>
+                  <button type="button" onclick="publishAllToClient('${law.id}', true)" class="text-[11px] font-bold text-slate-600 hover:text-slate-900 underline">Publicar todos</button>
                 </span>
                 <button 
                   onclick="openNewMovementModal('${law.id}')" 
@@ -234,6 +316,7 @@
                           </span>
                           <strong class="text-xs sm:text-sm text-navy-950 font-semibold">${mov.title}</strong>
                           ${getDeadlineBadge(mov.deadline_date, mov.deadline_status)}
+                          <button type="button" onclick="toggleMovementClientVisible('${mov.id}', ${mov.client_visible ? 1 : 0})" class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${mov.client_visible ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-slate-50 text-slate-500 border-slate-300'}" title="${mov.client_visible ? 'O cliente vê este andamento no portal. Clique para ocultar.' : 'Oculto do cliente. Clique para publicar no portal.'}">${mov.client_visible ? '🌐 Cliente vê' : '🔒 Só o escritório'}</button>
                         </div>
                         ${mov.description ? `
                           <p class="text-xs text-slate-600 pl-1 leading-relaxed">${mov.description}</p>
@@ -284,6 +367,7 @@
 
     async function loadLawsuits() {
       try {
+        await loadLawsuitResponsaveis();
         const res = await fetch('/api/lawsuits', { headers: getAuthHeaders() });
         if (res.status === 401) {
           handleLogout();
@@ -429,6 +513,10 @@
       document.getElementById('lawsuit-dist-date').value = law.distribution_date || '';
       document.getElementById('lawsuit-judge').value = law.judge_name || '';
       document.getElementById('lawsuit-notes').value = law.notes || '';
+      document.getElementById('lawsuit-client-visible').checked = law.client_visible !== 0;
+      document.getElementById('lawsuit-client-summary').value = law.client_summary || '';
+      document.getElementById('lawsuit-client-action').value = law.client_next_action || '';
+      document.getElementById('lawsuit-client-action-needed').checked = !!law.client_action_needed;
 
       document.getElementById('lawsuit-modal').classList.remove('hidden');
     }
@@ -455,7 +543,11 @@
         action_type: document.getElementById('lawsuit-action-type').value.trim(),
         distribution_date: document.getElementById('lawsuit-dist-date').value,
         judge_name: document.getElementById('lawsuit-judge').value.trim(),
-        notes: document.getElementById('lawsuit-notes').value.trim()
+        notes: document.getElementById('lawsuit-notes').value.trim(),
+        client_visible: document.getElementById('lawsuit-client-visible').checked,
+        client_summary: document.getElementById('lawsuit-client-summary').value.trim(),
+        client_next_action: document.getElementById('lawsuit-client-action').value.trim(),
+        client_action_needed: document.getElementById('lawsuit-client-action-needed').checked
       };
 
       try {
@@ -537,7 +629,9 @@
         title: document.getElementById('movement-title').value.trim(),
         deadline_date: document.getElementById('movement-deadline-date').value,
         deadline_status: document.getElementById('movement-deadline-status').value,
-        description: document.getElementById('movement-desc').value.trim()
+        description: document.getElementById('movement-desc').value.trim(),
+        client_visible: document.getElementById('movement-client-visible').checked,
+        client_text: document.getElementById('movement-client-text').value.trim()
       };
 
       try {
@@ -783,7 +877,130 @@
   window.openNewMovementModal = typeof openNewMovementModal !== 'undefined' ? openNewMovementModal : window.openNewMovementModal;
   window.closeMovementModal = typeof closeMovementModal !== 'undefined' ? closeMovementModal : window.closeMovementModal;
   window.handleMovementSubmit = typeof handleMovementSubmit !== 'undefined' ? handleMovementSubmit : window.handleMovementSubmit;
+
+    // ===== Portal do cliente (AUD-16) =====
+    async function toggleMovementClientVisible(movementId, current) {
+      try {
+        const res = await fetch(`/api/lawsuits/movements/${movementId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ client_visible: !current })
+        });
+        if (res.ok) await loadLawsuits();
+        else alert('Não foi possível alterar a visibilidade.');
+      } catch (e) { alert('Erro ao conectar ao servidor.'); }
+    }
+
+    async function publishAllToClient(lawsuitId, visible) {
+      if (!confirm(visible ? 'Publicar TODOS os andamentos deste processo no portal do cliente?\n\nConfira antes: use "Ver como o cliente vê". Notas e descrições internas nunca aparecem.' : 'Ocultar todos os andamentos do portal do cliente?')) return;
+      try {
+        const res = await fetch(`/api/lawsuits/${lawsuitId}/portal/publish-all`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ visible })
+        });
+        if (res.ok) await loadLawsuits();
+        else alert('Não foi possível publicar.');
+      } catch (e) { alert('Erro ao conectar ao servidor.'); }
+    }
+
+    // Atualiza o processo pelo Radar (Escavador): re-busca andamentos novos (dedupe) — custa crédito.
+    async function atualizarProcessoRadar(lawsuitId) {
+      const btn = document.getElementById('radar-upd-' + lawsuitId);
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Atualizando…'; }
+      try {
+        const res = await fetch(`/api/radar/atualizar-processo/${lawsuitId}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.success) {
+          if (typeof showToast === 'function') showToast(d.novos_andamentos ? `${d.novos_andamentos} andamento(s) novo(s).` : 'Já estava em dia.', 'success');
+          await loadLawsuits();
+        } else {
+          alert('Não foi possível atualizar: ' + (d.error || 'erro'));
+          if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar andamentos'; }
+        }
+      } catch (e) {
+        alert('Erro ao conectar ao servidor.');
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar andamentos'; }
+      }
+    }
+
+    function _esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+    async function previewClientPortal(lawsuitId) {
+      try {
+        const res = await fetch(`/api/lawsuits/${lawsuitId}/portal-preview`, { headers: getAuthHeaders() });
+        const d = await res.json();
+        if (!res.ok) return alert(d.error || 'Não foi possível montar a pré-visualização.');
+        const v = d.view;
+        let m = document.getElementById('portal-preview-modal');
+        if (!m) {
+          m = document.createElement('div');
+          m.id = 'portal-preview-modal';
+          m.className = 'fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto';
+          m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+          document.body.appendChild(m);
+        }
+        m.classList.remove('hidden');
+        m.innerHTML = `<div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 relative my-auto space-y-3 text-xs text-slate-700">
+          <button type="button" onclick="document.getElementById('portal-preview-modal').classList.add('hidden')" class="absolute right-4 top-3 text-slate-400 hover:text-slate-700 text-2xl font-bold" aria-label="Fechar">&times;</button>
+          <h3 class="font-serif font-bold text-lg text-navy-950">👁️ Assim o cliente vê este processo</h3>
+          ${d.visible_to_client ? '' : '<div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-bold">Este processo está OCULTO do cliente.</div>'}
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200"><div class="text-[10px] font-extrabold uppercase text-gold-700">Como está o seu processo</div><p class="text-sm font-bold text-navy-950 mt-1">${_esc(v.situation)}</p>${v.situation_source === 'automatico' ? '<p class="text-[11px] text-slate-500 mt-1">Frase geral automática. Escreva a sua no processo para personalizar.</p>' : ''}</div>
+          <div class="p-3 rounded-2xl ${v.action_needed ? 'bg-amber-50 border-2 border-amber-400' : 'bg-emerald-50 border border-emerald-200'}"><div class="text-[10px] font-extrabold uppercase ${v.action_needed ? 'text-amber-800' : 'text-emerald-800'}">O que você precisa fazer</div><p class="text-sm font-semibold text-navy-950 mt-1">${_esc(v.next_action)}</p></div>
+          <div><div class="text-[10px] font-extrabold uppercase text-slate-600 mb-1">Últimas novidades (${v.timeline.length})</div>
+            ${v.timeline.length ? v.timeline.map(t => `<div class="border-l-2 border-gold-500 pl-3 mb-2"><div class="text-[11px] text-slate-500">${_esc(String(t.date).split('-').reverse().join('/'))} • ${_esc(t.title)}</div><p class="text-sm font-semibold text-navy-950">${_esc(t.simple)}</p><div class="text-[10px] text-slate-500">${t.source === 'automatico' ? 'explicação geral automática' : 'texto escrito por você'}</div></div>`).join('') : '<p class="text-slate-400 italic">Nenhum andamento publicado.</p>'}
+          </div></div>`;
+      } catch (e) { alert('Erro ao conectar ao servidor.'); }
+    }
+
+  window.toggleMovementClientVisible = toggleMovementClientVisible;
+  window.publishAllToClient = publishAllToClient;
+  window.previewClientPortal = previewClientPortal;
+  window.atualizarProcessoRadar = atualizarProcessoRadar;
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;
+
+  // Atribuir/mudar o advogado responsável por um processo (só mestre/sócio). AUD-27 Parte 2.
+  window.atribuirResponsavel = async function (lawsuitId, userId) {
+    try {
+      const res = await fetch(`/api/lawsuits/${lawsuitId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}) },
+        body: JSON.stringify({ responsible_user_id: userId || null })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        if (typeof showToast === 'function') showToast('Responsável atualizado.', 'success');
+        if (typeof loadLawsuits === 'function') loadLawsuits();
+      } else {
+        alert('Não foi possível atribuir o responsável: ' + (data.error || 'erro'));
+      }
+    } catch (e) {
+      alert('Falha de conexão ao atribuir o responsável.');
+    }
+  };
+
+  // Monitorar um processo no Radar (Escavador), direto do card do processo.
+  // Só alerta o ADVOGADO — nada é enviado ao cliente.
+  window.monitorarProcessoRadar = async function (cnj) {
+    const numero = String(cnj || '').trim();
+    if (!numero) { alert('Este processo não tem número CNJ para monitorar.'); return; }
+    if (!confirm(`Monitorar o processo ${numero} no Radar (semanal)?\n\nOs andamentos chegam só para o advogado — nada é enviado ao cliente.`)) return;
+    try {
+      const res = await fetch('/api/radar/monitoramentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}) },
+        body: JSON.stringify({ tipo: 'processo', numeroCnj: numero, frequencia: 'SEMANAL' })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) alert('✅ Processo em monitoramento no Radar (semanal).');
+      else if (res.status === 503) alert('O Radar (Escavador) ainda não está ligado no servidor. Configure a chave para usar este botão.');
+      else alert('Não foi possível monitorar: ' + (data.error || 'erro'));
+    } catch (e) {
+      alert('Falha de conexão ao monitorar o processo.');
+    }
+  };
 })();

@@ -32,9 +32,10 @@ export function isEmailConfigured() {
 
 /**
  * Envia um e-mail. Nunca lança: retorna sempre um objeto de status.
+ * `attachments` segue o formato do nodemailer: [{ filename, content }].
  * @returns {Promise<{sent:boolean, reason?:string, messageId?:string, error?:string}>}
  */
-export async function sendEmail({ to, subject, text, html } = {}) {
+export async function sendEmail({ to, subject, text, html, attachments } = {}) {
   if (!to) return { sent: false, reason: 'no_recipient' };
 
   if (!isEmailConfigured()) {
@@ -62,7 +63,8 @@ export async function sendEmail({ to, subject, text, html } = {}) {
       to,
       subject,
       text,
-      html: html || undefined
+      html: html || undefined,
+      attachments: attachments && attachments.length ? attachments : undefined
     });
     console.log(`[✉️  EMAIL] Enviado para ${to} (id: ${info.messageId})`);
     return { sent: true, messageId: info.messageId };

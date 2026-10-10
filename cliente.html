@@ -2,7 +2,7 @@
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Área do Cliente • Jorge Alvim Advocacia</title>
   <meta name="description" content="Portal do Cliente de Jorge Alvim Advocacia. Acompanhe seus processos judiciais, andamentos, contrato de honorários, pagamentos e mensagens diretas.">
   <meta name="theme-color" content="#0A192F">
@@ -22,6 +22,7 @@
 
   <!-- Tailwind CSS CDN -->
   <link rel="stylesheet" href="/public/css/app.tailwind.css" />
+  <link rel="stylesheet" href="/public/css/a11y-fixes.css" />
   <script>
     window.tailwind = window.tailwind || {}; tailwind.config = {
       darkMode: 'class',
@@ -90,6 +91,9 @@
       scrollbar-color: #D97706 #F1F5F9;
       -webkit-overflow-scrolling: touch;
     }
+    .term-link { background:none; border:0; padding:0; margin:0; font:inherit; color:inherit; font-weight:inherit; cursor:help; border-bottom:2px dotted #B8860B; }
+    .term-link:focus-visible { outline:3px solid #1D4ED8; outline-offset:2px; }
+    .term-meaning { font-weight:500; color:#475569; font-size:.85em; }
     .gold-gradient-text {
       background: linear-gradient(135deg, #855E1C 0%, #B8860B 50%, #D4AF37 100%);
       -webkit-background-clip: text;
@@ -238,7 +242,7 @@
                   placeholder="Digite sua senha" 
                   class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-navy-950 focus:outline-none focus:border-gold-500 focus:bg-white transition-all"
                 />
-                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer" title="Ver/Ocultar senha temporariamente">
+                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-1.5 top-1.5 text-slate-400 hover:text-slate-600 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer" title="Ver/Ocultar senha temporariamente">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </button>
               </div>
@@ -509,9 +513,9 @@
                     type="password" 
                     id="reg-password"
                     required
-                    minlength="4"
-                    maxlength="12"
-                    placeholder="De 4 a 12 caracteres"
+                    minlength="10"
+                    maxlength="64"
+                    placeholder="De 10 a 64 caracteres"
                     class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
                   />
                   <button type="button" onclick="togglePasswordVisibility('reg-password')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar senha">
@@ -523,8 +527,8 @@
                     type="password" 
                     id="reg-confirm-password"
                     required
-                    minlength="4"
-                    maxlength="12"
+                    minlength="10"
+                    maxlength="64"
                     placeholder="Confirme sua senha"
                     class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-navy-950 focus:outline-none focus:border-gold-500"
                   />
@@ -893,7 +897,7 @@
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Nova Senha *</label>
                     <div class="relative">
-                      <input type="password" id="pwd-new" required minlength="4" maxlength="12" placeholder="De 4 a 12 caracteres" class="w-full pl-3 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                      <input type="password" id="pwd-new" required minlength="10" maxlength="64" placeholder="De 10 a 64 caracteres" class="w-full pl-3 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-300" />
                       <button type="button" onclick="togglePasswordVisibility('pwd-new')" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar senha">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                       </button>
@@ -902,7 +906,7 @@
                   <div>
                     <label class="block font-bold text-slate-700 mb-1">Confirmar Nova *</label>
                     <div class="relative">
-                      <input type="password" id="pwd-confirm" required minlength="4" maxlength="12" placeholder="Repita a senha" class="w-full pl-3 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-300" />
+                      <input type="password" id="pwd-confirm" required minlength="10" maxlength="64" placeholder="Repita a senha" class="w-full pl-3 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-300" />
                       <button type="button" onclick="togglePasswordVisibility('pwd-confirm')" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 p-0.5" title="Ver/Ocultar senha">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                       </button>
@@ -1087,9 +1091,9 @@
         <input
           type="password"
           id="forgot-new-pwd"
-          minlength="4"
-          maxlength="12"
-          placeholder="Nova senha (de 4 a 12 caracteres)"
+          minlength="10"
+          maxlength="64"
+          placeholder="Nova senha (de 10 a 64 caracteres)"
           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm"
         />
         <button 
@@ -1477,6 +1481,7 @@
         const data = await res.json();
 
         if (res.ok && data.success && data.token) {
+          try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
           if (loginInput) loginInput.value = '';
           const form = document.getElementById('client-login-form');
           if (form) form.reset();
@@ -1584,6 +1589,29 @@
     }
 
     // ================= CARREGAR DADOS DO CLIENTE LOGADO =================
+    // Aviso de senha antiga (política de senha): o login sinaliza e o portal avisa, sem bloquear.
+    function showPendingPasswordNotice() {
+      let msg = '';
+      try {
+        msg = sessionStorage.getItem('ja_pwd_outdated') || '';
+        if (msg) sessionStorage.removeItem('ja_pwd_outdated');
+      } catch (e) {}
+      if (!msg) return;
+      const el = document.createElement('div');
+      el.setAttribute('role', 'status');
+      el.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-[92%] p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold shadow-xl flex items-start gap-3';
+      const text = document.createElement('span');
+      text.className = 'flex-1';
+      text.textContent = '🔐 ' + msg;
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Fechar aviso');
+      close.textContent = '✕';
+      close.onclick = () => el.remove();
+      el.append(text, close);
+      document.body.appendChild(el);
+    }
+
     async function loadClientPortal() {
       const token = localStorage.getItem(CLIENT_TOKEN_KEY);
       if (!token) {
@@ -1601,6 +1629,7 @@
           currentClientData = data;
           renderClientPortal(data);
           showPortalView();
+          showPendingPasswordNotice();
         } else {
           logoutClient();
         }
@@ -1653,6 +1682,7 @@
 
     function renderClientPortal(data) {
       const { client, lawsuits, installments, messages } = data;
+      window.__glossary = data.glossary || [];
 
       // Header e Banner
       document.getElementById('header-user-name').textContent = client.full_name;
@@ -1684,30 +1714,63 @@
     }
 
     // ================= RENDERIZAR PROCESSOS & TIMELINE VISUAL ESTILO RASTREAMENTO =================
+    // Texto vindo do escritório: sempre escapado antes de entrar na tela.
+    function escHtml(t) {
+      return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+    }
+
+    // Dicionário jurídico simples: palavras como "citação" ganham uma explicação ao toque.
+    window.__glossary = window.__glossary || [];
+    function explainTerms(text) {
+      let html = escHtml(text);
+      (window.__glossary || []).slice().sort(function (x, y) { return y.term.length - x.term.length; }).forEach(function (g, i) {
+        const re = new RegExp('(^|[^\\p{L}])(' + g.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?![\\p{L}])', 'iu');
+        html = html.replace(re, function (m, pre, word) {
+          return pre + '<button type="button" class="term-link" data-i="' + i + '" onclick="toggleTermMeaning(this)" aria-expanded="false">' + word + '</button>';
+        });
+      });
+      return html;
+    }
+    function toggleTermMeaning(btn) {
+      const next = btn.nextElementSibling;
+      if (next && next.classList && next.classList.contains('term-meaning')) { next.remove(); btn.setAttribute('aria-expanded', 'false'); return; }
+      const word = btn.textContent.trim().toLowerCase();
+      const g = (window.__glossary || []).find(function (x) { return x.term.toLowerCase() === word; });
+      if (!g) return;
+      const tip = document.createElement('span');
+      tip.className = 'term-meaning';
+      tip.setAttribute('role', 'note');
+      tip.textContent = ' — ' + g.meaning;
+      btn.after(tip);
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    // ================= RENDERIZAR PROCESSOS & TIMELINE VISUAL =================
+    // As fases abaixo são uma ESTIMATIVA a partir do status e do último andamento publicado (não é um percentual real).
     function getProcessStageInfo(l) {
       const statusLower = (l.status || '').toLowerCase();
-      const lastMov = (l.movements && l.movements[0]) ? (l.movements[0].title + ' ' + (l.movements[0].description || '')).toLowerCase() : '';
+      const lastMov = (l.timeline && l.timeline[0]) ? String(l.timeline[0].title || '').toLowerCase() : '';
 
       let stage = 1;
-      let stageText = '1. Distribuído / Petição Inicial';
-      let stageDesc = 'O processo foi protocolado e autuado no Tribunal pelo Dr. Jorge Alvim.';
+      let stageText = '1. Início do processo';
+      let stageDesc = 'O processo foi registrado na Justiça e recebeu um número oficial.';
 
-      if (statusLower.includes('conclu') || statusLower.includes('alvar') || statusLower.includes('pago') || statusLower.includes('arquiv') || lastMov.includes('trânsito em julgado') || lastMov.includes('alvará')) {
+      if (statusLower.includes('conclu') || statusLower.includes('alvar') || statusLower.includes('pago') || statusLower.includes('arquiv') || lastMov.includes('trânsito em julgado') || lastMov.includes('arquiv')) {
         stage = 5;
-        stageText = '5. Conclusão / Pagamento / Alvará';
-        stageDesc = 'Fase final do processo: expedição de alvará judicial, cumprimento de valores ou baixa definitiva.';
-      } else if (statusLower.includes('senten') || statusLower.includes('julgado') || statusLower.includes('acórdão') || lastMov.includes('sentença') || lastMov.includes('julgado')) {
+        stageText = '5. Fase final';
+        stageDesc = 'O processo está na fase final: cumprimento do que foi decidido ou encerramento.';
+      } else if (statusLower.includes('senten') || statusLower.includes('julgado') || statusLower.includes('acórdão') || lastMov.includes('sentença') || lastMov.includes('acórdão')) {
         stage = 4;
-        stageText = '4. Decisão / Sentença';
-        stageDesc = 'O Magistrado proferiu julgamento de mérito sobre os pedidos da ação.';
-      } else if (statusLower.includes('audiência') || statusLower.includes('instru') || statusLower.includes('perícia') || lastMov.includes('audiência') || lastMov.includes('perito')) {
+        stageText = '4. Decisão';
+        stageDesc = 'Houve uma decisão do juiz ou do tribunal sobre o caso.';
+      } else if (statusLower.includes('audiência') || statusLower.includes('instru') || statusLower.includes('perícia') || lastMov.includes('audiência') || lastMov.includes('perit')) {
         stage = 3;
-        stageText = '3. Instrução / Audiência';
-        stageDesc = 'Fase de produção de provas, perícias técnicas ou realização de audiência de conciliação/instrução.';
-      } else if (statusLower.includes('despacho') || statusLower.includes('citação') || statusLower.includes('concluso') || lastMov.includes('concluso') || lastMov.includes('despacho')) {
+        stageText = '3. Provas e audiência';
+        stageDesc = 'Fase de reunir provas, ouvir as partes ou tentar um acordo.';
+      } else if (statusLower.includes('despacho') || statusLower.includes('citação') || statusLower.includes('concluso') || lastMov.includes('concluso') || lastMov.includes('despacho') || lastMov.includes('citação')) {
         stage = 2;
-        stageText = '2. Com o Juiz / Em Análise';
-        stageDesc = 'O processo está concluso no gabinete do Juiz para despacho inicial, liminar ou citação da parte contrária.';
+        stageText = '2. Com o juiz';
+        stageDesc = 'O juiz está analisando o processo e conduzindo os primeiros passos.';
       }
 
       return { stage, stageText, stageDesc };
@@ -1719,147 +1782,107 @@
       if (lawsuits.length === 0) {
         container.innerHTML = `
           <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-card-light text-center space-y-3">
-            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-gold-600 flex items-center justify-center text-2xl mx-auto border border-gold-200">
-              ⚖️
-            </div>
-            <h4 class="font-serif text-lg font-bold text-navy-950">Nenhum Processo Ativo Vinculado</h4>
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-gold-600 flex items-center justify-center text-2xl mx-auto border border-gold-200">⚖️</div>
+            <h4 class="font-serif text-lg font-bold text-navy-950">Nenhum processo para mostrar por enquanto</h4>
             <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-              O Dr. Jorge Alvim está preparando a petição inicial ou providenciando a distribuição do seu caso. Assim que o número do processo for cadastrado, você poderá acompanhar todos os andamentos aqui.
+              Assim que o seu processo estiver registrado e liberado pelo escritório, você poderá acompanhar tudo por aqui, em linguagem simples.
             </p>
           </div>
         `;
         return;
       }
 
+      const stages = [
+        { num: 1, label: 'Início', icon: '📦' },
+        { num: 2, label: 'Com o juiz', icon: '⚖️' },
+        { num: 3, label: 'Provas / audiência', icon: '🏛️' },
+        { num: 4, label: 'Decisão', icon: '📜' },
+        { num: 5, label: 'Fase final', icon: '✅' }
+      ];
+
       container.innerHTML = lawsuits.map(l => {
         const stageInfo = getProcessStageInfo(l);
         const percent = stageInfo.stage * 20;
 
-        const stages = [
-          { num: 1, label: 'Distribuído', icon: '📦' },
-          { num: 2, label: 'Com o Juiz', icon: '⚖️' },
-          { num: 3, label: 'Audiência / Provas', icon: '🏛️' },
-          { num: 4, label: 'Decisão / Sentença', icon: '📜' },
-          { num: 5, label: 'Pagamento / Final', icon: '💰' }
-        ];
-
-        const stepperHtml = stages.map(s => {
-          const isDone = s.num < stageInfo.stage;
-          const isCurrent = s.num === stageInfo.stage;
-          const circleClass = isDone 
-            ? 'bg-emerald-600 text-white border-emerald-600' 
-            : (isCurrent ? 'bg-gold-500 text-white border-gold-600 ring-4 ring-gold-100 animate-pulse' : 'bg-white text-slate-400 border-slate-300');
-          const textClass = isCurrent ? 'text-navy-950 font-extrabold' : (isDone ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium');
-
+        const stepperHtml = stages.map(st => {
+          const isDone = st.num < stageInfo.stage;
+          const isCurrent = st.num === stageInfo.stage;
+          const circleClass = isDone
+            ? 'bg-emerald-600 text-white border-emerald-600'
+            : (isCurrent ? 'bg-gold-500 text-white border-gold-600 ring-4 ring-gold-100' : 'bg-white text-slate-400 border-slate-300');
+          const textClass = isCurrent ? 'text-navy-950 font-extrabold' : (isDone ? 'text-emerald-700 font-bold' : 'text-slate-500 font-medium');
           return `
             <div class="flex-1 text-center relative z-10">
-              <div class="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 transition-all ${circleClass}">
-                ${isDone ? '✓' : s.icon}
-              </div>
-              <div class="text-[10px] sm:text-xs mt-2 ${textClass} leading-tight truncate px-1">
-                ${s.label}
-              </div>
-            </div>
-          `;
+              <div class="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border-2 ${circleClass}">${isDone ? '✓' : st.icon}</div>
+              <div class="text-[10px] sm:text-xs mt-2 ${textClass} leading-tight px-1">${st.label}</div>
+            </div>`;
         }).join('');
 
-        const movementsHtml = l.movements && l.movements.length > 0 ? l.movements.map(m => `
-          <div class="relative pl-6 pb-4 last:pb-0">
-            <div class="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-gold-500 border-2 border-white shadow-xs"></div>
-            <div class="text-xs font-bold text-navy-950">${m.title}</div>
-            <div class="text-[11px] text-slate-500 mt-0.5">${formatDate(m.movement_date)} ${m.has_deadline ? '• <strong class="text-rose-600">Prazo: ' + formatDate(m.deadline_date) + '</strong>' : ''}</div>
-            <p class="text-xs text-slate-700 mt-1 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">${m.description || 'Movimentação processual registrada.'}</p>
-          </div>
-        `).join('') : `
-          <div class="text-xs text-slate-400 py-3 italic text-center">Nenhuma movimentação lançada até o momento.</div>
-        `;
+        const timelineHtml = (l.timeline && l.timeline.length) ? l.timeline.map(m => `
+          <li class="relative pl-6 pb-4 last:pb-0">
+            <span class="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-gold-500 border-2 border-white shadow-xs" aria-hidden="true"></span>
+            <div class="text-[11px] text-slate-500">${formatDate(m.date)}</div>
+            <p class="text-sm text-navy-950 font-semibold leading-snug">${explainTerms(m.simple)}</p>
+            <div class="text-[11px] text-slate-500 mt-0.5">Registro oficial: ${escHtml(m.title)}${m.source === 'automatico' ? ' • <em>explicação geral automática</em>' : ''}</div>
+          </li>`).join('') : `<li class="text-xs text-slate-500 py-3 italic">Ainda não há novidades para mostrar. Avisaremos quando houver.</li>`;
+
+        const actionBox = l.action_needed
+          ? `<div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-400" role="alert">
+               <div class="text-[11px] font-extrabold uppercase tracking-wider text-amber-800">⚠️ O que você precisa fazer</div>
+               <p class="text-sm font-bold text-navy-950 mt-1 leading-snug">${explainTerms(l.next_action)}</p>
+             </div>`
+          : `<div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+               <div class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">✅ O que você precisa fazer</div>
+               <p class="text-sm font-semibold text-navy-950 mt-1 leading-snug">${explainTerms(l.next_action)}</p>
+             </div>`;
 
         return `
-          <div class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden">
+          <article class="bg-white rounded-3xl border border-slate-200 shadow-card-light overflow-hidden" aria-label="Processo ${escHtml(l.cnj_number)}">
             <div class="p-5 sm:p-6 bg-gradient-to-r from-slate-50 to-amber-50/30 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
                 <div class="flex items-center space-x-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gold-100 text-gold-900 border border-gold-300">
-                    ${l.instance || '1ª Instância'}
-                  </span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                    ${l.status || 'Em Andamento'}
-                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gold-100 text-gold-900 border border-gold-300">${escHtml(l.instance || '1ª Instância')}</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">${escHtml(l.status || 'Em Andamento')}</span>
                 </div>
-                <div class="font-serif font-extrabold text-navy-950 text-base sm:text-lg mt-1">
-                  CNJ: ${l.cnj_number}
-                </div>
-                <div class="text-xs text-slate-600 mt-0.5 font-medium">
-                  Tribunal: <strong>${l.tribunal}</strong> • ${l.court_branch || 'Vara Cível'}
-                </div>
+                <div class="font-serif font-extrabold text-navy-950 text-base sm:text-lg mt-1">Processo ${escHtml(l.cnj_number)}</div>
+                <div class="text-xs text-slate-600 mt-0.5 font-medium">${escHtml(l.tribunal || '')}${l.action_type ? ' • ' + escHtml(l.action_type) : ''}</div>
               </div>
-              <div class="text-right">
-                <span class="text-[10px] text-slate-400 block uppercase font-bold">Tipo de Ação</span>
-                <span class="text-xs font-bold text-slate-800">${l.action_type || 'Ação Judicial'}</span>
-              </div>
+              <div class="text-[11px] text-slate-500 sm:text-right">Atualizado em<br><strong class="text-slate-700">${formatDate(l.updated_at)}</strong></div>
             </div>
 
-            <!-- ================= ESTEIRA VISUAL ESTILO RASTREAMENTO / ENTREGA ================= -->
-            <div class="p-5 sm:p-6 bg-slate-50/60 border-b border-slate-200/80 space-y-4">
+            <div class="p-5 sm:p-6 space-y-4">
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <div class="text-[11px] font-extrabold uppercase tracking-wider text-gold-700">💡 Como está o seu processo</div>
+                <p class="text-base font-bold text-navy-950 mt-1 leading-snug">${explainTerms(l.situation)}</p>
+                ${l.situation_source === 'automatico' ? '<p class="text-[11px] text-slate-500 mt-1">Explicação geral, feita a partir da situação registrada. Em caso de dúvida, fale com o escritório.</p>' : ''}
+              </div>
+              ${actionBox}
+            </div>
+
+            <div class="px-5 sm:px-6 pb-5 space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-navy-950 uppercase tracking-wider flex items-center space-x-1.5">
-                  <span>🚚</span>
-                  <span>Evolução do Processo (Estilo Rastreamento)</span>
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gold-100 text-gold-900 border border-gold-300">
-                  ${percent}% Concluído
-                </span>
+                <span class="text-xs font-bold text-navy-950 uppercase tracking-wider">Fase estimada</span>
+                <span class="text-xs font-bold text-slate-700">${escHtml(stageInfo.stageText)}</span>
               </div>
-
-              <!-- Pipeline com Linha de Conexão -->
               <div class="relative py-2">
-                <div class="absolute top-6 sm:top-7 left-6 right-6 h-1 bg-slate-200 z-0">
-                  <div class="h-1 bg-gradient-to-r from-gold-500 to-emerald-600 transition-all duration-500" style="width: ${percent - 10}%"></div>
-                </div>
-                <div class="flex items-start justify-between relative z-10">
-                  ${stepperHtml}
-                </div>
+                <div class="absolute top-6 sm:top-7 left-6 right-6 h-1 bg-slate-200 z-0"><div class="h-1 bg-gradient-to-r from-gold-500 to-emerald-600" style="width: ${percent - 10}%"></div></div>
+                <div class="flex items-start justify-between relative z-10">${stepperHtml}</div>
               </div>
-
-              <!-- Explicação Leiga da Fase Atual + Guia das 5 Etapas -->
-              <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 text-xs space-y-2 shadow-2xs">
-                <div class="flex items-start space-x-3">
-                  <span class="text-lg flex-shrink-0">💡</span>
-                  <div>
-                    <span class="text-[10px] text-gold-700 font-bold uppercase tracking-wider block">Status em Linguagem Simples</span>
-                    <strong class="text-navy-950 font-bold block text-sm">${stageInfo.stageText}</strong>
-                    <p class="text-slate-600 mt-0.5 leading-relaxed">${stageInfo.stageDesc}</p>
-                  </div>
-                </div>
-
-                <details class="text-xs text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 cursor-pointer pt-2">
-                  <summary class="font-bold text-navy-950 flex items-center justify-between text-[11px]">
-                    <span>📖 Guia Rápido: O que acontece em cada uma das 5 fases do processo?</span>
-                    <span class="text-slate-400">▼</span>
-                  </summary>
-                  <div class="mt-2 pt-2 border-t border-slate-200/60 space-y-1.5 text-[11px] leading-relaxed">
-                    <div><strong>📦 1. Distribuído:</strong> O Dr. Jorge Alvim concluiu sua petição e protocolou a ação no Tribunal. O processo ganhou um número oficial no CNJ.</div>
-                    <div><strong>⚖️ 2. Com o Juiz:</strong> O juiz responsável analisa o processo, verifica pedidos urgentes (liminares) e notifica formalmente a outra parte para se manifestar.</div>
-                    <div><strong>🏛️ 3. Audiência / Provas:</strong> Fase de apresentação de provas, depoimentos de testemunhas, laudos periciais ou tentativa de acordo amigável.</div>
-                    <div><strong>📜 4. Decisão / Sentença:</strong> O juiz emite a sentença final julgando o caso. Se houver recurso, o escritório defende seus direitos nas instâncias superiores.</div>
-                    <div><strong>💰 5. Pagamento / Final:</strong> Vitória e cumprimento da decisão: momento de expedição de alvará judicial, pagamento de indenização ou quitação definitiva.</div>
-                  </div>
-                </details>
-              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">${escHtml(stageInfo.stageDesc)} <span class="text-slate-500">(Estimativa para facilitar o entendimento; não substitui a análise do seu advogado.)</span></p>
             </div>
 
-            <!-- Linha do Tempo dos Andamentos -->
-            <div class="p-5 sm:p-6 space-y-3">
-              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block border-b border-slate-100 pb-2">
-                📜 Histórico Cronológico de Andamentos (${l.movements ? l.movements.length : 0})
-              </span>
-              <div class="relative border-l-2 border-slate-200 ml-1.5 mt-3">
-                ${movementsHtml}
-              </div>
+            <div class="p-5 sm:p-6 border-t border-slate-200 space-y-3">
+              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">📜 Últimas novidades (${l.timeline ? l.timeline.length : 0})</h4>
+              <ol class="relative border-l-2 border-slate-200 ml-1.5 mt-3 list-none pl-0">${timelineHtml}</ol>
             </div>
-          </div>
-        `;
-      }).join('');
+          </article>`;
+      }).join('') + `
+        <details class="bg-white rounded-3xl border border-slate-200 p-5 text-xs text-slate-700">
+          <summary class="font-bold text-navy-950 cursor-pointer text-sm">📖 Dicionário: o que significam as palavras do processo?</summary>
+          <dl class="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-2">
+            ${(window.__glossary || []).map(g => `<div><dt class="font-extrabold text-navy-950">${escHtml(g.term)}</dt><dd class="text-slate-600">${escHtml(g.meaning)}</dd></div>`).join('')}
+          </dl>
+        </details>`;
     }
 
     // ================= RENDERIZAR CONTRATO & CARNÊ =================

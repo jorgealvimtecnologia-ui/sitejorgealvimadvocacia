@@ -1,0 +1,104 @@
+/*
+ * TOKENS do design system (AUD-18) — fonte ÚNICA de cores, tipografia, espaçamento e efeitos.
+ * Páginas e componentes usam var(--ds-*); ninguém escreve um hexadecimal novo fora deste arquivo.
+ * Modo escuro: automático (preferência do aparelho) ou forçado com <html data-theme="dark|light">.
+ * Cada par texto/fundo daqui é conferido por tests/design-system.test.js (contraste mínimo WCAG AA 4,5:1).
+ */
+:root {
+  color-scheme: light;
+
+  /* ---- Marca (paleta base) ---- */
+  --ds-navy-950: #060E1A;
+  --ds-navy-900: #0A192F;
+  --ds-navy-800: #132B4D;
+  --ds-gold-800: #855E1C;
+  --ds-gold-700: #996515;
+  --ds-gold-600: #B8860B;
+  --ds-gold-500: #D4AF37;
+  --ds-gold-300: #E6CA65;
+  --ds-gold-100: #FAF2D4;
+  --ds-gold-50:  #FDFBF4;
+
+  /* ---- Semântica (é isto que os componentes usam) ---- */
+  --ds-bg:          #FDFBF7;
+  --ds-surface:     #FFFFFF;
+  --ds-surface-2:   #F8FAFC;
+  --ds-text:        #0F172A;
+  --ds-text-muted:  #475569;
+  --ds-border:      #E2E8F0;
+  --ds-border-strong: #CBD5E1;
+  --ds-primary:     var(--ds-navy-900);   /* botões e títulos */
+  --ds-on-primary:  #FFFFFF;
+  --ds-accent:      var(--ds-gold-500);   /* superfícies douradas (botão de destaque, selos) */
+  --ds-on-accent:   var(--ds-navy-950);
+  --ds-accent-text: var(--ds-gold-700);   /* dourado SÓ para texto/link: o 600 não passa no contraste */
+  --ds-focus:       #1D4ED8;
+
+  --ds-success: #047857;  --ds-success-bg: #ECFDF5;  --ds-success-border: #A7F3D0;
+  --ds-warning: #92400E;  --ds-warning-bg: #FFFBEB;  --ds-warning-border: #FCD34D;
+  --ds-danger:  #B91C1C;  --ds-danger-bg:  #FEF2F2;  --ds-danger-border:  #FECACA;
+  --ds-info:    #1D4ED8;  --ds-info-bg:    #EFF6FF;  --ds-info-border:    #BFDBFE;
+
+  /* ---- Tipografia ---- */
+  --ds-font-serif: "Playfair Display", Georgia, serif;
+  --ds-font-sans:  "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ds-font-mono:  ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ds-text-xs: 0.75rem;   --ds-text-sm: 0.875rem;  --ds-text-base: 1rem;
+  --ds-text-lg: 1.125rem;  --ds-text-xl: 1.375rem;  --ds-text-2xl: 1.75rem;  --ds-text-3xl: 2.25rem;
+  --ds-leading: 1.55;
+
+  /* ---- Espaço (escala de 4 px), raios, sombras, camadas, movimento ---- */
+  --ds-space-1: 4px;  --ds-space-2: 8px;  --ds-space-3: 12px; --ds-space-4: 16px;
+  --ds-space-5: 20px; --ds-space-6: 24px; --ds-space-8: 32px; --ds-space-10: 40px;
+  --ds-radius-sm: 8px; --ds-radius-md: 12px; --ds-radius-lg: 16px; --ds-radius-xl: 24px; --ds-radius-pill: 999px;
+  --ds-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --ds-shadow-md: 0 6px 18px rgba(15, 23, 42, 0.10);
+  --ds-shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.22);
+  --ds-z-sticky: 30; --ds-z-modal: 1000; --ds-z-toast: 1100;
+  --ds-ease: 160ms ease;
+  --ds-tap: 44px;  /* alvo mínimo de toque */
+}
+
+/* ---- Modo escuro: preferência do aparelho (a menos que a página force o claro) ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ds-bg: #0B1424;       --ds-surface: #111C30;   --ds-surface-2: #16243C;
+    --ds-text: #E5EAF2;     --ds-text-muted: #A7B3C6;
+    --ds-border: #243350;   --ds-border-strong: #33466B;
+    --ds-primary: #E5EAF2;  --ds-on-primary: #0B1424;
+    --ds-accent: var(--ds-gold-500); --ds-on-accent: var(--ds-navy-950);
+    --ds-accent-text: #E6CA65;
+    --ds-focus: #93C5FD;
+    --ds-success: #6EE7B7;  --ds-success-bg: #052E22;  --ds-success-border: #065F46;
+    --ds-warning: #FCD34D;  --ds-warning-bg: #3A2A05;  --ds-warning-border: #92400E;
+    --ds-danger:  #FCA5A5;  --ds-danger-bg:  #3B0D0D;  --ds-danger-border:  #991B1B;
+    --ds-info:    #93C5FD;  --ds-info-bg:    #0B2A4D;  --ds-info-border:    #1E40AF;
+    --ds-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --ds-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+    --ds-shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* ---- Modo escuro forçado ---- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ds-bg: #0B1424;       --ds-surface: #111C30;   --ds-surface-2: #16243C;
+  --ds-text: #E5EAF2;     --ds-text-muted: #A7B3C6;
+  --ds-border: #243350;   --ds-border-strong: #33466B;
+  --ds-primary: #E5EAF2;  --ds-on-primary: #0B1424;
+  --ds-accent: var(--ds-gold-500); --ds-on-accent: var(--ds-navy-950);
+  --ds-accent-text: #E6CA65;
+  --ds-focus: #93C5FD;
+  --ds-success: #6EE7B7;  --ds-success-bg: #052E22;  --ds-success-border: #065F46;
+  --ds-warning: #FCD34D;  --ds-warning-bg: #3A2A05;  --ds-warning-border: #92400E;
+  --ds-danger:  #FCA5A5;  --ds-danger-bg:  #3B0D0D;  --ds-danger-border:  #991B1B;
+  --ds-info:    #93C5FD;  --ds-info-bg:    #0B2A4D;  --ds-info-border:    #1E40AF;
+  --ds-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --ds-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+  --ds-shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --ds-ease: 0ms linear; }
+}

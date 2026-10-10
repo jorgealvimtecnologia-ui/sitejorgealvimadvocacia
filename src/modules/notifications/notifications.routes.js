@@ -1,3 +1,4 @@
+import { registerJob, markJobRun } from '../../shared/observability.js';
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
@@ -206,11 +207,14 @@ let _scannerStarted = false;
 export function startDeadlineScanner(intervalMs = 60 * 60 * 1000) {
   if (_scannerStarted) return;
   _scannerStarted = true;
+  registerJob('varredura_prazos', intervalMs);
   const run = () => {
     try {
       const n = scanDeadlines();
+      markJobRun('varredura_prazos', true);
       if (n > 0) console.log(`🔔 [NOTIFICAÇÕES] ${n} novo(s) alerta(s) de prazo gerado(s).`);
     } catch (e) {
+      markJobRun('varredura_prazos', false, e.message);
       console.error('[NOTIFICAÇÕES] Erro na varredura periódica:', e.message);
     }
   };

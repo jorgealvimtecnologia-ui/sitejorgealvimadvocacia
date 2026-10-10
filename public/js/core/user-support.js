@@ -444,10 +444,10 @@
 
     function updateStatus(isOnline) {
       if (isOnline) {
-        badge.className = 'fixed bottom-3 left-3 z-[9999] flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-md border backdrop-blur-md transition-all duration-300 bg-emerald-500/10 text-emerald-800 border-emerald-500/30';
+        badge.className = 'fixed bottom-3 left-3 z-[9999] flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-md border backdrop-blur-md transition-all duration-300 bg-emerald-50 text-emerald-800 border-emerald-300';
         badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>Online</span>';
       } else {
-        badge.className = 'fixed bottom-3 left-3 z-[9999] flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-md border backdrop-blur-md transition-all duration-300 bg-rose-500/15 text-rose-800 border-rose-500/40';
+        badge.className = 'fixed bottom-3 left-3 z-[9999] flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-md border backdrop-blur-md transition-all duration-300 bg-rose-50 text-rose-800 border-rose-300';
         badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-600"></span><span>Sem conexão • Dados salvos localmente</span>';
         showToast('Conexão oscilando. Seus dados estão sendo salvos localmente com segurança.', 'warning', 6000);
       }

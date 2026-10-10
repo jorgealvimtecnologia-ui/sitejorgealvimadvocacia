@@ -1,0 +1,40 @@
+{
+  "_comentario": "Ordens do Roadmap Vivo surgidas nos testes do Radar/Escavador (08/10). Registrar no site com: npm run roadmap:register-batch -- docs/roadmap/ordens-radar-2026-10-08.json --aplicar (requer ROADMAP_AGENT_KEY no .env). Seguro repetir: títulos já existentes são pulados.",
+  "ordens": [
+    {
+      "ref": "RADAR-01",
+      "titulo": "Radar: não duplicar processos (dedupe por dígitos do CNJ) e limpar duplicados existentes",
+      "prioridade": "P1",
+      "descricao": "Há dois caminhos de cadastro (Radar Judicial/DataJud e Radar Escavador) que gravam o CNJ em formatos diferentes (com máscara x só dígitos), então a verificação de duplicado não casa e o mesmo processo entra duas vezes.",
+      "criterios": "A verificação de 'já existe' compara só os dígitos do CNJ; importar o mesmo processo por qualquer caminho não duplica; rotina de limpeza funde os duplicados já existentes mantendo o registro mais completo (com andamentos/partes)."
+    },
+    {
+      "ref": "RADAR-02",
+      "titulo": "Radar: limpar intimações fictícias (OABs de terceiros) da lista de Intimações",
+      "prioridade": "P1",
+      "descricao": "A aba Intimações & DJEN ainda mostra intimações de advogados fictícios da RHABAC (ex.: OAB 165430/Dr. Roberto Medeiros Fonseca), que não são do Dr. Jorge. Script limpar-demo.js já existe.",
+      "criterios": "Após a limpeza, só aparecem intimações da OAB do Dr. Jorge (222943/MG); nenhuma publicação de OAB de terceiro na lista; backup do banco feito antes de aplicar."
+    },
+    {
+      "ref": "RADAR-03",
+      "titulo": "Radar: busca por CPF/CNPJ (e nome) estruturada via /api/v2/envolvido/processos",
+      "prioridade": "P2",
+      "descricao": "Hoje a busca por CPF/CNPJ não retorna nada e a por nome traz homônimos (full-text). A API v2 tem o endpoint do envolvido (por nome ou CPF/CNPJ) que devolve os processos estruturados.",
+      "criterios": "Buscar por CPF/CNPJ retorna os processos da parte (estruturados); busca por nome usa o endpoint do envolvido e reduz homônimos; resultados já vêm completos para 'Adicionar ao sistema'."
+    },
+    {
+      "ref": "RADAR-04",
+      "titulo": "Radar/Agenda: levar prazos para a Agenda a partir dos andamentos (com confirmação do advogado)",
+      "prioridade": "P2",
+      "descricao": "Os andamentos/intimações importados não viram prazo na Agenda automaticamente. O cálculo de prazo é decisão do advogado (há o botão 'Calcular Prazo com 1 Clique').",
+      "criterios": "Ao calcular/confirmar um prazo a partir de um andamento ou intimação, ele aparece na Agenda do advogado; nada é lançado sozinho sem a confirmação; nada é enviado ao cliente automaticamente."
+    },
+    {
+      "ref": "RADAR-05",
+      "titulo": "Radar: importar audiências e documentos/autos do processo (fechar o \"todos os dados\")",
+      "prioridade": "P2",
+      "descricao": "Para completar o 'trazer todos os dados do Escavador', faltam as audiências marcadas e os documentos públicos/autos (estes costumam ter custo maior por download).",
+      "criterios": "Audiências do processo gravadas e exibidas na ficha; documentos/autos públicos acessíveis a partir do processo, com o custo exibido antes de baixar."
+    }
+  ]
+}

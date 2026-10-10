@@ -10,7 +10,7 @@
  *  3) enviado por e-mail ao titular, quando o canal solicitado é e-mail, há um
  *     destinatário e o SMTP está configurado (ver src/shared/email.js).
  */
-import { sendLawyerWhatsAppNotification } from './notify.js';
+import { sendWhatsAppMessage } from './notify.js';
 import { sendEmail, isEmailConfigured } from './email.js';
 import { createNotification } from '../modules/notifications/notifications.routes.js';
 
@@ -43,17 +43,21 @@ export async function deliverAccessCode({
     target_user_id: MASTER_USER_ID
   });
 
-  // 2) WhatsApp do escritório (quando solicitado e com gateway configurado).
+  // 2) WhatsApp do escritório (quando solicitado e com gateway configurado). O resultado é o REAL:
+  //    só conta como entregue se o gateway aceitou o envio.
   let deliveredToWhatsApp = false;
-  if (wantsWhatsApp && process.env.WHATSAPP_GATEWAY_URL) {
-    await sendLawyerWhatsAppNotification(
+  let whatsappReason = '';
+  if (wantsWhatsApp) {
+    const r = await sendWhatsAppMessage(
+      process.env.LAWYER_WHATSAPP_NUMBER || '5532998153429',
       `🔐 *CÓDIGO DE ACESSO - ${who.toUpperCase()}*\n\n` +
       `Titular: *${name}* (${identifier})\n` +
       `Código (válido até ${validity}): *${code}*\n\n` +
-      `Repasse o código somente após confirmar a identidade do titular.`,
-      { action: `${audience}_access_code`, resourceId }
-    ).catch(() => {});
-    deliveredToWhatsApp = true;
+      `Repasse o código somente após confirmar a identidade do titular.`
+    );
+    deliveredToWhatsApp = r.sent;
+    whatsappReason = r.reason || '';
+    if (!r.sent) console.warn(`[ACESSO] WhatsApp do código de acesso NÃO enviado (${whatsappReason}).`);
   }
 
   // 3) E-mail ao titular (quando solicitado, com destinatário e SMTP configurado).
@@ -84,6 +88,7 @@ export async function deliverAccessCode({
   return {
     deliveredToPanel: true,
     deliveredToWhatsApp,
+    whatsappReason,
     deliveredToEmail,
     emailConfigured: isEmailConfigured()
   };

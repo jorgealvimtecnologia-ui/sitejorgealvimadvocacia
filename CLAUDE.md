@@ -45,7 +45,7 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
 
 ### 🚨 REGRAS SUPREMAS DE ARQUITETURA (GUARDIÃO MODULAR)
 1. **Proibição de Monólitos:**
-   * `server.js` é apenas um orquestrador. Teto máximo: **3.200 linhas**.
+   * `server.js` é apenas um orquestrador. Teto máximo: **2.000 linhas** (era 3.200; o esquema do banco foi para `src/db/schema.js`).
    * `public/js/painel/painel-1-app.js` é o Core Shell. Teto máximo: **1.800 linhas**.
    * Novas rotas de API devem SEMPRE ficar em `src/modules/<nome>/<nome>.routes.js`.
    * Novas abas do painel devem SEMPRE ficar em `public/js/tabs/tab-<nome>.js`.
@@ -54,7 +54,36 @@ Nunca coloque a chave em commits, chats ou documentos. Só o Dr. Jorge arquiva o
 2. **🚫 Veto Absoluto a 2FA / TOTP:**
    * O sistema NÃO utiliza autenticação de dois fatores por decisão expressa do usuário.
 
-3. **Comandos de Verificação Mandatórios:**
-   * Guardião de Arquitetura: `npm run check:architecture`
+3. **🔐 Proibição Absoluta de `.env` Exposto:**
+   * O `.env` com segredos **nunca** fica em texto puro no GitHub, na imagem Docker nem no servidor Contabo.
+     Se precisar existir lá, os segredos ficam **criptografados** em `.env.enc` (`node scripts/env-vault.js`);
+     a chave do cofre fica fora do projeto (`/etc/advocacia/env.key`, permissão 600) e **nunca** em repositório, backup ou e-mail.
+   * O guardião (`npm run check:architecture`) **reprova** `.env`/chave versionados, `.dockerignore` sem `.env`,
+     script que envie o `.env` em texto puro, nginx sem bloqueio de arquivos ocultos e `backup.sh` que copie o `.env`.
+     O deploy (`scripts/deploy-remote.sh`) **recusa** publicar se o `.env` do servidor tiver segredos em texto puro.
+   * **Toda alteração do `.env` gera e-mail ao titular** (`jorgealvimtecnologia@gmail.com`): relatório só com NOMES
+     de variáveis + cópia **criptografada** do cofre. Nunca enviar o `.env` em texto puro, valores ou a chave por e-mail, chat ou documento.
+   * Novo segredo? Use `node scripts/env-vault.js set NOME` (vai direto para o cofre). Nunca adicione segredo ao `.env` em texto puro.
+
+4. **🛂 RBAC: senha do painel e senha Google só entram nas abas da função (RHABAC):**
+   * Login por **senha** e por **Google** obedecem às mesmas permissões (por função/usuário, negado por padrão). Nenhum
+     login abre todas as abas: toda entrada do painel passa por `applyPermissionsAndLoadModules()` e toda rota `/api` tem
+     regra em `src/middleware/rbac-rules.js`. Rota nova sem regra = 403 até para o mestre; o guardião reprova.
+   * **Contas mestras (únicas):** `jorgealvimtecnologia@gmail.com`, `jorgealvim10@gmail.com`, `jorgealvimadvocacia@gmail.com`
+     (`src/config/master-emails.js`). Mudar essa lista exige decisão do Dr. Jorge e atualizar `scripts/check-rbac-guard.js`.
+     Variável de ambiente nunca cria mestre. O token de teste do Google nunca vale em produção.
+   * **Criou, renomeou ou excluiu uma aba/módulo do painel? Atualize o RBAC NA MESMA ALTERAÇÃO** (o guardião reprova se faltar):
+     1. `public/js/painel/painel-3.js`: `MODULES` + classificar a aba em `MODULE_PERM` (com sua permissão), `ALWAYS_ALLOWED` ou `MASTER_ONLY`;
+     2. permissão nova? `src/shared/permissions.js` + migration em `src/db/migrations/` (coluna nova NULL = herda, para ninguém ganhar/perder acesso);
+     3. matriz "Usuários & Senhas": switch em `public/js/tabs/tab-users.js` (`TABS_CONFIG`) e coluna em `painel.html` (e os `colspan`);
+     4. servidor: regra da(s) rota(s) em `src/middleware/rbac-rules.js` com `tab('tab_x')`; menu em `painel-1-app.js` (`TAB_RULES`);
+     5. aba excluída: remover tudo isso (módulo, permissão, switch, coluna, regras) e rodar `npm run check:rbac`.
+   * Verificação: `npm run check:rbac` (também roda dentro de `npm run check:architecture`).
+   * **Perfil novo ou mudado na matriz?** `tests/rbac-per-role.test.js` entra como CADA perfil e confere todas as rotas GET, a Visão Geral/cockpit e o menu; área nova da API vai também na tabela `AREA_ABA` desse teste.
+
+5. **Comandos de Verificação Mandatórios:**
+   * Guardião do RBAC: `npm run check:rbac`
+   * Guardião de Arquitetura (inclui a proteção do `.env`): `npm run check:architecture`
+   * Exposição do `.env` (repositório, servidor, site ao vivo): `npm run check:env`
    * Bateria de Testes (200+ testes): `npm test`
    * E2E Checklist de Produção: `npm run test:checklist`

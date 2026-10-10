@@ -643,6 +643,35 @@
       }
     });
 
+    // Permissão da aba conforme a matriz de acesso do operador (negado por padrão).
+    function isTabAllowedByPermissions(tab, p) {
+      return (
+        (tab === 'leads' && p.tab_leads === 1) ||
+        (tab === 'clients' && p.tab_clients === 1) ||
+        (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
+        (tab === 'calendar' && p.tab_calendar === 1) ||
+        (tab === 'publications' && p.tab_publications === 1) ||
+        (tab === 'docs' && p.tab_clients === 1) ||
+        (tab === 'dashboard' && p.tab_dashboard === 1) ||
+        (tab === 'kanban' && p.tab_kanban === 1) ||
+        (['editor', 'calc'].includes(tab) && p.tab_tools === 1) ||
+        (tab === 'finance' && p.tab_financial === 1) ||
+        (tab === 'nfse' && p.tab_nfse === 1) ||
+        (tab === 'esign' && p.tab_esign === 1) ||
+        (tab === 'judicial' && p.tab_radar === 1) ||
+        (tab === 'offices' && p.tab_offices === 1) ||
+        (tab === 'drive' && p.tab_drive === 1) ||
+        (tab === 'users' && p.tab_users === 1) ||
+        (tab === 'hr' && p.tab_hr === 1) ||
+        (tab === 'rockets') ||
+        (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
+        (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
+        (tab === 'notifications' && p.tab_alerts === 1) ||
+        (tab === 'meta-ads' && p.tab_settings === 1)
+        
+      );
+    }
+
     // Alternar entre Abas
     function switchTab(tab) {
       if (typeof window.moduleAllowed === 'function' && !window.moduleAllowed(tab)) {
@@ -676,25 +705,7 @@
       // Validação de Permissão RBAC antes de abrir a aba
       if (window.currentUserPermissions && !window.currentUserPermissions.is_master) {
         const p = window.currentUserPermissions.permissions || {};
-        const isAllowed = (
-          (tab === 'leads' && p.tab_leads === 1) ||
-          (tab === 'clients' && p.tab_clients === 1) ||
-          (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
-          (tab === 'calendar' && p.tab_calendar === 1) ||
-          (tab === 'publications' && p.tab_publications === 1) ||
-          (tab === 'docs' && p.tab_lawsuits === 1) ||
-          (tab === 'finance' && p.tab_financial === 1) ||
-          (tab === 'nfse' && p.tab_financial === 1) ||
-          (tab === 'judicial' && p.tab_radar === 1) ||
-          (tab === 'offices' && p.tab_offices === 1) ||
-          (tab === 'drive' && p.tab_drive === 1) ||
-          (tab === 'users' && p.tab_users === 1) ||
-          (tab === 'hr' && p.tab_hr === 1) ||
-          (tab === 'rockets') ||
-          (['blog', 'site-boxes', 'faq', 'lgpd', 'notifications', 'meta-ads'].includes(tab) && p.tab_settings === 1) ||
-          (tab === 'audit' && p.tab_users === 1) ||
-          (tab === 'maintenance' && p.tab_users === 1)
-        );
+        const isAllowed = isTabAllowedByPermissions(tab, p);
         if (!isAllowed) {
           console.warn(`[RBAC] Acesso restrito à aba: ${tab}`);
           const fallback = (p.tab_calendar === 1) ? 'calendar' : ((p.tab_leads === 1) ? 'leads' : 'rockets');
@@ -749,57 +760,21 @@
       const activeClass = "flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all border border-gold-400 bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 text-white shadow-sm cursor-pointer";
       const inactiveClass = "flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-all border border-slate-200 bg-white cursor-pointer";
 
-      tabLeads.classList.add('hidden');
-      tabClients.classList.add('hidden');
-      tabLawsuits.classList.add('hidden');
-      if (tabCalendar) tabCalendar.classList.add('hidden');
-      if (tabPublications) tabPublications.classList.add('hidden');
-      tabDocs.classList.add('hidden');
-      if (tabFinance) tabFinance.classList.add('hidden');
-      if (tabNfse) tabNfse.classList.add('hidden');
-      if (tabBlog) tabBlog.classList.add('hidden');
-      if (tabAudit) tabAudit.classList.add('hidden');
-      if (tabPreClients) tabPreClients.classList.add('hidden');
-      if (tabJudicial) tabJudicial.classList.add('hidden');
-      if (tabOffices) tabOffices.classList.add('hidden');
-      if (tabDrive) tabDrive.classList.add('hidden');
-      if (tabHr) tabHr.classList.add('hidden');
-      tabUsers.classList.add('hidden');
-
-      btnLeads.className = inactiveClass;
-      btnClients.className = inactiveClass;
-      btnLawsuits.className = inactiveClass;
-      if (btnCalendar) btnCalendar.className = inactiveClass;
-      if (btnPublications) btnPublications.className = inactiveClass;
-      btnDocs.className = inactiveClass;
-      if (btnFinance) btnFinance.className = inactiveClass;
-      if (btnNfse) btnNfse.className = inactiveClass;
-      if (btnBlog) btnBlog.className = inactiveClass;
-      if (btnAudit) btnAudit.className = inactiveClass;
-      if (btnPreClients) btnPreClients.className = inactiveClass;
-      if (btnJudicial) btnJudicial.className = inactiveClass;
-      if (btnOffices) btnOffices.className = inactiveClass;
-      if (btnDrive) btnDrive.className = inactiveClass;
-      if (btnHr) btnHr.className = inactiveClass;
-      btnUsers.className = inactiveClass;
-
-      // Foguetes: aba adicionada na modularização; não constava no switchTab inline.
-      const tabRockets = document.getElementById('tab-content-rockets');
-      const btnRockets = document.getElementById('tab-btn-rockets');
-      if (tabRockets) tabRockets.classList.add('hidden');
-      if (btnRockets) btnRockets.className = inactiveClass;
-
-      // Novas abas (dashboard, assinaturas, LGPD, notificações, manutenção, meta-ads, site-boxes, faq) — módulos de gestão.
-      ['dashboard', 'esign', 'lgpd', 'notifications', 'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq'].forEach(function (t) {
+      // Esconde todas as abas e volta todos os botões ao estado inativo (as ativas são marcadas abaixo).
+      ['leads', 'clients', 'lawsuits', 'calendar', 'publications', 'docs', 'finance', 'nfse', 'blog', 'audit', 'pre-clients',
+        'judicial', 'offices', 'drive', 'hr', 'users', 'rockets', 'dashboard', 'esign', 'lgpd', 'notifications',
+        'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq'].forEach(function (t) {
         const c = document.getElementById('tab-content-' + t);
         const b = document.getElementById('tab-btn-' + t);
         if (c) c.classList.add('hidden');
         if (b) b.className = inactiveClass;
       });
-      const btnSiteBoxesTop = document.getElementById('tab-btn-site-boxes-top');
-      if (btnSiteBoxesTop) btnSiteBoxesTop.className = inactiveClass;
-      const btnFaqTop = document.getElementById('tab-btn-faq-top');
-      if (btnFaqTop) btnFaqTop.className = inactiveClass;
+      ['site-boxes-top', 'faq-top'].forEach(function (t) {
+        const b = document.getElementById('tab-btn-' + t);
+        if (b) b.className = inactiveClass;
+      });
+      const tabRockets = document.getElementById('tab-content-rockets');
+      const btnRockets = document.getElementById('tab-btn-rockets');
 
       if (tab === 'leads') {
         tabLeads.classList.remove('hidden');
@@ -971,13 +946,13 @@
         'lawsuits': isMaster || perms.tab_lawsuits === 1,
         'calendar': isMaster || perms.tab_calendar === 1,
         'publications': isMaster || perms.tab_publications === 1,
-        'docs': isMaster || perms.tab_lawsuits === 1,
+        'docs': isMaster || perms.tab_clients === 1,
         'finance': isMaster || perms.tab_financial === 1,
-        'nfse': isMaster || perms.tab_financial === 1,
-        'blog': isMaster || perms.tab_settings === 1,
-        'site-boxes-top': isMaster || perms.tab_settings === 1,
-        'faq-top': isMaster || perms.tab_settings === 1,
-        'audit': isMaster || perms.tab_users === 1,
+        'nfse': isMaster || perms.tab_nfse === 1,
+        'blog': isMaster || perms.tab_blog === 1,
+        'site-boxes-top': isMaster || perms.tab_blog === 1,
+        'faq-top': isMaster || perms.tab_blog === 1,
+        'audit': isMaster || perms.tab_audit === 1,
         'pre-clients': isMaster || perms.tab_clients === 1,
         'judicial': isMaster || perms.tab_radar === 1,
         'offices': isMaster || perms.tab_offices === 1,
@@ -986,15 +961,15 @@
         'hr': isMaster || perms.tab_hr === 1,
         'rockets': true,
         'colaborador': isMaster || perms.tab_colaborador === 1,
-        'dashboard': isMaster || perms.tab_lawsuits === 1 || perms.tab_clients === 1 || perms.tab_financial === 1,
-        'notifications': isMaster || perms.tab_settings === 1,
-        'esign': isMaster || perms.tab_financial === 1,
-        'lgpd': isMaster || perms.tab_settings === 1,
+        'dashboard': isMaster || perms.tab_dashboard === 1,
+        'notifications': isMaster || perms.tab_alerts === 1,
+        'esign': isMaster || perms.tab_esign === 1,
+        'lgpd': isMaster || perms.tab_audit === 1,
         'admin-requests': isMaster || perms.tab_lawsuits === 1,
-        'maintenance': isMaster || perms.tab_users === 1,
+        'maintenance': isMaster,
         'meta-ads': isMaster || perms.tab_settings === 1,
-        'site-boxes': isMaster || perms.tab_settings === 1,
-        'faq': isMaster || perms.tab_settings === 1
+        'site-boxes': isMaster || perms.tab_blog === 1,
+        'faq': isMaster || perms.tab_blog === 1
       };
 
       // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
@@ -1060,6 +1035,23 @@
       }
     }
     window.loadAndApplyUserPermissions = loadAndApplyUserPermissions;
+
+    // ÚNICO ponto de entrada pós-login (senha, Google e sessão restaurada): aplica as permissões do usuário
+    // (esconde o que a função dele não permite) e carrega SOMENTE os módulos autorizados.
+    async function applyPermissionsAndLoadModules() {
+      await loadAndApplyUserPermissions();
+      const p = window.currentUserPermissions?.permissions || {};
+      const isM = window.currentUserPermissions?.is_master;
+      if (isM || p.tab_leads === 1) loadLeads();
+      if (isM || p.tab_clients === 1) loadClients();
+      if (isM || p.tab_lawsuits === 1) loadLawsuits();
+      if (isM || p.tab_offices === 1) loadOffices();
+      if (isM || p.tab_drive === 1) loadDriveFiles();
+      if (isM || p.tab_calendar === 1) loadCalendarSummary();
+      if (isM || p.tab_publications === 1) loadPublicationsStats();
+      if (isM || p.tab_hr === 1) loadHrDashboard();
+    }
+    window.applyPermissionsAndLoadModules = applyPermissionsAndLoadModules;
     window.applyPermissionsToUI = applyPermissionsToUI;
 
     // 1. Autenticação & Inicialização
@@ -1075,18 +1067,7 @@
         if (res.ok) {
           const data = await res.json();
           showPanelScreen(data.user);
-          await loadAndApplyUserPermissions();
-
-          // Popula apenas dados dos módulos autorizados
-          const p = window.currentUserPermissions?.permissions || {};
-          const isM = window.currentUserPermissions?.is_master;
-          if (isM || p.tab_leads === 1) loadLeads();
-          if (isM || p.tab_clients === 1) loadClients();
-          if (isM || p.tab_lawsuits === 1) loadLawsuits();
-          if (isM || p.tab_offices === 1) loadOffices();
-          if (isM || p.tab_drive === 1) loadDriveFiles();
-          if (isM || p.tab_calendar === 1) loadCalendarSummary();
-          if (isM || p.tab_publications === 1) loadPublicationsStats();
+          await applyPermissionsAndLoadModules();
         } else {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
@@ -1151,6 +1132,7 @@
       document.documentElement.classList.add('has-admin-session');
       document.getElementById('login-view').classList.add('hidden');
       document.getElementById('panel-view').classList.remove('hidden');
+      setTimeout(() => { if (typeof showPendingPasswordNotice === 'function') showPendingPasswordNotice(); }, 800);
 
       // Se for perfil operacional restrito (motorista / colaborador), esconde preventivamente a aba de clientes
       const role = user ? (user.role || '').toLowerCase() : '';
@@ -1214,6 +1196,7 @@
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem('ja_admin_token', data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+          try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
           if (data.employeeToken) {
             localStorage.setItem('ja_employee_token', data.employeeToken);
           }
@@ -1225,19 +1208,7 @@
             return;
           }
           showPanelScreen(data.user);
-          await loadAndApplyUserPermissions();
-
-          // Popula apenas dados dos módulos autorizados
-          const p = window.currentUserPermissions?.permissions || {};
-          const isM = window.currentUserPermissions?.is_master;
-          if (isM || p.tab_leads === 1) loadLeads();
-          if (isM || p.tab_clients === 1) loadClients();
-          if (isM || p.tab_lawsuits === 1) loadLawsuits();
-          if (isM || p.tab_offices === 1) loadOffices();
-          if (isM || p.tab_drive === 1) loadDriveFiles();
-          if (isM || p.tab_calendar === 1) loadCalendarSummary();
-          if (isM || p.tab_publications === 1) loadPublicationsStats();
-          if (isM || p.tab_hr === 1) loadHrDashboard();
+          await applyPermissionsAndLoadModules();
         } else {
           errorText.textContent = data.error || 'Credenciais inválidas.';
           errorMsg.classList.remove('hidden');
@@ -1327,14 +1298,7 @@
           localStorage.setItem(TOKEN_KEY, data.token);
           localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
-          loadLeads();
-          loadClients();
-          loadLawsuits();
-          loadOffices();
-          loadDriveFiles();
-          loadCalendarSummary();
-          loadPublicationsStats();
-          loadHrDashboard();
+          await applyPermissionsAndLoadModules(); // o Google segue as MESMAS permissões do login por senha
         } else {
           if (errorText) errorText.textContent = data.error || 'Conta Google não autorizada para este painel.';
           if (errorMsg) errorMsg.classList.remove('hidden');
@@ -1405,6 +1369,7 @@
     }
 
     function closeAdminForgotPasswordModal() {
+      if (typeof toggleAdminResetPassword === "function") toggleAdminResetPassword(true);
       const modal = document.getElementById('admin-password-reset-modal');
       if (modal) modal.classList.add('hidden');
       const step1 = document.getElementById('admin-reset-step-1');
@@ -1415,7 +1380,7 @@
       if (alertBox) alertBox.classList.add('hidden');
     }
 
-    async function requestAdminResetCode() {
+    async function requestAdminResetCode(channel = 'whatsapp') {
       const userInput = document.getElementById('admin-reset-username');
       const sendBtn = document.getElementById('btn-admin-send-code');
       const username = userInput ? userInput.value.trim() : '';
@@ -1425,21 +1390,29 @@
         return;
       }
 
-      if (sendBtn) {
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = `<span>Enviando código...</span>`;
-      }
+      const botoes = ['btn-admin-send-code', 'btn-admin-send-code-email'].map((id) => document.getElementById(id)).filter(Boolean);
+      const textosOriginais = botoes.map((b) => b.innerHTML);
+      botoes.forEach((b) => { b.disabled = true; });
+      if (sendBtn) sendBtn.innerHTML = `<span>Enviando código...</span>`;
 
       try {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username })
+          body: JSON.stringify({ username, channel })
         });
         const data = await res.json();
 
-        if (res.ok && data.success) {
-          showAdminResetAlert('Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+        const canalLabel = channel === 'email' ? 'e-mail' : 'WhatsApp';
+        if (res.ok && data.success && data.channels && data.channels[channel] === false) {
+          // O sistema não tem este canal ligado: não prometemos um envio que não existe.
+          showAdminResetAlert(channel === 'email'
+            ? 'O envio por e-mail não está ativo neste sistema. Use o WhatsApp ou fale com o suporte.'
+            : 'O envio por WhatsApp não está ativo neste sistema. Use "Enviar Código por E-mail".', 'error');
+        } else if (res.ok && data.success) {
+          showAdminResetAlert(`Se o usuário existir, o código foi enviado ao ${channel === 'email' ? 'e-mail cadastrado' : 'WhatsApp do Dr. Jorge Alvim'}. Confira ${channel === 'email' ? 'a caixa de entrada e o spam' : 'o WhatsApp'}.`, 'success');
+          const t2 = document.getElementById('admin-reset-step2-text');
+          if (t2) t2.textContent = `Código solicitado por ${canalLabel}!`;
           document.getElementById('admin-reset-step-1')?.classList.add('hidden');
           document.getElementById('admin-reset-step-2')?.classList.remove('hidden');
           setTimeout(() => { document.getElementById('admin-reset-code')?.focus(); }, 150);
@@ -1449,10 +1422,7 @@
       } catch (err) {
         showAdminResetAlert('Erro ao conectar ao servidor.', 'error');
       } finally {
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          sendBtn.innerHTML = `<span>Enviar Código via WhatsApp</span> <span>📲</span>`;
-        }
+        botoes.forEach((b, i) => { b.disabled = false; b.innerHTML = textosOriginais[i]; });
       }
     }
 
@@ -1471,8 +1441,8 @@
         return;
       }
 
-      if (new_password.length < 4 || new_password.length > 12) {
-        showAdminResetAlert('A nova senha deve ter entre 4 e 12 caracteres.', 'error');
+      if (new_password.length < 10 || new_password.length > 64) {
+        showAdminResetAlert('A nova senha deve ter entre 10 e 64 caracteres.', 'error');
         return;
       }
 
@@ -1516,6 +1486,17 @@
         }
       }
     }
+
+    // Olho do campo "Nova Senha": fica visível enquanto digita e volta a ocultar ao sair.
+    function toggleAdminResetPassword(forceHide) {
+      const pwd = document.getElementById('admin-reset-newpassword');
+      const icon = document.getElementById('admin-reset-pwd-icon');
+      if (!pwd) return;
+      const show = forceHide === true ? false : pwd.type === 'password';
+      pwd.type = show ? 'text' : 'password';
+      if (icon) icon.textContent = show ? '🙈' : '👁️';
+    }
+    window.toggleAdminResetPassword = toggleAdminResetPassword;
 
     window.openAdminForgotPasswordModal = openAdminForgotPasswordModal;
     window.closeAdminForgotPasswordModal = closeAdminForgotPasswordModal;

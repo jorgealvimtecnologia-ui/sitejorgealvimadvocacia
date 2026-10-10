@@ -36,6 +36,15 @@ jobs:
       - name: Executar Checklist E2E de Produção
         run: npm run test:checklist
 
+      - name: Acessibilidade automática (axe-core, WCAG A/AA)
+        run: npm run test:a11y
+
+      - name: Orçamento de peso por página (gzip)
+        run: npm run check:perf
+
+      - name: Lighthouse (desempenho, acessibilidade, boas práticas, SEO)
+        run: npm run test:lighthouse:ci
+
       - name: Salvar relatório HTML do Playwright (em caso de falha)
         uses: actions/upload-artifact@v4
         if: failure()

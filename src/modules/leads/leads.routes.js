@@ -1,6 +1,7 @@
 /**
  * Módulo LEADS / Atendimentos do site — extraído do server.js.
  */
+import { classifyOrigin } from '../../shared/lead-origin.js';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -109,10 +110,12 @@ function ensureClientFromLead(lead, performer) {
 leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
   req.clientId = generateNextClientId();
   next();
-}, uploadClientDoc.array('documents', 10), leadHoneypot, requireRecaptcha('lead_submit'), (req, res) => {
+}, uploadClientDoc.none(), leadHoneypot, requireRecaptcha('lead_submit'), (req, res) => {
   try {
     const { name, phone, area, message, email, cpf, city, social_media, website, google_business } = req.body;
     const clientId = req.clientId;
+    // Origem do contato (AUD-17): UTM e domínio de referência enviados pelo site; só o domínio é guardado.
+    const { origin, detail: originDetail } = classifyOrigin({ utm_source: req.body.utm_source, utm_medium: req.body.utm_medium, utm_campaign: req.body.utm_campaign, referrer: req.body.referrer });
 
     if (!name || !phone) {
       return res.status(400).json({ error: 'Nome e telefone são obrigatórios.' });
@@ -136,8 +139,8 @@ leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
     // ficam separados (funil real), como decidido pelo Dr. Jorge.
     const insertLeadStmt = db.prepare(`
       INSERT INTO leads (id, created_at, name, phone, area, message, files, status,
-        social_media, website, google_business, stage, email, cpf, city)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'Novo', ?, ?, ?, 'recebido', ?, ?, ?)
+        social_media, website, google_business, stage, email, cpf, city, origin, origin_detail)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'Novo', ?, ?, ?, 'recebido', ?, ?, ?, ?, ?)
     `);
 
     insertLeadStmt.run(
@@ -153,7 +156,9 @@ leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
       google_business ? google_business.trim() : '',
       email ? email.trim() : null,
       cpf ? cpf.trim() : null,
-      city ? city.trim() : null
+      city ? city.trim() : null,
+      origin,
+      originDetail || null
     );
 
     // Trilha (linha do tempo): lead recebido pelo site. Estágio inicial 'recebido'.

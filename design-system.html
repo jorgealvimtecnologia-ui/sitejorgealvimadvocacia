@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Design system • Jorge Alvim Advocacia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/tokens.css">
+  <link rel="stylesheet" href="/public/css/components.css">
+  <style>
+    body { margin: 0; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: var(--ds-space-4); }
+    header.top { background: var(--ds-primary); color: var(--ds-on-primary); }
+    header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-4); flex-wrap: wrap; }
+    h1 { font-family: var(--ds-font-serif); margin: var(--ds-space-6) 0 var(--ds-space-1); }
+    h2 { font-family: var(--ds-font-serif); margin: var(--ds-space-8) 0 var(--ds-space-3); color: var(--ds-text); }
+    section { margin-bottom: var(--ds-space-8); }
+    .grid { display: grid; gap: var(--ds-space-4); grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+    .sw { border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); overflow: hidden; background: var(--ds-surface); }
+    .sw i { display: block; height: 52px; }
+    .sw span { display: block; padding: var(--ds-space-2) var(--ds-space-3); font-size: var(--ds-text-xs); font-family: var(--ds-font-mono); color: var(--ds-text-muted); }
+    .row { display: flex; flex-wrap: wrap; gap: var(--ds-space-3); align-items: center; }
+    code { font-family: var(--ds-font-mono); font-size: var(--ds-text-xs); background: var(--ds-surface-2); padding: 2px 6px; border-radius: var(--ds-radius-sm); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  </style>
+</head>
+<body class="ds-scope">
+  <header class="top">
+    <div class="wrap">
+      <strong style="font-family:var(--ds-font-serif);font-size:var(--ds-text-lg)">Jorge Alvim Advocacia • Design system</strong>
+      <button type="button" class="ds-btn ds-btn--accent ds-btn--sm" id="tema" aria-pressed="false">🌙 Modo escuro</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Catálogo de componentes</h1>
+    <p class="ds-help">Fonte única: <code>/public/css/tokens.css</code> (cores, tipografia, espaços) e <code>/public/css/components.css</code> (componentes <code>.ds-*</code>). Toda tela nova usa estes; ver <code>docs/DESIGN-SYSTEM.md</code>.</p>
+
+    <section aria-labelledby="s-cores">
+      <h2 id="s-cores">Cores (tokens)</h2>
+      <div class="grid" id="swatches" aria-live="polite"></div>
+    </section>
+
+    <section aria-labelledby="s-tipo">
+      <h2 id="s-tipo">Tipografia</h2>
+      <div class="ds-card">
+        <p style="font-family:var(--ds-font-serif);font-size:var(--ds-text-3xl);margin:0">Títulos em Playfair Display</p>
+        <p style="font-size:var(--ds-text-lg);margin:var(--ds-space-2) 0">Texto corrido em Plus Jakarta Sans, com entrelinha confortável para leitura.</p>
+        <p class="ds-help" style="margin:0">Texto de apoio, menor e mais discreto (contraste conferido).</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="s-botoes">
+      <h2 id="s-botoes">Botões <code>.ds-btn</code></h2>
+      <div class="row">
+        <button class="ds-btn ds-btn--primary">Principal</button>
+        <button class="ds-btn ds-btn--accent">Destaque</button>
+        <button class="ds-btn ds-btn--secondary">Secundário</button>
+        <button class="ds-btn ds-btn--danger">Perigo</button>
+        <button class="ds-btn ds-btn--ghost">Discreto</button>
+        <button class="ds-btn ds-btn--primary" disabled>Desabilitado</button>
+        <button class="ds-btn ds-btn--accent ds-btn--sm">Pequeno</button>
+        <button class="ds-btn ds-btn--accent ds-btn--lg">Grande</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="s-campos">
+      <h2 id="s-campos">Campos <code>.ds-field</code></h2>
+      <div class="ds-card" style="max-width:520px">
+        <div class="ds-field"><label class="ds-label" for="e-nome">Nome completo</label><input class="ds-input" id="e-nome" placeholder="Maria da Silva"><span class="ds-help">Como está no seu documento.</span></div>
+        <div class="ds-field"><label class="ds-label" for="e-area">Assunto</label><select class="ds-select" id="e-area"><option>Trabalhista</option><option>Previdenciário</option></select></div>
+        <div class="ds-field"><label class="ds-label" for="e-email">E-mail</label><input class="ds-input" id="e-email" aria-invalid="true" aria-describedby="e-erro" value="sem-arroba"><span class="ds-error" id="e-erro">Informe um e-mail válido.</span></div>
+        <div class="ds-field"><label class="ds-label" for="e-msg">Mensagem</label><textarea class="ds-textarea" id="e-msg"></textarea></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="s-selos">
+      <h2 id="s-selos">Selos, selo de prazo e avisos</h2>
+      <div class="row" style="margin-bottom:var(--ds-space-4)">
+        <span class="ds-badge ds-badge--neutral">Neutro</span><span class="ds-badge ds-badge--success">Concluído</span><span class="ds-badge ds-badge--warning">Atenção</span>
+        <span class="ds-badge ds-badge--danger">Atrasado</span><span class="ds-badge ds-badge--info">Informativo</span>
+      </div>
+      <p class="ds-help">O selo de prazo (<code>.ds-deadline</code>) escolhe a cor pela urgência (<code>DS.deadlineTone</code>): <code>.ds-deadline--ok</code> (mais de 7 dias), <code>.ds-deadline--soon</code> (4 a 7), <code>.ds-deadline--urgent</code> (1 a 3) e <code>.ds-deadline--fatal</code> (hoje ou vencido).</p>
+      <div class="row" id="prazos" style="margin-bottom:var(--ds-space-4)"></div>
+      <div style="display:grid;gap:var(--ds-space-3);max-width:640px">
+        <div class="ds-alert ds-alert--success" role="status">Consulta agendada com sucesso.</div>
+        <div class="ds-alert ds-alert--warning" role="status">Seu certificado vence em 12 dias.</div>
+        <div class="ds-alert ds-alert--danger" role="alert">Não foi possível salvar. Tente novamente.</div>
+        <div class="ds-alert ds-alert--info" role="status">O cálculo considera feriados forenses até 2030.</div>
+      </div>
+    </section>
+
+    <section aria-labelledby="s-tabela">
+      <h2 id="s-tabela">Tabela <code>.ds-table</code></h2>
+      <div class="ds-table-wrap"><table class="ds-table"><caption class="sr-only">Exemplo de tabela</caption>
+        <thead><tr><th>Cliente</th><th>Processo</th><th>Prazo</th></tr></thead>
+        <tbody><tr><td>Ana Souza</td><td>5001234-56.2026.8.13.0145</td><td id="t1"></td></tr><tr><td>Bruno Lima</td><td>5009999-00.2026.8.13.0145</td><td id="t2"></td></tr></tbody></table></div>
+    </section>
+
+    <section aria-labelledby="s-cartao">
+      <h2 id="s-cartao">Cartão, linha do tempo e chips</h2>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+        <article class="ds-card"><h3 class="ds-card__title">Como está o seu processo</h3><p style="margin:0">Estamos aguardando a audiência, marcada para 20/10.</p></article>
+        <article class="ds-card"><h3 class="ds-card__title">Últimas novidades</h3>
+          <ol class="ds-timeline"><li class="ds-timeline__item"><div class="ds-timeline__date">10/09</div><p class="ds-timeline__text">Audiência designada.</p></li><li class="ds-timeline__item"><div class="ds-timeline__date">01/09</div><p class="ds-timeline__text">A outra parte foi avisada.</p></li></ol></article>
+        <article class="ds-card"><h3 class="ds-card__title">Escolha o horário</h3><div class="row"><button class="ds-chip" aria-pressed="false">09:00</button><button class="ds-chip" aria-pressed="true">10:00</button><button class="ds-chip" aria-pressed="false">14:00</button></div></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="s-modal">
+      <h2 id="s-modal">Janela <code>.ds-modal</code></h2>
+      <p class="ds-help">Em uso, a janela fica sobre um véu escuro: <code>.ds-modal-backdrop</code> (aqui aparece solta, para você ver o desenho).</p>
+      <div class="ds-modal" role="dialog" aria-labelledby="m-t" style="position:static">
+        <h3 class="ds-modal__title" id="m-t">Cancelar consulta?</h3>
+        <p>O cliente receberá um e-mail avisando.</p>
+        <div class="row"><button class="ds-btn ds-btn--danger">Cancelar consulta</button><button class="ds-btn ds-btn--secondary">Voltar</button></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/core/ds.js"></script>
+  <script>
+    (function () {
+      var TOKENS = ['--ds-navy-950', '--ds-navy-900', '--ds-navy-800', '--ds-gold-800', '--ds-gold-700', '--ds-gold-600', '--ds-gold-500', '--ds-gold-300', '--ds-gold-100',
+        '--ds-bg', '--ds-surface', '--ds-surface-2', '--ds-text', '--ds-text-muted', '--ds-border', '--ds-primary', '--ds-accent', '--ds-accent-text',
+        '--ds-success', '--ds-warning', '--ds-danger', '--ds-info'];
+      function pintar() {
+        var cs = getComputedStyle(document.documentElement);
+        document.getElementById('swatches').innerHTML = TOKENS.map(function (t) {
+          return '<div class="sw"><i style="background:var(' + t + ')"></i><span>' + t + '<br>' + cs.getPropertyValue(t).trim() + '</span></div>';
+        }).join('');
+      }
+      var hoje = DS.todayStr();
+      function mais(n) { var d = new Date(); d.setDate(d.getDate() + n); return DS.todayStr(d); }
+      document.getElementById('prazos').innerHTML = [30, 6, 2, 0, -3].map(function (n) { return DS.deadlineBadge(mais(n), hoje); }).join('');
+      document.getElementById('t1').innerHTML = DS.deadlineBadge(mais(5), hoje);
+      document.getElementById('t2').innerHTML = DS.deadlineBadge(mais(1), hoje);
+
+      var btn = document.getElementById('tema');
+      function aplicar(escuro) {
+        document.documentElement.setAttribute('data-theme', escuro ? 'dark' : 'light');
+        btn.setAttribute('aria-pressed', String(escuro));
+        btn.textContent = escuro ? '☀️ Modo claro' : '🌙 Modo escuro';
+        try { localStorage.setItem('ds_tema', escuro ? 'dark' : 'light'); } catch (e) { /* sem armazenamento */ }
+        pintar();
+      }
+      var salvo = null;
+      try { salvo = localStorage.getItem('ds_tema'); } catch (e) { salvo = null; }
+      aplicar(salvo ? salvo === 'dark' : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches));
+      btn.addEventListener('click', function () { aplicar(document.documentElement.getAttribute('data-theme') !== 'dark'); });
+      document.querySelectorAll('.ds-chip').forEach(function (c) { c.addEventListener('click', function () { c.parentNode.querySelectorAll('.ds-chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); c.setAttribute('aria-pressed', 'true'); }); });
+    })();
+  </script>
+</body>
+</html>

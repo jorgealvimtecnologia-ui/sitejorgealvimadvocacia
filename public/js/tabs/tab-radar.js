@@ -20,6 +20,7 @@
       if (input && !input.value) {
         input.focus();
       }
+      if (typeof radarEscStatus === 'function') radarEscStatus();
     }
 
     function setJudicialSearchType(type) {
@@ -42,15 +43,15 @@
       if (type === 'number') {
         if (btnNumber) btnNumber.className = activeBtnClass;
         label.textContent = 'Número Único do Processo (CNJ / NPU)';
-        input.placeholder = 'Ex: 5006870-33.2024.8.13.0313 ou 5007788-99.2026.8.13.0145';
+        input.placeholder = 'Número CNJ com 20 dígitos: NNNNNNN-DD.AAAA.J.TR.OOOO';
       } else if (type === 'name') {
         if (btnName) btnName.className = activeBtnClass;
         label.textContent = 'Nome Completo da Parte ou Empresa';
-        input.placeholder = 'Ex: Mariana Souza, Carlos Alberto Santos, Banco do Brasil';
+        input.placeholder = 'Nome completo da parte ou do advogado (busca no Diário da Justiça)';
       } else if (type === 'cpf' || type === 'cnpj') {
         if (btnDoc) btnDoc.className = activeBtnClass;
         label.textContent = 'CPF ou CNPJ da Parte';
-        input.placeholder = 'Ex: 123.456.789-00 ou 12.345.678/0001-99';
+        input.placeholder = 'CPF ou CNPJ (só encontra processos cadastrados no escritório)';
       } else if (type === 'oab') {
         if (btnOab) btnOab.className = activeBtnClass;
         label.textContent = 'Número da Inscrição da OAB / UF';
@@ -130,6 +131,7 @@
             cacheIndicator.classList.remove('hidden');
           }
 
+          renderJudicialDiagnostics(data);
           renderJudicialResults(currentJudicialResults);
         } else {
           alert(`❌ ${data.error || 'Erro ao consultar o Radar Judicial.'}`);
@@ -176,6 +178,37 @@
         if (keyB.year !== keyA.year) return keyB.year - keyA.year;
         return keyB.seq - keyA.seq;
       });
+    }
+
+    // Mostra POR QUE a busca devolveu (ou não) dados: limites da busca, fontes consultadas e links do portal oficial.
+    function renderJudicialDiagnostics(data) {
+      const container = document.getElementById('judicial-results-container');
+      if (!container) return;
+      let box = document.getElementById('judicial-diagnostics');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'judicial-diagnostics';
+        container.parentNode.insertBefore(box, container);
+      }
+      const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const notices = (data.notices || []).map((n) => `<li>${esc(n)}</li>`).join('');
+      const sources = (data.sources || [])
+        .map((s) => `<li>${s.ok ? '✅' : '⚠️'} <b>${esc(s.name)}</b>${s.detail ? `: ${esc(s.detail)}` : ''}</li>`)
+        .join('');
+      const links = (data.portal_links || [])
+        .filter((l) => /^https?:\/\//.test(l.url || ''))
+        .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg border border-blue-200 bg-white text-blue-800 font-semibold hover:bg-blue-50">${esc(l.name)} ↗</a>`)
+        .join('');
+      if (!notices && !sources && !links) {
+        box.innerHTML = '';
+        return;
+      }
+      box.innerHTML = `
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-3 text-xs text-slate-700 space-y-2">
+          ${notices ? `<ul class="list-disc pl-4 space-y-1">${notices}</ul>` : ''}
+          ${sources ? `<details><summary class="cursor-pointer font-bold text-slate-600">Fontes consultadas</summary><ul class="mt-1 space-y-0.5">${sources}</ul></details>` : ''}
+          ${links ? `<div class="flex flex-wrap items-center gap-2 pt-1"><span class="font-bold">Consultar no portal oficial:</span>${links}</div>` : ''}
+        </div>`;
     }
 
     function renderJudicialResults(processes) {
@@ -269,7 +302,7 @@
       if (btnContainer) btnContainer.innerHTML = buttonsHtml;
 
       container.innerHTML = pageItems.map((p, index) => {
-        const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Processo Ativo', date: p.distribution_date };
+        const lastMov = p.movements && p.movements[0] ? p.movements[0] : { title: 'Sem andamentos informados pela fonte', date: p.distribution_date };
         const poloAtivoName = p.polo_ativo?.[0]?.name || 'Parte Autora';
         const poloPassivoName = p.polo_passivo?.[0]?.name || 'Parte Ré';
         const formattedDate = lastMov.date ? (lastMov.date.includes('-') ? lastMov.date.split('-').reverse().join('/') : lastMov.date) : '-';
@@ -393,11 +426,20 @@
       document.getElementById('jmodal-polo-passivo').textContent = poloPassivoName;
       document.getElementById('jmodal-polo-passivo-doc').textContent = poloPassivoDoc ? `Documento: ${poloPassivoDoc}` : '';
 
-      const lawyerName = process.lawyers?.[0]?.name || 'Dr. Jorge Eduardo da Silva Alvim';
-      const lawyerOAB = process.lawyers?.[0]?.oab || '222.943';
-      document.getElementById('jmodal-lawyers').textContent = `${lawyerName} (OAB/${process.lawyers?.[0]?.uf || 'MG'} ${lawyerOAB})`;
+      // Advogados: só os que a fonte informou (o Python manda "advogados"; o motor nativo, "lawyers"). Nunca um nome padrão.
+      const lawyerList = (process.lawyers || process.advogados || []).filter((a) => a && a.name);
+      document.getElementById('jmodal-lawyers').textContent = lawyerList.length
+        ? lawyerList.map((a) => `${a.name}${a.oab ? ` (${/^OAB/i.test(a.oab) ? a.oab : `OAB${a.uf ? '/' + a.uf : ''} ${a.oab}`})` : ''}`).join('; ')
+        : 'Não informado pela fonte consultada';
 
-      document.getElementById('jmodal-portal-link').href = process.direct_portal_url;
+      const portalLink = document.getElementById('jmodal-portal-link');
+      if (process.direct_portal_url) {
+        portalLink.href = process.direct_portal_url;
+        portalLink.classList.remove('hidden');
+      } else {
+        portalLink.removeAttribute('href');
+        portalLink.classList.add('hidden');
+      }
 
       // Renderizar Documentos Públicos
       const docsContainer = document.getElementById('jmodal-docs-container');
@@ -488,10 +530,188 @@
     }
 
     // =========================================================================
+    // RADAR AUTOMÁTICO (ESCAVADOR): monitoramento por OAB e por CNJ
+    // =========================================================================
+    function escMsg(texto, cor) {
+      const el = document.getElementById('esc-msg');
+      if (!el) return;
+      el.textContent = texto;
+      el.className = 'mt-3 text-xs ' + (cor || 'text-slate-600');
+      el.classList.remove('hidden');
+    }
+
+    async function escApi(url, method, body) {
+      const res = await fetch(url, {
+        method: method || 'GET',
+        headers: { 'Content-Type': 'application/json', ...(typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}) },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    async function radarEscStatus() {
+      const badge = document.getElementById('esc-status-line');
+      if (!badge) return;
+      try {
+        const { ok, data } = await escApi('/api/radar/status?refresh=1');
+        if (!ok) { badge.textContent = 'indisponível'; badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500'; return; }
+        if (!data.configurado) {
+          badge.textContent = '● não configurado';
+          badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700';
+          escMsg('A chave do Escavador ainda não foi configurada no servidor. Os botões funcionarão após ligar a chave (veja docs/RADAR-ESCAVADOR.md).', 'text-amber-700');
+          return;
+        }
+        const st = data.status || {};
+        const saldo = (typeof st.saldo_centavos === 'number') ? ('R$ ' + (st.saldo_centavos / 100).toFixed(2)) : '—';
+        const baixo = st.saldo_baixo === true;
+        badge.textContent = '● ativo · saldo ' + saldo;
+        badge.className = 'text-[11px] font-bold px-2.5 py-1 rounded-full ' + (baixo ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700');
+        if (baixo) escMsg('Saldo baixo — recarregue no painel do Escavador para não interromper o monitoramento.', 'text-rose-700');
+      } catch (e) {
+        badge.textContent = 'erro ao verificar';
+      }
+    }
+
+    async function radarEscMonitorarOab() {
+      const oab = (document.getElementById('esc-oab-input') || {}).value;
+      const uf = ((document.getElementById('esc-oab-uf') || {}).value || 'MG').toUpperCase();
+      if (!oab || !String(oab).trim()) { escMsg('Informe o número da OAB.', 'text-rose-700'); return; }
+      escMsg('Criando o monitoramento da OAB…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/monitoramentos', 'POST', { tipo: 'diario', termo: String(oab).replace(/\D/g, ''), uf });
+      if (ok && data.success) { escMsg('✅ Pronto! A OAB está sendo monitorada. As intimações vão aparecer na lista de Intimações.', 'text-emerald-700'); radarEscStatus(); }
+      else escMsg('Não foi possível criar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    async function radarEscMonitorarProcesso() {
+      const cnj = (document.getElementById('esc-cnj-input') || {}).value;
+      const frequencia = (document.getElementById('esc-cnj-freq') || {}).value || 'SEMANAL';
+      if (!cnj || String(cnj).replace(/\D/g, '').length < 15) { escMsg('Informe um número de processo (CNJ) válido.', 'text-rose-700'); return; }
+      escMsg('Criando o monitoramento do processo…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/monitoramentos', 'POST', { tipo: 'processo', numeroCnj: cnj, frequencia });
+      if (ok && data.success) { escMsg('✅ Processo em monitoramento (' + frequencia.toLowerCase() + ').', 'text-emerald-700'); radarEscStatus(); }
+      else escMsg('Não foi possível criar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    async function radarEscCadastrarAtivos() {
+      const btn = document.getElementById('esc-ativos-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Cadastrando…'; }
+      escMsg('Cadastrando todos os processos ativos por CNJ…', 'text-slate-500');
+      let resp = await escApi('/api/radar/monitorar-processos-ativos', 'POST', {});
+      // Proteção de custo: o servidor pede confirmação antes de monitorar um a um.
+      if (resp.ok && resp.data && resp.data.requer_confirmacao) {
+        if (btn) { btn.disabled = false; btn.textContent = '📡 Monitorar todos os processos ativos (semanal)'; }
+        if (!confirm(resp.data.aviso + '\n\nDeseja continuar mesmo assim?')) { escMsg('Cancelado. Dica: monitore a sua OAB — pega todos por R$ 2,20/mês.', 'text-slate-600'); return; }
+        if (btn) { btn.disabled = true; btn.textContent = 'Monitorando…'; }
+        resp = await escApi('/api/radar/monitorar-processos-ativos', 'POST', { confirmar: true });
+      }
+      const { ok, data } = resp;
+      if (btn) { btn.disabled = false; btn.textContent = '📡 Monitorar todos os processos ativos (semanal)'; }
+      if (ok && data.success) {
+        escMsg('✅ ' + data.criados + ' novo(s) em monitoramento, ' + data.jaExistiam + ' já estavam' + (data.falhas ? (', ' + data.falhas + ' falha(s)') : '') + '.', 'text-emerald-700');
+        radarEscStatus();
+      } else escMsg('Não foi possível cadastrar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    async function radarEscImportarPorOab() {
+      const oab = (document.getElementById('esc-oab-input') || {}).value;
+      const uf = ((document.getElementById('esc-oab-uf') || {}).value || 'MG').toUpperCase();
+      if (!oab || !String(oab).trim()) { escMsg('Informe o número da OAB no campo acima para buscar os seus processos.', 'text-rose-700'); return; }
+      if (!confirm('Buscar no Escavador todos os processos da OAB ' + oab + ' e adicionar ao sistema os que ainda não estão?\n\nOs que já existem não são duplicados.')) return;
+      const btn = document.getElementById('esc-importar-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Buscando e importando…'; }
+      escMsg('Buscando seus processos e adicionando ao sistema…', 'text-slate-500');
+      const { ok, data } = await escApi('/api/radar/importar-processos', 'POST', { oab: String(oab).replace(/\D/g, ''), uf });
+      if (btn) { btn.disabled = false; btn.textContent = '📥 Buscar meus processos (pela OAB) e adicionar ao sistema'; }
+      if (ok && data.success) {
+        escMsg('✅ ' + data.importados + ' processo(s) adicionado(s), ' + data.jaExistiam + ' já estavam no sistema' + (data.falhas ? (', ' + data.falhas + ' não puderam ser lidos') : '') + '. Abra a aba Processos para ver.', 'text-emerald-700');
+      } else escMsg('Não foi possível importar: ' + (data.error || 'erro'), 'text-rose-700');
+    }
+
+    // Busca avulsa + "Adicionar ao sistema" em cada resultado.
+    let escResultados = [];
+
+    function escEscapar(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderEscResultados() {
+      const box = document.getElementById('esc-busca-res');
+      if (!box) return;
+      if (!escResultados.length) { box.innerHTML = '<div class="text-[11px] text-slate-400">Nenhum processo encontrado.</div>'; return; }
+      box.innerHTML = escResultados.map((p, i) => {
+        const resumo = p.resumo || '(sem trecho disponível)';
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-slate-200 rounded-xl p-2.5">
+            <div class="min-w-0">
+              <div class="font-mono text-xs text-navy-950">${escEscapar(p.numero_processo)}</div>
+              <div class="text-[11px] text-slate-500">${escEscapar(p.tribunal_code || '')} • ${escEscapar(p.class_name || '')}${p.link ? ` • <a href="${escEscapar(p.link)}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:underline font-semibold">🔗 ver publicação</a>` : ''}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-2">${escEscapar(resumo)}</div>
+            </div>
+            <button type="button" id="esc-add-${i}" onclick="radarEscAdicionarUm(${i})" class="whitespace-nowrap bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700 self-start sm:self-center">📥 Adicionar ao sistema</button>
+          </div>`;
+      }).join('');
+    }
+
+    // Mostra o campo de Estado (UF) só quando a busca é por OAB (evita o homônimo de outro estado).
+    function radarEscBuscaTipoMudou() {
+      const tipo = (document.getElementById('esc-busca-tipo') || {}).value || 'numeroCnj';
+      const uf = document.getElementById('esc-busca-uf');
+      const input = document.getElementById('esc-busca-input');
+      if (uf) uf.classList.toggle('hidden', tipo !== 'oab');
+      if (input) {
+        input.placeholder = tipo === 'oab' ? 'nº da OAB (ex.: 222943)'
+          : tipo === 'nome' ? 'nome da pessoa/empresa'
+          : tipo === 'cpfCnpj' ? 'CPF ou CNPJ' : '0000000-00.0000.0.00.0000';
+      }
+    }
+
+    async function radarEscBuscar() {
+      const tipo = (document.getElementById('esc-busca-tipo') || {}).value || 'numeroCnj';
+      const termo = ((document.getElementById('esc-busca-input') || {}).value || '').trim();
+      if (!termo) { escMsg('Digite um termo para buscar.', 'text-rose-700'); return; }
+      const payload = { [tipo]: termo };
+      // Busca por OAB precisa do ESTADO (UF) para trazer a OAB certa (evita o homônimo de outro estado).
+      if (tipo === 'oab') {
+        const uf = ((document.getElementById('esc-busca-uf') || {}).value || 'MG').trim().toUpperCase().slice(0, 2);
+        if (!uf) { escMsg('Informe o estado (UF) da OAB.', 'text-rose-700'); return; }
+        payload.uf = uf;
+      }
+      const box = document.getElementById('esc-busca-res');
+      if (box) box.innerHTML = '<div class="text-[11px] text-slate-400">Buscando…</div>';
+      const { ok, data } = await escApi('/api/radar/buscar', 'POST', payload);
+      if (!ok) { if (box) box.innerHTML = ''; escMsg('Não foi possível buscar: ' + (data.error || 'erro'), 'text-rose-700'); return; }
+      escResultados = data.processos || [];
+      renderEscResultados();
+    }
+
+    async function radarEscAdicionarUm(i) {
+      const p = escResultados[i];
+      if (!p) return;
+      const btn = document.getElementById('esc-add-' + i);
+      if (btn) { btn.disabled = true; btn.textContent = 'Adicionando…'; }
+      const { ok, data } = await escApi('/api/radar/importar-processos', 'POST', { processos: [p] });
+      if (ok && data.success) {
+        if (btn) { btn.textContent = data.importados ? '✅ Adicionado' : '✔ Já estava no sistema'; btn.className = 'whitespace-nowrap bg-slate-200 text-slate-600 text-[11px] font-bold px-3 py-1.5 rounded-lg'; }
+      } else {
+        if (btn) { btn.disabled = false; btn.textContent = '📥 Adicionar ao sistema'; }
+        escMsg('Não foi possível adicionar: ' + (data.error || 'erro'), 'text-rose-700');
+      }
+    }
+
+    // =========================================================================
 
   // ==========================================================================
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
   // ==========================================================================
+  window.radarEscBuscar = typeof radarEscBuscar !== 'undefined' ? radarEscBuscar : window.radarEscBuscar;
+  window.radarEscBuscaTipoMudou = typeof radarEscBuscaTipoMudou !== 'undefined' ? radarEscBuscaTipoMudou : window.radarEscBuscaTipoMudou;
+  window.radarEscAdicionarUm = typeof radarEscAdicionarUm !== 'undefined' ? radarEscAdicionarUm : window.radarEscAdicionarUm;
+  window.radarEscImportarPorOab = typeof radarEscImportarPorOab !== 'undefined' ? radarEscImportarPorOab : window.radarEscImportarPorOab;
+  window.radarEscStatus = typeof radarEscStatus !== 'undefined' ? radarEscStatus : window.radarEscStatus;
+  window.radarEscMonitorarOab = typeof radarEscMonitorarOab !== 'undefined' ? radarEscMonitorarOab : window.radarEscMonitorarOab;
+  window.radarEscMonitorarProcesso = typeof radarEscMonitorarProcesso !== 'undefined' ? radarEscMonitorarProcesso : window.radarEscMonitorarProcesso;
+  window.radarEscCadastrarAtivos = typeof radarEscCadastrarAtivos !== 'undefined' ? radarEscCadastrarAtivos : window.radarEscCadastrarAtivos;
   window.initJudicialTab = typeof initJudicialTab !== 'undefined' ? initJudicialTab : window.initJudicialTab;
   window.setJudicialSearchType = typeof setJudicialSearchType !== 'undefined' ? setJudicialSearchType : window.setJudicialSearchType;
   window.setJudicialSearchExample = typeof setJudicialSearchExample !== 'undefined' ? setJudicialSearchExample : window.setJudicialSearchExample;

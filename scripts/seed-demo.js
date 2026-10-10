@@ -20,7 +20,19 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.join(__dirname, '..', 'leads.db');
+if (process.env.NODE_ENV === 'production' || process.env.SEED_DEMO_OK !== '1') {
+  console.error('✗ Recusado: este seed grava senhas de DEMONSTRAÇÃO. Rode só em banco de teste: SEED_DEMO_OK=1 node scripts/seed-demo.js');
+  process.exit(1);
+}
 const db = new DatabaseSync(DB_PATH);
+
+// Senhas de demonstração: novas a cada execução, nunca escritas no código. Mostradas ao final, no terminal.
+const DEMO_SENHAS = [];
+const pw = (quem) => {
+  const senha = `Demo#${crypto.randomBytes(8).toString('hex')}`;
+  DEMO_SENHAS.push([quem, senha]);
+  return senha;
+};
 
 const now = () => new Date().toISOString();
 const iso = (d) => new Date(d).toISOString();
@@ -46,13 +58,13 @@ console.log('🌱 Semeando dados de demonstração...\n');
 // 1. OPERADORES DO PAINEL (tabela users) + permissões
 // ============================================================
 const OPERATORS = [
-  { id: 'USR-MASTER-01', username: 'jorgealvimtecnologia', password: 'jorgealvim', name: 'Dr. Jorge Alvim (Mestre)', role: 'master', tabs: 'all' },
-  { id: 'USR-ADV-01', username: 'mariana.adv', password: 'mariana123', name: 'Dra. Mariana Costa', role: 'admin', tabs: 'all' },
-  { id: 'USR-ADV-02', username: 'carlos.adv', password: 'carlos123', name: 'Dr. Carlos Menezes', role: 'admin', tabs: 'all' },
-  { id: 'USR-SEC-01', username: 'secretaria', password: 'secretaria123', name: 'Patrícia Ramos (Secretária)', role: 'admin', tabs: ['tab_leads', 'tab_clients', 'tab_calendar', 'tab_publications', 'tab_portal_cliente'] },
-  { id: 'USR-FIN-01', username: 'financeiro', password: 'financeiro123', name: 'Roberto Lima (Financeiro)', role: 'admin', tabs: ['tab_financial', 'tab_clients', 'tab_leads'] },
-  { id: 'USR-RH-01', username: 'rh', password: 'rh123', name: 'Fernanda Alves (RH)', role: 'admin', tabs: ['tab_hr', 'tab_colaborador'] },
-  { id: 'USR-EST-01', username: 'estagiario', password: 'estagiario123', name: 'Lucas Pereira (Estagiário)', role: 'admin', tabs: ['tab_lawsuits', 'tab_publications', 'tab_radar', 'tab_calendar'] },
+  { id: 'USR-MASTER-01', username: 'jorgealvimtecnologia', password: pw('jorgealvimtecnologia'), name: 'Dr. Jorge Alvim (Mestre)', role: 'master', tabs: 'all' },
+  { id: 'USR-ADV-01', username: 'mariana.adv', password: pw('mariana.adv'), name: 'Dra. Mariana Costa', role: 'admin', tabs: 'all' },
+  { id: 'USR-ADV-02', username: 'carlos.adv', password: pw('carlos.adv'), name: 'Dr. Carlos Menezes', role: 'admin', tabs: 'all' },
+  { id: 'USR-SEC-01', username: 'secretaria', password: pw('secretaria'), name: 'Patrícia Ramos (Secretária)', role: 'admin', tabs: ['tab_leads', 'tab_clients', 'tab_calendar', 'tab_publications', 'tab_portal_cliente'] },
+  { id: 'USR-FIN-01', username: 'financeiro', password: pw('financeiro'), name: 'Roberto Lima (Financeiro)', role: 'admin', tabs: ['tab_financial', 'tab_clients', 'tab_leads'] },
+  { id: 'USR-RH-01', username: 'rh', password: pw('rh'), name: 'Fernanda Alves (RH)', role: 'admin', tabs: ['tab_hr', 'tab_colaborador'] },
+  { id: 'USR-EST-01', username: 'estagiario', password: pw('estagiario'), name: 'Lucas Pereira (Estagiário)', role: 'admin', tabs: ['tab_lawsuits', 'tab_publications', 'tab_radar', 'tab_calendar'] },
 ];
 
 const apCols = colsOf('access_permissions');
@@ -97,9 +109,9 @@ console.log(`👤 Operadores: ${OPERATORS.length} configurados.`);
 // 2. CLIENTES (tabela clients) — portal do cliente
 // ============================================================
 const CLIENTS = [
-  { id: 'CLI-DEMO-01', client_type: 'PF', full_name: 'João da Silva Santos', cpf: '111.444.777-35', email: 'joao.silva@email.com', phone: '(32) 98801-1001', city: 'Juiz de Fora', state: 'MG', password: 'cliente123', contract_value: 6000, installments_count: 6, installment_value: 1000 },
-  { id: 'CLI-DEMO-02', client_type: 'PF', full_name: 'Maria Aparecida Souza', cpf: '222.555.888-46', email: 'maria.souza@email.com', phone: '(32) 98802-2002', city: 'Juiz de Fora', state: 'MG', password: 'cliente123', contract_value: 3600, installments_count: 3, installment_value: 1200 },
-  { id: 'CLI-DEMO-03', client_type: 'PJ', full_name: 'Tech Solutions Comércio LTDA', cnpj: '11.222.333/0001-81', email: 'contato@techsolutions.com.br', phone: '(32) 98803-3003', city: 'Juiz de Fora', state: 'MG', password: 'cliente123', contract_value: 24000, installments_count: 12, installment_value: 2000 },
+  { id: 'CLI-DEMO-01', client_type: 'PF', full_name: 'João da Silva Santos', cpf: '111.444.777-35', email: 'joao.silva@email.com', phone: '(32) 98801-1001', city: 'Juiz de Fora', state: 'MG', password: pw('João da Silva Santos'), contract_value: 6000, installments_count: 6, installment_value: 1000 },
+  { id: 'CLI-DEMO-02', client_type: 'PF', full_name: 'Maria Aparecida Souza', cpf: '222.555.888-46', email: 'maria.souza@email.com', phone: '(32) 98802-2002', city: 'Juiz de Fora', state: 'MG', password: pw('Maria Aparecida Souza'), contract_value: 3600, installments_count: 3, installment_value: 1200 },
+  { id: 'CLI-DEMO-03', client_type: 'PJ', full_name: 'Tech Solutions Comércio LTDA', cnpj: '11.222.333/0001-81', email: 'contato@techsolutions.com.br', phone: '(32) 98803-3003', city: 'Juiz de Fora', state: 'MG', password: pw('Tech Solutions Comércio LTDA'), contract_value: 24000, installments_count: 12, installment_value: 2000 },
 ];
 
 const clientCols = colsOf('clients');
@@ -289,4 +301,5 @@ FINANCE.forEach((f, i) => run(`financeiro ${i + 1}`, () => {
 console.log(`💰 Financeiro: ${FINANCE.length} lançamentos criados.`);
 
 console.log(`\n✅ Seed concluído. ${okCount} operações OK, ${errCount} avisos.`);
-console.log('   Rode "node server.js" e teste os logins listados em CREDENCIAIS-DEMO.md');
+console.log('\n🔑 Senhas de demonstração desta execução (anote agora; não ficam salvas em arquivo):');
+DEMO_SENHAS.forEach(([quem, senha]) => console.log(`   ${quem}: ${senha}`));

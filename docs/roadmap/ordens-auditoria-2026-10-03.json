@@ -1,0 +1,513 @@
+{
+  "origem": "Auditoria do repositório vs. capacidades discutidas (03/10/2026), atualizada ao fim do dia: só o que NÃO foi feito (sobras do P0 e P1, P2, P3)",
+  "ordens": [
+    {
+      "ref": "AUD-01",
+      "prioridade": "P0",
+      "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
+      "descricao": "Senha do painel passou a exigir de 10 a 64 caracteres, aplicada no backend, nos formulários e nos scripts. Já publicado em produção.",
+      "criterios": "Backend, formulários e scripts recusam senha fora de 10–64 caracteres; testes cobrindo o limite passam no npm test.",
+      "estado": "publicado em produção (03/10, versão f158399)"
+    },
+    {
+      "ref": "AUD-02",
+      "prioridade": "P0",
+      "titulo": "Tirar o .env do backup (ou criptografar o conjunto)",
+      "descricao": "O backup não copia mais o .env nem chaves; o .env fica no cofre criptografado e o guardião reprova qualquer exposição. Já publicado em produção.",
+      "criterios": "backup.sh não copia .env/chaves; cofre .env.enc em uso; npm run check:architecture reprova .env exposto.",
+      "estado": "publicado em produção (03/10)"
+    },
+    {
+      "ref": "AUD-03",
+      "prioridade": "P0",
+      "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",
+      "descricao": "O teste de restauração, o manifesto e a limpeza de segredos dos backups já estão no ar. Sobra ligar a verificação semanal no servidor e fixar as metas de recuperação.",
+      "criterios": "scripts/setup-backup-cron.sh executado no servidor (cron semanal ativo, conferido com crontab -l); primeira verificação semanal registrada; Dr. Jorge confirma RPO 24 h e RTO 4 h (propostos) em docs/INFRA.md.",
+      "estado": "publicado em produção (03/10); sobra ação no servidor e decisão do Dr. Jorge"
+    },
+    {
+      "ref": "AUD-04",
+      "prioridade": "P0",
+      "titulo": "Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto",
+      "descricao": "Os alertas de prazo por WhatsApp/e-mail só para advogados já estão no ar. Sobra configurar quem recebe e por onde enviar.",
+      "criterios": "Advogado titular e substitutos definidos no painel (Alertas & Notificações); gateway de WhatsApp configurado e testado com um envio real; envio por e-mail testado; primeiro ciclo real de alertas conferido.",
+      "estado": "publicado em produção (03/10); sobra configuração pelo Dr. Jorge"
+    },
+    {
+      "ref": "AUD-26",
+      "prioridade": "P0",
+      "estado": "feito em 03/10 (cofre, chave guardada, chave trocada); sobra conferir o nginx e girar a senha do SMTP",
+      "titulo": "Fechar a migração do .env: conferir o nginx e girar a senha do SMTP (ação do Dr. Jorge)",
+      "descricao": "O .env do servidor já está no cofre criptografado, a cópia solta foi apagada, a chave está no Bitwarden e a chave que vazou na conversa foi trocada (rotate-key). Sobra: confirmar que o nginx do Contabo (fora do repositório) bloqueia arquivos ocultos, e criar uma nova senha de app do SMTP, porque e-mails de aviso antigos carregam cópias do cofre cifradas com a chave que vazou.",
+      "criterios": "node scripts/check-env-exposure.js --url=https://jorgealvimadvocacia.com.br sem violações; nova senha de app gravada com env-vault.js set SMTP_PASS (seguido de chown www-data e reinício); senhas de app antigas revogadas no Google, inclusive a de 26/09; /health ok."
+    },
+    {
+      "ref": "AUD-27",
+      "prioridade": "P0",
+      "estado": "proposta enviada (17 funções); aguardando as 5 respostas do Dr. Jorge",
+      "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
+      "descricao": "Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente. Já feito: a matriz ganhou colunas separadas (26 colunas), papel desconhecido deixa de virar Advogado, \"atendente\" é Secretária e o vínculo operador-colaborador é exato. Sobra cadastrar as 17 funções como perfis (etapa 1) e passar cada pessoa à função certa, com confirmação uma a uma, removendo as regras por nome (etapa 2).",
+      "criterios": "As 17 funções existem como perfis na matriz e passam no teste por perfil (tests/rbac-per-role.test.js); cada pessoa tem exatamente uma função confirmada pelo mestre; nenhuma regra por nome próprio ou trecho de login; matriz aprovada pelo Dr. Jorge (cinco perguntas em docs/PAPEIS-E-PERMISSOES.md)."
+    },
+    {
+      "ref": "AUD-33",
+      "prioridade": "P0",
+      "estado": "pendente: decisão do Dr. Jorge",
+      "titulo": "Mesclar o PR #8 na main (a produção roda o código da branch)",
+      "descricao": "A produção foi publicada a partir da branch claude/awesome-allen-td2uwv (PR #8, ainda rascunho). A main não tem as correções de segurança. Um deploy feito a partir da main reverteria o login Google corrigido, as permissões por função e o cofre do .env.",
+      "criterios": "PR #8 revisado e mesclado na main pelo Dr. Jorge; CI verde na main; próximo deploy sai da main e a versão no ar confere com o commit da main."
+    },
+    {
+      "ref": "AUD-05",
+      "prioridade": "P1",
+      "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
+      "descricao": "A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.",
+      "criterios": "Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil.",
+      "estado": "feito no repositório em 04/10/2026 (CI verde); falta publicar no servidor",
+      "nota_entrega": "Calendário gerado por regra (Páscoa) e estendido a cada partida até 4 anos à frente (hoje até 2030), sem apagar o que o escritório cadastrou; aviso de cobertura; feriados locais cadastráveis no painel (calculadora de prazos); motor de prazo separado e coberto por 20 testes (dias úteis, feriado, recesso 20/12–20/01, fim de semana, prorrogação, feriado local)."
+    },
+    {
+      "ref": "AUD-06",
+      "prioridade": "P1",
+      "titulo": "Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências",
+      "descricao": "npm audit acusa 1 vulnerabilidade moderada (multer 2.2.0 a 2.3.0, negação de serviço por upload abortado). docs/SECURITY.md afirma 0 vulnerabilidades. A CI roda o audit com continue-on-error.",
+      "criterios": "npm audit --omit=dev sem pendências; docs/SECURITY.md atualizado; CI falha em high ou critical; npm test verde após a atualização.",
+      "estado": "publicado em produção (multer 2.4.0; auditoria de produção com 0 vulnerabilidades)"
+    },
+    {
+      "ref": "AUD-07",
+      "prioridade": "P1",
+      "titulo": "Mover a chave do DataJud para variável de ambiente",
+      "descricao": "juridico.routes.js mantém um valor padrão fixo para a chave do DataJud. Provavelmente é a chave pública divulgada pelo CNJ, mas deve sair do código.",
+      "criterios": "Confirmada a natureza da chave; leitura apenas de DATAJUD_API_KEY (com documentação no .env.example); sem segredo literal no código; sincronização continua funcionando.",
+      "estado": "publicado em produção (chave do DataJud só pelo cofre; falta confirmar a chave no servidor, ver AUD-40 suspensa)"
+    },
+    {
+      "ref": "AUD-08",
+      "prioridade": "P1",
+      "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
+      "descricao": "Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.",
+      "criterios": "Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e ligar o monitor externo",
+      "nota_entrega": "Logs JSON com id de requisição (X-Request-Id) sem corpo/token/query; /health checa banco, disco e tarefas automáticas (503 se o banco cair); vigia a cada 10 min avisa o mestre (tarefa parada, disco baixo, certificado); erros em anel + log. Falta: monitor EXTERNO de disponibilidade (ex.: UptimeRobot) apontando para /health e definir CERT_CHECK_HOST no cofre (ver docs/INFRA.md)."
+    },
+    {
+      "ref": "AUD-09",
+      "prioridade": "P1",
+      "titulo": "Migrações de banco versionadas",
+      "descricao": "Existe uma única migração (001_kanban_indexes.sql); o restante do esquema nasce de CREATE TABLE IF NOT EXISTS espalhado em server.js e nos módulos, sem histórico reversível.",
+      "criterios": "Runner usando a tabela schema_migrations; esquema atual consolidado em migrações numeradas; novas mudanças de esquema só por migração; teste que sobe banco vazio e aplica todas.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (mexe na base do banco; retomar só quando ele mandar). Já ajudou: o esquema inteiro saiu do server.js para src/db/schema.js (AUD-11), o primeiro passo para as migrações."
+    },
+    {
+      "ref": "AUD-10",
+      "prioridade": "P1",
+      "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
+      "descricao": "O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.",
+      "criterios": "Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "nota_entrega": "Node 24 em todo lugar (CI, Dockerfile, .nvmrc, engines, README) com teste que reprova divergência; o build do Vite já compila o HTML legado e agora BLOQUEIA a CI (sem continue-on-error)."
+    },
+    {
+      "ref": "AUD-11",
+      "prioridade": "P1",
+      "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
+      "descricao": "server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).",
+      "criterios": "server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "nota_entrega": "server.js de 3.141 para ~1.720 linhas (esquema do banco movido para src/db/schema.js, mesma ordem de execução); teto do guardião baixado para 2.000; switchTab de 300 para 241 linhas (permissões e reset de abas em funções/laço); teste e2e de troca de abas."
+    },
+    {
+      "ref": "AUD-31",
+      "prioridade": "P1",
+      "estado": "pendente",
+      "titulo": "Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)",
+      "descricao": "Hoje cada aba só liga ou desliga: quem tem Processos vê todos os processos. O escopo de dados (data_scope) é gravado mas nenhum trecho do servidor o aplica, e não existe permissão de somente leitura. A primeira versão das 17 funções trata o \"restrito\" como desligado.",
+      "criterios": "Advogado de escritório e estagiário veem só os processos em que são responsáveis, provado por teste na API; cliente só os seus; permissão de somente leitura por aba onde a matriz pedir; testes por função e por escopo."
+    },
+    {
+      "ref": "AUD-32",
+      "prioridade": "P1",
+      "estado": "pendente: falta a chave do agente no ambiente",
+      "titulo": "Registrar estas ordens no Roadmap Vivo do site",
+      "descricao": "As ordens vivem neste JSON e em ROADMAP_MODIFICACOES_HOJE_E_FUTURO.md. O site ainda não as recebeu porque o comando de registro exige a ROADMAP_AGENT_KEY, que o Dr. Jorge cadastra nas configurações do ambiente (nunca no chat).",
+      "criterios": "npm run roadmap:register-batch -- --aplicar executado; npm run roadmap:list mostra as ordens no site; rodar de novo não duplica."
+    },
+    {
+      "ref": "AUD-34",
+      "prioridade": "P1",
+      "estado": "pendente: horário combinado com o Dr. Jorge",
+      "titulo": "Reiniciar o servidor Contabo para aplicar as atualizações de sistema",
+      "descricao": "O servidor mostra \"System restart required\" e 33 atualizações pendentes (2 de segurança do ESM). Não foi reiniciado para não arriscar a produção no meio das mudanças.",
+      "criterios": "Backup recente conferido; reinício em horário de baixo movimento; serviço advocacia, nginx e backup voltam sozinhos; /health ok; apt sem atualizações de segurança pendentes."
+    },
+    {
+      "ref": "AUD-35",
+      "prioridade": "P1",
+      "estado": "pendente: ação do Dr. Jorge",
+      "titulo": "Trocar a senha da conta Google mestra e conferir as outras duas contas mestras",
+      "descricao": "A conta jorgealvimtecnologia tem verificação em duas etapas, chaves de acesso e telefone de recuperação, mas a senha é de ago/2023. As outras duas contas mestras (jorgealvimadvocacia, o e-mail público do escritório e alvo de phishing, e jorgealvim10) precisam das mesmas proteções do próprio Google.",
+      "criterios": "Senha trocada; verificação em duas etapas e chaves de acesso conferidas nas três contas mestras; \"Revisar atividades de segurança\" sem itens desconhecidos."
+    },
+    {
+      "ref": "AUD-12",
+      "prioridade": "P2",
+      "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
+      "descricao": "Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.",
+      "criterios": "Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar as chaves (passo a passo em docs/INFRA.md)",
+      "nota_entrega": "Backup cifrado com chave PÚBLICA (privada fica com o Dr. Jorge) + SHA-256 + conferência no teste semanal; documentos de clientes/drive cifrados em repouso (AES-256-GCM, chave DOC_ENC_KEY no cofre) com leitura transparente, migração segura dos antigos e verificação; uploads de HTML/SVG recusados. Falta: gerar e guardar as chaves, escolher destino do envio automático (rclone) e rodar a migração."
+    },
+    {
+      "ref": "AUD-13",
+      "prioridade": "P2",
+      "titulo": "Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor",
+      "descricao": "Existem dois módulos (esign e signatures) com assinatura simples/avançada própria (Lei 14.063/2020), sem ICP-Brasil.",
+      "criterios": "Um único fluxo de assinatura, sem duplicação de código; parecer sobre quando exigir assinatura qualificada (ICP-Brasil ou provedor como ClickSign/D4Sign); trilha de evidências preservada.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026: antes de seguir ele quer saber se terá de pagar algo (certificado ICP-Brasil e/ou provedor de assinatura). A assinatura atual (simples/avançada, Lei 14.063/2020) funciona e não tem custo extra."
+    },
+    {
+      "ref": "AUD-14",
+      "prioridade": "P2",
+      "titulo": "IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão",
+      "descricao": "src/modules/ai/ai.routes.js não chama nenhum modelo: gera minutas a partir de modelos de texto. Rotular como gerador de modelos e planejar IA real com regras de privacidade.",
+      "criterios": "Fornecedor escolhido com contrato que impeça treino com dados do escritório; resumo de andamento em linguagem simples e triagem de leads funcionando; aviso de que não é consultoria jurídica; todo texto passa por revisão humana antes de uso; tela atual renomeada para refletir que são modelos.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026, para avaliar o custo (uso de IA é pago por consumo). Retomar após a avaliação de custo."
+    },
+    {
+      "ref": "AUD-15",
+      "prioridade": "P2",
+      "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
+      "descricao": "O site capta contato por formulário e WhatsApp, mas não há marcação de horário pelo próprio visitante.",
+      "criterios": "Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar (painel → Agenda → Agendamento online)",
+      "nota_entrega": "Página pública /agendar (dia + horário livre da agenda do advogado, dados com consentimento LGPD, reCAPTCHA quando configurado); cada marcação vira lead no funil + evento \"consulta\" na agenda (que bloqueia o horário) + aviso no painel; confirmação por e-mail com convite .ics e link pessoal para remarcar/cancelar; lembrete 24 h antes; só e-mail (sem WhatsApp). Nasce DESLIGADO; só o mestre liga e configura. 26 testes + e2e no navegador."
+    },
+    {
+      "ref": "AUD-16",
+      "prioridade": "P2",
+      "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
+      "descricao": "O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.",
+      "criterios": "Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou \"nada a fazer agora\"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar. Validar com clientes reais quando houver (hoje só o Dr. Jorge)",
+      "nota_entrega": "Portal: cada processo mostra \"como está\" em uma frase, \"o que você precisa fazer\" (destacado quando há ação), últimas novidades explicadas e dicionário com termos explicados ao toque. O advogado decide o que o cliente vê (processo e andamento a andamento; pré-visualização \"ver como o cliente vê\"; publicar todos). CORREÇÃO DE CONFIDENCIALIDADE: antes o portal enviava ao cliente notas internas, nome do juiz e a descrição interna de todos os andamentos; agora só sai o publicado, com título oficial + explicação simples. Andamentos novos nascem ocultos. Fase estimada sem percentual falso."
+    },
+    {
+      "ref": "AUD-17",
+      "prioridade": "P2",
+      "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
+      "descricao": "Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.",
+      "criterios": "Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar. Os números só ficam ricos conforme houver dados lançados e leads com origem",
+      "nota_entrega": "Painel \"Indicadores do dono\" (Financeiro): receita e margem direta por área, inadimplência (idade e maiores devedores), previsão de caixa 3/6 meses (só entradas contratadas; saídas = maior entre lançadas e média 3 meses), origem dos clientes com conversão (lead→cliente→contrato) e dinheiro de terceiros (alvarás) separado; conferência automática contra o livro caixa (diferença zero). Nova captura de origem no site e no agendamento (UTM e só o domínio de referência, sessionStorage). Leads antigos ficam \"Não informado\". Limitações: área do cliente vem do processo/lead; despesas gerais não são rateadas; previsão não inclui saldo em conta."
+    },
+    {
+      "ref": "AUD-18",
+      "prioridade": "P2",
+      "titulo": "Design system: tokens, componentes e página-catálogo",
+      "descricao": "A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.",
+      "criterios": "Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar. Migração das telas antigas é gradual (docs/DESIGN-SYSTEM.md)",
+      "nota_entrega": "Auditoria visual medida (3 versões do azul da marca, 83 cores soltas, 22 degradês de botão, dourado do texto sem contraste); tokens únicos com modo claro e escuro (contraste AA conferido por teste); componentes .ds-* sem cor solta; lógica única da cor do prazo (DS.deadlineTone); página-catálogo /design-system; agendamento já ligado aos tokens. Modo escuro avaliado: pronto nos tokens, NÃO ligado no painel/site até migrar as telas (evita texto ilegível)."
+    },
+    {
+      "ref": "AUD-19",
+      "prioridade": "P2",
+      "titulo": "Acessibilidade e desempenho com verificação automática",
+      "descricao": "painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.",
+      "criterios": "Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "nota_entrega": "Testes automáticos na CI: axe-core (WCAG A/AA, zero violações nas páginas públicas) + navegação por teclado com foco visível; orçamento de peso por página (gzip, docs/perf-budget.json) que reprova quem engordar; Lighthouse com metas (desempenho 85 / acessib. 95 / boas práticas 90 / SEO 90) — hoje as páginas públicas estão em 98-100 de desempenho e 97-100 de acessibilidade. Imagens em webp/avif na mesma URL (capa do blog 616KB->34KB). Corrigido: contraste do Tailwind antigo (public/css/a11y-fixes.css), zoom no celular reabilitado, alvo de toque do olho da senha."
+    },
+    {
+      "ref": "AUD-20",
+      "prioridade": "P2",
+      "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
+      "descricao": "O staging (homolog.jorgealvimadvocacia.com.br) está no ar e foi usado para validar as correções. Sobra a rotina periódica de verificação da produção.",
+      "criterios": "Checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada; staging sem dados reais de clientes.",
+      "estado": "feito no repositório em 04/10/2026; falta publicar e o cron rodar no servidor",
+      "nota_entrega": "scripts/producao-checklist.js: confere site/health, certificado HTTPS, backup diário recente, cópia externa cifrada, teste de restauração, disco, tarefas automáticas e versão publicada; reprova (exit 1) em problema grave. Agendado por setup-backup-cron.sh (segunda 05:00) com aviso por e-mail (scripts/avisar-producao.js). 8 testes. npm run check:producao."
+    },
+    {
+      "ref": "AUD-21",
+      "prioridade": "P2",
+      "titulo": "Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)",
+      "descricao": "Não há registro de teste de invasão autorizado nem de revisão por encarregado de dados ou advogado de privacidade. O sistema já tem módulo LGPD, política de privacidade e trilha de auditoria.",
+      "criterios": "Escopo e fornecedor decididos pelo Dr. Jorge; relatório recebido e achados tratados como ordens; parecer de privacidade sobre bases legais, retenção e transferência internacional.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (teste de invasão e revisão de LGPD por especialista; retomar quando ele quiser contratar)."
+    },
+    {
+      "ref": "AUD-22",
+      "prioridade": "P2",
+      "titulo": "Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)",
+      "descricao": "Funções que não aparecem em código: produto, UX, segurança, SEO e conteúdo, suporte, treinamento e contabilidade. É preciso definir quem assume cada uma.",
+      "criterios": "Tabela papel x responsável aprovada pelo Dr. Jorge; lacunas viram ordens; guias curtos e treinamento de uma tarde para a equipe; canal de suporte definido.",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026: por enquanto a equipe é só ele. Retomar quando houver mais pessoas."
+    },
+    {
+      "ref": "AUD-23",
+      "prioridade": "P2",
+      "titulo": "Pesquisa de UX com usuários reais",
+      "descricao": "A aba Testes Físicos já coleta falhas, mas não há teste de usabilidade estruturado com advogados, secretária e clientes.",
+      "criterios": "Cinco pessoas por perfil observadas executando tarefas-chave sem ajuda; problemas priorizados e viram ordens; métricas de base definidas (tempo para registrar andamento, taxa de contato do site).",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026: ainda não há usuários reais além dele. Retomar quando houver advogados, secretária ou clientes usando."
+    },
+    {
+      "ref": "AUD-24",
+      "prioridade": "P2",
+      "titulo": "Presença no Google e Cloudflare (ações externas do Dr. Jorge)",
+      "descricao": "Completar o Perfil da Empresa no Google com pedido sistemático de avaliações (dentro das regras da OAB), ativar a Cloudflare já preparada em ativar-cloudflare.sh e confirmar Search Console e Analytics ativos.",
+      "criterios": "Perfil completo com fotos e serviços; rotina de pedido de avaliação definida; Cloudflare com SSL Full (Strict); Search Console e GA4 recebendo dados; banner de cookies conforme a LGPD.",
+      "estado": "guia pronto (docs/GUIA-GOOGLE-CLOUDFLARE.md); ações externas a cargo do Dr. Jorge",
+      "nota_entrega": "Passo a passo: Perfil da Empresa no Google (com regras da OAB sobre avaliações), Search Console (GSC_VERIFICATION + sitemap.xml), GA4 (GA_MEASUREMENT_ID, respeitando o banner LGPD), Cloudflare Free (SSL Full strict, nameservers no registro.br, TRUST_CLOUDFLARE=1). Todas as variáveis vão ao cofre; o código já está preparado."
+    },
+    {
+      "ref": "AUD-36",
+      "prioridade": "P2",
+      "estado": "pendente",
+      "titulo": "Instalar o pacote \"compression\" no servidor (resposta com gzip na origem)",
+      "descricao": "O log de inicialização avisa que o pacote compression não está instalado: a origem responde sem gzip (a Cloudflare entrega Brotli, então o usuário não sente).",
+      "criterios": "npm install --omit=dev feito no servidor em horário tranquilo; o log mostra a compressão ativa; /health ok."
+    },
+    {
+      "ref": "AUD-37",
+      "prioridade": "P2",
+      "estado": "pendente",
+      "titulo": "Teste de navegador do menu para cada função",
+      "descricao": "O teste por perfil cobre API, Visão Geral e cockpit para todos os perfis, mas o teste de navegador (Playwright) só confere o menu da secretária.",
+      "criterios": "e2e que entra como cada função e confere os itens do menu e que o console não registra chamadas negadas pela API."
+    },
+    {
+      "ref": "AUD-38",
+      "prioridade": "P2",
+      "estado": "pendente: depende da AUD-27",
+      "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
+      "descricao": "No cadastro de operadores, \"Administrador Geral\" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta \"mariana\" ou \"gabriela\" por pedaço do texto digitado (ainda exige a senha da pessoa).",
+      "criterios": "Perfil do Administrador Geral definido pelo Dr. Jorge; login por senha só por usuário ou e-mail exatos; guardião reprova a volta dos apelidos."
+    },
+    {
+      "ref": "AUD-39",
+      "prioridade": "P1",
+      "estado": "pendente: revisão combinada com o Dr. Jorge",
+      "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
+      "descricao": "Hoje os segredos estão espalhados: no cofre criptografado do servidor (SMTP_PASS), no .env dos computadores (chave do agente do Roadmap Vivo, chave do cofre no Bitwarden) e DENTRO do banco leads.db em texto puro (system_settings: chave do Asaas; meta_api_settings: token da Meta; outras chaves de API). Também usados pelo código: DATAJUD_API_KEY, GOOGLE_MAPS_API_KEY, RECAPTCHA_SECRET_KEY, WHATSAPP_API_KEY e WHATSAPP_GATEWAY_URL, MASTER_PASSWORD, SYNC_PASS. Mais as credenciais fora do código: chave SSH de deploy, secrets do GitHub (DEPLOY_*), contas Google mestras e senhas de app.",
+      "criterios": "Inventário (só nomes, onde está, quem usa, quando foi criada/trocada) em docs/; cada segredo guardado no cofre do servidor ou no gerenciador de senhas, nunca em texto puro no banco ou no .env; segredos do banco migrados ou criptografados; datas de troca definidas; quem perdeu uma chave sabe como recuperar; guardião reprova segredo novo em texto puro."
+    },
+    {
+      "ref": "AUD-40",
+      "prioridade": "P0",
+      "estado": "SUSPENSA por decisão do Dr. Jorge em 04/10/2026. Publicado: nada mais é inventado. Causa do vazio: o servidor (Contabo, França) é bloqueado pelo Diário da Justiça (ComunicaAPI, HTTP 403); o DataJud é alcançável e só falta confirmar a chave. Caminhos avaliados: (1) ponte/VPS em São Paulo, R$ 16 a R$ 28/mês (Locaweb ou Hostinger com datacenter no Brasil), (2) mudar a hospedagem para o Brasil, (3) API paga (Escavador sob orçamento, Jusbrasil a partir de R$ 1.000/mês). Dr. Jorge pediu formulário ao Escavador; plano atual dele é só de navegador. Retomar quando ele decidir.",
+      "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
+      "descricao": "Em 04/10/2026 o Dr. Jorge testou o Radar em produção: nenhuma busca (número, nome, CPF/CNPJ, OAB) devolvia dado real. O Radar completava a resposta com dados INVENTADOS: um processo de enchimento para clientes encontrados, andamentos e documentos padrão, advogado padrão e um card falso \"Consulta Pública de Autos\"; e a sincronização automática chegou a gravar esses andamentos em processos reais. Já corrigido no código: o Radar só devolve dado real (DataJud, DJEN ou o cadastro do escritório), mostra as fontes consultadas e o motivo de cada falha, e a sincronização só grava andamento de fonte real. Limites reais: o DataJud público só busca por NÚMERO do processo; por nome/OAB só o Diário da Justiça (DJEN) ajuda; por CPF/CNPJ não existe fonte pública.",
+      "criterios": "Publicado; node scripts/radar-diagnostico.js no servidor mostra DataJud e ComunicaAPI respondendo (chave aceita pelo CNJ); busca por número de um processo real devolve o andamento real; node scripts/radar-limpar-fabricados.js rodado (primeiro sem --aplicar) e os andamentos inventados antigos removidos; decisão do Dr. Jorge sobre buscar por nome/CPF em provedor pago (ver AUD-41)."
+    },
+    {
+      "ref": "AUD-41",
+      "prioridade": "P2",
+      "estado": "pendente: decisão do Dr. Jorge",
+      "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",
+      "descricao": "As bases públicas (DataJud e Diário da Justiça) não permitem busca por CPF/CNPJ nem por nome de parte em todos os tribunais. Quem precisa disso hoje usa provedores comerciais de dados processuais, com custo e contrato (e cuidados de LGPD e sigilo).",
+      "criterios": "Comparativo de provedores (custo, cobertura de tribunais, termos de uso, LGPD); decisão do Dr. Jorge; se aprovado, integração com a chave guardada no cofre e o mesmo princípio: só dado real, com a fonte indicada."
+    },
+    {
+      "ref": "AUD-42",
+      "prioridade": "P1",
+      "estado": "pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)",
+      "titulo": "WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)",
+      "descricao": "Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.",
+      "criterios": "Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado)."
+    }
+  ],
+  "sincronizar": [
+    {
+      "titulo": "Reforçar a política de senha (mínimo e máximo de caracteres)",
+      "status": "conforme",
+      "nota": "Publicado em produção em 03/10/2026 (versão f158399): senha de 10 a 64 caracteres em backend, formulários e scripts."
+    },
+    {
+      "titulo": "Tirar o .env do backup (ou criptografar o conjunto)",
+      "status": "conforme",
+      "nota": "Publicado em produção em 03/10/2026: o backup não copia mais o .env nem chaves; o .env agora fica no cofre criptografado e o guardião reprova exposição."
+    },
+    {
+      "titulo": "Teste de restauração de backup e metas de recuperação (RPO/RTO)",
+      "status": "conforme",
+      "nota": "[AUD-03] publicado em produção (03/10); sobra ação no servidor e decisão do Dr. Jorge"
+    },
+    {
+      "titulo": "Alertas de prazo por WhatsApp/e-mail, com confirmação de ciência e substituto",
+      "status": "conforme",
+      "nota": "[AUD-04] publicado em produção (03/10); sobra configuração pelo Dr. Jorge"
+    },
+    {
+      "titulo": "Fechar a migração do .env: conferir o nginx e girar a senha do SMTP (ação do Dr. Jorge)",
+      "status": "em_curso",
+      "nota": "[AUD-26] Feito no código (testado, CI verde); aguardando publicação no servidor. feito em 03/10 (cofre, chave guardada, chave trocada); sobra conferir o nginx e girar a senha do SMTP"
+    },
+    {
+      "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
+      "status": "conforme",
+      "nota": "[AUD-27] proposta enviada (17 funções); aguardando as 5 respostas do Dr. Jorge"
+    },
+    {
+      "titulo": "Mesclar o PR #8 na main (a produção roda o código da branch)",
+      "status": "planejado",
+      "nota": "[AUD-33] pendente: decisão do Dr. Jorge"
+    },
+    {
+      "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
+      "status": "em_curso",
+      "nota": "[AUD-05] Feito no código (testado, CI verde); aguardando publicação no servidor. Calendário gerado por regra (Páscoa) e estendido a cada partida até 4 anos à frente (hoje até 2030), sem apagar o que o escritório cadastrou; aviso de cobertura; feriados locais cadastráveis no painel (calculadora de pr"
+    },
+    {
+      "titulo": "Corrigir vulnerabilidade do multer e endurecer a auditoria de dependências",
+      "status": "conforme",
+      "nota": "[AUD-06] publicado em produção (multer 2.4.0; auditoria de produção com 0 vulnerabilidades)"
+    },
+    {
+      "titulo": "Mover a chave do DataJud para variável de ambiente",
+      "status": "conforme",
+      "nota": "[AUD-07] Publicado: chave do DataJud só pelo cofre. (A consulta por número depende da confirmação da chave no servidor; a busca por nome/OAB é a AUD-40, suspensa.)"
+    },
+    {
+      "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
+      "status": "conforme",
+      "nota": "[AUD-08] Feito no código (testado, CI verde); aguardando publicação no servidor. Logs JSON com id de requisição (X-Request-Id) sem corpo/token/query; /health checa banco, disco e tarefas automáticas (503 se o banco cair); vigia a cada 10 min avisa o mestre (tarefa parada, disco baixo, certificado); "
+    },
+    {
+      "titulo": "Migrações de banco versionadas",
+      "status": "conforme",
+      "nota": "[AUD-09] SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (mexe na base do banco; retomar só quando ele mandar). Já ajudou: o esquema inteiro saiu do server.js para src/db/schema.js (AUD-11), o primeiro passo para as migrações."
+    },
+    {
+      "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
+      "status": "conforme",
+      "nota": "[AUD-10] Feito no código (testado, CI verde); aguardando publicação no servidor. Node 24 em todo lugar (CI, Dockerfile, .nvmrc, engines, README) com teste que reprova divergência; o build do Vite já compila o HTML legado e agora BLOQUEIA a CI (sem continue-on-error)."
+    },
+    {
+      "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
+      "status": "conforme",
+      "nota": "[AUD-11] Feito no código (testado, CI verde); aguardando publicação no servidor. server.js de 3.141 para ~1.720 linhas (esquema do banco movido para src/db/schema.js, mesma ordem de execução); teto do guardião baixado para 2.000; switchTab de 300 para 241 linhas (permissões e reset de abas em funçõe"
+    },
+    {
+      "titulo": "Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)",
+      "status": "conforme",
+      "nota": "[AUD-31] pendente"
+    },
+    {
+      "titulo": "Registrar estas ordens no Roadmap Vivo do site",
+      "status": "em_curso",
+      "nota": "[AUD-32] pendente: falta a chave do agente no ambiente"
+    },
+    {
+      "titulo": "Reiniciar o servidor Contabo para aplicar as atualizações de sistema",
+      "status": "conforme",
+      "nota": "[AUD-34] pendente: horário combinado com o Dr. Jorge"
+    },
+    {
+      "titulo": "Trocar a senha da conta Google mestra e conferir as outras duas contas mestras",
+      "status": "planejado",
+      "nota": "[AUD-35] pendente: ação do Dr. Jorge"
+    },
+    {
+      "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
+      "status": "conforme",
+      "nota": "[AUD-12] Feito no código (testado, CI verde); aguardando publicação no servidor. Backup cifrado com chave PÚBLICA (privada fica com o Dr. Jorge) + SHA-256 + conferência no teste semanal; documentos de clientes/drive cifrados em repouso (AES-256-GCM, chave DOC_ENC_KEY no cofre) com leitura transparen"
+    },
+    {
+      "titulo": "Consolidar a assinatura eletrônica e avaliar ICP-Brasil/provedor",
+      "status": "bloqueado",
+      "nota": "[AUD-13] SUSPENSA por decisão do Dr. Jorge em 04/10/2026: antes de seguir ele quer saber se terá de pagar algo (certificado ICP-Brasil e/ou provedor de assinatura). A assinatura atual (simples/avançada, Lei 14.063/2020) funciona e não tem custo extra."
+    },
+    {
+      "titulo": "IA de verdade: resumo de andamentos, triagem de leads e rascunhos com revisão",
+      "status": "bloqueado",
+      "nota": "[AUD-14] SUSPENSA por decisão do Dr. Jorge em 04/10/2026, para avaliar o custo (uso de IA é pago por consumo). Retomar após a avaliação de custo."
+    },
+    {
+      "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
+      "status": "conforme",
+      "nota": "[AUD-15] Feito no código (testado, CI verde); aguardando publicação no servidor. Página pública /agendar (dia + horário livre da agenda do advogado, dados com consentimento LGPD, reCAPTCHA quando configurado); cada marcação vira lead no funil + evento \"consulta\" na agenda (que bloqueia o horário) + "
+    },
+    {
+      "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
+      "status": "conforme",
+      "nota": "[AUD-16] Feito no código (testado, CI verde); aguardando publicação no servidor. Portal: cada processo mostra \"como está\" em uma frase, \"o que você precisa fazer\" (destacado quando há ação), últimas novidades explicadas e dicionário com termos explicados ao toque. O advogado decide o que o cliente v"
+    },
+    {
+      "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
+      "status": "conforme",
+      "nota": "[AUD-17] Feito no código (testado, CI verde); aguardando publicação no servidor. Painel \"Indicadores do dono\" (Financeiro): receita e margem direta por área, inadimplência (idade e maiores devedores), previsão de caixa 3/6 meses (só entradas contratadas; saídas = maior entre lançadas e média 3 meses"
+    },
+    {
+      "titulo": "Design system: tokens, componentes e página-catálogo",
+      "status": "conforme",
+      "nota": "[AUD-18] Feito no código (testado, CI verde); aguardando publicação no servidor. Auditoria visual medida (3 versões do azul da marca, 83 cores soltas, 22 degradês de botão, dourado do texto sem contraste); tokens únicos com modo claro e escuro (contraste AA conferido por teste); componentes .ds-* se"
+    },
+    {
+      "titulo": "Acessibilidade e desempenho com verificação automática",
+      "status": "conforme",
+      "nota": "[AUD-19] Feito no código (testado, CI verde); aguardando publicação no servidor. Testes automáticos na CI: axe-core (WCAG A/AA, zero violações nas páginas públicas) + navegação por teclado com foco visível; orçamento de peso por página (gzip, docs/perf-budget.json) que reprova quem engordar; Lightho"
+    },
+    {
+      "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
+      "status": "conforme",
+      "nota": "[AUD-20] Feito no código (testado, CI verde); aguardando publicação no servidor. scripts/producao-checklist.js: confere site/health, certificado HTTPS, backup diário recente, cópia externa cifrada, teste de restauração, disco, tarefas automáticas e versão publicada; reprova (exit 1) em problema grav"
+    },
+    {
+      "titulo": "Teste de invasão externo e revisão de LGPD por especialista (ação do Dr. Jorge)",
+      "status": "bloqueado",
+      "nota": "[AUD-21] SUSPENSA por decisão do Dr. Jorge em 04/10/2026 (teste de invasão e revisão de LGPD por especialista; retomar quando ele quiser contratar)."
+    },
+    {
+      "titulo": "Mapa de responsabilidades e plano de treinamento da equipe (decisão do Dr. Jorge)",
+      "status": "bloqueado",
+      "nota": "[AUD-22] SUSPENSA por decisão do Dr. Jorge em 04/10/2026: por enquanto a equipe é só ele. Retomar quando houver mais pessoas."
+    },
+    {
+      "titulo": "Pesquisa de UX com usuários reais",
+      "status": "bloqueado",
+      "nota": "[AUD-23] SUSPENSA por decisão do Dr. Jorge em 04/10/2026: ainda não há usuários reais além dele. Retomar quando houver advogados, secretária ou clientes usando."
+    },
+    {
+      "titulo": "Presença no Google e Cloudflare (ações externas do Dr. Jorge)",
+      "status": "em_curso",
+      "nota": "[AUD-24] Feito no código (testado, CI verde); aguardando publicação no servidor. Passo a passo: Perfil da Empresa no Google (com regras da OAB sobre avaliações), Search Console (GSC_VERIFICATION + sitemap.xml), GA4 (GA_MEASUREMENT_ID, respeitando o banner LGPD), Cloudflare Free (SSL Full strict, nam"
+    },
+    {
+      "titulo": "Instalar o pacote \"compression\" no servidor (resposta com gzip na origem)",
+      "status": "conforme",
+      "nota": "[AUD-36] pendente"
+    },
+    {
+      "titulo": "Teste de navegador do menu para cada função",
+      "status": "conforme",
+      "nota": "[AUD-37] pendente"
+    },
+    {
+      "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
+      "status": "planejado",
+      "nota": "[AUD-38] pendente: depende da AUD-27"
+    },
+    {
+      "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
+      "status": "em_curso",
+      "nota": "[AUD-39] pendente: revisão combinada com o Dr. Jorge"
+    },
+    {
+      "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
+      "status": "conforme",
+      "nota": "[AUD-40] SUSPENSA por decisão do Dr. Jorge em 04/10/2026. Publicado: nada mais é inventado. Causa do vazio: o servidor (Contabo, França) é bloqueado pelo Diário da Justiça (ComunicaAPI, HTTP 403); o DataJud é alcançável e só falta confirmar a chave. Caminhos avaliados: (1) ponte/VPS em Sã"
+    },
+    {
+      "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",
+      "status": "em_curso",
+      "nota": "[AUD-41] pendente: decisão do Dr. Jorge"
+    },
+    {
+      "titulo": "WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)",
+      "status": "planejado",
+      "nota": "[AUD-42] pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)"
+    }
+  ]
+}
