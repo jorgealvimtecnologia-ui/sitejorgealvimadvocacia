@@ -332,6 +332,7 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.equal(r.itens.length, 1);
     assert.match(capturado, /\/api\/v2\/processos\/numero_cnj\/5015787-60\.2024\.8\.13\.0145\/movimentacoes\?/);
     const m = movimentacaoParaMovimento(r.itens[0]);
+    assert.equal(m.source_id, '1');                      // id do Escavador (dedupe ao atualizar)
     assert.equal(m.movement_date, '2024-04-17');
     assert.equal(m.title, 'Distribuição');
     assert.equal(m.description, 'Autos distribuídos');  // espaços normalizados

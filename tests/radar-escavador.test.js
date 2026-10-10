@@ -216,6 +216,54 @@ describe('Radar/Escavador — "achou pelo Radar, completa o máximo" (enriquecim
     }
   });
 
+  it('dedupe de PROCESSO por dígitos: mesmo CNJ em formatos diferentes não duplica', async () => {
+    process.env.ESCAVADOR_API_TOKEN = 'token-teste';
+    const comMascara = { numero_processo: '1234567-89.2024.8.13.0001', sigla_tribunal: 'TJMG', envolvidos: [{ nome: 'Fulano', polo: 'ATIVO' }] };
+    const r1 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [comMascara], enriquecer: false });
+    assert.equal(r1.body.importados, 1);
+    // mesmo processo, só dígitos → deve reconhecer como já existente
+    const soDigitos = { numero_processo: '12345678920248130001', sigla_tribunal: 'TJMG', envolvidos: [{ nome: 'Fulano', polo: 'ATIVO' }] };
+    const r2 = await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [soDigitos], enriquecer: false });
+    assert.equal(r2.body.importados, 0, 'não pode duplicar o mesmo CNJ em formato diferente');
+    assert.equal(r2.body.jaExistiam, 1);
+    delete process.env.ESCAVADOR_API_TOKEN;
+  });
+
+  it('atualizar-processo: grava andamentos novos e, na 2ª vez, não duplica (dedupe por source_id)', async () => {
+    process.env.ESCAVADOR_API_TOKEN = 'token-teste';
+    const CNJ = '7001001-01.2026.8.13.0145';
+    // cria o processo (sem enriquecer/rede)
+    await request(app).post('/api/radar/importar-processos').set('Authorization', `Bearer ${token}`).send({ processos: [{ numero_processo: CNJ, sigla_tribunal: 'TJMG', envolvidos: [{ nome: 'Cliente', polo: 'ATIVO' }] }], enriquecer: false });
+    const row = db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(CNJ);
+    assert.ok(row);
+
+    const detalhe = { numero_cnj: CNJ, fontes: [{ sigla: 'TJMG', grau: 1, capa: { classe: 'Ação', assunto: 'X', situacao: 'Ativo' }, envolvidos: [] }] };
+    const movs = { items: [
+      { id: 501, data: '2026-01-10', tipo: 'ANDAMENTO', classificacao_predita: { nome: 'Conclusão' }, conteudo: 'Conclusos' },
+      { id: 502, data: '2026-01-12', tipo: 'PUBLICAÇÃO', tipo_publicacao: 'Despacho', conteudo: 'Vistos' },
+    ] };
+    const realFetch = global.fetch;
+    global.fetch = async (url) => {
+      const u = String(url);
+      const body = u.includes('/movimentacoes') ? movs : (u.includes('/numero_cnj/') ? detalhe : {});
+      return { ok: true, status: 200, headers: { get: () => null }, json: async () => body };
+    };
+    try {
+      const a1 = await request(app).post(`/api/radar/atualizar-processo/${row.id}`).set('Authorization', `Bearer ${token}`);
+      assert.equal(a1.status, 200, JSON.stringify(a1.body));
+      assert.equal(a1.body.novos_andamentos, 2);
+      // 2ª atualização com os MESMOS andamentos → 0 novos (dedupe)
+      const a2 = await request(app).post(`/api/radar/atualizar-processo/${row.id}`).set('Authorization', `Bearer ${token}`);
+      assert.equal(a2.body.novos_andamentos, 0, 'não pode duplicar andamentos já gravados');
+      // os andamentos ficam visíveis ao cliente por padrão
+      const vis = db.prepare(`SELECT COUNT(*) n FROM lawsuit_movements WHERE lawsuit_id = ? AND client_visible = 1`).get(row.id).n;
+      assert.equal(vis, 2);
+    } finally {
+      global.fetch = realFetch;
+      delete process.env.ESCAVADOR_API_TOKEN;
+    }
+  });
+
   it('importar por OAB usa a busca estruturada (V2) e já vem completo (sem consulta extra)', async () => {
     process.env.ESCAVADOR_API_TOKEN = 'token-teste';
     const CNJ = '9090909-09.2024.8.13.0145';

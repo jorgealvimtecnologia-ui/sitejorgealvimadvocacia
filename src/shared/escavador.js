@@ -341,6 +341,7 @@ export function movimentacaoParaMovimento(m) {
   const o = m || {};
   const titulo = o.classificacao_predita?.nome || o.tipo_publicacao || o.tipo || 'Movimentação';
   return {
+    source_id: o.id != null ? String(o.id) : '',  // id do Escavador (dedupe ao atualizar)
     movement_date: normalizaData(o.data || o.data_movimentacao || o.data_publicacao) || '',
     title: String(titulo).trim().slice(0, 200),
     description: String(o.conteudo || o.texto || '').replace(/\s+/g, ' ').trim().slice(0, 2000),

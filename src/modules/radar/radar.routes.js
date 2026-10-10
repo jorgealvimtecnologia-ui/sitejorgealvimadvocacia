@@ -325,18 +325,41 @@ export function mesclarProcesso(base, rico) {
   };
 }
 
-/** Grava as movimentações (andamentos) de um processo no histórico do sistema. Idempotente por
- *  processo novo (só é chamado para processos recém-criados). Retorna quantos andamentos entraram. */
+/** Acha o id de um processo pelo CNJ comparando SÓ OS DÍGITOS (ignora máscara/pontos/traços),
+ *  para não duplicar quando os dois caminhos de importação gravam formatos diferentes. */
+function acharLawsuitIdPorCnj(numero) {
+  const dig = soDigitos(numero);
+  if (!dig) return null;
+  try {
+    const row = db.prepare(`SELECT id FROM lawsuits
+      WHERE REPLACE(REPLACE(REPLACE(REPLACE(cnj_number,'-',''),'.',''),' ',''),'/','') = ?`).get(dig);
+    return row ? row.id : null;
+  } catch { return null; }
+}
+
+/**
+ * Grava as movimentações (andamentos) no histórico, SEM DUPLICAR: pula o que já existe
+ * (pelo source_id do Escavador; sem ele, por data+título+descrição). Entra VISÍVEL ao cliente
+ * por padrão (o advogado pode ocultar um específico depois). Retorna quantos andamentos NOVOS entraram.
+ */
 function inserirMovimentacoes(lawsuitId, movs) {
   if (!lawsuitId || !Array.isArray(movs) || !movs.length) return 0;
   const now = new Date().toISOString();
-  const stmt = db.prepare(`INSERT INTO lawsuit_movements (lawsuit_id, movement_date, title, description, created_at)
-                           VALUES (?, ?, ?, ?, ?)`);
+  const stmt = db.prepare(`INSERT INTO lawsuit_movements (lawsuit_id, movement_date, title, description, source_id, client_visible, created_at)
+                           VALUES (?, ?, ?, ?, ?, 1, ?)`);
+  const porSource = db.prepare(`SELECT 1 FROM lawsuit_movements WHERE lawsuit_id = ? AND source_id = ? LIMIT 1`);
+  const porTexto = db.prepare(`SELECT 1 FROM lawsuit_movements WHERE lawsuit_id = ? AND movement_date = ? AND title = ? AND description = ? LIMIT 1`);
   let n = 0;
   for (const m of movs) {
     if (!m || (!m.movement_date && !m.description)) continue;
+    const date = m.movement_date || now.slice(0, 10);
+    const title = m.title || 'Movimentação';
+    const desc = m.description || '';
+    const sid = m.source_id ? String(m.source_id) : '';
     try {
-      stmt.run(lawsuitId, m.movement_date || now.slice(0, 10), m.title || 'Movimentação', m.description || '', now);
+      const jaTem = sid ? porSource.get(lawsuitId, sid) : porTexto.get(lawsuitId, date, title, desc);
+      if (jaTem) continue; // dedupe: não duplica ao atualizar
+      stmt.run(lawsuitId, date, title, desc, sid || null, now);
       n++;
     } catch { /* best-effort por item */ }
   }
@@ -346,8 +369,8 @@ function inserirMovimentacoes(lawsuitId, movs) {
 function importarProcessoEscritorio(pd, session) {
   const numero = String(pd.numero_processo || '').trim();
   if (!numero) return { ok: false, reason: 'sem número' };
-  const existente = db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(numero);
-  if (existente) return { ok: true, jaExistia: true, lawsuitId: existente.id };
+  const existenteId = acharLawsuitIdPorCnj(numero); // dedupe por DÍGITOS (ignora formato)
+  if (existenteId) return { ok: true, jaExistia: true, lawsuitId: existenteId };
 
   const now = new Date().toISOString();
   // O CLIENTE é, de preferência, a parte que o advogado representa (detectada pela OAB no
@@ -462,8 +485,7 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
     let pd = (p && (p.detalhado || Array.isArray(p.polo_ativo) || Array.isArray(p.polo_passivo))) ? p : processoParaImport(p);
     if (!pd.numero_processo) { falhas++; continue; }
     // Só gasta crédito com o detalhe se o processo ainda NÃO existe e ainda não veio detalhado.
-    const existe = db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(soDigitos(pd.numero_processo))
-      || db.prepare(`SELECT id FROM lawsuits WHERE cnj_number = ?`).get(pd.numero_processo);
+    const existe = acharLawsuitIdPorCnj(pd.numero_processo); // dedupe por dígitos
     if (enriquecer && !existe && !pd.detalhado) {
       const d = await detalharProcesso({ numeroCnj: pd.numero_processo });
       if (typeof d.creditos === 'number') { creditos += d.creditos; registrarGasto('detalhar_processo', d.creditos); }
@@ -491,6 +513,51 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
   }
   logAudit(req, { event_type: 'RADAR', event_name: 'IMPORTAR_PROCESSOS', module: 'RADAR', resource_id: soDigitos(b.oab || '') || 'lote', description: `Importação do Radar: ${importados} novo(s), ${jaExistiam} já existia(m), ${enriquecidos} detalhado(s), ${andamentos} andamento(s), ${falhas} falha(s).` });
   return res.json({ success: true, total: encontrados.length, importados, jaExistiam, enriquecidos, andamentos, falhas, creditos });
+});
+
+/**
+ * POST /api/radar/atualizar-processo/:id — ATUALIZA um processo já cadastrado: re-busca o detalhe
+ * (valor/situação/fase/vara/juiz) e os ANDAMENTOS no Escavador, gravando só o que é NOVO (dedupe).
+ * Consome crédito (é o senhor quem dispara). A atualização vale para o escritório E para o cliente
+ * (leem a mesma cópia). O cliente NUNCA dispara isto.
+ */
+radarRouter.post('/api/radar/atualizar-processo/:id', requireAuth, async (req, res) => {
+  if (!escavadorConfigured()) return res.status(503).json(INDISPONIVEL);
+  const law = db.prepare(`SELECT id, cnj_number FROM lawsuits WHERE id = ? AND deleted_at IS NULL`).get(req.params.id);
+  if (!law || !law.cnj_number) return res.status(404).json({ error: 'Processo não encontrado ou sem número CNJ.' });
+
+  const padrao = advogadoPadrao();
+  let creditos = 0;
+  // 1) Detalhe (capa): atualiza valor/situação/fase/vara/juiz/classe/assunto quando vierem.
+  const d = await detalharProcesso({ numeroCnj: law.cnj_number });
+  if (typeof d.creditos === 'number') { creditos += d.creditos; registrarGasto('atualizar_detalhe', d.creditos); }
+  if (d.ok && d.data) {
+    const pd = detalheParaImport(d.data, { oab: padrao?.oab || '', uf: padrao?.uf || 'MG' });
+    db.prepare(`UPDATE lawsuits SET
+        action_type = COALESCE(NULLIF(?,''), action_type),
+        subject = COALESCE(NULLIF(?,''), subject),
+        court_branch = COALESCE(NULLIF(?,''), court_branch),
+        judge_name = COALESCE(NULLIF(?,''), judge_name),
+        distribution_date = COALESCE(NULLIF(?,''), distribution_date),
+        valor_causa = COALESCE(NULLIF(?,''), valor_causa),
+        situacao = COALESCE(NULLIF(?,''), situacao),
+        fase = COALESCE(NULLIF(?,''), fase),
+        updated_at = ?
+      WHERE id = ?`).run(
+      pd.class_name && pd.class_name !== 'Ação Judicial' ? pd.class_name : '', pd.subject || '', pd.court_branch || '',
+      pd.judge_name || '', pd.distribution_date || '', pd.valor_causa || '', pd.situacao || '', pd.fase || '',
+      new Date().toISOString(), law.id);
+  }
+  // 2) Andamentos: grava só os NOVOS (dedupe por source_id).
+  const mv = await listarMovimentacoes({ numeroCnj: law.cnj_number });
+  if (typeof mv.creditos === 'number') { creditos += mv.creditos; registrarGasto('atualizar_andamentos', mv.creditos); }
+  let novos = 0;
+  if (mv.ok && Array.isArray(mv.itens) && mv.itens.length) {
+    novos = inserirMovimentacoes(law.id, mv.itens.map(movimentacaoParaMovimento));
+  }
+  if (novos > 0) { try { reconcileDeadlinesToCalendar(); } catch { /* best-effort */ } }
+  logAudit(req, { event_type: 'RADAR', event_name: 'ATUALIZAR_PROCESSO', module: 'RADAR', resource_id: law.id, description: `Atualização do processo ${law.cnj_number}: ${novos} andamento(s) novo(s).` });
+  return res.json({ success: true, novos_andamentos: novos, creditos });
 });
 
 /** DELETE /api/radar/monitoramentos/:id — remove um monitoramento. */

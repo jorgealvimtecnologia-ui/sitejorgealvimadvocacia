@@ -22,8 +22,15 @@ const { createSession } = await import('../src/middleware/auth.js');
 const svc = await import('../src/modules/deadline-alerts/deadline-alerts.service.js');
 const { runAlertsNow, startDeadlineAlerts } = await import('../src/modules/deadline-alerts/deadline-alerts.routes.js');
 
-const NOW = new Date('2026-10-05T13:00:00Z'); // 10:00 em Brasília
-const day = (o) => new Date(Date.UTC(2026, 9, 5 + o)).toISOString().slice(0, 10);
+// Data-base = a PRÓXIMA segunda-feira (inclui hoje se for segunda), para manter dias úteis
+// determinísticos e os prazos sempre no futuro — assim o teste não "vence" com a virada do relógio.
+const NOW = (() => {
+  const d = new Date(); d.setUTCHours(13, 0, 0, 0);
+  const dow = d.getUTCDay();                 // 0=dom … 6=sáb
+  d.setUTCDate(d.getUTCDate() + (dow === 1 ? 0 : (8 - dow) % 7));
+  return d;
+})();
+const day = (o) => { const d = new Date(NOW); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + o); return d.toISOString().slice(0, 10); };
 const ts = new Date().toISOString();
 const bearer = (t) => ({ Authorization: `Bearer ${t}` });
 

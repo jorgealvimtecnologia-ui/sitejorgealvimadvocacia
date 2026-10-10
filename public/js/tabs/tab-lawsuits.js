@@ -288,6 +288,7 @@
                   <span>Andamentos & Prazos Judiciais (${movCount}):</span>
                 </span>
                 <span class="flex items-center gap-3">
+                  ${law.cnj_number ? `<button type="button" id="radar-upd-${law.id}" onclick="atualizarProcessoRadar('${law.id}')" class="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline" title="Re-busca os andamentos novos no Escavador (consome crédito)">🔄 Atualizar andamentos</button>` : ''}
                   <button type="button" onclick="previewClientPortal('${law.id}')" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline">👁️ Ver como o cliente vê</button>
                   <button type="button" onclick="publishAllToClient('${law.id}', true)" class="text-[11px] font-bold text-slate-600 hover:text-slate-900 underline">Publicar todos</button>
                 </span>
@@ -903,6 +904,28 @@
       } catch (e) { alert('Erro ao conectar ao servidor.'); }
     }
 
+    // Atualiza o processo pelo Radar (Escavador): re-busca andamentos novos (dedupe) — custa crédito.
+    async function atualizarProcessoRadar(lawsuitId) {
+      const btn = document.getElementById('radar-upd-' + lawsuitId);
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Atualizando…'; }
+      try {
+        const res = await fetch(`/api/radar/atualizar-processo/${lawsuitId}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.success) {
+          if (typeof showToast === 'function') showToast(d.novos_andamentos ? `${d.novos_andamentos} andamento(s) novo(s).` : 'Já estava em dia.', 'success');
+          await loadLawsuits();
+        } else {
+          alert('Não foi possível atualizar: ' + (d.error || 'erro'));
+          if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar andamentos'; }
+        }
+      } catch (e) {
+        alert('Erro ao conectar ao servidor.');
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 Atualizar andamentos'; }
+      }
+    }
+
     function _esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
     async function previewClientPortal(lawsuitId) {
@@ -935,6 +958,7 @@
   window.toggleMovementClientVisible = toggleMovementClientVisible;
   window.publishAllToClient = publishAllToClient;
   window.previewClientPortal = previewClientPortal;
+  window.atualizarProcessoRadar = atualizarProcessoRadar;
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;
