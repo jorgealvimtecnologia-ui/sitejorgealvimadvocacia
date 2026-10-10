@@ -1888,20 +1888,11 @@
                   ></textarea>
                 </div>
 
-                <!-- Anexos: acompanham a mensagem enviada para a caixa de leads -->
-                <div>
-                  <label for="lead-quick-files" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Anexar Arquivos <span class="text-slate-400 text-[11px] font-normal">(opcional • até 10 arquivos, 50MB cada)</span>
-                  </label>
-                  <input
-                    type="file"
-                    id="lead-quick-files"
-                    name="documents"
-                    multiple
-                    onchange="updateQuickLeadFileList()"
-                    class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-gold-300 file:bg-gold-50 file:text-gold-800 file:font-bold file:text-xs hover:file:bg-gold-100 file:cursor-pointer cursor-pointer rounded-xl border border-slate-300 bg-slate-50/50 py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-gold-500"
-                  />
-                  <ul id="lead-quick-files-list" class="mt-1.5 space-y-0.5"></ul>
+                <!-- Documentos NÃO são enviados por aqui: após o primeiro contato, o escritório
+                     manda um link seguro para o cliente anexar (protege o servidor e os dados). -->
+                <div class="rounded-xl border border-gold-200 bg-gold-50/50 px-3 py-2 text-[11px] text-slate-600 flex items-start gap-2">
+                  <span>📎</span>
+                  <span>Não precisa anexar documentos agora. Após este primeiro contato, enviaremos um <strong>link seguro</strong> para você anexar seus arquivos com tranquilidade.</span>
                 </div>
 
                 <p class="text-[11px] text-slate-500 flex items-center space-x-1.5 pt-1">
@@ -2462,81 +2453,6 @@
       defaultMessage: 'Olá! Gostaria de agendar uma consulta jurídica com o Dr. Jorge Alvim.'
     };
 
-    let selectedFiles = [];
-
-    function addFiles(filesList) {
-      if (!filesList || filesList.length === 0) return;
-      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-      let hasOversized = false;
-
-      Array.from(filesList).forEach(file => {
-        if (file.size > MAX_FILE_SIZE) {
-          hasOversized = true;
-          return;
-        }
-        // Evita duplicatas exatas
-        const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
-        if (!exists) {
-          selectedFiles.push(file);
-        }
-      });
-
-      if (hasOversized) {
-        alert('Alguns arquivos excederam o limite de 50MB e não foram adicionados.');
-      }
-
-      renderSelectedFiles();
-    }
-
-    function handleFilesSelect(input) {
-      if (input.files) {
-        addFiles(input.files);
-        input.value = ''; // Permite selecionar o mesmo arquivo novamente se desejar
-      }
-    }
-
-    function renderSelectedFiles() {
-      const container = document.getElementById('selected-files-list');
-      if (!container) return;
-      if (selectedFiles.length === 0) {
-        container.innerHTML = '';
-        return;
-      }
-
-      container.innerHTML = selectedFiles.map((file, index) => {
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|heic|heif|jfif)$/i.test(file.name);
-        
-        let previewHtml = `<span class="text-gold-600 font-bold flex-shrink-0 text-base">📄</span>`;
-        if (isImage) {
-          try {
-            const previewUrl = URL.createObjectURL(file);
-            previewHtml = `<img loading="lazy" decoding="async"src="${previewUrl}" alt="Preview" class="w-8 h-8 rounded-lg object-cover border border-slate-200 flex-shrink-0" />`;
-          } catch(e) {
-            previewHtml = `<span class="text-gold-600 font-bold flex-shrink-0 text-base">🖼️</span>`;
-          }
-        }
-
-        return `
-          <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200 text-xs shadow-sm hover:border-gold-300 transition-all">
-            <div class="flex items-center space-x-2.5 truncate pr-2">
-              ${previewHtml}
-              <span class="font-semibold text-slate-800 truncate text-[11px] sm:text-xs">${file.name}</span>
-              <span class="text-slate-400 text-[10px] sm:text-[11px] flex-shrink-0">(${sizeMb} MB)</span>
-            </div>
-            <button type="button" onclick="removeFile(${index})" aria-label="Remover arquivo ${file.name}" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-base leading-none transition-colors" title="Remover Arquivo">
-              &times;
-            </button>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function removeFile(index) {
-      selectedFiles.splice(index, 1);
-      renderSelectedFiles();
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Header Scroll
       const header = document.getElementById('main-header');
@@ -2607,36 +2523,6 @@
         });
       }
 
-      // 4. Suporte Avançado a Drag & Drop de Arquivos e Fotos
-      const dropzone = document.getElementById('dropzone-container');
-      if (dropzone) {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-          dropzone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-          dropzone.addEventListener(eventName, () => {
-            dropzone.classList.add('border-gold-500', 'bg-gold-50/50', 'scale-[1.01]');
-          }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-          dropzone.addEventListener(eventName, () => {
-            dropzone.classList.remove('border-gold-500', 'bg-gold-50/50', 'scale-[1.01]');
-          }, false);
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-          const dt = e.dataTransfer;
-          if (dt && dt.files && dt.files.length > 0) {
-            addFiles(dt.files);
-          }
-        }, false);
-      }
-
       // Google reCAPTCHA v3 (obtenção de token transparente para proteção anti-robô)
       window.getRecaptchaToken = async function(action = 'lead_submit') {
         if (typeof window.grecaptcha === 'undefined' || !window.__RECAPTCHA_SITE_KEY) return null;
@@ -2698,9 +2584,8 @@
             formData.append('area', area);
             formData.append('message', message);
 
-            selectedFiles.forEach(file => {
-              formData.append('documents', file);
-            });
+            // Documentos NÃO são enviados por este formulário público (evita encher o servidor).
+            // O escritório envia um link seguro depois, para o cliente anexar.
 
             // Token Google reCAPTCHA v3 (se habilitado)
             if (typeof window.getRecaptchaToken === 'function') {
@@ -2736,9 +2621,6 @@
           if (city) msg += `*Cidade/UF:* ${city}\n`;
           msg += `*Área de Interesse:* ${area}\n`;
           if (message) msg += `*Resumo:* ${message}\n`;
-          if (selectedFiles.length > 0) {
-            msg += `*Documentos Anexados:* ${selectedFiles.length} arquivo(s) salvos no ficheiro do escritório\n`;
-          }
           msg += `\n_Juiz de Fora - MG | jorgealvimadvocacia.com.br_`;
 
           const encoded = encodeURIComponent(msg);
@@ -2754,8 +2636,6 @@
 
           // Limpa o formulário
           form.reset();
-          selectedFiles = [];
-          renderSelectedFiles();
         });
       }
     });
@@ -2794,17 +2674,13 @@
 
       let clientId = 'JA-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
 
-      const fileInput = document.getElementById('lead-quick-files');
-      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
-
       try {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('phone', phone);
         formData.append('area', area);
         formData.append('message', message || 'Solicitação de Consulta Express via site principal.');
-        // Anexos: enviados junto com o lead (campo "documents", lido pelo backend).
-        files.forEach(file => formData.append('documents', file));
+        // Documentos NÃO são enviados por este formulário público (o escritório manda link seguro depois).
 
         // Token Google reCAPTCHA v3 (se habilitado)
         if (typeof window.getRecaptchaToken === 'function') {
@@ -2837,9 +2713,6 @@
       if (message) {
         waText += `*Resumo do Caso:* ${message}\n`;
       }
-      if (files.length) {
-        waText += `*Anexos enviados ao escritório:* ${files.length} arquivo(s)\n`;
-      }
       waText += `\n_Juiz de Fora - MG | Atendimento Online em Todo o Brasil_`;
 
       const encoded = encodeURIComponent(waText);
@@ -2860,44 +2733,11 @@
       window.open(waUrl, '_blank');
     }
 
-    // Mostra os arquivos selecionados abaixo do campo de anexos (com validação leve).
-    function updateQuickLeadFileList() {
-      const input = document.getElementById('lead-quick-files');
-      const list = document.getElementById('lead-quick-files-list');
-      if (!input || !list) return;
-      const files = input.files ? Array.from(input.files) : [];
-      const MAX_FILES = 10;
-      const MAX_SIZE = 50 * 1024 * 1024; // 50MB por arquivo (igual ao backend)
-
-      if (files.length > MAX_FILES) {
-        alert(`Você pode anexar no máximo ${MAX_FILES} arquivos.`);
-        input.value = '';
-        list.innerHTML = '';
-        return;
-      }
-      const oversized = files.find(f => f.size > MAX_SIZE);
-      if (oversized) {
-        alert(`O arquivo "${oversized.name}" excede o limite de 50MB.`);
-        input.value = '';
-        list.innerHTML = '';
-        return;
-      }
-
-      list.innerHTML = files.map(f => {
-        const kb = f.size / 1024;
-        const sizeStr = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB';
-        const safeName = f.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<li class="text-[11px] text-slate-600 flex items-center gap-1.5"><span>📎</span><span class="truncate">${safeName}</span><span class="text-slate-400">(${sizeStr})</span></li>`;
-      }).join('');
-    }
-
     function resetQuickLeadForm() {
       const formContainer = document.getElementById('quick-lead-form-container');
       const successCard = document.getElementById('quick-lead-success');
       const form = document.getElementById('quick-lead-form');
       if (form) form.reset();
-      const list = document.getElementById('lead-quick-files-list');
-      if (list) list.innerHTML = '';
       if (successCard) successCard.classList.add('hidden');
       if (formContainer) formContainer.classList.remove('hidden');
     }

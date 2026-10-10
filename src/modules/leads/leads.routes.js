@@ -110,7 +110,7 @@ function ensureClientFromLead(lead, performer) {
 leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
   req.clientId = generateNextClientId();
   next();
-}, uploadClientDoc.array('documents', 10), leadHoneypot, requireRecaptcha('lead_submit'), (req, res) => {
+}, uploadClientDoc.none(), leadHoneypot, requireRecaptcha('lead_submit'), (req, res) => {
   try {
     const { name, phone, area, message, email, cpf, city, social_media, website, google_business } = req.body;
     const clientId = req.clientId;
