@@ -88,7 +88,7 @@ export const RULES = [
   [/^\/api\/offices(\/|$)/, tab('tab_offices')],
   [/^\/api\/(judicial|juridico|radar)(\/|$)/, tab('tab_radar')],
   [/^\/api\/(admin-requests|adminrequests)(\/|$)/, tab('tab_lawsuits')],
-  [/^\/api\/(meta-ads|explorer)(\/|$)/, tab('tab_settings')],
+  [/^\/api\/(meta-ads|explorer)(\/|$)/, tab('tab_blog')],   // Marketing/Meta Ads andam junto do blog (tab_blog herda tab_settings: mestre/sócio/gerente mantêm acesso)
 
   // ---- Administração do site e do sistema: a MESMA aba que libera o menu libera a API ----
   // (antes, /api/admin/* era "qualquer operador logado": o menu escondia a aba, mas o servidor deixava uma

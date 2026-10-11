@@ -21,9 +21,19 @@
 > (campo `responsible_user_id` no PUT). Regra central em `src/middleware/data-scope.js`, aplicada em todas as rotas de
 > `src/modules/lawsuits/lawsuits.routes.js`; testes em `tests/data-scope.test.js`.
 >
-> **Parte 2 — ainda a fazer:** estender o mesmo escopo a clientes e às publicações/Radar; criar as 13 novas funções como
-> perfis na matriz (hoje são 8); e a matriz como dados editável pelo mestre. (O portal do cliente já mostra só os dados do
-> próprio cliente, por sessão separada.)
+> **Parte 2 — as 17 funções FEITO (11/10/2026):** as funções que faltavam foram criadas como perfis na matriz
+> (`src/modules/access/access.routes.js` → `ROLE_TEMPLATES`): além das 8 anteriores, agora existem **advogado sócio,
+> chefe e auxiliar de RH, chefe e auxiliar do financeiro, chefe de marketing, chefe e auxiliar de sistema de informação,
+> serviços gerais e motoboy** — 17 funções no total (+ `sem_perfil` e `cliente`). O teste por função
+> (`tests/rbac-per-role.test.js`) lê os perfis da própria matriz e **já valida cada um** (rotas liberadas/negadas,
+> nenhum número de área bloqueada no painel, e o menu batendo com as abas). Detalhe de segurança: **marketing** recebe o
+> **blog e o Meta Ads** (via `tab_blog`, concedido explicitamente) **sem** herdar os **logs de auditoria** de
+> "Configurações"; **TI** administra o sistema (Configurações/auditoria) mas **não** vê clientes/processos/financeiro, e
+> **Usuários & Senhas continua só do mestre** (`/api/users` é MASTER). `roleFromPosition` reconhece os novos cargos.
+>
+> **Parte 2 — ainda a fazer:** estender o escopo de dados (hoje aplicado aos PROCESSOS) também a **clientes** e
+> **publicações/Radar** — isso é a ordem P1 "Escopo de dados e somente leitura"; e tornar a matriz **dados editáveis**
+> pelo mestre (hoje os perfis são modelos no código). (O portal do cliente já mostra só os dados do próprio cliente.)
 
 ## 1. Como funciona hoje (verificado no código)
 

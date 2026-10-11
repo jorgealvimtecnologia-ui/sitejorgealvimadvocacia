@@ -201,9 +201,24 @@ export function roleFromPosition(position) {
   if (!pos) return 'sem_perfil';
   if (/estagi/.test(pos)) return 'estagiario';
   if (/secret|recepc|atendiment/.test(pos)) return 'secretaria';
-  if (/motorist|motoboy|externo|entreg/.test(pos)) return 'motorista';
-  if (/gerente|financ|administrativ|contab|dp\b|departamento pessoal/.test(pos)) return 'gerente';
+  // Entregas / transporte (motoboy antes de motorista).
+  if (/motoboy|entregador/.test(pos)) return 'motoboy';
+  if (/motorist|externo/.test(pos)) return 'motorista';
+  if (/servi[cç]os?\s*gerais|limpeza|zelador|faxin|copeir/.test(pos)) return 'servicos_gerais';
+  // Auxiliares de área (antes dos chefes e dos genéricos).
+  if (/auxiliar.*(rh|recursos humanos|pessoal)/.test(pos)) return 'auxiliar_rh';
+  if (/auxiliar.*(financ|cont[aá]bil|cobran)/.test(pos)) return 'auxiliar_financeiro';
+  if (/auxiliar.*(ti\b|tecnologia|sistema|inform[aá]tic)/.test(pos)) return 'auxiliar_ti';
+  // Chefes de área (exigem "chefe/coordenador/diretor", para não capturar palavras genéricas).
+  if (/(chefe|coorden|diretor).*(rh|recursos humanos|pessoal)/.test(pos)) return 'chefe_rh';
+  if (/(chefe|coorden|diretor).*(financ|cont[aá]bil)/.test(pos)) return 'chefe_financeiro';
+  if (/marketing|publicidad|comunica[cç][aã]o social|(chefe|coorden|diretor).*(m[ií]dia|comunica)/.test(pos)) return 'chefe_marketing';
+  if (/tecnologia da informa|(chefe|coorden|diretor).*(ti\b|tecnologia|sistema|inform[aá]tic)/.test(pos)) return 'chefe_ti';
+  // Advogados: sócio (sem ser titular/proprietário) vs proprietário/titular.
+  if (/s[oó]cio/.test(pos) && !/titular|propriet/.test(pos)) return 'advogado_socio';
   if (/s[oó]ci|titular|propriet/.test(pos)) return 'dono_escritorio';
+  // Fallbacks legados (preservam o comportamento anterior).
+  if (/gerente|financ|administrativ|contab|dp\b|departamento pessoal/.test(pos)) return 'gerente';
   if (/advog|jur[ií]dic/.test(pos)) return 'advogado';
   return 'sem_perfil';
 }
@@ -300,6 +315,151 @@ const ROLE_TEMPLATES = {
       tab_users: 0, tab_settings: 0
     }
   },
+  // ─── Funções acrescentadas para completar as 17 do Dr. Jorge (AUD-27) ───
+  // 3) Advogado sócio: trabalha o escritório inteiro e VÊ o financeiro (decisão do Dr. Jorge 04/10),
+  //    mas sem RH, usuários nem configurações.
+  advogado_socio: {
+    key: 'advogado_socio',
+    name: 'Advogado Sócio',
+    badge_label: '🤝 Sócio',
+    badge_class: 'bg-emerald-100 text-emerald-950 border-emerald-400 font-bold',
+    data_scope: 'office',
+    tabs: {
+      tab_leads: 1, tab_clients: 1, tab_lawsuits: 1, tab_radar: 1,
+      tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 1,
+      tab_hr: 0, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 7) Chefe de RH: folha completa (decisão do Dr. Jorge). Sem clientes/processos/financeiro.
+  chefe_rh: {
+    key: 'chefe_rh',
+    name: 'Chefe de RH',
+    badge_label: '🧑‍💼 Chefe de RH',
+    badge_class: 'bg-blue-100 text-blue-900 border-blue-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 1, tab_drive: 1, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 1, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 8) Chefe do setor financeiro: financeiro (com NF-e/assinaturas por herança) e clientes para cobrança.
+  chefe_financeiro: {
+    key: 'chefe_financeiro',
+    name: 'Chefe do Setor Financeiro',
+    badge_label: '💰 Chefe Financeiro',
+    badge_class: 'bg-amber-100 text-amber-900 border-amber-300 font-semibold',
+    data_scope: 'office',
+    tabs: {
+      tab_leads: 0, tab_clients: 1, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 1, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 9) Chefe de comunicação/marketing: blog e Meta Ads (decisão do Dr. Jorge). O blog é concedido
+  //    de forma EXPLÍCITA (granular) para NÃO herdar os logs de auditoria que vêm de "Configurações".
+  chefe_marketing: {
+    key: 'chefe_marketing',
+    name: 'Chefe de Comunicação e Marketing',
+    badge_label: '📣 Marketing',
+    badge_class: 'bg-pink-100 text-pink-900 border-pink-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 1, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 1, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    },
+    granular: { tab_blog: 1, tab_audit: 0 }
+  },
+  // 10) Chefe de sistema de informação: administra o sistema (Configurações, auditoria), mas NÃO vê
+  //     clientes/processos/financeiro (sigilo profissional). Usuários continua só do mestre.
+  chefe_ti: {
+    key: 'chefe_ti',
+    name: 'Chefe de Sistema de Informação',
+    badge_label: '🖥️ TI',
+    badge_class: 'bg-slate-200 text-slate-900 border-slate-400 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 1
+    }
+  },
+  // 12) Serviços gerais: só o portal do colaborador.
+  servicos_gerais: {
+    key: 'servicos_gerais',
+    name: 'Serviços Gerais',
+    badge_label: '🧹 Serviços Gerais',
+    badge_class: 'bg-slate-100 text-slate-700 border-slate-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 0, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 13) Motoboy: a agenda dele e o portal do colaborador.
+  motoboy: {
+    key: 'motoboy',
+    name: 'Motoboy / Entregas',
+    badge_label: '🏍️ Motoboy',
+    badge_class: 'bg-slate-200 text-slate-800 border-slate-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 14) Auxiliar de RH: apoia o RH (sem a visão completa de folha do chefe).
+  auxiliar_rh: {
+    key: 'auxiliar_rh',
+    name: 'Auxiliar de RH',
+    badge_label: '🧑‍💼 Auxiliar de RH',
+    badge_class: 'bg-blue-50 text-blue-800 border-blue-200 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 1, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 1, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 15) Auxiliar do setor financeiro: apoia o financeiro.
+  auxiliar_financeiro: {
+    key: 'auxiliar_financeiro',
+    name: 'Auxiliar do Setor Financeiro',
+    badge_label: '💰 Auxiliar Financeiro',
+    badge_class: 'bg-amber-50 text-amber-800 border-amber-200 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 1, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 0
+    }
+  },
+  // 16) Auxiliar de sistema de informação: apoia a TI (Configurações), sem dados de clientes.
+  auxiliar_ti: {
+    key: 'auxiliar_ti',
+    name: 'Auxiliar de Sistema de Informação',
+    badge_label: '🖥️ Auxiliar de TI',
+    badge_class: 'bg-slate-100 text-slate-800 border-slate-300 font-semibold',
+    data_scope: 'assigned',
+    tabs: {
+      tab_leads: 0, tab_clients: 0, tab_lawsuits: 0, tab_radar: 0,
+      tab_offices: 0, tab_drive: 0, tab_calendar: 1, tab_publications: 0,
+      tab_hr: 0, tab_financial: 0, tab_colaborador: 1, tab_portal_cliente: 0,
+      tab_users: 0, tab_settings: 1
+    }
+  },
   // Quem NÃO se encaixa em nenhuma função fica SEM acesso até o mestre escolher o perfil
   // (antes caía no perfil Advogado: processos, radar, drive, agenda... sem ninguém ter decidido).
   sem_perfil: {
@@ -329,6 +489,18 @@ const ROLE_TEMPLATES = {
     }
   }
 };
+
+// Abas granulares que um perfil pode fixar EXPLICITAMENTE (as demais herdam das legadas).
+const GRANULARES_PERMITIDAS = new Set(['tab_nfse', 'tab_esign', 'tab_blog', 'tab_audit', 'tab_alerts', 'tab_dashboard', 'tab_kanban', 'tab_tools']);
+
+/** Aplica os ajustes granulares EXPLÍCITOS de um perfil (tpl.granular), com whitelist de colunas. */
+function aplicarGranulares(userId, tpl) {
+  if (!tpl || !tpl.granular) return;
+  for (const [k, v] of Object.entries(tpl.granular)) {
+    if (!GRANULARES_PERMITIDAS.has(k)) continue; // só colunas conhecidas (evita SQL dinâmico inseguro)
+    db.prepare(`UPDATE access_permissions SET ${k} = ? WHERE user_id = ?`).run(v ? 1 : 0, userId);
+  }
+}
 
 export function syncAllAccessPermissions() {
   try {
@@ -386,6 +558,7 @@ export function syncAllAccessPermissions() {
           tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
           tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, tpl.name, now, now
         );
+        aplicarGranulares(u.id, tpl);
       } else if (isMaster) {
         // Enforce God Mode para Dr. Jorge Alvim
         db.prepare(`
@@ -414,6 +587,9 @@ export function syncAllAccessPermissions() {
           tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
           tpl.tabs.tab_users, tpl.tabs.tab_settings, tpl.data_scope, tpl.name, now, u.id
         );
+        // Troca de perfil re-zera as granulares (volta a herdar) e aplica os ajustes do novo perfil.
+        db.prepare(`UPDATE access_permissions SET tab_nfse = NULL, tab_esign = NULL, tab_blog = NULL, tab_audit = NULL, tab_alerts = NULL, tab_dashboard = NULL, tab_kanban = NULL, tab_tools = NULL WHERE user_id = ?`).run(u.id);
+        aplicarGranulares(u.id, tpl);
       }
     }
 
@@ -441,6 +617,7 @@ export function syncAllAccessPermissions() {
           tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
           tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, `${emp.position} (${emp.contract_type})`, now, now
         );
+        aplicarGranulares(emp.id, tpl);
       }
     }
 
@@ -485,16 +662,26 @@ accessRouter.get('/api/access-control/matrix', requireAuth, (req, res) => {
     const rows = db.prepare(`
       SELECT * FROM access_permissions 
       ORDER BY 
-        CASE 
+        CASE
           WHEN role_template = 'master' THEN 1
           WHEN role_template = 'dono_escritorio' THEN 2
-          WHEN role_template = 'advogado' THEN 3
-          WHEN role_template = 'estagiario' THEN 4
-          WHEN role_template = 'gerente' THEN 5
+          WHEN role_template = 'advogado_socio' THEN 3
+          WHEN role_template = 'advogado' THEN 4
+          WHEN role_template = 'estagiario' THEN 5
           WHEN role_template = 'secretaria' THEN 6
-          WHEN role_template = 'motorista' THEN 7
-          WHEN role_template = 'cliente' THEN 8
-          ELSE 9
+          WHEN role_template = 'chefe_rh' THEN 7
+          WHEN role_template = 'auxiliar_rh' THEN 8
+          WHEN role_template = 'chefe_financeiro' THEN 9
+          WHEN role_template = 'auxiliar_financeiro' THEN 10
+          WHEN role_template = 'gerente' THEN 11
+          WHEN role_template = 'chefe_marketing' THEN 12
+          WHEN role_template = 'chefe_ti' THEN 13
+          WHEN role_template = 'auxiliar_ti' THEN 14
+          WHEN role_template = 'motorista' THEN 15
+          WHEN role_template = 'motoboy' THEN 16
+          WHEN role_template = 'servicos_gerais' THEN 17
+          WHEN role_template = 'cliente' THEN 18
+          ELSE 19
         END, user_name ASC
     `).all();
 
@@ -502,9 +689,9 @@ accessRouter.get('/api/access-control/matrix', requireAuth, (req, res) => {
       total: rows.length,
       active: rows.filter(r => r.is_active === 1).length,
       masters: rows.filter(r => r.role_template === 'master' || r.role_template === 'dono_escritorio').length,
-      lawyers: rows.filter(r => r.role_template === 'advogado').length,
+      lawyers: rows.filter(r => ['advogado', 'advogado_socio'].includes(r.role_template)).length,
       interns: rows.filter(r => r.role_template === 'estagiario').length,
-      staff: rows.filter(r => ['secretaria', 'gerente', 'motorista'].includes(r.role_template)).length,
+      staff: rows.filter(r => ['secretaria', 'gerente', 'motorista', 'motoboy', 'servicos_gerais', 'chefe_rh', 'auxiliar_rh', 'chefe_financeiro', 'auxiliar_financeiro', 'chefe_marketing', 'chefe_ti', 'auxiliar_ti'].includes(r.role_template)).length,
       clients: rows.filter(r => r.role_template === 'cliente').length
     };
 
@@ -636,6 +823,9 @@ accessRouter.post('/api/access-control/apply-template', requireAuth, (req, res) 
     );
     // Aplicar um perfil modelo volta as abas granulares a "herdar" (o perfil define tudo de novo)
     db.prepare(`UPDATE access_permissions SET tab_nfse = NULL, tab_esign = NULL, tab_blog = NULL, tab_audit = NULL, tab_alerts = NULL, tab_dashboard = NULL, tab_kanban = NULL, tab_tools = NULL WHERE user_id = ?`).run(user_id);
+    // ...e então aplica os ajustes granulares EXPLÍCITOS do perfil (ex.: marketing recebe o blog
+    // sem herdar a auditoria de "Configurações").
+    aplicarGranulares(user_id, tpl);
 
     logAudit(req, {
       event_type: 'ALTERACAO_PERMISSAO',

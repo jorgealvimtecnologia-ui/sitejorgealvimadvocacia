@@ -139,7 +139,7 @@ const AREA_ABA = {
   '/api/hr/': 'tab_hr', '/api/financial': 'tab_financial', '/api/nfse': 'tab_nfse', '/api/esign/requests': 'tab_esign',
   '/api/dashboard': 'tab_dashboard', '/api/kanban': 'tab_kanban', '/api/notifications': 'tab_alerts',
   '/api/admin/audit-logs': 'tab_audit', '/api/lgpd': 'tab_audit', '/api/admin/blog': 'tab_blog', '/api/admin/site': 'tab_blog',
-  '/api/meta-ads': 'tab_settings', '/api/explorer': 'tab_settings',
+  '/api/meta-ads': 'tab_blog', '/api/explorer': 'tab_blog',
 };
 const SO_MESTRE = ['/api/users', '/api/admin/maintenance', '/api/admin/backup', '/api/admin/roadmap', '/api/admin/qa', '/api/deadline-alerts', '/api/access-control/matrix'];
 
