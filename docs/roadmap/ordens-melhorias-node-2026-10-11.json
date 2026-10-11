@@ -1,0 +1,26 @@
+{
+  "_comentario": "Melhorias por cima do stack Node (decisão do Dr. Jorge 11/10: ficar no Node, NÃO migrar para Laravel). Registrar no site com: npm run roadmap:register-batch -- docs/roadmap/ordens-melhorias-node-2026-10-11.json --aplicar (requer ROADMAP_AGENT_KEY no .env). Seguro repetir: títulos já existentes são pulados.",
+  "ordens": [
+    {
+      "ref": "MELHORIA-01",
+      "titulo": "Tempo real no foguete: mensagens e sininho ao vivo (WebSocket/SSE)",
+      "prioridade": "P1",
+      "descricao": "Hoje cliente e escritório precisam recarregar a página para ver mensagem nova ou o aviso do sino. O Node é forte em tempo real: com WebSocket ou SSE, a conversa do portal e as notificações do painel atualizam na hora, sem recarregar. É a melhoria de maior valor percebido para a aba de mensagens que acabamos de criar.",
+      "criterios": "Nova mensagem do cliente aparece no painel do advogado responsável/dono/secretária em segundos, sem recarregar; a resposta do escritório aparece no portal do cliente sem recarregar; o sino de notificações atualiza o número em tempo real; funciona atrás do nginx (proxy de WebSocket) e cai de volta para recarregar manual se a conexão falhar; nada de andamento automático ao cliente (mantém a regra atual)."
+    },
+    {
+      "ref": "MELHORIA-02",
+      "titulo": "Fila de tarefas em segundo plano (e-mail, WhatsApp, Escavador, backup) com repetição automática",
+      "prioridade": "P2",
+      "descricao": "Envios de e-mail/WhatsApp, sincronizações do Escavador e backups rodam dentro do pedido e, se falham, se perdem ou travam a tela. Uma fila de tarefas (ex.: BullMQ) coloca esses trabalhos numa esteira que tenta de novo sozinha e não prende o painel.",
+      "criterios": "E-mails, WhatsApp e sincronizações do Escavador saem por uma fila com nova tentativa automática em caso de falha; o painel responde na hora (não espera o envio); há visão simples de pendências/falhas; backups entram na mesma esteira."
+    },
+    {
+      "ref": "MELHORIA-03",
+      "titulo": "Cache de consultas para cortar custo do Escavador",
+      "prioridade": "P2",
+      "descricao": "Cada chamada à API do Escavador é paga. Reexibir dado já salvo já é grátis (feito), mas buscas repetidas de origens/saldo/mesmo processo em curto intervalo ainda gastam. Um cache com validade curta evita repetir a mesma chamada paga.",
+      "criterios": "Chamadas idênticas ao Escavador num curto intervalo (ex.: origens, saldo, mesmo CNJ) são servidas do cache, sem nova cobrança; o cache tem validade configurável e pode ser limpo; relatório simples de quantas chamadas foram economizadas."
+    }
+  ]
+}
