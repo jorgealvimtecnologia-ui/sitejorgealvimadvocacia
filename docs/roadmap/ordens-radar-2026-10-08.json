@@ -13,7 +13,8 @@
       "titulo": "Radar: limpar intimações fictícias (OABs de terceiros) da lista de Intimações",
       "prioridade": "P1",
       "descricao": "A aba Intimações & DJEN ainda mostra intimações de advogados fictícios da RHABAC (ex.: OAB 165430/Dr. Roberto Medeiros Fonseca), que não são do Dr. Jorge. Script limpar-demo.js já existe.",
-      "criterios": "Após a limpeza, só aparecem intimações da OAB do Dr. Jorge (222943/MG); nenhuma publicação de OAB de terceiro na lista; backup do banco feito antes de aplicar."
+      "criterios": "Após a limpeza, só aparecem intimações da OAB do Dr. Jorge (222943/MG); nenhuma publicação de OAB de terceiro na lista; backup do banco feito antes de aplicar.",
+      "estado": "Limpeza ja roteirizada em scripts/limpar-demo.js: apaga court_publications cuja advogado_oab NAO contem a OAB do Dr. Jorge (KEEP_OAB=222943) e preserva as da OAB dele + processos/clientes importados do Radar. RODAR NO SERVIDOR: cp leads.db leads.db.bak; node scripts/limpar-demo.js (simula); depois node scripts/limpar-demo.js --aplicar. Feito isso, so aparecem intimacoes da OAB 222943/MG."
     },
     {
       "ref": "RADAR-03",
