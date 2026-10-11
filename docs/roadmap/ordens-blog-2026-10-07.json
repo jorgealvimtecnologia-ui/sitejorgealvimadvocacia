@@ -1,0 +1,89 @@
+{
+  "_comentario": "Ordens do Roadmap Vivo (blog cluster golpes/Marco Legal + ajustes do site). Registrar no site com: npm run roadmap:register-batch -- docs/roadmap/ordens-blog-2026-10-07.json --aplicar (requer ROADMAP_AGENT_KEY no .env).",
+  "ordens": [
+    {
+      "ref": "SITE-01",
+      "titulo": "Blog: nova categoria \"Direito do Marco Legal da Internet\"",
+      "prioridade": "P2",
+      "descricao": "Opção adicionada no seletor de Área/Categoria do blog (formulário de novo artigo e filtro do painel). Já implementado; validar em produção.",
+      "criterios": "A categoria aparece no seletor de categoria (novo artigo e filtro) e o artigo salva/filtra sem erro."
+    },
+    {
+      "ref": "SITE-02",
+      "titulo": "Site: Áreas de Atuação sem fotos de pessoas",
+      "prioridade": "P2",
+      "descricao": "Trocar fotos com pessoas por ilustrações temáticas sem pessoas nos boxes Civil & Contratos, Família, Trabalhista e Militar & Forças Armadas (brasão/estrela). Já implementado; conferir no ar.",
+      "criterios": "Nenhum box de Áreas de Atuação exibe pessoas; Civil usa contrato/documento, Militar usa alusão às Forças Armadas (sem pessoas)."
+    },
+    {
+      "ref": "BLOG-01",
+      "titulo": "Caí no golpe do Pix: o que fazer nas primeiras 48 horas para recuperar o dinheiro",
+      "prioridade": "P1",
+      "descricao": "Vítima, altíssima busca local, fecha o funil. Passo a passo: acionar banco e MED em até 80 dias, B.O. como representação, ação de indenização. Linka os dois pilares.",
+      "criterios": "Artigo publicado e indexado, otimizado para busca local (Juiz de Fora), com passo a passo das 48h, menção ao MED/80 dias e CTA de contato."
+    },
+    {
+      "ref": "BLOG-02",
+      "titulo": "Golpe do WhatsApp clonado / novo número: como agir e quando o banco deve devolver",
+      "prioridade": "P1",
+      "descricao": "Recuperação + responsabilidade bancária (Súmula 479 do STJ e exceções recentes). Conecta à área Bancária.",
+      "criterios": "Artigo publicado com passos de contenção, análise da Súmula 479 e exceções, e CTA; vinculado à categoria Bancária/Consumidor."
+    },
+    {
+      "ref": "BLOG-03",
+      "titulo": "Comprei em loja ou anúncio falso e não recebi o produto: seus direitos",
+      "prioridade": "P1",
+      "descricao": "Responsabilidade solidária do marketplace (CDC), estorno/chargeback, ação. Conecta à categoria Consumidor.",
+      "criterios": "Artigo publicado cobrindo responsabilidade solidária (CDC), chargeback e ação judicial, com CTA; categoria Consumidor."
+    },
+    {
+      "ref": "BLOG-04",
+      "titulo": "Fui difamado/caluniado nas redes sociais: como remover o conteúdo e processar o autor",
+      "prioridade": "P2",
+      "descricao": "Atualização do STF sobre o art. 19 do Marco Civil; notificação, remoção e queixa-crime (para honra, STF manteve exigência de ordem judicial). Liga ao pilar identificar autor.",
+      "criterios": "Artigo publicado com a posição atual do STF (art. 19 MCI), fluxo de remoção/queixa-crime e CTA; categoria Marco Legal da Internet."
+    },
+    {
+      "ref": "BLOG-05",
+      "titulo": "Responsabilidade dos bancos em golpes e fraudes: quando há direito à devolução",
+      "prioridade": "P2",
+      "descricao": "Súmula 479, fortuito interno, golpe do falso gerente/central. Tema jurídico forte e muito buscado.",
+      "criterios": "Artigo publicado explicando Súmula 479/fortuito interno com exemplos (falso gerente/central) e CTA; categoria Bancária."
+    },
+    {
+      "ref": "BLOG-06",
+      "titulo": "Vazamento de fotos íntimas: remoção urgente e responsabilização",
+      "prioridade": "P2",
+      "descricao": "Art. 21 do MCI (basta notificação extrajudicial à plataforma), urgência e crimes aplicáveis. Proteção à vítima; redação sóbria.",
+      "criterios": "Artigo publicado, redação sóbria, com o rito do art. 21 MCI (notificação extrajudicial), urgência e crimes aplicáveis, e CTA."
+    },
+    {
+      "ref": "BLOG-07",
+      "titulo": "Ata notarial passo a passo: onde e como fazer para blindar sua prova",
+      "prioridade": "P2",
+      "descricao": "Expande o que o artigo de provas resume, incluindo o e-Notariado. Pilar de apoio ao de Provas Digitais.",
+      "criterios": "Artigo publicado com passo a passo da ata notarial (presencial e e-Notariado), vinculado ao artigo de Provas Digitais, com CTA."
+    },
+    {
+      "ref": "BLOG-08",
+      "titulo": "LGPD e vazamento de dados: o que fazer se seus dados foram expostos",
+      "prioridade": "P2",
+      "descricao": "Direitos do titular, ANPD, indenização. Atrai também clientes pessoa jurídica.",
+      "criterios": "Artigo publicado cobrindo direitos do titular, ANPD e indenização, com CTA; atende PF e PJ."
+    },
+    {
+      "ref": "BLOG-09",
+      "titulo": "Golpe do empréstimo consignado / descontos indevidos do INSS",
+      "prioridade": "P2",
+      "descricao": "Ponte com Previdenciário, muito buscado por idosos.",
+      "criterios": "Artigo publicado orientando sobre consignado/descontos indevidos do INSS, com CTA; categoria Previdenciário."
+    },
+    {
+      "ref": "BLOG-10",
+      "titulo": "Golpe do falso leilão de veículos / Detran",
+      "prioridade": "P2",
+      "descricao": "Ponte com Trânsito/CNH.",
+      "criterios": "Artigo publicado alertando sobre falso leilão de veículos/Detran, com CTA; categoria Trânsito & CNH."
+    }
+  ]
+}

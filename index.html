@@ -143,7 +143,7 @@
         ],
         "sameAs": [
           "https://www.instagram.com/jorgealvim10advocacia",
-          "https://www.facebook.com/share/19ZCbAXv1F/",
+          "https://www.facebook.com/jorge.alvim.890022",
           "https://www.youtube.com/@JorgeAlvimAdvocacia"
         ]
       },
@@ -221,6 +221,7 @@
 
   <!-- Tailwind CSS CDN com Suporte a Breakpoint Extra Pequeno (xs) -->
   <link rel="stylesheet" href="/public/css/app.tailwind.css" />
+  <link rel="stylesheet" href="/public/css/a11y-fixes.css" />
   <script>
     window.tailwind = window.tailwind || {}; tailwind.config = {
       theme: {
@@ -370,6 +371,7 @@
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGoogleGsiLoaded && window.__onGoogleGsiLoaded()"></script>
   <script src="/js/google-auth-client.js" defer></script>
+  <script src="/js/core/attribution.js"></script>
 </head>
 
 <body class="bg-warm-50 text-slate-800 font-sans antialiased overflow-x-hidden w-full selection:bg-gold-500 selection:text-white">
@@ -458,6 +460,9 @@
             <span>Contato & Envio</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
+          <a href="/agendar" data-booking-link hidden class="relative px-3 py-2 rounded-lg font-bold text-gold-700 hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200">
+            <span>📅 Agendar consulta</span>
+          </a>
           <button onclick="openUniversalAuthModal('admin')" type="button" id="btn-open-universal-portal" class="text-xs text-navy-950 font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-50 via-gold-50 to-amber-100 hover:from-amber-100 hover:to-gold-200 border border-gold-300/80 hover:border-gold-400 transition-all duration-200 shadow-sm hover:shadow-md inline-flex items-center space-x-2 cursor-pointer group" title="Acesse com segurança seu Portal (Cliente, Colaborador ou Advogado)">
             <span class="text-sm">🏛️</span>
             <span class="tracking-tight text-navy-950 font-extrabold">Acessar Portais</span>
@@ -520,6 +525,7 @@
           </a>
           <a href="#faq" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Dúvidas Frequentes (FAQ)</a>
           <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Contato & Envio de Documentos</a>
+          <a href="/agendar" data-booking-link hidden class="mobile-nav-link text-gold-700 font-bold py-2 border-b border-slate-100 transition-colors">📅 Agendar consulta online</a>
           <button onclick="openUniversalAuthModal('client'); try{toggleMobileMenu(false)}catch(e){}" type="button" class="mobile-nav-link text-left text-navy-950 font-bold py-3 bg-gradient-to-r from-amber-50 to-gold-50 hover:from-gold-100 hover:to-amber-100 px-4 rounded-xl border border-gold-300 flex items-center justify-between cursor-pointer w-full shadow-sm">
             <div class="flex items-center space-x-2.5">
               <span class="text-lg">🏛️</span>
@@ -536,7 +542,7 @@
               <svg class="w-4 h-4 text-pink-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
               <span>Instagram</span>
             </a>
-            <a href="https://www.facebook.com/share/19ZCbAXv1F/" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-1.5 text-xs text-slate-600 hover:text-blue-600 font-medium py-1 px-2 rounded-md hover:bg-blue-50 transition-colors">
+            <a href="https://www.facebook.com/jorge.alvim.890022" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-1.5 text-xs text-slate-600 hover:text-blue-600 font-medium py-1 px-2 rounded-md hover:bg-blue-50 transition-colors">
               <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
               <span>Facebook</span>
             </a>
@@ -621,7 +627,7 @@
               </p>
             </div>
           </div>
-          <a href="/cliente" class="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center space-x-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all">
+          <a href="/cliente" class="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center space-x-1.5 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all">
             <span>Entrar Agora</span>
             <span>→</span>
           </a>
@@ -883,11 +889,14 @@
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
               <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-100">
-                <img loading="lazy" decoding="async"
-                  src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=70" 
-                  alt="Direito Civil e Assinatura de Contratos" 
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+                <div role="img" aria-label="Direito Civil e Contratos"
+                  class="w-full h-full bg-gradient-to-br from-navy-900 to-navy-700 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
+                  <svg class="w-20 h-20 text-gold-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M8 3h5l5 5v11a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M13 3v5h5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M9 12.5h6M9 15.5h6M9 18.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </div>
                 <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/95 backdrop-blur-sm border border-gold-400 flex items-center justify-center text-gold-700 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -929,11 +938,14 @@
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
               <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-100">
-                <img loading="lazy" decoding="async"
-                  src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=70" 
-                  alt="Direito de Família e Proteção Patrimonial" 
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+                <div role="img" aria-label="Direito de Família e Proteção Patrimonial"
+                  class="w-full h-full bg-gradient-to-br from-navy-900 to-navy-700 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
+                  <svg class="w-20 h-20 text-gold-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 11l8-7 8 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 17.3s-2.6-1.7-2.6-3.4a1.3 1.3 0 012.6-.6 1.3 1.3 0 012.6.6c0 1.7-2.6 3.4-2.6 3.4z" fill="currentColor"/>
+                  </svg>
+                </div>
                 <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/95 backdrop-blur-sm border border-gold-400 flex items-center justify-center text-gold-700 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -979,11 +991,14 @@
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
               <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-100">
-                <img loading="lazy" decoding="async"
-                  src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=70" 
-                  alt="Direito do Trabalho e Relações Profissionais" 
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+                <div role="img" aria-label="Direito do Trabalho e Relações Profissionais"
+                  class="w-full h-full bg-gradient-to-br from-navy-900 to-navy-700 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
+                  <svg class="w-20 h-20 text-gold-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 8h16a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M9 8V6a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3 13h18" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </div>
                 <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/95 backdrop-blur-sm border border-gold-400 flex items-center justify-center text-gold-700 shadow-md">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -1071,11 +1086,13 @@
           <div class="rounded-2xl bg-white border border-slate-200 shadow-card-light overflow-hidden flex flex-col justify-between group transition-all duration-300 hover:shadow-card-hover hover:border-gold-400 hover:-translate-y-1.5">
             <div>
               <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-slate-100">
-                <img loading="lazy" decoding="async"
-                  src="https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=70" 
-                  alt="Direito Militar e Forças Armadas - Dr. Jorge Alvim Subtenente R1" 
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+                <div role="img" aria-label="Direito Militar e Forças Armadas Brasileiras"
+                  class="w-full h-full bg-gradient-to-br from-navy-900 to-navy-700 flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
+                  <svg class="w-20 h-20 text-gold-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 3l7 2.5v5.6c0 4.2-2.9 7.2-7 8.4-4.1-1.2-7-4.2-7-8.4V5.5L12 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path transform="translate(12 10.6) scale(0.42) translate(-12 -12)" fill="currentColor" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                  </svg>
+                </div>
                 <div class="absolute top-3 left-3 sm:top-4 sm:left-4 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/95 backdrop-blur-sm border border-gold-400 flex items-center justify-center text-gold-700 shadow-md">
                   <svg class="w-5 h-5 text-gold-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -1399,7 +1416,13 @@
           <div class="bg-warm-50 rounded-3xl border border-slate-200 overflow-hidden shadow-card-light hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
             <div>
               <div class="h-48 relative overflow-hidden bg-slate-200">
-                <img loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=70" alt="Direito de Família em Juiz de Fora" class="w-full h-full object-cover">
+                <div role="img" aria-label="Direito de Família em Juiz de Fora" class="w-full h-full bg-gradient-to-br from-navy-900 to-navy-700 flex items-center justify-center">
+                  <svg class="w-16 h-16 text-gold-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 11l8-7 8 7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 17.3s-2.6-1.7-2.6-3.4a1.3 1.3 0 012.6-.6 1.3 1.3 0 012.6.6c0 1.7-2.6 3.4-2.6 3.4z" fill="currentColor"/>
+                  </svg>
+                </div>
                 <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-navy-950 shadow-xs border border-slate-200">
                   Direito de Família
                 </span>
@@ -1865,20 +1888,11 @@
                   ></textarea>
                 </div>
 
-                <!-- Anexos: acompanham a mensagem enviada para a caixa de leads -->
-                <div>
-                  <label for="lead-quick-files" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Anexar Arquivos <span class="text-slate-400 text-[11px] font-normal">(opcional • até 10 arquivos, 50MB cada)</span>
-                  </label>
-                  <input
-                    type="file"
-                    id="lead-quick-files"
-                    name="documents"
-                    multiple
-                    onchange="updateQuickLeadFileList()"
-                    class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-gold-300 file:bg-gold-50 file:text-gold-800 file:font-bold file:text-xs hover:file:bg-gold-100 file:cursor-pointer cursor-pointer rounded-xl border border-slate-300 bg-slate-50/50 py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-gold-500"
-                  />
-                  <ul id="lead-quick-files-list" class="mt-1.5 space-y-0.5"></ul>
+                <!-- Documentos NÃO são enviados por aqui: após o primeiro contato, o escritório
+                     manda um link seguro para o cliente anexar (protege o servidor e os dados). -->
+                <div class="rounded-xl border border-gold-200 bg-gold-50/50 px-3 py-2 text-[11px] text-slate-600 flex items-start gap-2">
+                  <span>📎</span>
+                  <span>Não precisa anexar documentos agora. Após este primeiro contato, enviaremos um <strong>link seguro</strong> para você anexar seus arquivos com tranquilidade.</span>
                 </div>
 
                 <p class="text-[11px] text-slate-500 flex items-center space-x-1.5 pt-1">
@@ -2002,7 +2016,7 @@
                 <a href="https://www.instagram.com/jorgealvim10advocacia" target="_blank" rel="noopener noreferrer" title="Instagram @jorgealvim10advocacia" class="text-slate-400 hover:text-pink-600 transition-colors">
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                 </a>
-                <a href="https://www.facebook.com/share/19ZCbAXv1F/" target="_blank" rel="noopener noreferrer" title="Facebook Jorge Alvim" class="text-slate-400 hover:text-blue-600 transition-colors">
+                <a href="https://www.facebook.com/jorge.alvim.890022" target="_blank" rel="noopener noreferrer" title="Facebook Jorge Alvim" class="text-slate-400 hover:text-blue-600 transition-colors">
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                 </a>
                 <a href="https://www.youtube.com/@JorgeAlvimAdvocacia" target="_blank" rel="noopener noreferrer" title="YouTube @JorgeAlvimAdvocacia" class="text-slate-400 hover:text-red-600 transition-colors">
@@ -2205,7 +2219,7 @@
               </a>
 
               <!-- Facebook -->
-              <a href="https://www.facebook.com/share/19ZCbAXv1F/" target="_blank" rel="noopener noreferrer" title="Facebook Jorge Alvim" aria-label="Facebook"
+              <a href="https://www.facebook.com/jorge.alvim.890022" target="_blank" rel="noopener noreferrer" title="Facebook Jorge Alvim" aria-label="Facebook"
                 class="w-9 h-9 rounded-xl bg-white border border-slate-200 hover:border-blue-500 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-all shadow-sm hover:shadow-md group">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -2282,7 +2296,7 @@
               class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:border-pink-400 flex items-center justify-center text-slate-400 hover:text-pink-600 transition-all shadow-sm">
               <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
             </a>
-            <a href="https://www.facebook.com/share/19ZCbAXv1F/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook Jorge Alvim"
+            <a href="https://www.facebook.com/jorge.alvim.890022" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook Jorge Alvim"
               class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:border-blue-500 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-all shadow-sm">
               <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             </a>
@@ -2439,81 +2453,6 @@
       defaultMessage: 'Olá! Gostaria de agendar uma consulta jurídica com o Dr. Jorge Alvim.'
     };
 
-    let selectedFiles = [];
-
-    function addFiles(filesList) {
-      if (!filesList || filesList.length === 0) return;
-      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-      let hasOversized = false;
-
-      Array.from(filesList).forEach(file => {
-        if (file.size > MAX_FILE_SIZE) {
-          hasOversized = true;
-          return;
-        }
-        // Evita duplicatas exatas
-        const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
-        if (!exists) {
-          selectedFiles.push(file);
-        }
-      });
-
-      if (hasOversized) {
-        alert('Alguns arquivos excederam o limite de 50MB e não foram adicionados.');
-      }
-
-      renderSelectedFiles();
-    }
-
-    function handleFilesSelect(input) {
-      if (input.files) {
-        addFiles(input.files);
-        input.value = ''; // Permite selecionar o mesmo arquivo novamente se desejar
-      }
-    }
-
-    function renderSelectedFiles() {
-      const container = document.getElementById('selected-files-list');
-      if (!container) return;
-      if (selectedFiles.length === 0) {
-        container.innerHTML = '';
-        return;
-      }
-
-      container.innerHTML = selectedFiles.map((file, index) => {
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|heic|heif|jfif)$/i.test(file.name);
-        
-        let previewHtml = `<span class="text-gold-600 font-bold flex-shrink-0 text-base">📄</span>`;
-        if (isImage) {
-          try {
-            const previewUrl = URL.createObjectURL(file);
-            previewHtml = `<img loading="lazy" decoding="async"src="${previewUrl}" alt="Preview" class="w-8 h-8 rounded-lg object-cover border border-slate-200 flex-shrink-0" />`;
-          } catch(e) {
-            previewHtml = `<span class="text-gold-600 font-bold flex-shrink-0 text-base">🖼️</span>`;
-          }
-        }
-
-        return `
-          <div class="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200 text-xs shadow-sm hover:border-gold-300 transition-all">
-            <div class="flex items-center space-x-2.5 truncate pr-2">
-              ${previewHtml}
-              <span class="font-semibold text-slate-800 truncate text-[11px] sm:text-xs">${file.name}</span>
-              <span class="text-slate-400 text-[10px] sm:text-[11px] flex-shrink-0">(${sizeMb} MB)</span>
-            </div>
-            <button type="button" onclick="removeFile(${index})" aria-label="Remover arquivo ${file.name}" class="text-rose-500 hover:text-rose-700 font-bold p-1 text-base leading-none transition-colors" title="Remover Arquivo">
-              &times;
-            </button>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function removeFile(index) {
-      selectedFiles.splice(index, 1);
-      renderSelectedFiles();
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       // 1. Header Scroll
       const header = document.getElementById('main-header');
@@ -2584,36 +2523,6 @@
         });
       }
 
-      // 4. Suporte Avançado a Drag & Drop de Arquivos e Fotos
-      const dropzone = document.getElementById('dropzone-container');
-      if (dropzone) {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-          dropzone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }, false);
-        });
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-          dropzone.addEventListener(eventName, () => {
-            dropzone.classList.add('border-gold-500', 'bg-gold-50/50', 'scale-[1.01]');
-          }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-          dropzone.addEventListener(eventName, () => {
-            dropzone.classList.remove('border-gold-500', 'bg-gold-50/50', 'scale-[1.01]');
-          }, false);
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-          const dt = e.dataTransfer;
-          if (dt && dt.files && dt.files.length > 0) {
-            addFiles(dt.files);
-          }
-        }, false);
-      }
-
       // Google reCAPTCHA v3 (obtenção de token transparente para proteção anti-robô)
       window.getRecaptchaToken = async function(action = 'lead_submit') {
         if (typeof window.grecaptcha === 'undefined' || !window.__RECAPTCHA_SITE_KEY) return null;
@@ -2675,14 +2584,14 @@
             formData.append('area', area);
             formData.append('message', message);
 
-            selectedFiles.forEach(file => {
-              formData.append('documents', file);
-            });
+            // Documentos NÃO são enviados por este formulário público (evita encher o servidor).
+            // O escritório envia um link seguro depois, para o cliente anexar.
 
             // Token Google reCAPTCHA v3 (se habilitado)
             if (typeof window.getRecaptchaToken === 'function') {
               const rcToken = await window.getRecaptchaToken('lead_submit');
               if (rcToken) formData.append('recaptcha_token', rcToken);
+              if (window.JAAttribution) window.JAAttribution.appendTo(formData);
             }
 
             // Envia para o servidor local
@@ -2712,9 +2621,6 @@
           if (city) msg += `*Cidade/UF:* ${city}\n`;
           msg += `*Área de Interesse:* ${area}\n`;
           if (message) msg += `*Resumo:* ${message}\n`;
-          if (selectedFiles.length > 0) {
-            msg += `*Documentos Anexados:* ${selectedFiles.length} arquivo(s) salvos no ficheiro do escritório\n`;
-          }
           msg += `\n_Juiz de Fora - MG | jorgealvimadvocacia.com.br_`;
 
           const encoded = encodeURIComponent(msg);
@@ -2730,8 +2636,6 @@
 
           // Limpa o formulário
           form.reset();
-          selectedFiles = [];
-          renderSelectedFiles();
         });
       }
     });
@@ -2770,22 +2674,19 @@
 
       let clientId = 'JA-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
 
-      const fileInput = document.getElementById('lead-quick-files');
-      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
-
       try {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('phone', phone);
         formData.append('area', area);
         formData.append('message', message || 'Solicitação de Consulta Express via site principal.');
-        // Anexos: enviados junto com o lead (campo "documents", lido pelo backend).
-        files.forEach(file => formData.append('documents', file));
+        // Documentos NÃO são enviados por este formulário público (o escritório manda link seguro depois).
 
         // Token Google reCAPTCHA v3 (se habilitado)
         if (typeof window.getRecaptchaToken === 'function') {
           const rcToken = await window.getRecaptchaToken('lead_submit');
           if (rcToken) formData.append('recaptcha_token', rcToken);
+              if (window.JAAttribution) window.JAAttribution.appendTo(formData);
         }
 
         const res = await fetch('/api/leads', {
@@ -2812,9 +2713,6 @@
       if (message) {
         waText += `*Resumo do Caso:* ${message}\n`;
       }
-      if (files.length) {
-        waText += `*Anexos enviados ao escritório:* ${files.length} arquivo(s)\n`;
-      }
       waText += `\n_Juiz de Fora - MG | Atendimento Online em Todo o Brasil_`;
 
       const encoded = encodeURIComponent(waText);
@@ -2835,44 +2733,11 @@
       window.open(waUrl, '_blank');
     }
 
-    // Mostra os arquivos selecionados abaixo do campo de anexos (com validação leve).
-    function updateQuickLeadFileList() {
-      const input = document.getElementById('lead-quick-files');
-      const list = document.getElementById('lead-quick-files-list');
-      if (!input || !list) return;
-      const files = input.files ? Array.from(input.files) : [];
-      const MAX_FILES = 10;
-      const MAX_SIZE = 50 * 1024 * 1024; // 50MB por arquivo (igual ao backend)
-
-      if (files.length > MAX_FILES) {
-        alert(`Você pode anexar no máximo ${MAX_FILES} arquivos.`);
-        input.value = '';
-        list.innerHTML = '';
-        return;
-      }
-      const oversized = files.find(f => f.size > MAX_SIZE);
-      if (oversized) {
-        alert(`O arquivo "${oversized.name}" excede o limite de 50MB.`);
-        input.value = '';
-        list.innerHTML = '';
-        return;
-      }
-
-      list.innerHTML = files.map(f => {
-        const kb = f.size / 1024;
-        const sizeStr = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB';
-        const safeName = f.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<li class="text-[11px] text-slate-600 flex items-center gap-1.5"><span>📎</span><span class="truncate">${safeName}</span><span class="text-slate-400">(${sizeStr})</span></li>`;
-      }).join('');
-    }
-
     function resetQuickLeadForm() {
       const formContainer = document.getElementById('quick-lead-form-container');
       const successCard = document.getElementById('quick-lead-success');
       const form = document.getElementById('quick-lead-form');
       if (form) form.reset();
-      const list = document.getElementById('lead-quick-files-list');
-      if (list) list.innerHTML = '';
       if (successCard) successCard.classList.add('hidden');
       if (formContainer) formContainer.classList.remove('hidden');
     }
@@ -2960,12 +2825,23 @@
       }
     }
 
+    // Olho do campo "Nova Senha" da recuperação: fica visível enquanto a pessoa digita (sem ocultar sozinho) e volta a ocultar ao sair.
+    function toggleResetPassword(forceHide) {
+      const pwd = document.getElementById('uauth-reset-newpass');
+      const icon = document.getElementById('uauth-reset-pwd-icon');
+      if (!pwd) return;
+      const show = forceHide === true ? false : pwd.type === 'password';
+      pwd.type = show ? 'text' : 'password';
+      if (icon) icon.textContent = show ? '🙈' : '👁️';
+    }
+
     // ================= RECUPERAÇÃO DE SENHA UNIFICADA =================
     function handleUniversalForgotPassword() {
       openAdminResetView();
     }
 
     function openAdminResetView() {
+      toggleResetPassword(true);
       const mainBox = document.getElementById('uauth-main-container');
       const resetBox = document.getElementById('uauth-reset-container');
       const resetStep1 = document.getElementById('uauth-reset-step-1');
@@ -2985,6 +2861,7 @@
     }
 
     function closeAdminResetView() {
+      toggleResetPassword(true);
       const mainBox = document.getElementById('uauth-main-container');
       const resetBox = document.getElementById('uauth-reset-container');
       if (mainBox) mainBox.classList.remove('hidden');
@@ -3030,15 +2907,20 @@
         });
         const data = await res.json();
 
-        if (res.ok && data.success) {
+        if (res.ok && data.success && data.channels && data.channels[channel] === false) {
+          // O sistema não tem este canal ligado: não prometemos um envio que não existe.
           showUAuthResetAlert(isEmail
-            ? 'Código enviado! Verifique o e-mail cadastrado (confira também a caixa de spam).'
-            : 'Código enviado com sucesso para o WhatsApp do Dr. Jorge Alvim!', 'success');
+            ? 'O envio por e-mail não está ativo neste sistema. Use o WhatsApp ou fale com o suporte.'
+            : 'O envio por WhatsApp não está ativo neste sistema. Use "Enviar por e-mail".', 'error');
+        } else if (res.ok && data.success) {
+          showUAuthResetAlert(isEmail
+            ? 'Se o usuário existir, o código foi enviado ao e-mail cadastrado (confira também a caixa de spam).'
+            : 'Se o usuário existir, o código foi enviado ao WhatsApp do Dr. Jorge Alvim.', 'success');
           const step2Hint = document.getElementById('uauth-reset-step2-hint');
           if (step2Hint) {
             step2Hint.textContent = isEmail
-              ? 'Código enviado para o e-mail cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).'
-              : 'Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).';
+              ? 'Código enviado para o e-mail cadastrado! Digite-o abaixo junto com sua nova senha (10 a 64 caracteres).'
+              : 'Código enviado para o WhatsApp cadastrado! Digite-o abaixo junto com sua nova senha (10 a 64 caracteres).';
           }
           document.getElementById('uauth-reset-step-1')?.classList.add('hidden');
           document.getElementById('uauth-reset-step-2')?.classList.remove('hidden');
@@ -3075,8 +2957,8 @@
         return;
       }
 
-      if (new_password.length < 4 || new_password.length > 12) {
-        showUAuthResetAlert('A nova senha deve ter entre 4 e 12 caracteres.', 'error');
+      if (new_password.length < 10 || new_password.length > 64) {
+        showUAuthResetAlert('A nova senha deve ter entre 10 e 64 caracteres.', 'error');
         return;
       }
 
@@ -3202,6 +3084,7 @@
 
         if (res.ok && data.success) {
           showUAuthAlert('Identificado com sucesso! Redirecionando com segurança...', 'success');
+          try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
           
           // Salva tokens de sessão de forma integrada e transparente
           if (data.token) {
@@ -3877,7 +3760,7 @@
           <!-- Etapa 2: Validar Código e Nova Senha -->
           <div id="uauth-reset-step-2" class="hidden space-y-3">
             <div id="uauth-reset-step2-hint" class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 font-medium">
-              Código enviado! Digite-o abaixo junto com sua nova senha (4 a 12 caracteres).
+              Código enviado! Digite-o abaixo junto com sua nova senha (10 a 64 caracteres).
             </div>
             <div>
               <label for="uauth-reset-code" class="block text-xs font-bold text-slate-700 mb-1">
@@ -3893,14 +3776,26 @@
             </div>
             <div>
               <label for="uauth-reset-newpass" class="block text-xs font-bold text-slate-700 mb-1">
-                Nova Senha de Acesso (4 a 12 caracteres) *
+                Nova Senha de Acesso (10 a 64 caracteres) *
               </label>
-              <input 
-                type="password" 
-                id="uauth-reset-newpass" 
-                placeholder="Digite a nova senha" 
-                class="uauth-input"
-              />
+              <div style="position: relative; width: 100%;">
+                <input 
+                  type="password" 
+                  id="uauth-reset-newpass" 
+                  placeholder="Digite a nova senha" 
+                  autocomplete="new-password"
+                  class="uauth-input"
+                  style="padding-right: 42px;"
+                />
+                <button 
+                  type="button" 
+                  onclick="toggleResetPassword()" 
+                  style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;" 
+                  title="Ver ou ocultar senha"
+                >
+                  <span id="uauth-reset-pwd-icon">👁️</span>
+                </button>
+              </div>
             </div>
             <button 
               type="button" 
@@ -4230,6 +4125,16 @@
 
   <script src="/js/analytics.js"></script>
   <script defer src="/js/enhance-ui.js"></script>
+  <script>
+    // Agendamento online: os links só aparecem quando o escritório liga o recurso (painel → Agenda → Agendamento online).
+    (function () {
+      try {
+        fetch('/api/booking/config').then(function (r) { return r.json(); }).then(function (c) {
+          if (c && c.enabled) document.querySelectorAll('[data-booking-link]').forEach(function (el) { el.hidden = false; });
+        }).catch(function () {});
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>
 

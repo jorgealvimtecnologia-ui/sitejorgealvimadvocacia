@@ -10,81 +10,14 @@
  * métodos HTTP). A PRIMEIRA regra cujo caminho — e método, se houver — casa decide.
  */
 import { db } from '../config/db.js';
+import { hasTab } from '../shared/permissions.js';
 import { validateToken, validateClientToken, validateEmployeeToken } from './auth.js';
 
-// Perfis
-export const PUBLIC = 'public';                 // sem login (site, captação, webhooks, consulta CEP/CNPJ)
-export const ANY = 'any';                       // qualquer sessão válida
-export const CLIENT = 'client';                 // sessão do portal do cliente
-export const EMPLOYEE = 'employee';             // sessão do portal do colaborador
-export const PANEL = 'panel';                   // operador do painel (mestre ou usuário)
-export const PANEL_OR_EMPLOYEE = 'panel_emp';   // painel OU colaborador (ex.: despachos/foguetes)
-export const MASTER = 'master';                 // só o mestre
-const tab = (t) => ({ panelTab: t });           // operador do painel COM a aba `t` (mestre sempre passa)
+import { PUBLIC, ANY, CLIENT, EMPLOYEE, PANEL, PANEL_OR_EMPLOYEE, MASTER, RULES } from './rbac-rules.js';
 
-const RULES = [
-  // ---- Público (sem login) ----
-  [/^\/api\/health\b/, PUBLIC],
-  [/^\/api\/auth\/(login|logout|google|unified-google|forgot-password|reset-password|google-config)\b/, PUBLIC],
-  [/^\/api\/client-portal\/(login|register|forgot-password|reset-password|auth\/google)\b/, PUBLIC],
-  [/^\/api\/hr\/(employee|portal)\/(login|google|auth\/google)\b/, PUBLIC],
-  [/^\/api\/(site|lookup|webhooks)\//, PUBLIC],
-  [/^\/api\/blog\/posts\/[^/]+\/(comments|like|share)\b/, PUBLIC],
-  [/^\/api\/blog\/track-click\b/, PUBLIC],
-  [/^\/api\/blog\/(posts|categories)\b/, PUBLIC, ['GET']],
-  [/^\/api\/esign\/(public|verify)\//, PUBLIC],
-  [/^\/api\/esign\/requests\/[^/]+\/chancelado\b/, PUBLIC],
-  [/^\/api\/client-portal\/magic-(info|upload)\//, PUBLIC],
-  [/^\/api\/faq\b/, PUBLIC],
-  [/^\/api\/visits\//, PUBLIC],
-  [/^\/api\/analytics\/(event|consent)\b/, PUBLIC],
-  [/^\/api\/lgpd\/request\b/, PUBLIC, ['POST']],
-  [/^\/api\/leads\/?$/, PUBLIC, ['POST']],            // captação de leads pelo site (só POST)
-  [/^\/api\/recaptcha\//, PUBLIC],                    // configuração pública do reCAPTCHA
-  [/^\/api\/agent\/roadmap/, PUBLIC],                 // API dos agentes: tem chave própria (X-Roadmap-Agent-Key)
+// Reexporta os perfis e a consulta de regras (quem já importava de rbac.js continua funcionando).
+export { PUBLIC, ANY, CLIENT, EMPLOYEE, PANEL, PANEL_OR_EMPLOYEE, MASTER, RULES, ruleFor } from './rbac-rules.js';
 
-  // ---- Portais (só o próprio titular logado) ----
-  [/^\/api\/client-portal\/magic-link\b/, PANEL],   // painel gera o link de upload para o cliente
-  [/^\/api\/client-portal\//, CLIENT],
-  [/^\/api\/hr\/reports\/annual-financial\/employee\//, EMPLOYEE],
-  [/^\/api\/hr\/(employee|portal)\//, EMPLOYEE],
-
-  // ---- Compartilhado painel + colaborador (despachos/foguetes) ----
-  [/^\/api\/rockets(\/|$)/, PANEL_OR_EMPLOYEE],
-
-  // ---- Qualquer sessão logada ----
-  [/^\/api\/auth\/(me|unlock)\b/, ANY],
-  [/^\/api\/notifications(\/|$)/, PANEL],
-  [/^\/api\/access-control\/my-permissions\b/, ANY],
-
-  // ---- Só o mestre (administração sensível) ----
-  [/^\/api\/admin\/backup(\/|$)/, MASTER],
-  [/^\/api\/admin\/(restore|wipe|reset|export)/, MASTER],
-  [/^\/api\/access-control\/(toggle|apply-template|toggle-user-status|matrix)\b/, MASTER],
-  [/^\/api\/users(\/|$)/, MASTER],
-  [/^\/api\/admin\/roadmap(\/|$)/, MASTER],
-  [/^\/api\/admin\/qa(\/|$)/, MASTER],
-  [/^\/api\/admin\/relatorios(\/|$)/, MASTER],
-  [/^\/api\/lgpd(\/|$)/, MASTER],
-
-  // ---- Módulos do painel controlados pela matriz de permissões (mestre sempre) ----
-  [/^\/api\/clients(\/|$)/, tab('tab_clients')],
-  [/^\/api\/ocr(\/|$)/, tab('tab_clients')],   // OCR zero-digitação alimenta o cadastro de clientes
-  [/^\/api\/leads(\/|$)/, tab('tab_leads')],
-  [/^\/api\/lawsuits(\/|$)/, tab('tab_lawsuits')],
-  [/^\/api\/(court|publications)(\/|$)/, tab('tab_publications')],
-  [/^\/api\/calendar(\/|$)/, tab('tab_calendar')],
-  [/^\/api\/(financial|nfse|esign|signatures)(\/|$)/, tab('tab_financial')],
-  [/^\/api\/hr(\/|$)/, tab('tab_hr')],
-  [/^\/api\/drive(\/|$)/, tab('tab_drive')],
-  [/^\/api\/offices(\/|$)/, tab('tab_offices')],
-  [/^\/api\/(judicial|juridico)(\/|$)/, tab('tab_radar')],
-  [/^\/api\/(admin-requests|adminrequests)(\/|$)/, tab('tab_lawsuits')],
-  [/^\/api\/(meta-ads|explorer)(\/|$)/, tab('tab_settings')],
-
-  // ---- Demais rotas do painel: qualquer operador logado ----
-  [/^\/api\/(dashboard|kanban|sync|admin|blog|site-content|maintenance|legaltech|legal-docs|ai|analytics|audit)(\/|$)/, PANEL]
-];
 
 function tokenOf(req) {
   const h = req.headers['authorization'] || '';
@@ -95,11 +28,21 @@ export function isMasterSession(s) {
   return !!s && (s.userId === 'USR-MASTER-01' || s.username === 'jorgealvimtecnologia' || s.role === 'master');
 }
 
+/** Operador suspenso na Matriz de Acessos (is_active = 0): perde TODO acesso ao painel, mesmo com sessão já aberta. */
+function isSuspended(userId) {
+  try {
+    const p = db.prepare(`SELECT is_active FROM access_permissions WHERE user_id = ?`).get(userId);
+    return !!p && p.is_active === 0;
+  } catch (e) {
+    return false;
+  }
+}
+
 function operatorHasTab(s, tabKey) {
   if (isMasterSession(s)) return true;
   try {
     const perm = db.prepare(`SELECT * FROM access_permissions WHERE user_id = ?`).get(s.userId);
-    return !!(perm && perm[tabKey]);
+    return !!(perm && hasTab(perm, tabKey));
   } catch (e) {
     return false;
   }
@@ -125,6 +68,11 @@ export function rbacGuard(req, res, next) {
     const client = panel ? null : validateClientToken(token);
     const employee = panel || client ? null : validateEmployeeToken(token);
     if (!panel && !client && !employee) return needLogin(res);
+
+    // Suspenso na matriz = sem acesso a NADA do painel, nem com sessão aberta antes da suspensão.
+    if (panel && !isMasterSession(panel) && isSuspended(panel.userId)) {
+      return deny(res, 'Seu perfil de operador está desativado na Matriz de Controle de Acesso. Contate a administração.');
+    }
 
     if (need === ANY) return next();
     if (need === CLIENT) return client ? next() : deny(res);

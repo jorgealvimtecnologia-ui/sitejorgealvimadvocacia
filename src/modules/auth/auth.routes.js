@@ -10,9 +10,12 @@ import { logAudit } from '../../middleware/audit.js';
 import { verifyPassword, isStrongHash, hashPassword } from '../../shared/password-crypto.js';
 import { loginRateLimit, loginLockRemaining, registerLoginFailure, clearLoginFailures, normalizeLoginId } from '../../shared/login-guard.js';
 import { verifyGoogleToken } from '../../shared/google-auth.js';
-import { validatePassword } from '../../shared/password-policy.js';
+import { isMasterEmail } from '../../config/master-emails.js';
+import { findEmployeeForUser, findUserForEmployee, findEmployeeByTypedName } from '../../shared/identity-link.js';
+import { validatePassword, outdatedPasswordNotice } from '../../shared/password-policy.js';
 import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
 import { deliverAccessCode } from '../../shared/access-codes.js';
+import { isEmailConfigured } from '../../shared/email.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
 
 export const authRouter = express.Router();
@@ -53,10 +56,6 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
     if (!user) {
       if (['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
         user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
-      } else if (compactUsername.includes('mariana')) {
-        user = db.prepare(`SELECT * FROM users WHERE username LIKE '%mariana%' OR name LIKE '%mariana%'`).get();
-      } else if (compactUsername.includes('gabriela')) {
-        user = db.prepare(`SELECT * FROM users WHERE username LIKE '%gabriela%' OR name LIKE '%gabriela%'`).get();
       } else {
         // Nome COMPLETO exato (sem busca parcial: um pedaço do nome não localiza contas)
         user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(name)) = ?`).get(cleanUsername);
@@ -79,6 +78,12 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
     if (user && isPasswordValid) {
       clearLoginFailures(reqIp, lockId);
+
+      // Operador SUSPENSO na Matriz de Acessos não entra (antes só o Google barrava; a senha ainda abria o sistema).
+      const susp = db.prepare(`SELECT is_active FROM access_permissions WHERE user_id = ?`).get(user.id);
+      if (susp && susp.is_active === 0 && user.id !== 'USR-MASTER-01') {
+        return res.status(403).json({ error: 'Acesso Negado (RBAC): Seu perfil de operador encontra-se desativado na Matriz de Controle de Acesso. Contate a administração.' });
+      }
 
       // Upgrade transparente: se a senha estava em formato antigo, regrava no formato forte.
       try {
@@ -105,13 +110,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
       // Se este operador/usuário também for colaborador cadastrado no RH (ex: motorista, secretária, estagiário)
       let employeeToken = null;
-      let matchedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR id = ?`).get(`%${user.name.toLowerCase()}%`, user.id);
-      if (!matchedEmp) {
-        const parts = user.name.trim().split(/\s+/);
-        if (parts.length >= 2) {
-          matchedEmp = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? AND LOWER(name) LIKE ?`).get(`%${parts[0].toLowerCase()}%`, `%${parts[parts.length - 1].toLowerCase()}%`);
-        }
-      }
+      const matchedEmp = findEmployeeForUser(db, user);
       if (matchedEmp) {
         try {
           employeeToken = createEmployeeSession(matchedEmp);
@@ -122,6 +121,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
       return res.json({
         success: true,
+        ...outdatedPasswordNotice(rawPassword),
         authType: isDriverOrColab ? 'employee' : 'admin',
         token,
         employeeToken,
@@ -197,6 +197,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
         return res.json({
           success: true,
+          ...outdatedPasswordNotice(rawPassword),
           authType: 'client',
           token,
           role: 'cliente',
@@ -228,11 +229,11 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
       employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(email)) = ?`).get(cleanUsername);
     }
     if (!employee) {
-      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ? OR REPLACE(LOWER(name), ' ', '') LIKE ? OR id = ?`).get(`%${cleanUsername}%`, `%${compactUsername}%`, rawUsername);
+      employee = findEmployeeByTypedName(db, rawUsername);
     }
 
     if (employee) {
-      const linkedUser = db.prepare(`SELECT * FROM users WHERE LOWER(name) LIKE ? OR username = ? OR id = ?`).get(`%${employee.name.toLowerCase()}%`, cleanUsername, employee.id);
+      const linkedUser = findUserForEmployee(db, employee) || db.prepare(`SELECT * FROM users WHERE username = ?`).get(cleanUsername);
       const isUserAuth = linkedUser && (
         verifyPassword(rawPassword, linkedUser.password_hash, linkedUser.salt) ||
         (compactPassword !== rawPassword && verifyPassword(compactPassword, linkedUser.password_hash, linkedUser.salt))
@@ -261,6 +262,7 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
 
         return res.json({
           success: true,
+          ...outdatedPasswordNotice(rawPassword),
           authType: 'employee',
           token,
           employeeToken: token,
@@ -371,8 +373,13 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
     // 2. Localizar operador estritamente no ecossistema administrativo
     let user = null;
 
+    // 0) Contas Google MESTRAS (src/config/master-emails.js) são o mestre, com prioridade sobre qualquer outro vínculo.
+    if (isMasterEmail(email)) {
+      user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+
     // A) Por google_id já vinculado previamente a um usuário operador
-    if (googleUser.sub) {
+    if (!user && googleUser.sub) {
       user = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
     }
 
@@ -390,16 +397,6 @@ authRouter.post('/api/auth/google', loginRateLimit, async (req, res) => {
       if (operatorPerm) {
         user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
       }
-    }
-
-    // D) Mestre oficial (Dr. Jorge Alvim) - emails explicitamente autorizados na env ou padrão institucional
-    const adminEmailsEnv = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
-      .split(',')
-      .map(s => s.toLowerCase().trim())
-      .filter(Boolean);
-
-    if (!user && adminEmailsEnv.includes(email)) {
-      user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
     }
 
     // 3. Validação RBAC estrita de perfil e acesso
@@ -493,7 +490,11 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
 
     // 1. Checar se é OPERADOR (users ou access_permissions onde role_template != 'cliente')
     let operator = null;
-    if (googleUser.sub) {
+    // Contas Google MESTRAS (src/config/master-emails.js): prioridade sobre qualquer outro vínculo.
+    if (isMasterEmail(email)) {
+      operator = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+    if (!operator && googleUser.sub) {
       operator = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
     }
     if (!operator) {
@@ -507,13 +508,6 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
       if (operatorPerm) {
         operator = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
       }
-    }
-    const adminEmailsEnv = (process.env.GOOGLE_ADMIN_EMAILS || 'jorgealvimtecnologia@gmail.com')
-      .split(',')
-      .map(s => s.toLowerCase().trim())
-      .filter(Boolean);
-    if (!operator && adminEmailsEnv.includes(email)) {
-      operator = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
     }
 
     // Se for operador ativo
@@ -549,7 +543,7 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
     // 2. Checar se é COLABORADOR do RH
     let employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(cpf)) = ? OR id = ?`).get(email, email);
     if (!employee && operator) {
-      employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(name) LIKE ?`).get(`%${operator.name.toLowerCase()}%`);
+      employee = findEmployeeForUser(db, operator);
     }
 
     if (employee) {
@@ -662,7 +656,7 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
       if (['jorgealvim', 'jorgealvimtecnologia', 'drjorgealvim', 'jorge.alvim'].includes(compactUsername)) {
         user = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
       } else {
-        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(name)) LIKE ?`).get(cleanUsername, `%${cleanUsername}%`);
+        user = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(google_email)) = ? OR LOWER(TRIM(name)) = ?`).get(cleanUsername, cleanUsername);
       }
     }
 
@@ -671,6 +665,9 @@ authRouter.post('/api/auth/forgot-password', loginRateLimit, async (req, res) =>
     // casos), preservando a resposta genérica contra enumeração de contas.
     const genericResponse = {
       success: true,
+      // Quais canais o sistema tem configurados (informação do sistema, não da conta): a tela usa isso para
+      // não prometer um envio que não existe.
+      channels: { whatsapp: !!String(process.env.WHATSAPP_GATEWAY_URL || '').trim(), email: isEmailConfigured() },
       message: deliveryChannel === 'email'
         ? 'Se o usuário existir, o código de verificação foi enviado ao e-mail cadastrado.'
         : 'Se o usuário existir, o código de verificação foi enviado ao WhatsApp do Administrador.'
@@ -755,7 +752,7 @@ authRouter.post('/api/auth/reset-password', loginRateLimit, (req, res) => {
       return res.status(400).json({ error: 'Código de segurança expirado. Solicite um novo código.' });
     }
 
-    // Validar nova senha conforme política de 4 a 12 caracteres
+    // Validar nova senha conforme a política única (src/shared/password-policy.js)
     const pol = validatePassword(new_password);
     if (!pol.ok) {
       return res.status(400).json({ error: pol.error });

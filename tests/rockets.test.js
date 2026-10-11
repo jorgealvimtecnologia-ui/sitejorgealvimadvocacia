@@ -17,7 +17,7 @@ import fs from 'node:fs';
 const TMP_DB = path.join(os.tmpdir(), `jaw-rockets-test-${Date.now()}.db`);
 process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
-process.env.MASTER_PASSWORD = 'jorgealvim';
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
 const { hashPassword } = await import('../src/shared/password-crypto.js');
@@ -42,7 +42,7 @@ describe('🚀 Central de Foguetes & Gestão de Usuários e Mensagens', () => {
     // 1. Autenticar Mestre
     const resMaster = await request(app)
       .post('/api/auth/login')
-      .send({ identifier: 'jorgealvimtecnologia', password: 'jorgealvim' });
+      .send({ identifier: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' });
     assert.equal(resMaster.status, 200);
     masterToken = resMaster.body.token;
 

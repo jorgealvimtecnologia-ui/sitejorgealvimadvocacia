@@ -910,8 +910,8 @@
             </div>
           </div>
 
-          <!-- Coluna 3: Intimações DJEN -->
-          <div class="space-y-2.5">
+          <!-- Coluna 3: Intimações DJEN (só para quem tem a aba Intimações) -->
+          <div class="space-y-2.5" data-need-module="publications">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center space-x-1">
                 <span>📰</span>
@@ -925,6 +925,7 @@
         </div>
       </div>
     `;
+    if (typeof window.gateByModule === 'function') window.gateByModule();   // esconde a triagem do DJEN para quem não tem Intimações
   }
 
   window.triageDJEN = async function (id, action) {

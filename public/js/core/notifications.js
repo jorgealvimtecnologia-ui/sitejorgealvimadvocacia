@@ -91,6 +91,19 @@ function playNotificationSound() {
 }
 
 /**
+ * Aviso de senha antiga (política de senha). O login só sinaliza no sessionStorage;
+ * o aviso aparece na tela seguinte, mesmo quando o login redireciona de outra página.
+ */
+function showPendingPasswordNotice() {
+  let msg = '';
+  try {
+    msg = sessionStorage.getItem('ja_pwd_outdated') || '';
+    if (msg) sessionStorage.removeItem('ja_pwd_outdated');
+  } catch (e) {}
+  if (msg) showToastNotification('🔐 Troque sua senha', msg, 'info');
+}
+
+/**
  * Exibe um toast flutuante no canto superior direito
  */
 function showToastNotification(title, message, type = 'info') {

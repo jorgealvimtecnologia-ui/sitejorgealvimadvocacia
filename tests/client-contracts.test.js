@@ -14,7 +14,7 @@ import fs from 'node:fs';
 const TMP_DB = path.join(os.tmpdir(), `jaw-client-contracts-${Date.now()}.db`);
 process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
-process.env.MASTER_PASSWORD = 'jorgealvim';
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
 
@@ -22,7 +22,7 @@ let token = '';
 let clientId = '';
 
 before(async () => {
-  const login = await request(app).post('/api/auth/login').send({ username: 'jorgealvimtecnologia', password: 'jorgealvim' });
+  const login = await request(app).post('/api/auth/login').send({ username: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' });
   assert.equal(login.status, 200);
   token = login.body.token;
   const create = await request(app).post('/api/clients')

@@ -8,6 +8,7 @@
 #  Uso:  deploy-remote.sh <REMOTE_DIR> <SERVICE> <PORT> [GIT_SHA]
 #  Ex.:  deploy-remote.sh /var/www/advocacia advocacia 3000 9ee3393
 #  Códigos de saída: 0=OK · 1=deploy revertido (rollback OK) · 2/3=falha grave
+#                    4=deploy RECUSADO pelo guardião do .env (serviço não foi reiniciado)
 # ============================================================================
 set -u
 REMOTE="${1:-/var/www/advocacia}"
@@ -31,6 +32,40 @@ health() {
 
 echo "[deploy-remote] Ajustando permissões (usuário do serviço: $U)..."
 fix_perms
+
+# ---------------------------------------------------------------------------
+# GUARDIÃO DO .env: o deploy é RECUSADO se houver segredos em texto puro no .env do
+# servidor, cópias soltas do .env, permissões abertas (estas são corrigidas) ou a chave
+# do cofre dentro do projeto. Segredos devem ficar criptografados em .env.enc
+# (node scripts/env-vault.js migrate --gerar-chave). Recusar = devolver os arquivos
+# anteriores; o serviço NÃO foi reiniciado e segue com a versão que estava no ar.
+# Liberação de USO ÚNICO (para o 1º deploy, antes de migrar): crie o arquivo
+#   touch $REMOTE/.deploy-permite-env-texto-puro
+# Ele é apagado automaticamente após ser usado. Variável equivalente: DEPLOY_ALLOW_PLAINTEXT_ENV=1.
+# ---------------------------------------------------------------------------
+if [ -f "$REMOTE/scripts/check-env-exposure.js" ] && command -v node >/dev/null 2>&1; then
+  echo "[deploy-remote] Guardião do .env: conferindo exposição de segredos no servidor..."
+  if ! (cd "$REMOTE" && node scripts/check-env-exposure.js --servidor="$REMOTE" --corrigir-permissoes); then
+    if [ -f "$REMOTE/.deploy-permite-env-texto-puro" ] || [ "${DEPLOY_ALLOW_PLAINTEXT_ENV:-0}" = "1" ]; then
+      rm -f "$REMOTE/.deploy-permite-env-texto-puro"
+      echo "[deploy-remote] !!! ATENÇÃO: guardião do .env reprovou, mas o deploy foi LIBERADO (uso único)."
+      echo "[deploy-remote] !!! Migre AGORA:  cd $REMOTE && node scripts/env-vault.js migrate --gerar-chave && systemctl restart $SERVICE"
+    else
+      echo "[deploy-remote] !!! DEPLOY RECUSADO pelo guardião do .env (veja acima). Restaurando os arquivos anteriores; o serviço NÃO foi reiniciado."
+      D="$(cat "$REMOTE/backups/LAST" 2>/dev/null)"
+      if [ -n "$D" ] && [ -d "$D" ]; then
+        cp -r "$D"/server.js "$D"/*.html "$D"/src "$D"/public "$REMOTE/" 2>/dev/null || true
+        fix_perms
+        echo "[deploy-remote] Arquivos anteriores restaurados de: $D"
+      else
+        echo "[deploy-remote] !!! Sem backup em backups/LAST: arquivos novos permanecem no disco, mas o serviço segue com a versão antiga em memória."
+      fi
+      exit 4
+    fi
+  fi
+else
+  echo "[deploy-remote] Guardião do .env indisponível (scripts/check-env-exposure.js ou node ausente): conferência pulada."
+fi
 
 echo "[deploy-remote] Reiniciando $SERVICE..."
 systemctl restart "$SERVICE"

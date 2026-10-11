@@ -1,6 +1,6 @@
 /**
  * Regressão de segurança (itens 4 e 5 do hardening):
- * - política de senha: mínimo 8, sem teto baixo, complexidade;
+ * - política de senha: mínimo 10, teto de 64 (frases longas), sem regras de composição;
  * - hash forte PBKDF2 210k e compatibilidade com formatos legados no login.
  */
 import { test } from 'node:test';
@@ -9,22 +9,22 @@ import crypto from 'node:crypto';
 import { validatePassword, PASSWORD_MIN, PASSWORD_MAX } from '../src/shared/password-policy.js';
 import { hashPassword, verifyPassword, isStrongHash } from '../src/shared/password-crypto.js';
 
-test('política: mínimo é 8 e teto não bloqueia senhas fortes', () => {
-  assert.equal(PASSWORD_MIN, 8);
+test('política: mínimo é 10 e teto não bloqueia senhas fortes', () => {
+  assert.equal(PASSWORD_MIN, 10);
   assert.ok(PASSWORD_MAX >= 64);
 });
 
-test('política: rejeita senha curta (< 8)', () => {
+test('política: rejeita senha curta (< 10)', () => {
   assert.equal(validatePassword('Ab1@').ok, false);       // 4 chars
-  assert.equal(validatePassword('Abc123!').ok, false);    // 7 chars
+  assert.equal(validatePassword('Abc123!@9').ok, false);  // 9 chars
 });
 
 test('política: rejeita senha longa demais (> 64)', () => {
   assert.equal(validatePassword('a'.repeat(65)).ok, false);
 });
 
-test('política: aceita senha de 8+ caracteres (Mivl@100)', () => {
-  const r = validatePassword('Mivl@100');
+test('política: aceita senha de 10+ caracteres', () => {
+  const r = validatePassword('Mivl@10020');
   assert.equal(r.ok, true, r.error);
 });
 

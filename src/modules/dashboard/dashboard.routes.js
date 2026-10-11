@@ -1,6 +1,8 @@
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
+import { isMasterSession } from '../../middleware/rbac.js';
+import { effectivePerms } from '../../shared/permissions.js';
 
 export const dashboardRouter = express.Router();
 
@@ -19,12 +21,79 @@ function safe(fn, fallback) {
   try { const v = fn(); return v == null ? fallback : v; } catch (e) { return fallback; }
 }
 
+/** Zera números e listas (mantém a forma do objeto, para o painel não quebrar). */
+function zeroed(o) {
+  if (Array.isArray(o)) return [];
+  if (o && typeof o === 'object') return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, zeroed(v)]));
+  return typeof o === 'number' ? 0 : typeof o === 'string' ? '' : o;
+}
+
+/**
+ * A Visão Geral junta dados de TODAS as áreas, mas cada pessoa só recebe os números das abas que pode abrir
+ * (antes: receita, caixa, inadimplência, RH e processos iam para qualquer operador, mesmo com o menu escondido).
+ * O que não pode ver vem ZERADO (mesma forma, sem vazar valores).
+ */
+export function filterOverviewForUser(payload, perms, isMaster = false) {
+  if (isMaster) return payload;
+  const has = (k) => perms && perms[k] === 1;
+  const out = { ...payload };
+  const agenda = has('tab_calendar') || has('tab_lawsuits');
+  if (!agenda) { out.risco = { ...zeroed(payload.risco), nivel: 'VERDE', mensagem: '' }; out.prazos = zeroed(payload.prazos); }
+  if (!has('tab_financial')) out.financeiro = zeroed(payload.financeiro);
+  if (payload.juridico) {
+    out.juridico = { ...payload.juridico };
+    if (!has('tab_clients')) { out.juridico.clientes_total = 0; out.juridico.clientes_ativos = 0; }
+    if (!has('tab_lawsuits')) { out.juridico.processos_total = 0; out.juridico.processos_andamento = 0; }
+  }
+  if (!has('tab_leads')) out.comercial = zeroed(payload.comercial);
+  if (!has('tab_hr')) out.equipe = { ...zeroed(payload.equipe), foguetes_pendentes: payload.equipe?.foguetes_pendentes ?? 0 };
+  if (payload.compliance) {
+    out.compliance = { ...payload.compliance };
+    if (!has('tab_esign')) { out.compliance.assinaturas_pendentes = 0; out.compliance.assinaturas_concluidas = 0; }
+    if (!has('tab_audit')) out.compliance.lgpd_abertas = 0;
+    if (!has('tab_alerts')) out.compliance.notificacoes_nao_lidas = 0;
+  }
+  return out;
+}
+
+function permsOf(req) {
+  const master = isMasterSession(req.user);
+  let perms = {};
+  if (!master) {
+    try { perms = effectivePerms(db.prepare('SELECT * FROM access_permissions WHERE user_id = ?').get(req.user?.userId)); } catch (e) { perms = {}; }
+  }
+  return { master, perms };
+}
+
+function overviewFor(req, payload) {
+  const { master, perms } = permsOf(req);
+  return filterOverviewForUser(payload, perms, master);
+}
+
+/** Cockpit "Meu Dia Hoje": agenda/prazos só com Agenda ou Processos; intimações do DJEN só com Intimações. */
+export function filterCockpitForUser(c, perms, master = false) {
+  if (master) return c;
+  const agenda = perms.tab_calendar === 1 || perms.tab_lawsuits === 1;
+  const pubs = perms.tab_publications === 1;
+  const hojeAgenda = (c.prazos.hoje || []).filter((p) => p.source !== 'djen');
+  const hojeDjen = (c.prazos.hoje || []).filter((p) => p.source === 'djen');
+  const hoje = [...(agenda ? hojeAgenda : []), ...(pubs ? hojeDjen : [])];
+  const amanha = agenda ? c.prazos.amanha : [];
+  const semana = agenda ? c.prazos.semana : [];
+  return {
+    ...c,
+    prazos: { hoje, amanha, semana, total_hoje: hoje.length, total_semana: hoje.length + amanha.length + semana.length },
+    audiencias: agenda ? c.audiencias : [],
+    intimacoes: pubs ? c.intimacoes : []
+  };
+}
+
 /** GET /api/dashboard/overview — visão geral consolidada do Painel de Comando Executivo. */
 dashboardRouter.get('/api/dashboard/overview', requireAuth, (req, res) => {
   try {
     const forceRefresh = req.query.refresh === '1' || req.query.refresh === 'true';
     if (!forceRefresh && overviewCache && Date.now() < overviewCacheExpires) {
-      return res.json(overviewCache);
+      return res.json(overviewFor(req, overviewCache));
     }
 
     const now = new Date();
@@ -172,7 +241,7 @@ dashboardRouter.get('/api/dashboard/overview', requireAuth, (req, res) => {
     overviewCache = payload;
     overviewCacheExpires = Date.now() + 30000; // TTL 30s
 
-    return res.json(payload);
+    return res.json(overviewFor(req, payload));
   } catch (err) {
     console.error('[DASHBOARD] Falha ao consolidar visão geral:', err);
     return res.status(500).json({ error: 'Erro ao carregar a visão geral.' });
@@ -240,7 +309,7 @@ dashboardRouter.get('/api/dashboard/meu-dia-hoje', requireAuth, (req, res) => {
       LIMIT 6
     `).all(), []);
 
-    return res.json({
+    const cockpit = {
       success: true,
       data_hoje: todayStr,
       hora_atual: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -253,7 +322,9 @@ dashboardRouter.get('/api/dashboard/meu-dia-hoje', requireAuth, (req, res) => {
       },
       audiencias: audienciasHoje,
       intimacoes: intimacoesDjen
-    });
+    };
+    const { master, perms } = permsOf(req);
+    return res.json(filterCockpitForUser(cockpit, perms, master));
   } catch (err) {
     console.error('[COCKPIT] Erro ao obter dados de Meu Dia Hoje:', err);
     return res.status(500).json({ error: 'Erro ao carregar dados matinais do advogado.' });

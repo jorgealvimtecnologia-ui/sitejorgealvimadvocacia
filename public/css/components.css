@@ -1,0 +1,77 @@
+/*
+ * COMPONENTES-BASE do design system (AUD-18). Só usam var(--ds-*) (nenhum hexadecimal aqui: o teste reprova).
+ * Cada classe .ds-* tem um exemplo vivo em /design-system.
+ */
+.ds-scope { font-family: var(--ds-font-sans); line-height: var(--ds-leading); color: var(--ds-text); background: var(--ds-bg); }
+.ds-scope :focus-visible, .ds-btn:focus-visible, .ds-input:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
+
+/* ---- Botão ---- */
+.ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--ds-space-2); min-height: var(--ds-tap); padding: var(--ds-space-3) var(--ds-space-5);
+  border: 1.5px solid transparent; border-radius: var(--ds-radius-md); font: inherit; font-weight: 800; font-size: var(--ds-text-sm); cursor: pointer; text-decoration: none;
+  transition: transform var(--ds-ease), box-shadow var(--ds-ease), background var(--ds-ease); }
+.ds-btn:hover { transform: translateY(-1px); box-shadow: var(--ds-shadow-md); }
+.ds-btn[disabled], .ds-btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+.ds-btn--primary { background: var(--ds-primary); color: var(--ds-on-primary); }
+.ds-btn--accent { background: var(--ds-accent); color: var(--ds-on-accent); }
+.ds-btn--secondary { background: var(--ds-surface); color: var(--ds-text); border-color: var(--ds-border-strong); }
+.ds-btn--danger { background: var(--ds-danger-bg); color: var(--ds-danger); border-color: var(--ds-danger-border); }
+.ds-btn--ghost { background: transparent; color: var(--ds-accent-text); }
+.ds-btn--sm { min-height: 36px; padding: var(--ds-space-2) var(--ds-space-3); font-size: var(--ds-text-xs); }
+.ds-btn--lg { min-height: 52px; padding: var(--ds-space-4) var(--ds-space-8); font-size: var(--ds-text-base); }
+
+/* ---- Campos de formulário ---- */
+.ds-field { display: grid; gap: var(--ds-space-1); margin-bottom: var(--ds-space-4); }
+.ds-label { font-weight: 700; font-size: var(--ds-text-sm); color: var(--ds-text); }
+.ds-input, .ds-select, .ds-textarea { width: 100%; min-height: var(--ds-tap); padding: var(--ds-space-3); font: inherit; color: var(--ds-text); background: var(--ds-surface);
+  border: 1.5px solid var(--ds-border-strong); border-radius: var(--ds-radius-md); }
+.ds-textarea { min-height: 96px; resize: vertical; }
+.ds-input[aria-invalid="true"] { border-color: var(--ds-danger); }
+.ds-help { font-size: var(--ds-text-xs); color: var(--ds-text-muted); }
+.ds-error { font-size: var(--ds-text-xs); color: var(--ds-danger); font-weight: 700; }
+
+/* ---- Cartão ---- */
+.ds-card { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-lg); padding: var(--ds-space-5); box-shadow: var(--ds-shadow-sm); }
+.ds-card__title { margin: 0 0 var(--ds-space-3); font-family: var(--ds-font-serif); font-size: var(--ds-text-lg); color: var(--ds-text); }
+
+/* ---- Tabela ---- */
+.ds-table-wrap { overflow-x: auto; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-md); background: var(--ds-surface); }
+.ds-table { width: 100%; border-collapse: collapse; font-size: var(--ds-text-sm); }
+.ds-table th { text-align: left; padding: var(--ds-space-3); font-size: var(--ds-text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ds-text-muted); background: var(--ds-surface-2); }
+.ds-table td { padding: var(--ds-space-3); border-top: 1px solid var(--ds-border); }
+
+/* ---- Janela (modal) ---- */
+.ds-modal-backdrop { position: fixed; inset: 0; z-index: var(--ds-z-modal); display: flex; align-items: center; justify-content: center; padding: var(--ds-space-4); background: rgba(6, 14, 26, 0.6); }
+.ds-modal { width: min(560px, 100%); max-height: 92vh; overflow: auto; background: var(--ds-surface); color: var(--ds-text); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-xl); padding: var(--ds-space-6); box-shadow: var(--ds-shadow-lg); }
+.ds-modal__title { margin: 0 0 var(--ds-space-2); font-family: var(--ds-font-serif); font-size: var(--ds-text-xl); }
+
+/* ---- Selos e avisos ---- */
+.ds-badge { display: inline-flex; align-items: center; gap: var(--ds-space-1); padding: 2px var(--ds-space-3); border-radius: var(--ds-radius-pill); font-size: var(--ds-text-xs); font-weight: 800; border: 1px solid transparent; }
+.ds-badge--neutral { background: var(--ds-surface-2); color: var(--ds-text-muted); border-color: var(--ds-border); }
+.ds-badge--success { background: var(--ds-success-bg); color: var(--ds-success); border-color: var(--ds-success-border); }
+.ds-badge--warning { background: var(--ds-warning-bg); color: var(--ds-warning); border-color: var(--ds-warning-border); }
+.ds-badge--danger  { background: var(--ds-danger-bg);  color: var(--ds-danger);  border-color: var(--ds-danger-border); }
+.ds-badge--info    { background: var(--ds-info-bg);    color: var(--ds-info);    border-color: var(--ds-info-border); }
+
+/* Selo de prazo: a cor sai da urgência (ver DS.deadlineTone em public/js/core/ds.js) */
+.ds-deadline { display: inline-flex; align-items: center; gap: var(--ds-space-2); padding: var(--ds-space-1) var(--ds-space-3); border-radius: var(--ds-radius-sm); font-size: var(--ds-text-xs); font-weight: 800; border: 1px solid transparent; }
+.ds-deadline--ok     { background: var(--ds-success-bg); color: var(--ds-success); border-color: var(--ds-success-border); }
+.ds-deadline--soon   { background: var(--ds-warning-bg); color: var(--ds-warning); border-color: var(--ds-warning-border); }
+.ds-deadline--urgent { background: var(--ds-danger-bg);  color: var(--ds-danger);  border-color: var(--ds-danger-border); }
+.ds-deadline--fatal  { background: var(--ds-danger);     color: var(--ds-surface); border-color: var(--ds-danger); }
+
+.ds-alert { padding: var(--ds-space-3) var(--ds-space-4); border-radius: var(--ds-radius-md); border: 1px solid transparent; font-size: var(--ds-text-sm); }
+.ds-alert--success { background: var(--ds-success-bg); color: var(--ds-success); border-color: var(--ds-success-border); }
+.ds-alert--warning { background: var(--ds-warning-bg); color: var(--ds-warning); border-color: var(--ds-warning-border); }
+.ds-alert--danger  { background: var(--ds-danger-bg);  color: var(--ds-danger);  border-color: var(--ds-danger-border); }
+.ds-alert--info    { background: var(--ds-info-bg);    color: var(--ds-info);    border-color: var(--ds-info-border); }
+
+/* ---- Linha do tempo ---- */
+.ds-timeline { list-style: none; margin: 0; padding: 0 0 0 var(--ds-space-2); border-left: 2px solid var(--ds-border); }
+.ds-timeline__item { position: relative; padding: 0 0 var(--ds-space-4) var(--ds-space-5); }
+.ds-timeline__item::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--ds-accent); border: 2px solid var(--ds-surface); }
+.ds-timeline__date { font-size: var(--ds-text-xs); color: var(--ds-text-muted); }
+.ds-timeline__text { margin: 0; font-weight: 700; }
+
+/* ---- Chip selecionável (dia, horário, filtro) ---- */
+.ds-chip { min-height: var(--ds-tap); padding: var(--ds-space-2) var(--ds-space-4); border-radius: var(--ds-radius-md); border: 1.5px solid var(--ds-border-strong); background: var(--ds-surface); color: var(--ds-text); font: inherit; font-weight: 700; cursor: pointer; }
+.ds-chip[aria-pressed="true"] { background: var(--ds-primary); color: var(--ds-on-primary); border-color: var(--ds-primary); }

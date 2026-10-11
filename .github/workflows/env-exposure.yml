@@ -1,0 +1,26 @@
+name: Guardião do .env (site ao vivo)
+
+# Confere todo dia que o site em produção NÃO expõe /.env, /.git/config, /leads.db etc.
+# Se algum caminho sensível responder 200, a execução FALHA e o GitHub avisa por e-mail.
+# Também pode ser disparado à mão (aba Actions). Só faz requisições GET públicas, de leitura.
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  live:
+    name: Site ao vivo sem arquivos sensíveis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Conferir exposição no site ao vivo
+        run: node scripts/check-env-exposure.js --url="${SITE_URL:-https://jorgealvimadvocacia.com.br}"
+        env:
+          # Opcional: defina a variável de repositório SITE_URL para outro domínio.
+          SITE_URL: ${{ vars.SITE_URL }}

@@ -504,9 +504,20 @@
                   ` : '';
                 })()}
 
+                <!-- Mensagens do Cliente (conversa pelo portal) -->
+                <button
+                  onclick="openClientMessages('${client.id}', '${encodeURIComponent(client.full_name || '')}')"
+                  class="relative px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-indigo-700"
+                  title="Conversar com o cliente pelo Portal do Cliente"
+                >
+                  <span>💬</span>
+                  <span>Mensagens</span>
+                  ${client.unread_messages ? `<span class="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow">${client.unread_messages > 99 ? '99+' : client.unread_messages}</span>` : ''}
+                </button>
+
                 <!-- Carnê Asaas -->
-                <button 
-                  onclick="openClientFinancialTab('${client.id}')" 
+                <button
+                  onclick="openClientFinancialTab('${client.id}')"
                   class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center space-x-1 border border-slate-700"
                   title="Abrir carnê de parcelas e gerar cobranças Asaas para este cliente"
                 >
@@ -1052,8 +1063,112 @@
 
 
   // ==========================================================================
+  // MENSAGENS DO CLIENTE (conversa pelo Portal do Cliente — "o cliente no foguete")
+  // Só o advogado responsável, o dono e a secretária conversam (o servidor valida).
+  // ==========================================================================
+  let currentMsgClientId = null;
+
+  function escMsg(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  async function openClientMessages(id, nameEncoded) {
+    currentMsgClientId = id;
+    const modal = document.getElementById('client-messages-modal');
+    if (!modal) return;
+    const title = document.getElementById('cmsg-client-name');
+    if (title) title.textContent = nameEncoded ? decodeURIComponent(nameEncoded) : ('#' + id);
+    const input = document.getElementById('cmsg-input');
+    if (input) input.value = '';
+    modal.classList.remove('hidden');
+    await loadClientMessages(id);
+  }
+
+  function closeClientMessages() {
+    const modal = document.getElementById('client-messages-modal');
+    if (modal) modal.classList.add('hidden');
+    currentMsgClientId = null;
+    // Abrir a conversa marca as mensagens como lidas no servidor; recarrega para zerar o selo.
+    if (typeof loadClients === 'function') loadClients();
+  }
+
+  async function loadClientMessages(id) {
+    const feed = document.getElementById('cmsg-feed');
+    if (feed) feed.innerHTML = '<p class="text-center text-slate-400 text-sm py-6">Carregando…</p>';
+    try {
+      const res = await fetch(`/api/clients/${id}/messages`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        if (feed) feed.innerHTML = `<p class="text-center text-rose-500 text-sm py-6">${escMsg(data.error || 'Erro ao carregar mensagens.')}</p>`;
+        return;
+      }
+      renderClientMessages(data.messages || []);
+    } catch (err) {
+      if (feed) feed.innerHTML = '<p class="text-center text-rose-500 text-sm py-6">Erro de comunicação com o servidor.</p>';
+    }
+  }
+
+  function renderClientMessages(messages) {
+    const feed = document.getElementById('cmsg-feed');
+    if (!feed) return;
+    if (!messages.length) {
+      feed.innerHTML = '<p class="text-center text-slate-400 text-sm py-6">Nenhuma mensagem ainda. Escreva abaixo para iniciar a conversa com o cliente.</p>';
+      return;
+    }
+    feed.innerHTML = messages.map(m => {
+      const isOffice = m.sender === 'office';
+      let quando = '';
+      try { quando = m.created_at ? new Date(m.created_at).toLocaleString('pt-BR') : ''; } catch (e) { quando = m.created_at || ''; }
+      const autor = isOffice ? ('🏛️ ' + escMsg(m.sender_name || 'Escritório')) : ('👤 ' + escMsg(m.sender_name || 'Cliente'));
+      return `
+        <div class="flex ${isOffice ? 'justify-end' : 'justify-start'}">
+          <div class="max-w-[80%] rounded-2xl px-3 py-2 text-sm ${isOffice ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-800'}">
+            <div class="text-[10px] font-bold opacity-80 mb-0.5">${autor}</div>
+            ${m.subject ? `<div class="text-[11px] font-semibold ${isOffice ? 'text-indigo-100' : 'text-slate-500'} mb-0.5">${escMsg(m.subject)}</div>` : ''}
+            <div class="whitespace-pre-wrap break-words">${escMsg(m.message)}</div>
+            <div class="text-[10px] opacity-70 mt-1 text-right">${escMsg(quando)}</div>
+          </div>
+        </div>`;
+    }).join('');
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  async function sendOfficeMessage(ev) {
+    if (ev && ev.preventDefault) ev.preventDefault();
+    if (!currentMsgClientId) return;
+    const input = document.getElementById('cmsg-input');
+    const btn = document.getElementById('cmsg-send-btn');
+    const texto = ((input && input.value) || '').trim();
+    if (!texto) return;
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(`/api/clients/${currentMsgClientId}/messages`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ message: texto })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (input) input.value = '';
+        await loadClientMessages(currentMsgClientId);
+      } else {
+        alert(data.error || 'Erro ao enviar a resposta.');
+      }
+    } catch (err) {
+      alert('Erro de comunicação com o servidor.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  // ==========================================================================
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
   // ==========================================================================
+  window.openClientMessages = openClientMessages;
+  window.closeClientMessages = closeClientMessages;
+  window.sendOfficeMessage = sendOfficeMessage;
   window.loadClients = typeof loadClients !== 'undefined' ? loadClients : window.loadClients;
   window.updateClientsStats = typeof updateClientsStats !== 'undefined' ? updateClientsStats : window.updateClientsStats;
   window.filterClients = typeof filterClients !== 'undefined' ? filterClients : window.filterClients;

@@ -20,7 +20,24 @@ import urllib.error
 from datetime import datetime
 
 # Constantes e Endpoints dos Tribunais (DataJud CNJ)
-DATAJUD_API_KEY = os.environ.get("DATAJUD_API_KEY", "APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==")
+_raw_key = os.environ.get("DATAJUD_API_KEY", "").strip()
+# A chave NÃO fica no código: vem só do ambiente (cofre do servidor). Aceita com ou sem o prefixo "APIKey".
+DATAJUD_API_KEY = (_raw_key if _raw_key.lower().startswith("apikey ") else f"APIKey {_raw_key}") if _raw_key else ""
+
+# Falhas das consultas externas (para o painel explicar POR QUE não veio resultado, em vez de falhar em silêncio).
+ERRORS = []
+
+
+def record_error(url, exc):
+    host = urllib.parse.urlparse(url).netloc
+    code = getattr(exc, "code", None)
+    if code:
+        detail = f"HTTP {code}" + (" (acesso recusado)" if code in (401, 403) else "")
+    else:
+        detail = type(exc).__name__ + (f": {exc}" if str(exc) else "")
+    item = {"source": host, "detail": detail}
+    if item not in ERRORS:
+        ERRORS.append(item)
 
 DATAJUD_TRIBUNALS = {
     "tjmg": {"name": "Tribunal de Justiça de Minas Gerais", "segment": "Estadual", "endpoint": "api_publica_tjmg"},
@@ -78,8 +95,8 @@ def http_post_json(url: str, headers: dict, payload: dict, timeout: int = 8) -> 
             if response.status in (200, 201):
                 raw = response.read().decode("utf-8")
                 return json.loads(raw)
-    except Exception:
-        pass
+    except Exception as exc:
+        record_error(url, exc)
     return None
 
 def http_get_json(url: str, headers: dict, timeout: int = 8) -> dict:
@@ -90,8 +107,8 @@ def http_get_json(url: str, headers: dict, timeout: int = 8) -> dict:
             if response.status in (200, 201):
                 raw = response.read().decode("utf-8")
                 return json.loads(raw)
-    except Exception:
-        pass
+    except Exception as exc:
+        record_error(url, exc)
     return None
 
 def search_datajud_by_number(npu_digits: str, tribunal_code: str = None) -> list:
@@ -113,6 +130,10 @@ def search_datajud_by_number(npu_digits: str, tribunal_code: str = None) -> list
             }
         }
     }
+
+    if not DATAJUD_API_KEY:
+        ERRORS.append({"source": "api-publica.datajud.cnj.jus.br", "detail": "a chave DATAJUD_API_KEY não está configurada no servidor"})
+        return results
 
     headers = {
         "Authorization": DATAJUD_API_KEY,
@@ -157,10 +178,10 @@ def normalize_datajud_hit(hit: dict, trib_code: str) -> dict:
             "description": m_compl.strip() or m_name
         })
 
-    class_name = src.get("classe", {}).get("nome", "Ação Judicial")
-    orgao_name = src.get("orgaoJulgador", {}).get("nome", "Vara Cível / Órgão Julgador")
+    class_name = src.get("classe", {}).get("nome", "Não informado")
+    orgao_name = src.get("orgaoJulgador", {}).get("nome", "Não informado")
     assuntos = src.get("assuntos", [])
-    assunto_name = assuntos[0].get("nome", "Direito Processual") if assuntos else "Direito Civil / Processual"
+    assunto_name = assuntos[0].get("nome", "Não informado") if assuntos else "Não informado"
     data_ajuizamento = src.get("dataAjuizamento", "")
     if len(data_ajuizamento) >= 8:
         dist_date = f"{data_ajuizamento[:4]}-{data_ajuizamento[4:6]}-{data_ajuizamento[6:8]}"
@@ -181,9 +202,9 @@ def normalize_datajud_hit(hit: dict, trib_code: str) -> dict:
         "value": 0,
         "formatted_value": "—",
         "status": "Em Tramitação",
-        "polo_ativo": [{"name": "Polo Ativo (Conforme Autos)", "document": "", "role": "Autor / Requerente"}],
-        "polo_passivo": [{"name": "Polo Passivo (Conforme Autos)", "document": "", "role": "Réu / Requerido"}],
-        "advogados": [{"name": "Advogados Registrados nos Autos", "oab": ""}],
+        "polo_ativo": [{"name": "Não informado pela base pública do CNJ", "document": "", "role": ""}],
+        "polo_passivo": [{"name": "Não informado pela base pública do CNJ", "document": "", "role": ""}],
+        "advogados": [],
         "movements": movements[:20],
         "source": "DataJud CNJ"
     }
@@ -316,9 +337,9 @@ def search_comunicaapi(query_type: str, query_term: str, tribunal: str = "all") 
             "formatted_value": "—",
             "status": "Em Tramitação",
             "direct_portal_url": link_doc or f"https://pje.{trib.lower()}.jus.br/",
-            "polo_ativo": polo_ativo or [{"name": "Polo Ativo (Conforme DJe)", "document": "", "role": "Autor"}],
-            "polo_passivo": polo_passivo or [{"name": "Polo Passivo (Conforme DJe)", "document": "", "role": "Réu"}],
-            "advogados": advogados or [{"name": "Advogados Registrados no DJe", "oab": ""}],
+            "polo_ativo": polo_ativo or [{"name": "Não informado no Diário da Justiça", "document": "", "role": "Autor"}],
+            "polo_passivo": polo_passivo or [{"name": "Não informado no Diário da Justiça", "document": "", "role": "Réu"}],
+            "advogados": advogados,
             "movements": movs,
             "source": "DJEN / ComunicaAPI"
         })
@@ -346,6 +367,10 @@ def search_local_sqlite(query_type: str, query_term: str) -> list:
         if query_type == "number" and digits:
             cur.execute("SELECT * FROM lawsuits WHERE cnj_number LIKE ? OR lawsuit_number LIKE ?", (f"%{clean_term}%", f"%{digits}%"))
         elif query_type == "oab":
+            # Só a OAB do próprio escritório lista os processos dele; a de terceiros não devolve nada daqui.
+            if "222943" not in digits:
+                conn.close()
+                return results
             cur.execute("SELECT * FROM lawsuits ORDER BY created_at DESC")
         else:
             cur.execute("""
@@ -357,7 +382,7 @@ def search_local_sqlite(query_type: str, query_term: str) -> list:
         
         rows = cur.fetchall()
         for r in rows:
-            client_name = "Cliente do Escritório"
+            client_name = "Não informado"
             client_doc = ""
             if r["client_id"]:
                 c_row = cur.execute("SELECT full_name, cpf, cnpj FROM clients WHERE id = ?", (r["client_id"],)).fetchone()
@@ -377,13 +402,6 @@ def search_local_sqlite(query_type: str, query_term: str) -> list:
             except Exception:
                 pass
 
-            if not movs:
-                movs = [{
-                    "date": r["distribution_date"] or "2026-08-01",
-                    "title": "Distribuição da Ação",
-                    "description": f"Processo distribuído para {r['court_branch']}."
-                }]
-
             results.append({
                 "id": f"PROC-LOCAL-{r['id']}",
                 "numero_processo": clean_digits(r["cnj_number"]),
@@ -393,14 +411,14 @@ def search_local_sqlite(query_type: str, query_term: str) -> list:
                 "segment": "Estadual / Federal",
                 "orgao_julgador": r["court_branch"] or "Vara Cível",
                 "class_name": r["action_type"] or "Ação Judicial",
-                "subject": r["subject"] or "Direito Civil",
-                "distribution_date": r["distribution_date"] or "2026-08-01",
+                "subject": r["subject"] or "Não informado",
+                "distribution_date": r["distribution_date"] or "",
                 "value": r["claim_value"] or 0,
                 "formatted_value": f"R$ {float(r['claim_value']):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if r["claim_value"] else "—",
                 "status": r["status"] or "Em Tramitação",
                 "polo_ativo": [{"name": client_name, "document": client_doc, "role": "Autor"}],
-                "polo_passivo": [{"name": "Parte Requerida", "document": "", "role": "Réu"}],
-                "advogados": [{"name": "Dr. Jorge Alvim", "oab": "OAB/MG 222.943"}],
+                "polo_passivo": [{"name": "Não informado", "document": "", "role": ""}],
+                "advogados": [],
                 "movements": movs,
                 "source": "Base do Escritório"
             })
@@ -442,11 +460,11 @@ def main():
         if dj_results and com_results:
             merged = dj_results[0]
             c_item = com_results[0]
-            if c_item.get("polo_ativo") and c_item["polo_ativo"][0]["name"] != "Polo Ativo (Conforme DJe)":
+            if c_item.get("polo_ativo") and c_item["polo_ativo"][0]["name"] != "Não informado no Diário da Justiça":
                 merged["polo_ativo"] = c_item["polo_ativo"]
-            if c_item.get("polo_passivo") and c_item["polo_passivo"][0]["name"] != "Polo Passivo (Conforme DJe)":
+            if c_item.get("polo_passivo") and c_item["polo_passivo"][0]["name"] != "Não informado no Diário da Justiça":
                 merged["polo_passivo"] = c_item["polo_passivo"]
-            if c_item.get("advogados") and c_item["advogados"][0]["name"] != "Advogados Registrados no DJe":
+            if c_item.get("advogados"):
                 merged["advogados"] = c_item["advogados"]
             if c_item.get("movements"):
                 # Intercalar publicações com movimentações
@@ -475,10 +493,9 @@ def main():
         loc_results = search_local_sqlite("name", query_term)
         aggregated.extend(loc_results)
 
-    # 4. Se for busca por CPF / CNPJ:
+    # 4. Se for busca por CPF / CNPJ: o DataJud e o Diário da Justiça NÃO permitem buscar por CPF/CNPJ.
+    #    Só o cadastro do próprio escritório pode responder (nada é inventado).
     else:
-        com_results = search_comunicaapi("cpf", query_term, tribunal)
-        aggregated.extend(com_results)
         loc_results = search_local_sqlite("cpf", query_term)
         aggregated.extend(loc_results)
 
@@ -500,7 +517,8 @@ def main():
         "query_term": query_term,
         "tribunal": tribunal,
         "total": len(deduped),
-        "processes": deduped
+        "processes": deduped,
+        "errors": ERRORS
     }
 
     print(json.dumps(output, ensure_ascii=False, indent=2))

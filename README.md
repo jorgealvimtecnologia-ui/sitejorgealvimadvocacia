@@ -4,7 +4,7 @@ Sistema web integrado para o escritório **Jorge Alvim Advocacia (OAB/MG)**: sit
 + ERP jurídico completo (clientes, processos, prazos, financeiro, RH, blog e portais de
 autoatendimento para clientes e colaboradores).
 
-> **Stack:** Node.js 22+ · Express 5 · SQLite nativo (`node:sqlite`) · HTML/Tailwind (CDN) ·
+> **Stack:** Node.js 24+ · Express 5 · SQLite nativo (`node:sqlite`) · HTML/Tailwind (CDN) ·
 > Docker + Nginx. Sem framework de frontend — as telas são servidas como páginas HTML.
 
 ---
@@ -55,7 +55,7 @@ e o bloco de init em `server.js`).
 
 ## 🚀 Como executar (desenvolvimento)
 
-**Pré-requisitos:** Node.js **22 ou superior** (a API `node:sqlite` é nativa a partir do 22.5).
+**Pré-requisitos:** Node.js **24 ou superior** (a mesma versão da produção e da CI; a API `node:sqlite` é nativa).
 
 ```bash
 # 1. Instalar dependências

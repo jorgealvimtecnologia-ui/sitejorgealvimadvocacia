@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { requireAuth } from '../../middleware/auth.js';
 import { ROOT_DIR } from '../../config/constants.js';
+import { sendStoredFile } from '../../middleware/stored-files.js';
 
 export const explorerRouter = express.Router();
 
@@ -63,6 +64,6 @@ explorerRouter.delete('/api/explorer/delete', requireAuth, (req, res) => {
 });
 explorerRouter.get('/api/explorer/download', requireAuth, (req, res) => {
   try { const abs = expResolve(req.query.path); if (fs.statSync(abs).isDirectory()) return res.status(400).json({ error: 'Não é possível baixar uma pasta.' });
-    return res.download(abs);
+    return sendStoredFile(req, res, abs, { download: true });
   } catch (e) { return res.status(400).json({ error: e.message }); }
 });

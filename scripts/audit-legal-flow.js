@@ -239,13 +239,13 @@ console.log(`\n${BOLD}${BLUE}6. DESEMPENHO TÉCNICO & LIMITE DO GUARDIÃO${RESET
 try {
   const serverPath = path.join(ROOT_DIR, 'server.js');
   const serverLines = fs.readFileSync(serverPath, 'utf8').split('\n').length;
-  const isServerOk = serverLines <= 3200;
+  const isServerOk = serverLines <= 2000;
 
   check(
     `Saúde do Backend Orchestrator (server.js)`,
     isServerOk,
     10,
-    `Linhas: ${serverLines} / 3.200 linhas permitidas (Margem: ${3200 - serverLines} linhas)`,
+    `Linhas: ${serverLines} / 2.000 linhas permitidas (Margem: ${2000 - serverLines} linhas)`,
     'Mantenha as novas rotas estritamente em src/modules/<modulo>/ para não inflar o core.'
   );
 } catch (e) {

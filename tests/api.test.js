@@ -26,11 +26,11 @@ process.env.NODE_ENV = 'test';
 process.env.DB_PATH = TMP_DB;
 // A senha do mestre não é mais hardcoded no boot: definimos a senha inicial do
 // banco de teste por MASTER_PASSWORD (o mesmo mecanismo do .env em produção).
-process.env.MASTER_PASSWORD = 'jorgealvim';
+process.env.MASTER_PASSWORD = 'SenhaRealDoMestre#2026';
 
 const { app, db } = await import('../server.js');
 
-const MASTER = { username: 'jorgealvimtecnologia', password: 'jorgealvim' };
+const MASTER = { username: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' };
 let masterToken = '';
 
 const auth = (req, token) => req.set('Authorization', `Bearer ${token}`);
@@ -54,7 +54,9 @@ describe('Health check', () => {
   it('GET /health responde ok', async () => {
     const r = await request(app).get('/health');
     assert.equal(r.status, 200);
-    assert.equal(r.body.status, 'ok');
+    assert.equal(r.body.db, 'ok');
+    // 'degraded' só se a máquina de teste estiver com pouco disco; 'fail' (banco fora) nunca.
+    assert.ok(['ok', 'degraded'].includes(r.body.status));
   });
 });
 
@@ -180,7 +182,7 @@ describe('RBAC — perfil restrito', () => {
     // Cria uma "secretária" (perfil restrito) e sua matriz de permissões:
     // PODE clientes, NÃO PODE financeiro.
     const created = await auth(request(app).post('/api/users'), masterToken)
-      .send({ username: 'secretaria_test', password: 'senha1234', name: 'Secretária Teste', role: 'secretaria' });
+      .send({ username: 'secretaria_test', password: 'senha12345', name: 'Secretária Teste', role: 'secretaria' });
     assert.equal(created.status, 201);
 
     const u = db.prepare('SELECT id FROM users WHERE username = ?').get('secretaria_test');
@@ -190,7 +192,7 @@ describe('RBAC — perfil restrito', () => {
       VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
       .run(`AP-TEST-${Date.now()}`, u.id, 'admin', 'Secretária Teste', 'secretaria', 1, 0, 1, 'assigned', now, now);
 
-    const rl = await request(app).post('/api/auth/login').send({ username: 'secretaria_test', password: 'senha1234' });
+    const rl = await request(app).post('/api/auth/login').send({ username: 'secretaria_test', password: 'senha12345' });
     assert.equal(rl.status, 200);
     secToken = rl.body.token;
   });
@@ -212,7 +214,7 @@ describe('RBAC — perfil restrito', () => {
   });
 });
 
-describe('Política de senha (8–64 caracteres)', () => {
+describe('Política de senha (10–64 caracteres)', () => {
   const novo = (senha, sufixo) => auth(request(app).post('/api/users'), masterToken).send({
     username: `pol_${sufixo}`, password: senha, name: `Pol ${sufixo}`, role: 'secretaria',
   });
@@ -222,8 +224,8 @@ describe('Política de senha (8–64 caracteres)', () => {
     assert.equal(r.status, 400);
   });
 
-  it('senha com 7 caracteres (abaixo do mínimo) → 400', async () => {
-    const r = await novo('abc1234', 'sub8');
+  it('senha com 9 caracteres (abaixo do mínimo) → 400', async () => {
+    const r = await novo('abc123456', 'sub10');
     assert.equal(r.status, 400);
   });
 
@@ -232,8 +234,8 @@ describe('Política de senha (8–64 caracteres)', () => {
     assert.equal(r.status, 400);
   });
 
-  it('senha com 8 caracteres (limite mínimo) → 201', async () => {
-    const r = await novo('abcd1234', 'min8');
+  it('senha com 10 caracteres (limite mínimo) → 201', async () => {
+    const r = await novo('abcd123456', 'min10');
     assert.equal(r.status, 201);
   });
 
@@ -943,7 +945,7 @@ describe('Google Identity Services (Auth & Cadastro)', () => {
 describe('Soft Delete & Barreira Ética OAB (LGPD Art. 16, I)', () => {
   const testCpf = '111.222.333-44';
   const testPhone = '32988887777';
-  const testPass = 'Senha123';
+  const testPass = 'Senha12345';
   let testClientId = '';
   let clientPortalToken = '';
 
@@ -1324,7 +1326,7 @@ describe('Recuperação de Senha do Administrador & Google Colaborador', () => {
     await request(app).post('/api/auth/reset-password').send({
       username: 'jorgealvimtecnologia',
       code: codeBack,
-      new_password: 'jorgealvim'
+      new_password: 'SenhaRealDoMestre#2026'
     });
   });
 

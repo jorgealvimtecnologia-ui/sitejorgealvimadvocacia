@@ -1,3 +1,4 @@
+import { registerJob, markJobRun } from '../../shared/observability.js';
 import express from 'express';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
@@ -60,12 +61,11 @@ async function comunicaFetch(url, opts) {
   return fetch(url, opts);
 }
 
+// Advogados cujas OABs o motor monitora. Apenas os REAIS do escritório — as OABs fictícias
+// de demonstração (que puxavam intimações de terceiros) foram removidas. Novos advogados
+// reais entram pela aba "Equipe" (office_members), que resolveLawyers() também considera.
 const OFFICE_LAWYERS = [
-  { id: 'dr-jorge-alvim', name: 'Dr. Jorge Alvim', oab: '222943', uf: 'MG' },
-  { id: 'MEM-2026-0001', name: 'Dr. Jorge Eduardo Alvim', oab: '198765', uf: 'MG' },
-  { id: 'MEM-2026-0002', name: 'Dra. Mariana Fonseca Alvim', oab: '210450', uf: 'MG' },
-  { id: 'MEM-2026-0006', name: 'Dr. Roberto Medeiros Fonseca', oab: '165430', uf: 'MG' },
-  { id: 'MEM-2026-0007', name: 'Dra. Camila Vasconcelos', oab: '225890', uf: 'MG' }
+  { id: 'dr-jorge-alvim', name: 'Dr. Jorge Eduardo da Silva Alvim', oab: '222943', uf: 'MG' }
 ];
 
 /** Monta a lista de advogados a sincronizar (padrão do escritório + office_members, ou uma OAB-alvo). */
@@ -356,7 +356,12 @@ export function startSyncScheduler() {
   _started = true;
   const hours = Math.max(1, Number(process.env.SYNC_INTERVAL_HOURS) || 12);
   const intervalMs = hours * 60 * 60 * 1000;
-  const run = () => { runFullSync().catch(e => console.error('[SYNC] Erro no ciclo automático:', e.message)); };
+  registerJob('sincronizacao_tribunais', intervalMs);
+  const run = () => {
+    runFullSync()
+      .then((r) => markJobRun('sincronizacao_tribunais', r?.success !== false, r?.error || ''))
+      .catch(e => { markJobRun('sincronizacao_tribunais', false, e.message); console.error('[SYNC] Erro no ciclo automático:', e.message); });
+  };
   setTimeout(run, 30000).unref?.();        // primeira sync ~30s após o boot
   setInterval(run, intervalMs).unref?.();
   console.log(`🔄 [SYNC] Agendador ativo: sincronização automática a cada ${hours}h.`);

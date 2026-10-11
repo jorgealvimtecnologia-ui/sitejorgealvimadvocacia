@@ -22,13 +22,13 @@ export async function sendLawyerWhatsAppNotification(messageText, metadata = {})
         headers: {
           'Content-Type': 'application/json',
           'Client-Token': WHATSAPP_API_KEY,
-          'apikey': WHATSAPP_API_KEY
+          apikey: WHATSAPP_API_KEY,
         },
         body: JSON.stringify({
           phone: LAWYER_WHATSAPP_NUMBER,
           number: LAWYER_WHATSAPP_NUMBER,
-          message: messageText
-        })
+          message: messageText,
+        }),
       });
       console.log(` [📲 WHATSAPP] Notificação enviada via Gateway API (Status: ${response.status})`);
     } catch (err) {
@@ -37,4 +37,33 @@ export async function sendLawyerWhatsAppNotification(messageText, metadata = {})
   }
 
   return { success: true, waDirectUrl, lawyerPhone: LAWYER_WHATSAPP_NUMBER };
+}
+
+/**
+ * Envia WhatsApp a UM número pelo gateway e informa, DE VERDADE, se foi enviado.
+ * (A função acima sempre devolve success:true, mesmo sem gateway ou com erro: não serve
+ * para alertas de prazo, que precisam saber se chegou.) Nunca lança.
+ * @param {string} phone número em dígitos com DDI (ex.: 5532998153429)
+ * @param {string} messageText
+ * @param {{ fetchImpl?: typeof fetch, env?: object }} [opts] injeção para testes
+ * @returns {Promise<{sent:boolean, reason?:string, status?:number}>}
+ */
+export async function sendWhatsAppMessage(phone, messageText, { fetchImpl = fetch, env = process.env } = {}) {
+  const gateway = String(env.WHATSAPP_GATEWAY_URL || '').trim();
+  if (!gateway) return { sent: false, reason: 'not_configured' };
+  if (!/^\d{12,13}$/.test(String(phone || ''))) return { sent: false, reason: 'invalid_phone' };
+  try {
+    const key = env.WHATSAPP_API_KEY || '';
+    const res = await fetchImpl(gateway, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Client-Token': key, apikey: key },
+      body: JSON.stringify({ phone, number: phone, message: messageText }),
+      signal: AbortSignal.timeout(15000),
+    });
+    return res.ok
+      ? { sent: true, status: res.status }
+      : { sent: false, reason: `gateway_http_${res.status}`, status: res.status };
+  } catch (err) {
+    return { sent: false, reason: `send_failed: ${err.message}` };
+  }
 }

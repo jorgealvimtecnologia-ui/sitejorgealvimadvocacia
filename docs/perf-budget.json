@@ -1,0 +1,43 @@
+{
+  "nota": "Orçamento = medição + 5%. A página pode emagrecer, não engordar. Metas finais de projeto em docs/DESIGN-SYSTEM.md e docs/INFRA.md (desempenho). Regravar só por decisão consciente: node scripts/perf-budget.js --atualizar",
+  "metas_lighthouse": {
+    "desempenho": 85,
+    "acessibilidade": 95,
+    "boas_praticas": 85,
+    "seo": 90
+  },
+  "pages": {
+    "/": {
+      "total_gz_kb": 88,
+      "medido_em_kb": 83
+    },
+    "/painel": {
+      "total_gz_kb": 447,
+      "medido_em_kb": 425.5
+    },
+    "/cliente": {
+      "total_gz_kb": 56,
+      "medido_em_kb": 53.1
+    },
+    "/colaborador": {
+      "total_gz_kb": 49,
+      "medido_em_kb": 46.6
+    },
+    "/blog": {
+      "total_gz_kb": 37,
+      "medido_em_kb": 35.2
+    },
+    "/amazon": {
+      "total_gz_kb": 30,
+      "medido_em_kb": 28.3
+    },
+    "/agendar": {
+      "total_gz_kb": 9,
+      "medido_em_kb": 8.5
+    },
+    "/design-system": {
+      "total_gz_kb": 9,
+      "medido_em_kb": 7.9
+    }
+  }
+}

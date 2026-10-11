@@ -13,7 +13,9 @@
     "guard": "node scripts/check-architecture.js",
     "guard:watch": "node scripts/check-architecture.js --watch",
     "check:architecture": "node scripts/check-architecture.js",
-    "test": "node scripts/check-architecture.js && node --test \"tests/**/*.test.js\"",
+    "check:rbac": "node scripts/check-rbac-guard.js",
+    "check:env": "node scripts/check-env-exposure.js",
+    "test": "node scripts/check-architecture.js && node --test --test-concurrency=1 \"tests/**/*.test.js\"",
     "test:watch": "node --test --watch \"tests/**/*.test.js\"",
     "test:health": "node scripts/test-system.js",
     "audit:flow": "node scripts/audit-legal-flow.js",
@@ -26,6 +28,7 @@
     "roadmap:functions": "node scripts/roadmap-agent.js functions",
     "roadmap:note": "node scripts/roadmap-agent.js note",
     "roadmap:register": "node scripts/roadmap-agent.js register",
+    "roadmap:register-batch": "node scripts/roadmap-register-batch.js",
     "roadmap:import-local": "node scripts/roadmap-agent.js import-local",
     "qa:checklist": "node scripts/generate-qa-checklist.js",
     "test:e2e": "playwright test",
@@ -36,9 +39,17 @@
     "lint:fix": "eslint . --fix",
     "audit": "npm audit --omit=dev --audit-level=high",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "backup:scrub-old": "node scripts/backup-scrub-old.js",
+    "backup:verify": "node scripts/backup-restore-test.js",
+    "env:vault": "node scripts/env-vault.js",
+    "check:perf": "node scripts/perf-budget.js",
+    "test:a11y": "playwright test e2e/a11y.spec.js",
+    "test:lighthouse:ci": "node scripts/lighthouse-ci.js",
+    "check:producao": "node scripts/producao-checklist.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.49.1",
     "autoprefixer": "^10.4.20",
@@ -55,8 +66,11 @@
     "compression": "^1.8.2",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "multer": "^2.3.0",
+    "multer": "^2.4.0",
     "nodemailer": "^10.0.10",
     "undici": "^6.21.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

@@ -16,7 +16,7 @@ test('login do painel com o usuário mestre entra no sistema', async ({ page }) 
   // A tela de login vem pré-preenchida com o usuário mestre; garantimos os valores.
   await page.fill('#login-username', 'jorgealvimtecnologia');
   await page.click('#login-password');
-  await page.fill('#login-password', 'jorgealvim');
+  await page.fill('#login-password', process.env.E2E_MASTER_PASSWORD);
   await page.click('#login-form button[type="submit"]');
 
   // Após autenticar, o painel aparece e o nome do usuário é exibido.

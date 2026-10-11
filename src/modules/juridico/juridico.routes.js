@@ -2,6 +2,8 @@
  * Módulo JURÍDICO (radar) — intimações DJEN, DataJud/CNJ, prazos e tribunais.
  * Rotas /api/judicial e /api/court. Extraído do server.js.
  */
+import { computeLegalDeadline } from '../../shared/deadline-calc.js';
+import { ensureCourtHolidays, holidayCoverage } from '../../shared/court-calendar.js';
 import express from 'express';
 import { execFile } from 'node:child_process';
 import path from 'path';
@@ -114,6 +116,13 @@ function detectTribunalFromNPU(npu) {
   return null;
 }
 
+/** Valor do cabeçalho Authorization do DataJud ("APIKey <chave>"); aceita a chave com ou sem o prefixo. */
+export function datajudAuthHeader(raw) {
+  const v = String(raw || '').trim();
+  if (!v) return '';
+  return /^APIKey\s+/i.test(v) ? v : `APIKey ${v}`;
+}
+
 /**
  * Consulta oficial à API REST / ElasticSearch do DataJud (CNJ)
  */
@@ -121,7 +130,15 @@ async function callDataJudAPI(tribunalCode, esQuery) {
   const tribunal = JUDICIAL_TRIBUNALS[tribunalCode];
   if (!tribunal) throw new Error(`Tribunal '${tribunalCode}' não suportado.`);
 
-  const apiKey = process.env.DATAJUD_API_KEY || 'APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==';
+  // A chave NÃO fica no código: vem só de DATAJUD_API_KEY (cofre do servidor: node scripts/env-vault.js set DATAJUD_API_KEY).
+  const apiKey = datajudAuthHeader(process.env.DATAJUD_API_KEY);
+  if (!apiKey) {
+    if (!callDataJudAPI.avisou) {
+      callDataJudAPI.avisou = true;
+      console.warn('[DATAJUD] DATAJUD_API_KEY não configurada: o Radar Judicial por DataJud fica indisponível até configurar (veja .env.example).');
+    }
+    return { success: false, error: 'Chave do DataJud não configurada no servidor (DATAJUD_API_KEY).' };
+  }
   const url = `https://api-publica.datajud.cnj.jus.br/${tribunal.apiEndpoint}/_search`;
 
   try {
@@ -210,7 +227,7 @@ function normalizeJudicialHit(hit, tribunalCode) {
   movements.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Formatar data de distribuição
-  let distDate = src.dataAjuizamento || src.dataDistribuicao || new Date().toISOString().split('T')[0];
+  let distDate = src.dataAjuizamento || src.dataDistribuicao || '';
   if (typeof distDate === 'string' && distDate.length >= 8 && !distDate.includes('-')) {
     distDate = `${distDate.slice(0, 4)}-${distDate.slice(4, 6)}-${distDate.slice(6, 8)}`;
   }
@@ -223,24 +240,20 @@ function normalizeJudicialHit(hit, tribunalCode) {
     tribunal_name: tribunal.name,
     segment: tribunal.segment,
     court_system: tribunal.system || 'PJe',
-    class_name: src.classe?.nome || 'Ação Cível / Procedimento Comum',
-    subject: Array.isArray(src.assuntos) ? src.assuntos.map(a => a.nome).join(', ') : (src.assunto || 'Direito Civil / Consumidor'),
+    // NADA aqui é inventado: o que a base pública do CNJ não informa aparece como "não informado" (ou vazio).
+    class_name: src.classe?.nome || 'Não informado',
+    subject: Array.isArray(src.assuntos) && src.assuntos.length ? src.assuntos.map(a => a.nome).join(', ') : (src.assunto || 'Não informado'),
     distribution_date: distDate,
-    court_branch: src.orgaoJulgador?.nome || 'Vara Cível / Juizado Especial',
-    city: src.orgaoJulgador?.municipio || 'Juiz de Fora - MG',
+    court_branch: src.orgaoJulgador?.nome || 'Não informado',
+    city: src.orgaoJulgador?.municipio || '',
     confidential: !!src.nivelSigilo,
-    polo_ativo: poloAtivo.length > 0 ? poloAtivo : [{ name: 'Autor Identificado nos Autos', document: '' }],
-    polo_passivo: poloPassivo.length > 0 ? poloPassivo : [{ name: 'Réu / Requerido nos Autos', document: '' }],
-    lawyers: advogados.length > 0 ? advogados : [{ name: 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
-    movements: movements.length > 0 ? movements : [
-      { date: new Date().toISOString(), title: 'Processo em Tramitação Regular', details: 'Autos em andamento com prazos vigentes.' }
-    ],
-    direct_portal_url: tribunal.portalUrl ? tribunal.portalUrl(formattedNumber) : `https://pje.tjmg.jus.br/`,
-    public_documents: [
-      { title: 'Petição Inicial / Distribuição', type: 'PDF', is_public: true },
-      { title: 'Despacho / Decisão Interlocutória', type: 'PDF', is_public: true },
-      { title: 'Certidão de Intimação Eletrônica', type: 'PDF', is_public: true }
-    ]
+    polo_ativo: poloAtivo.length > 0 ? poloAtivo : [{ name: 'Não informado pela base pública do CNJ', document: '' }],
+    polo_passivo: poloPassivo.length > 0 ? poloPassivo : [{ name: 'Não informado pela base pública do CNJ', document: '' }],
+    lawyers: advogados,
+    movements,
+    direct_portal_url: tribunal.portalUrl ? tribunal.portalUrl(formattedNumber) : '',
+    public_documents: [],   // a base pública do DataJud não traz documentos: use o portal do tribunal
+    origin: 'datajud'
   };
 }
 
@@ -261,245 +274,191 @@ function runPythonRadarCrawler({ queryType, queryTerm, tribunal = 'all', uf = 'M
     execFile('python3', args, { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
       if (error) {
         console.warn('⚠️ [RADAR PYTHON CRAWLER WARN]', error.message);
-        return resolve(null);
+        return resolve({ success: false, error: `motor Python indisponível (${error.code === 'ENOENT' ? 'python3 não instalado' : error.message})` });
       }
       try {
         const parsed = JSON.parse(stdout);
         resolve(parsed);
       } catch (e) {
         console.warn('⚠️ [RADAR PYTHON PARSE ERROR]', e.message);
-        resolve(null);
+        resolve({ success: false, error: 'o motor Python devolveu uma resposta inválida' });
       }
     });
   });
 }
 
 /**
- * Orquestrador central de busca multi-tribunal com motor Python
+ * Links oficiais de consulta para o(s) tribunal(is) da busca (nunca um "processo de mentira": só o caminho para o portal).
+ */
+function judicialPortalLinks(tribunal, term) {
+  const codes = tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal] ? [tribunal] : ['tjmg', 'trf6', 'trt3', 'tjsp'];
+  return codes
+    .map((c) => JUDICIAL_TRIBUNALS[c])
+    .filter((t) => t && typeof t.portalUrl === 'function')
+    .map((t) => ({ name: t.name, url: t.portalUrl(term) }));
+}
+
+/** Processo do ESCRITÓRIO (tabela lawsuits) no formato do Radar: só campos reais; o que falta aparece como "não informado". */
+function localLawsuitToRadar(lp) {
+  const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(lp.client_id);
+  const movements = db.prepare(`SELECT * FROM lawsuit_movements WHERE lawsuit_id = ? ORDER BY movement_date DESC`).all(lp.id);
+  return {
+    id: lp.id,
+    numero_processo: lp.cnj_number,
+    numero_processo_raw: String(lp.cnj_number || '').replace(/\D/g, ''),
+    tribunal_code: lp.tribunal ? String(lp.tribunal).split(/\s|-/)[0].toLowerCase() : '',
+    tribunal_name: lp.tribunal || 'Não informado',
+    segment: '',
+    court_system: '',
+    class_name: lp.action_type || 'Não informado',
+    subject: lp.subject || lp.notes || 'Não informado',
+    distribution_date: lp.distribution_date || '',
+    court_branch: lp.court_branch || 'Não informado',
+    city: '',
+    confidential: false,
+    polo_ativo: client ? [{ name: client.full_name, document: client.cpf || client.cnpj || '' }] : [{ name: 'Não informado', document: '' }],
+    polo_passivo: [{ name: 'Não informado', document: '' }],
+    lawyers: [],
+    movements: movements.map((m) => ({ date: m.movement_date || m.created_at, title: m.title, details: m.description || '' })),
+    direct_portal_url: '',
+    public_documents: [],
+    origin: 'escritorio',
+    source: 'Base do Escritório'
+  };
+}
+
+/**
+ * Orquestrador central de busca. REGRA DE OURO: só devolve dado REAL (DataJud, DJEN ou o cadastro do próprio
+ * escritório). Quando não acha, devolve lista vazia + o MOTIVO (fontes consultadas) + links do portal oficial.
  */
 async function searchJudicialNetwork({ queryType, queryTerm, tribunal = 'all' }) {
   const cleanTerm = queryTerm.trim();
   const digitsOnly = cleanTerm.replace(/\D/g, '');
   const now = new Date();
+  const sources = []; // { name, ok, detail }: o que foi consultado e o que respondeu
+  const notices = []; // limites da busca, em linguagem simples
 
-  // 1. Verificar Cache SQLite Local
+  if (queryType === 'cpf' || queryType === 'cnpj') {
+    notices.push('Não existe busca por CPF/CNPJ nas bases públicas (DataJud e Diário da Justiça). Esta busca só encontra processos do escritório cadastrados neste sistema; para os demais, use o portal do tribunal.');
+  } else if (queryType === 'name') {
+    notices.push('A busca por nome usa o Diário da Justiça (DJEN): só encontra quem teve intimação publicada. O DataJud público não permite buscar por nome.');
+  } else if (queryType === 'oab') {
+    notices.push('A busca por OAB usa o Diário da Justiça (DJEN): mostra processos com intimações publicadas para essa OAB.');
+  }
+  const portal_links = judicialPortalLinks(tribunal, cleanTerm);
+  const base = { notices, portal_links };
+
+  // 1. Cache local (2 horas). Só guardamos resultados reais de fontes externas.
   try {
     const cached = db.prepare(`
       SELECT * FROM judicial_search_cache 
       WHERE query_type = ? AND query_term = ? AND tribunal = ? AND expires_at > ?
     `).get(queryType, cleanTerm, tribunal, now.toISOString());
-
     if (cached) {
       console.log(`⚡ [RADAR JUDICIAL CACHE HIT] Retornando ${cached.total_results} processo(s) do cache para '${cleanTerm}'`);
-      return { success: true, source: 'cache', total: cached.total_results, processes: JSON.parse(cached.results_json) };
+      return { success: true, source: 'cache', total: cached.total_results, processes: JSON.parse(cached.results_json), sources: [{ name: 'Cache local (2 h)', ok: true, detail: `${cached.total_results} resultado(s)` }], ...base };
     }
   } catch (err) {
     console.warn('Erro ao consultar cache judicial:', err);
   }
 
-  // 2. Executar Motor Especializado em Python (radar_crawler.py)
-  try {
-    const pyResult = await runPythonRadarCrawler({ queryType, queryTerm: cleanTerm, tribunal });
-    if (pyResult && pyResult.success && pyResult.processes && pyResult.processes.length > 0) {
-      console.log(`🐍 [RADAR PYTHON CRAWLER] ${pyResult.processes.length} processo(s) capturados com sucesso para '${cleanTerm}'`);
-
-      // Salvar em Cache (2 horas)
-      try {
-        const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-        db.prepare(`
-          INSERT INTO judicial_search_cache (query_type, query_term, tribunal, total_results, results_json, created_at, expires_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).run(queryType, cleanTerm, tribunal, pyResult.processes.length, JSON.stringify(pyResult.processes), now.toISOString(), expiresAt);
-      } catch (err) {}
-
-      return {
-        success: true,
-        engine: 'Python 3 Radar Crawler (DataJud • DJEN • SQLite)',
-        source: 'python_crawler',
-        total: pyResult.processes.length,
-        processes: pyResult.processes
-      };
-    }
-  } catch (pyErr) {
-    console.warn('Falha ao acionar motor Python:', pyErr.message);
-  }
-
-  let aggregatedProcesses = [];
-
-  // 3. Fallback Nativo JavaScript (se Python não retornar resultados)
-  if (queryType === 'number' && digitsOnly.length >= 8) {
-    let targetTribunals = [];
-    if (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) {
-      targetTribunals = [tribunal];
-    } else {
-      const detected = detectTribunalFromNPU(digitsOnly);
-      targetTribunals = detected ? [detected] : ['tjmg', 'trf6', 'trf1', 'trt3', 'tjsp', 'stj', 'stf', 'tst'];
-    }
-
-    const esQuery = {
-      size: 10,
-      query: {
-        match: {
-          numeroProcesso: digitsOnly
-        }
-      }
-    };
-
-    const apiPromises = targetTribunals.map(async (tribCode) => {
-      try {
-        const res = await callDataJudAPI(tribCode, esQuery);
-        if (res.success && res.data?.hits?.hits?.length > 0) {
-          return res.data.hits.hits.map(hit => normalizeJudicialHit(hit, tribCode));
-        }
-      } catch (e) {
-        console.warn(`Falha na busca remota no tribunal ${tribCode}:`, e.message);
-      }
-      return [];
-    });
-
-    const resultsByTribunal = await Promise.all(apiPromises);
-    resultsByTribunal.forEach(list => {
-      aggregatedProcesses.push(...list);
-    });
-  }
-
-  // 3. BUSCA POR NOME, CPF, CNPJ, OAB OU PROCESSOS DO ESCRITÓRIO:
-  if (aggregatedProcesses.length === 0) {
-    try {
-      let localProcesses = [];
-      const cleanDoc = digitsOnly;
-      const isOabSearch = queryType === 'oab' || cleanTerm.toLowerCase().includes('oab') || cleanTerm.includes('222943') || cleanTerm.includes('222.943');
-
-      if (queryType === 'number') {
-        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE (cnj_number LIKE ? OR cnj_number LIKE ?) AND deleted_at IS NULL`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
-      } else if (isOabSearch) {
-        localProcesses = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC`).all();
-      } else {
-        localProcesses = db.prepare(`
-          SELECT l.* FROM lawsuits l
-          LEFT JOIN clients c ON l.client_id = c.id
-          WHERE (c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ? 
-             OR REPLACE(REPLACE(REPLACE(c.cpf, '.', ''), '-', ''), ' ', '') LIKE ?
-             OR REPLACE(REPLACE(REPLACE(REPLACE(c.cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
-             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?)
-            AND l.deleted_at IS NULL
-        `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
-
-        if (localProcesses.length === 0) {
-          const matchedClients = db.prepare(`
-            SELECT * FROM clients 
-            WHERE full_name LIKE ? OR cpf LIKE ? OR cnpj LIKE ?
-               OR REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?
-               OR REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?
-          `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanDoc}%`, `%${cleanDoc}%`);
-
-          matchedClients.forEach(c => {
-            localProcesses.push({
-              id: 'PROC-' + c.id,
-              client_id: c.id,
-              cnj_number: '5007788-99.2026.8.13.0145',
-              tribunal: 'TJMG',
-              instance: '1ª Instância',
-              action_type: 'Ação Cível e de Defesa de Direitos',
-              court_branch: 'Vara Cível da Comarca de Juiz de Fora - MG',
-              subject: 'Direito Civil e Empresarial',
-              distribution_date: '2026-08-20',
-              status: 'Em Andamento',
-              created_at: new Date().toISOString()
-            });
-          });
-        }
-      }
-
-      if (localProcesses.length > 0) {
-        localProcesses.forEach(lp => {
-          const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(lp.client_id) || { full_name: 'Cliente do Escritório' };
-          const movements = db.prepare(`SELECT * FROM lawsuit_movements WHERE lawsuit_id = ? ORDER BY movement_date DESC`).all(lp.id);
-          
-          aggregatedProcesses.push({
-            id: lp.id,
-            numero_processo: lp.cnj_number,
-            numero_processo_raw: lp.cnj_number.replace(/\D/g, ''),
-            tribunal_code: (lp.tribunal && lp.tribunal.toLowerCase().includes('federal')) ? 'trf6' : 'tjmg',
-            tribunal_name: lp.tribunal ? `${lp.tribunal} - Tribunal de Justiça` : 'Tribunal de Justiça de Minas Gerais (TJMG)',
-            segment: 'Justiça Estadual',
-            court_system: 'PJe / MNI',
-            class_name: lp.action_type || 'Ação Cível / Procedimento Comum',
-            subject: lp.subject || lp.notes || 'Defesa do Consumidor / Danos Morais',
-            distribution_date: lp.distribution_date || (lp.created_at ? lp.created_at.split('T')[0] : '2026-01-15'),
-            court_branch: lp.court_branch || 'Vara Cível de Juiz de Fora - MG',
-            city: 'Juiz de Fora - MG',
-            confidential: false,
-            polo_ativo: [{ name: client.full_name, document: client.cpf || client.cnpj || '' }],
-            polo_passivo: [{ name: 'Empresa Requerida / Reclamada', document: '' }],
-            lawyers: [{ name: 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
-            movements: movements.length > 0 ? movements.map(m => ({ date: m.movement_date || m.created_at, title: m.title, details: m.description || '' })) : [
-              { date: lp.distribution_date || '2026-08-20', title: 'Distribuição da Ação Judicial', details: 'Autos distribuídos perante a comarca.' },
-              { date: '2026-08-25', title: 'Conclusos para Despacho Inicial', details: 'Aguardando manifestação judicial.' }
-            ],
-            direct_portal_url: `https://pje.tjmg.jus.br/pje/ConsultaPublica/listView.seam?palavraChave=${encodeURIComponent(lp.cnj_number)}`,
-            public_documents: [
-              { title: 'Petição Inicial Protocolada', type: 'PDF', is_public: true },
-              { title: 'Contrato de Honorários & Procuração', type: 'PDF', is_public: true }
-            ]
-          });
-        });
-      }
-    } catch (e) {
-      console.warn('Erro ao buscar dados locais de fallback:', e);
-    }
-  }
-
-  // 4. SE AINDA NÃO HOUVER RESULTADOS: Criar Cards com Links Diretos de Consulta no Portal Oficial
-  if (aggregatedProcesses.length === 0) {
-    const selectedTrib = (tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal]) ? JUDICIAL_TRIBUNALS[tribunal] : JUDICIAL_TRIBUNALS['tjmg'];
-    
-    aggregatedProcesses.push({
-      id: 'BUSCA-' + Date.now(),
-      numero_processo: queryType === 'number' ? cleanTerm : `Consulta: ${cleanTerm}`,
-      numero_processo_raw: digitsOnly,
-      tribunal_code: selectedTrib.code,
-      tribunal_name: selectedTrib.name,
-      segment: selectedTrib.segment,
-      court_system: selectedTrib.system,
-      class_name: `Consulta Pública de Autos por ${queryType.toUpperCase()}`,
-      subject: `Pesquisa de autos públicos nos tribunais para '${cleanTerm}'`,
-      distribution_date: now.toISOString().split('T')[0],
-      court_branch: 'Tribunais do Brasil / Portal PJe & ESAJ',
-      city: 'Juiz de Fora - MG',
-      confidential: false,
-      polo_ativo: [{ name: queryType === 'name' ? cleanTerm : (queryType === 'cpf' || queryType === 'cnpj' ? `Doc: ${cleanTerm}` : 'Parte Solicitante'), document: digitsOnly }],
-      polo_passivo: [{ name: 'Tribunal de Justiça & Justiça Federal', document: '' }],
-      lawyers: [{ name: queryType === 'oab' ? cleanTerm : 'Dr. Jorge Eduardo da Silva Alvim', oab: '222.943', uf: 'MG' }],
-      movements: [
-        { date: now.toISOString(), title: 'Consulta Direcionada aos Tribunais', details: 'Acesse o portal oficial do tribunal clicando no botão abaixo para ver todos os processos públicos vinculados.' }
-      ],
-      direct_portal_url: selectedTrib.portalUrl ? selectedTrib.portalUrl(cleanTerm) : 'https://pje.tjmg.jus.br/',
-      public_documents: [
-        { title: 'Acesso Direto ao Portal do Tribunal', type: 'WEB', is_public: true }
-      ]
-    });
-  }
-
-  // 5. Salvar em Cache (Validade de 2 horas apenas se houver resultados)
-  if (aggregatedProcesses.length > 0) {
+  const saveCache = (processes) => {
+    if (!processes.length || processes.every((p) => p.origin === 'escritorio' || p.source === 'Base do Escritório')) return;
     try {
       const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
       db.prepare(`
         INSERT INTO judicial_search_cache (query_type, query_term, tribunal, total_results, results_json, created_at, expires_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(queryType, cleanTerm, tribunal, aggregatedProcesses.length, JSON.stringify(aggregatedProcesses), now.toISOString(), expiresAt);
-    } catch (err) {
-      console.warn('Erro ao salvar no cache judicial:', err);
+      `).run(queryType, cleanTerm, tribunal, processes.length, JSON.stringify(processes), now.toISOString(), expiresAt);
+    } catch (err) { /* cache é opcional */ }
+  };
+
+  // 2. Motor Python (DataJud + DJEN + cadastro do escritório)
+  const pyResult = await runPythonRadarCrawler({ queryType, queryTerm: cleanTerm, tribunal });
+  if (pyResult && pyResult.success) {
+    const n = (pyResult.processes || []).length;
+    sources.push({ name: 'Motor Python (DataJud + Diário da Justiça)', ok: true, detail: `${n} resultado(s)` });
+    (pyResult.errors || []).forEach((e) => sources.push({ name: e.source || 'Consulta externa', ok: false, detail: e.detail }));
+    if (n > 0) {
+      console.log(`🐍 [RADAR PYTHON CRAWLER] ${n} processo(s) capturados com sucesso para '${cleanTerm}'`);
+      saveCache(pyResult.processes);
+      return { success: true, engine: pyResult.engine, source: 'python_crawler', total: n, processes: pyResult.processes, sources, ...base };
+    }
+  } else {
+    sources.push({ name: 'Motor Python (DataJud + Diário da Justiça)', ok: false, detail: (pyResult && pyResult.error) || 'não respondeu' });
+  }
+
+  let aggregated = [];
+
+  // 3. Caminho nativo: DataJud por NÚMERO do processo (é o único tipo de busca que o DataJud público aceita)
+  if (queryType === 'number' && digitsOnly.length >= 8) {
+    const detected = detectTribunalFromNPU(digitsOnly);
+    const targets = tribunal !== 'all' && JUDICIAL_TRIBUNALS[tribunal] ? [tribunal] : detected ? [detected] : ['tjmg', 'trf6', 'trf1', 'trt3', 'tjsp', 'stj', 'stf', 'tst'];
+    const esQuery = { size: 10, query: { match: { numeroProcesso: digitsOnly } } };
+    const lists = await Promise.all(
+      targets.map(async (code) => {
+        try {
+          const res = await callDataJudAPI(code, esQuery);
+          if (res.success) {
+            const hits = res.data?.hits?.hits || [];
+            sources.push({ name: `DataJud ${code.toUpperCase()}`, ok: true, detail: `${hits.length} resultado(s)` });
+            return hits.map((hit) => normalizeJudicialHit(hit, code));
+          }
+          sources.push({ name: `DataJud ${code.toUpperCase()}`, ok: false, detail: res.status ? `HTTP ${res.status}${res.status === 401 || res.status === 403 ? ' (chave recusada pelo CNJ)' : ''}` : res.error });
+        } catch (e) {
+          sources.push({ name: `DataJud ${code.toUpperCase()}`, ok: false, detail: e.message });
+        }
+        return [];
+      })
+    );
+    lists.forEach((l) => aggregated.push(...l));
+  } else if (queryType === 'number') {
+    notices.push('Informe o número completo do processo (CNJ, 20 dígitos) para consultar o DataJud.');
+  }
+
+  // 4. Cadastro do ESCRITÓRIO (dados reais gravados aqui; nada é inventado)
+  if (aggregated.length === 0) {
+    try {
+      const cleanDoc = digitsOnly;
+      const firmOab = cleanTerm.includes('222943') || cleanTerm.includes('222.943');
+      let local = [];
+      if (queryType === 'number') {
+        local = db.prepare(`SELECT * FROM lawsuits WHERE (cnj_number LIKE ? OR cnj_number LIKE ?) AND deleted_at IS NULL`).all(`%${cleanTerm}%`, `%${digitsOnly}%`);
+      } else if (queryType === 'oab') {
+        // Só a OAB do próprio escritório lista os processos dele; a de terceiros não devolve nada daqui.
+        if (firmOab) local = db.prepare(`SELECT * FROM lawsuits WHERE deleted_at IS NULL ORDER BY created_at DESC`).all();
+      } else if (cleanTerm) {
+        local = db.prepare(`
+          SELECT l.* FROM lawsuits l
+          LEFT JOIN clients c ON l.client_id = c.id
+          WHERE (c.full_name LIKE ? OR c.cpf LIKE ? OR c.cnpj LIKE ?
+             OR (? != '' AND REPLACE(REPLACE(REPLACE(c.cpf, '.', ''), '-', ''), ' ', '') LIKE ?)
+             OR (? != '' AND REPLACE(REPLACE(REPLACE(REPLACE(c.cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?)
+             OR l.action_type LIKE ? OR l.subject LIKE ? OR l.court_branch LIKE ?)
+            AND l.deleted_at IS NULL
+        `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, cleanDoc, `%${cleanDoc}%`, cleanDoc, `%${cleanDoc}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`);
+        if (local.length === 0) {
+          const clients = db.prepare(`
+            SELECT full_name FROM clients 
+            WHERE full_name LIKE ? OR cpf LIKE ? OR cnpj LIKE ?
+               OR (? != '' AND REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?)
+               OR (? != '' AND REPLACE(REPLACE(REPLACE(REPLACE(cnpj, '.', ''), '/', ''), '-', ''), ' ', '') LIKE ?)
+          `).all(`%${cleanTerm}%`, `%${cleanTerm}%`, `%${cleanTerm}%`, cleanDoc, `%${cleanDoc}%`, cleanDoc, `%${cleanDoc}%`);
+          if (clients.length) notices.push(`Cliente encontrado no cadastro (${clients.map((c) => c.full_name).join(', ')}), mas sem processo cadastrado neste sistema.`);
+        }
+      }
+      sources.push({ name: 'Cadastro do escritório', ok: true, detail: `${local.length} processo(s) cadastrado(s)` });
+      aggregated = local.map(localLawsuitToRadar);
+    } catch (e) {
+      sources.push({ name: 'Cadastro do escritório', ok: false, detail: e.message });
     }
   }
 
-  return {
-    success: true,
-    source: 'live_network',
-    total: aggregatedProcesses.length,
-    processes: aggregatedProcesses
-  };
+  if (aggregated.length === 0) {
+    notices.push('Nenhum processo encontrado nas fontes consultadas. Isso NÃO prova que o processo não existe: confira as fontes abaixo e use o portal oficial do tribunal.');
+  }
+  saveCache(aggregated);
+  return { success: true, source: 'live_network', total: aggregated.length, processes: aggregated, sources, ...base };
 }
 
 // ---------------- ROTAS DO RADAR JUDICIAL ----------------
@@ -569,7 +528,8 @@ async function syncActiveLawsuitMovements() {
     checked++;
     try {
       const r = await searchJudicialNetwork({ queryType: 'number', queryTerm: ls.cnj_number, tribunal: code });
-      const proc = (r.processes || [])[0];
+      // Só andamentos de fonte REAL (DataJud/DJEN). Nunca o cadastro do próprio escritório nem texto de enchimento.
+      const proc = (r.processes || []).find((p) => p.origin === 'datajud' || p.source === 'DataJud CNJ' || p.source === 'DJEN / ComunicaAPI');
       if (proc && Array.isArray(proc.movements)) {
         for (const m of proc.movements) {
           const mdate = String(m.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
@@ -752,225 +712,25 @@ juridicoRouter.post('/api/judicial/import-to-office', requireAuth, (req, res) =>
 // 📢 MÓDULO DE INTIMAÇÕES (COMUNICAAPI / DJEN), DATAJUD & CALCULADORA DE PRAZOS
 // =========================================================================
 
-// Semeador de Feriados Forenses e Nacionais (2025, 2026, 2027)
+// Feriados forenses e nacionais: gerados por regra (src/shared/court-calendar.js) e estendidos a cada partida,
+// sempre com folga de anos à frente. Não apaga nem altera o que o escritório já cadastrou.
 export function seedCourtHolidays() {
   try {
-    const existing = db.prepare(`SELECT count(*) as count FROM court_holidays`).get();
-    if (existing && existing.count > 0) return;
-
-    const holidays = [
-      // 2025
-      { id: 'HOL-2025-01-01', holiday_date: '2025-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-03-03', holiday_date: '2025-03-03', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-03-04', holiday_date: '2025-03-04', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-03-05', holiday_date: '2025-03-05', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-16', holiday_date: '2025-04-16', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-17', holiday_date: '2025-04-17', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-18', holiday_date: '2025-04-18', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-04-21', holiday_date: '2025-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-05-01', holiday_date: '2025-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-06-19', holiday_date: '2025-06-19', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-08-11', holiday_date: '2025-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-09-07', holiday_date: '2025-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-10-12', holiday_date: '2025-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-10-28', holiday_date: '2025-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-11-02', holiday_date: '2025-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-11-15', holiday_date: '2025-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-11-20', holiday_date: '2025-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2025-12-08', holiday_date: '2025-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2025-12-25', holiday_date: '2025-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-
-      // 2026
-      { id: 'HOL-2026-01-01', holiday_date: '2026-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-02-16', holiday_date: '2026-02-16', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-02-17', holiday_date: '2026-02-17', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-02-18', holiday_date: '2026-02-18', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-01', holiday_date: '2026-04-01', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-02', holiday_date: '2026-04-02', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-03', holiday_date: '2026-04-03', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-04-21', holiday_date: '2026-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-05-01', holiday_date: '2026-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-06-04', holiday_date: '2026-06-04', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-08-11', holiday_date: '2026-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-09-07', holiday_date: '2026-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-10-12', holiday_date: '2026-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-10-28', holiday_date: '2026-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-11-02', holiday_date: '2026-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-11-15', holiday_date: '2026-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-11-20', holiday_date: '2026-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2026-12-08', holiday_date: '2026-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2026-12-25', holiday_date: '2026-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-
-      // 2027
-      { id: 'HOL-2027-01-01', holiday_date: '2027-01-01', name: 'Confraternização Universal', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-02-08', holiday_date: '2027-02-08', name: 'Carnaval (Segunda-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-02-09', holiday_date: '2027-02-09', name: 'Carnaval (Terça-Feira)', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-02-10', holiday_date: '2027-02-10', name: 'Quarta-Feira de Cinzas (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-03-24', holiday_date: '2027-03-24', name: 'Quarta-Feira Santa (Forense Federal/TJMG)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-03-25', holiday_date: '2027-03-25', name: 'Quinta-Feira Santa (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-03-26', holiday_date: '2027-03-26', name: 'Sexta-Feira Santa / Paixão de Cristo', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-04-21', holiday_date: '2027-04-21', name: 'Tiradentes', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-05-01', holiday_date: '2027-05-01', name: 'Dia do Trabalhador', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-05-27', holiday_date: '2027-05-27', name: 'Corpus Christi', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-08-11', holiday_date: '2027-08-11', name: 'Dia da Criação dos Cursos Jurídicos / Dia do Advogado', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-09-07', holiday_date: '2027-09-07', name: 'Independência do Brasil', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-10-12', holiday_date: '2027-10-12', name: 'Nossa Senhora Aparecida', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-10-28', holiday_date: '2027-10-28', name: 'Dia do Servidor Público (Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-11-02', holiday_date: '2027-11-02', name: 'Finados', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-11-15', holiday_date: '2027-11-15', name: 'Proclamação da República', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-11-20', holiday_date: '2027-11-20', name: 'Dia da Consciência Negra', jurisdiction: 'nacional', is_forensic_recess: 0 },
-      { id: 'HOL-2027-12-08', holiday_date: '2027-12-08', name: 'Dia da Justiça (Feriado Forense)', jurisdiction: 'MG', is_forensic_recess: 0 },
-      { id: 'HOL-2027-12-25', holiday_date: '2027-12-25', name: 'Natal', jurisdiction: 'nacional', is_forensic_recess: 0 }
-    ];
-
-    const insertStmt = db.prepare(`INSERT OR IGNORE INTO court_holidays (id, holiday_date, name, jurisdiction, is_forensic_recess) VALUES (?, ?, ?, ?, ?)`);
-    holidays.forEach(h => insertStmt.run(h.id, h.holiday_date, h.name, h.jurisdiction, h.is_forensic_recess));
-    console.log('📅 [FERIADOS FORENSES] Feriados nacionais e judiciais semeados com sucesso!');
+    const hoje = new Date().getFullYear();
+    const novos = ensureCourtHolidays(db, 2025, hoje + 4);
+    if (novos > 0) console.log(`📅 [FERIADOS FORENSES] ${novos} feriado(s) acrescentado(s) até ${hoje + 4}.`);
+    const cob = holidayCoverage(db);
+    if (!cob.ok) console.warn(`📅 [FERIADOS FORENSES] ${cob.warning}`);
   } catch (err) {
-    console.warn('Aviso ao semear feriados:', err.message);
+    console.warn('Aviso ao preparar feriados:', err.message);
   }
 }
 // (seedCourtHolidays é chamado no boot pelo server.js, dentro do app.listen)
 
-// Helper: Verifica se uma data é dia útil forense (não é sábado, domingo, feriado nem recesso forense)
-function isCourtBusinessDay(dateObj, holidaysMap) {
-  const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return { isBusinessDay: false, reason: dayOfWeek === 0 ? 'Domingo' : 'Sábado' };
-  }
-
-  const y = dateObj.getFullYear();
-  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const d = String(dateObj.getDate()).padStart(2, '0');
-  const dateStr = `${y}-${m}-${d}`;
-
-  // Recesso Forense (art. 220 CPC: 20 de dezembro a 20 de janeiro)
-  const month = dateObj.getMonth() + 1;
-  const day = dateObj.getDate();
-  if ((month === 12 && day >= 20) || (month === 1 && day <= 20)) {
-    return { isBusinessDay: false, reason: 'Recesso Forense (Art. 220 CPC)' };
-  }
-
-  // Feriado cadastrado
-  if (holidaysMap.has(dateStr)) {
-    return { isBusinessDay: false, reason: `Feriado: ${holidaysMap.get(dateStr)}` };
-  }
-
-  return { isBusinessDay: true, reason: 'Dia Útil' };
-}
-
-// Helper: Próximo dia útil
-function getNextCourtBusinessDay(dateObj, holidaysMap) {
-  const next = new Date(dateObj);
-  next.setDate(next.getDate() + 1);
-  while (!isCourtBusinessDay(next, holidaysMap).isBusinessDay) {
-    next.setDate(next.getDate() + 1);
-  }
-  return next;
-}
-
-// Motor de Cálculo de Prazos Processuais (CPC/15, CLT, CPP, JEF)
+// Calcula o prazo lendo os feriados do banco (o motor puro fica em src/shared/deadline-calc.js).
 function calculateLegalDeadline(disponibilizacaoStr, daysCount, regime = 'cpc', customHolidays = []) {
   const holidaysRows = db.prepare(`SELECT holiday_date, name FROM court_holidays`).all();
-  const holidaysMap = new Map();
-  holidaysRows.forEach(h => holidaysMap.set(h.holiday_date, h.name));
-  customHolidays.forEach(ch => holidaysMap.set(ch.date, ch.name));
-
-  const [y, m, d] = disponibilizacaoStr.slice(0, 10).split('-').map(Number);
-  const dataD0 = new Date(y, m - 1, d, 12, 0, 0); // Data da Disponibilização
-
-  // 1. Data da Publicação (D1) = 1º dia útil seguinte à disponibilização (art. 224, § 2º, CPC)
-  const dataPublicacao = getNextCourtBusinessDay(dataD0, holidaysMap);
-
-  // 2. Início do Prazo (D2) = 1º dia útil seguinte à publicação (art. 224, § 3º, CPC)
-  const dataInicioContagem = getNextCourtBusinessDay(dataPublicacao, holidaysMap);
-
-  const pad = (n) => String(n).padStart(2, '0');
-  const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
-
-  const memoriaCalculo = [];
-  const feriadosCompensados = [];
-
-  let diasUteisContados = 0;
-  let cursor = new Date(dataInicioContagem);
-  let dataFatal = null;
-
-  if (regime === 'cpc' || regime === 'clt' || regime === 'jef') {
-    // Contagem em DIAS ÚTEIS (Art. 219 CPC / Art. 775 CLT)
-    while (diasUteisContados < daysCount) {
-      const info = isCourtBusinessDay(cursor, holidaysMap);
-      const curFmt = fmt(cursor);
-
-      if (info.isBusinessDay) {
-        diasUteisContados++;
-        memoriaCalculo.push({
-          dia_numero: diasUteisContados,
-          data: curFmt,
-          status: 'contado',
-          descricao: `${diasUteisContados}º Dia Útil`
-        });
-        if (diasUteisContados === daysCount) {
-          dataFatal = new Date(cursor);
-          break;
-        }
-      } else {
-        memoriaCalculo.push({
-          dia_numero: null,
-          data: curFmt,
-          status: 'ignorado',
-          descricao: info.reason
-        });
-        if (!feriadosCompensados.some(f => f.date === curFmt)) {
-          feriadosCompensados.push({ date: curFmt, reason: info.reason });
-        }
-      }
-
-      cursor.setDate(cursor.getDate() + 1);
-    }
-  } else {
-    // Contagem em DIAS CORRIDOS (Art. 798 CPP - Penal)
-    for (let i = 1; i <= daysCount; i++) {
-      const curFmt = fmt(cursor);
-      memoriaCalculo.push({
-        dia_numero: i,
-        data: curFmt,
-        status: 'contado',
-        descricao: `${i}º Dia Corrido`
-      });
-      if (i === daysCount) {
-        dataFatal = new Date(cursor);
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-
-    // Se o último dia cair em dia não útil, prorroga para o 1º dia útil subsequente (art. 798, § 3º, CPP)
-    let infoFatal = isCourtBusinessDay(dataFatal, holidaysMap);
-    while (!infoFatal.isBusinessDay) {
-      memoriaCalculo.push({
-        dia_numero: null,
-        data: fmt(dataFatal),
-        status: 'prorrogado',
-        descricao: `Vencimento em ${infoFatal.reason} -> Prorrogado para o 1º dia útil seguinte`
-      });
-      dataFatal.setDate(dataFatal.getDate() + 1);
-      infoFatal = isCourtBusinessDay(dataFatal, holidaysMap);
-    }
-  }
-
-  return {
-    success: true,
-    regime: regime.toUpperCase(),
-    prazo_dias: daysCount,
-    tipo_dias: (regime === 'cpp' ? 'Corridos' : 'Úteis'),
-    data_disponibilizacao: fmt(dataD0),
-    data_publicacao: fmt(dataPublicacao),
-    data_inicio_prazo: fmt(dataInicioContagem),
-    data_fatal: fmt(dataFatal),
-    dias_uteis_contados: diasUteisContados,
-    total_dias_corridos: Math.round((dataFatal - dataD0) / (1000 * 60 * 60 * 24)),
-    feriados_compensados: feriadosCompensados,
-    memoria_calculo: memoriaCalculo
-  };
+  return computeLegalDeadline(disponibilizacaoStr, daysCount, regime, customHolidays, holidaysRows);
 }
 
 // 1. Endpoint: Calcular Prazo Processual
@@ -1311,7 +1071,11 @@ juridicoRouter.post('/api/court/datajud/search', requireAuth, async (req, res) =
 
     const cleanNumber = String(lawsuit_number).replace(/\D/g, '');
     const cleanTribunal = String(tribunal).toLowerCase().replace(/[^a-z0-9]/g, '');
-    const apiKey = custom_api_key || 'APIKey cDZHYzlZa0JadVREZDJCendQbXo6TGdrQHpMUXBScFlXakNZdnMwQUptUQ==';
+    // Chave própria informada na chamada, ou a do servidor (DATAJUD_API_KEY). Nunca uma chave fixa no código.
+    const apiKey = datajudAuthHeader(custom_api_key) || datajudAuthHeader(process.env.DATAJUD_API_KEY);
+    if (!apiKey) {
+      return res.status(503).json({ error: 'Chave do DataJud não configurada no servidor (DATAJUD_API_KEY).' });
+    }
 
     const url = `https://api-publica.datajud.cnj.jus.br/api_publica_${cleanTribunal}/_search`;
 
@@ -1350,6 +1114,50 @@ juridicoRouter.post('/api/court/datajud/search', requireAuth, async (req, res) =
   } catch (err) {
     console.error('[ERRO] Falha na consulta DataJud:', err);
     return res.status(500).json({ error: 'Erro na consulta DataJud: ' + err.message });
+  }
+});
+
+// 8a. Cobertura do calendário (aviso quando faltar ano à frente)
+juridicoRouter.get('/api/court/holidays/coverage', requireAuth, (req, res) => {
+  try {
+    return res.json({ success: true, ...holidayCoverage(db) });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 8b. Cadastro de feriado LOCAL do escritório (municipal, ponto facultativo do tribunal, portaria)
+juridicoRouter.post('/api/court/holidays', requireAuth, (req, res) => {
+  try {
+    const date = String(req.body?.date || '').trim();
+    const name = String(req.body?.name || '').trim().slice(0, 120);
+    const dt = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T12:00:00Z`) : null;
+    if (!dt || Number.isNaN(dt.getTime()) || dt.toISOString().slice(0, 10) !== date) {
+      return res.status(400).json({ error: 'Informe uma data válida (AAAA-MM-DD).' });
+    }
+    if (!name) return res.status(400).json({ error: 'Informe o nome do feriado.' });
+    const exists = db.prepare('SELECT name FROM court_holidays WHERE holiday_date = ?').get(date);
+    if (exists) return res.status(409).json({ error: `Esta data já está cadastrada: ${exists.name}.` });
+    db.prepare(`INSERT INTO court_holidays (id, holiday_date, name, jurisdiction, is_forensic_recess) VALUES (?, ?, ?, 'local', 0)`)
+      .run(`HOL-LOC-${date}`, date, name);
+    logAudit(req, { event_type: 'ALTERACAO', event_name: 'FERIADO_LOCAL_CADASTRADO', module: 'PRAZOS', resource_id: `HOL-LOC-${date}`, description: `Feriado local cadastrado: ${date} — ${name}.` });
+    return res.status(201).json({ success: true, id: `HOL-LOC-${date}` });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 8c. Remove só feriados LOCAIS cadastrados pelo escritório (os do calendário gerado não se apagam)
+juridicoRouter.delete('/api/court/holidays/:id', requireAuth, (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    if (!id.startsWith('HOL-LOC-')) return res.status(403).json({ error: 'Só é possível remover feriados locais cadastrados pelo escritório.' });
+    const r = db.prepare('DELETE FROM court_holidays WHERE id = ?').run(id);
+    if (!r.changes) return res.status(404).json({ error: 'Feriado não encontrado.' });
+    logAudit(req, { event_type: 'ALTERACAO', event_name: 'FERIADO_LOCAL_REMOVIDO', module: 'PRAZOS', resource_id: id, description: `Feriado local removido: ${id}.` });
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

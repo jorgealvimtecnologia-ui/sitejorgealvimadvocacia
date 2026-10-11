@@ -42,3 +42,7 @@ storage/office_drive/*
 nginx/ssl/*.pem
 nginx/ssl/*.key
 public/img/blog/*test*
+
+# Chave PRIVADA do backup cifrado (AUD-12): nunca no repositório nem no servidor
+*PRIVADA*.pem
+BACKUP-PRIVADA*

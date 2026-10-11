@@ -3,6 +3,14 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'node:crypto';
 import { STORAGE_DIR, STORAGE_DRIVE_DIR } from '../config/constants.js';
+import { encryptedDiskStorage } from '../shared/file-vault.js';
+
+// Tipos que o navegador executa (HTML, SVG, scripts) ou que rodam no servidor: nunca aceitos como documento.
+const BLOCKED_UPLOAD_EXT = /\.(html?|xhtml|svg|js|mjs|php[0-9]?|phtml|phar|exe|bat|cmd|sh|com|scr|jar|msi|dll|htaccess)$/i;
+function blockRiskyUploads(req, file, cb) {
+  if (BLOCKED_UPLOAD_EXT.test(file.originalname || '')) return cb(new Error('Tipo de arquivo não permitido por segurança.'));
+  cb(null, true);
+}
 
 // 1. Storage para Documentos de Clientes e Processos (até 50MB)
 const clientStorage = multer.diskStorage({
@@ -23,8 +31,10 @@ const clientStorage = multer.diskStorage({
   }
 });
 
+// Os arquivos são gravados JÁ CIFRADOS no disco quando DOC_ENC_KEY estiver no cofre (src/shared/file-vault.js).
 export const uploadClientDoc = multer({
-  storage: clientStorage,
+  storage: encryptedDiskStorage(clientStorage),
+  fileFilter: blockRiskyUploads,
   limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
@@ -42,6 +52,7 @@ const driveStorage = multer.diskStorage({
 });
 
 export const uploadDrive = multer({
-  storage: driveStorage,
+  storage: encryptedDiskStorage(driveStorage),
+  fileFilter: blockRiskyUploads,
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB
 });
