@@ -1,0 +1,68 @@
+{
+  "_comentario": "Robô de notícias + caixa de revisão + engajamento (curtidas/comentários moderados). Especificação completa em docs/ROBO-NOTICIAS-SPEC.md (pedido do Dr. Jorge, 12/10/2026). REGRA: antes de implementar, explorar o código, apresentar o plano e esperar o OK; o robô NUNCA publica sozinho. Entregar em etapas testáveis. Registrar no site com: npm run roadmap:register-batch -- docs/roadmap/ordens-robo-noticias-2026-10-12.json --aplicar (requer ROADMAP_AGENT_KEY).",
+  "ordens": [
+    {
+      "ref": "ROBO-00",
+      "titulo": "Robô de notícias: explorar o código do blog e apresentar o plano (antes de implementar)",
+      "prioridade": "P2",
+      "descricao": "Primeiro passo obrigatório do pedido: ler o repositório e explicar como o blog funciona hoje (modelo do post, rota que cria/salva, templates, login do painel, banco SQLite) e só então propor o plano em etapas. Nada é implementado sem o OK do Dr. Jorge.",
+      "criterios": "Documento curto explicando o blog atual (campos do post, onde salva, rotas, login) e o plano em etapas aprovado pelo Dr. Jorge; reaproveita o modelo/banco existentes (não cria segundo sistema)."
+    },
+    {
+      "ref": "ROBO-01",
+      "titulo": "Caixa de revisão: campo status no post (pendente|publicada|descartada) e tela /revisar",
+      "prioridade": "P2",
+      "descricao": "Base de tudo: acrescentar o campo status ao post (os atuais continuam 'publicada') e a tela /revisar (protegida pelo login) que lista os itens 'pendente' com título, resumo, tags, HTML, categoria e fonte+link; para cada um: editar, publicar, descartar e, se possível, regerar. 'Publicar' só muda o status para 'publicada'.",
+      "criterios": "Com um post de teste marcado 'pendente', ele aparece em /revisar, pode ser editado, publicado (vira 'publicada') ou descartado; nada entra no ar sem passar pela caixa; a tela exige login."
+    },
+    {
+      "ref": "ROBO-02",
+      "titulo": "Página de controle do robô /robo: termos de busca, fontes e fila de coleta",
+      "prioridade": "P2",
+      "descricao": "Página única /robo (mesmo login do painel) com: termos de busca que o escritório cadastra/edita/remove e ativa/desativa (ex.: INSS, BPC, LOAS, militar, servidor, FGTS, Juiz de Fora...); lista de fontes com liga/desliga; fila de coleta (o que foi coletado e o status, com data/fonte); botão 'coletar agora' + agendamento (node-cron, intervalo configurável) e indicador de 'última coleta: quando/quantos'. Termos e fontes no banco, não no código.",
+      "criterios": "O escritório cadastra/ativa/desativa termos e liga/desliga fontes pela tela; a fila mostra os itens coletados e o status; 'coletar agora' dispara a coleta; o indicador mostra a última coleta."
+    },
+    {
+      "ref": "ROBO-03",
+      "titulo": "Coletor da Agência Brasil (EBC/RSS) gravando itens como 'pendente' conforme os termos",
+      "prioridade": "P2",
+      "descricao": "Primeiro adaptador de fonte: Agência Brasil (Creative Commons, RSS). Coleta conforme os termos ativos, grava os itens como 'pendente' na caixa de revisão, com fonte+link de origem (atribuição) e dedupe por hash para não repetir. Adaptador ISOLADO (se o site mudar, só ele conserta).",
+      "criterios": "A coleta traz itens reais da Agência Brasil filtrados pelos termos; cada item guarda fonte+link; itens repetidos não entram de novo (dedupe); o adaptador é isolado dos demais."
+    },
+    {
+      "ref": "ROBO-04",
+      "titulo": "Redator com IA preenchendo os rascunhos (Anthropic por .env), sem publicar sozinho",
+      "prioridade": "P2",
+      "descricao": "A IA (chave Anthropic só no .env, nunca no código) preenche os rascunhos pendentes: título, resumo, tags e HTML; em modo curadoria quando não se pode republicar na íntegra (resumo próprio + link). O robô NUNCA publica — só gera rascunho para a caixa de revisão.",
+      "criterios": "Os itens pendentes chegam com título/resumo/tags/HTML preenchidos pela IA; conteúdo de fonte sem republicação integral vira resumo próprio + link; a chave fica só no .env; nada é publicado automaticamente."
+    },
+    {
+      "ref": "ROBO-05",
+      "titulo": "Página pública de notícias filtrando por status 'publicada'",
+      "prioridade": "P2",
+      "descricao": "A página pública de notícias mostra apenas os posts com status 'publicada' (os pendentes/descartados nunca aparecem), reaproveitando o layout/rotas do blog atual.",
+      "criterios": "Só aparecem no site as notícias 'publicada'; pendentes e descartadas ficam invisíveis ao público; a página reaproveita o blog existente."
+    },
+    {
+      "ref": "ROBO-06",
+      "titulo": "Curtidas nas notícias publicadas (com contador)",
+      "prioridade": "P2",
+      "descricao": "O leitor pode curtir uma notícia publicada, com contador de curtidas, estilo avaliações da Amazon.",
+      "criterios": "Curtir incrementa o contador na notícia; o número fica guardado e é exibido; protegido contra abuso simples (ex.: não contar várias vezes do mesmo visitante)."
+    },
+    {
+      "ref": "ROBO-07",
+      "titulo": "Comentários do público nas notícias, com moderação obrigatória no painel",
+      "prioridade": "P2",
+      "descricao": "O leitor comenta com nome simples. Por ser site de advogado, comentário ofensivo/difamatório no ar é risco jurídico: todo comentário passa por APROVAÇÃO no painel antes de aparecer (pendente/aprovado/removido), com antispam, e o editor pode remover a qualquer momento. Guardar autor, texto, data e status; aba no painel para moderar.",
+      "criterios": "Comentário novo entra como 'pendente' e NÃO aparece no site até ser aprovado; o painel tem aba para aprovar/remover; há proteção antispam; o editor remove quando quiser."
+    },
+    {
+      "ref": "ROBO-08",
+      "titulo": "Demais fontes de notícias, uma de cada vez (cada uma um adaptador isolado)",
+      "prioridade": "P3",
+      "descricao": "Depois do fluxo validado com a Agência Brasil, acrescentar fontes uma a uma, cada uma como adaptador isolado (preferir RSS; raspagem só sem feed): Imprensa Nacional (Diário Oficial), STF, STJ, TST, gov.br e INSS, Governo de Minas Gerais, TJMG, Prefeitura de Juiz de Fora.",
+      "criterios": "Cada nova fonte entra como adaptador isolado e só liga depois de testada ponta a ponta; se um site muda de layout, só aquele adaptador precisa de conserto; sempre com fonte+link e dedupe."
+    }
+  ]
+}
