@@ -6,7 +6,8 @@
       "titulo": "Radar: não duplicar processos (dedupe por dígitos do CNJ) e limpar duplicados existentes",
       "prioridade": "P1",
       "descricao": "Há dois caminhos de cadastro (Radar Judicial/DataJud e Radar Escavador) que gravam o CNJ em formatos diferentes (com máscara x só dígitos), então a verificação de duplicado não casa e o mesmo processo entra duas vezes.",
-      "criterios": "A verificação de 'já existe' compara só os dígitos do CNJ; importar o mesmo processo por qualquer caminho não duplica; rotina de limpeza funde os duplicados já existentes mantendo o registro mais completo (com andamentos/partes)."
+      "criterios": "A verificação de 'já existe' compara só os dígitos do CNJ; importar o mesmo processo por qualquer caminho não duplica; rotina de limpeza funde os duplicados já existentes mantendo o registro mais completo (com andamentos/partes).",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): dedupe por digitos do CNJ (processos e andamentos por source_id)."
     },
     {
       "ref": "RADAR-02",

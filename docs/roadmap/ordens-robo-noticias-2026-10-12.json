@@ -1,0 +1,89 @@
+{
+  "_comentario": "Robô de notícias + caixa de revisão + engajamento + IA interna de redação jurídica. Especificação em docs/ROBO-NOTICIAS-SPEC.md; motor de IA, prompts e máquina de estados em docs/ROBO-NOTICIAS-PROMPTS.md (base: spec do Dr. Jorge + plano do Antigravity, 12/10/2026). REGRA: explorar o código, aprovar o plano e só então implementar; o robô NUNCA publica sozinho; entregar em etapas testáveis. Registrar no site com: npm run roadmap:register-batch -- docs/roadmap/ordens-robo-noticias-2026-10-12.json --aplicar (requer ROADMAP_AGENT_KEY).",
+  "ordens": [
+    {
+      "ref": "ROBO-00",
+      "titulo": "Robô de notícias: explorar o código do blog e aprovar o plano (antes de implementar)",
+      "prioridade": "P2",
+      "descricao": "Primeiro passo obrigatório: ler o repositório e explicar como o blog funciona hoje (modelo do post em blog_posts, rota que cria/salva, templates, login do painel, SQLite) e só então propor o plano em etapas. Nada é implementado sem o OK do Dr. Jorge; reaproveita o blog/banco existentes (não cria segundo sistema).",
+      "criterios": "Documento curto do blog atual + plano em etapas aprovado pelo Dr. Jorge; confirma reaproveitamento de blog_posts e da lógica de salvar."
+    },
+    {
+      "ref": "ROBO-01",
+      "titulo": "Banco e máquina de estados: fases do post + tabelas de termos e fontes + caixa /revisar",
+      "prioridade": "P2",
+      "descricao": "Acrescentar a blog_posts: fase (1_triagem|2_pauta|3_redacao|4_publicado; descarte=descartada), source_url, raw_text, ai_outline, social_snippets. Criar tabelas de termos de busca (ativa/desativa) e fontes (liga/desliga). Caixa de revisão /revisar (protegida) listando os itens em andamento com fonte+link; editar, publicar, descartar, regerar. Os posts atuais seguem publicados.",
+      "criterios": "Post de teste percorre as fases; /revisar lista, edita, publica (vira 4_publicado) e descarta; termos e fontes ficam no banco, editáveis; nada entra no ar sem passar pela caixa; a tela exige login. Estimativa Antigravity: 2-3h."
+    },
+    {
+      "ref": "ROBO-02",
+      "titulo": "Página /robo (tab-robo.js): a workstation em 4 caixas + termos, fontes, fila e agendamento",
+      "prioridade": "P2",
+      "descricao": "public/js/tabs/tab-robo.js seguindo o check-architecture.js. As 4 caixas: (1) pautas descobertas (Aprovar/Descartar); (2) seleção de ângulo/título; (3) editor visual estilo Word para ajustes rápidos; (4) disparo + cópia para redes. Na mesma página: cadastro de termos e fontes (ativa/desativa), fila de coleta com status/data/fonte, botão 'coletar agora' + agendamento (node-cron, intervalo configurável) e indicador de última coleta.",
+      "criterios": "O escritório opera o robô por /robo: aprova/descarta pauta, escolhe ângulo, edita no editor visual, dispara e copia para redes; cadastra/ativa termos e liga/desliga fontes; a fila e o indicador de última coleta funcionam. Estimativa Antigravity: 4-5h."
+    },
+    {
+      "ref": "ROBO-03",
+      "titulo": "Coletor de órgãos oficiais (RSS) começando pela Agência Brasil, com filtro e dedupe",
+      "prioridade": "P2",
+      "descricao": "Módulo leitor de RSS/notícias, primeiro adaptador = Agência Brasil (EBC, Creative Commons). Filtro automático pelos termos ativos (INSS, BPC, LOAS, militar, servidor, FGTS, Juiz de Fora...). Deduplicação por hash para não repetir notícia. Grava os itens como 1_triagem com fonte+link. Adaptador ISOLADO (se o site muda, só ele conserta).",
+      "criterios": "A coleta traz itens reais filtrados pelos termos, grava fonte+link, não repete (dedupe por hash) e é isolada por fonte. Estimativa Antigravity: 2-3h."
+    },
+    {
+      "ref": "ROBO-04",
+      "titulo": "Motor de IA interno (robot.ai.js): prompt-mestre da OAB + os 4 prompts, saída JSON",
+      "prioridade": "P2",
+      "descricao": "src/modules/robot/robot.ai.js com a chave do modelo (padrão Claude/Anthropic) só no .env. Prompt-mestre com ética da OAB (Prov. 205/2021), tradução do juridiquês, contexto regional e SAÍDA EM JSON. Quatro prompts: (1) triagem de pauta; (2) ângulos/títulos com SEO; (3) redação em blocos éticos; (4) legendas WhatsApp/Instagram/meta-Google. Nunca inventar leis/artigos. O robô NUNCA publica — só gera rascunho JSON para a caixa. Prompts completos em docs/ROBO-NOTICIAS-PROMPTS.md.",
+      "criterios": "Cada prompt devolve o JSON esperado (triagem→ângulos→redação em blocos→social); o conteúdo respeita a ética da OAB e não inventa leis; a chave fica só no .env; nada é publicado automaticamente. Estimativa Antigravity: 3-4h."
+    },
+    {
+      "ref": "ROBO-05",
+      "titulo": "Renderizador visual: monta a diagramação do JSON limpo no layout do blog (sem HTML para o usuário)",
+      "prioridade": "P2",
+      "descricao": "Pega o JSON da IA (pontos rápidos, seções, caixa de destaque do Dr. Jorge, CTA sóbria, fonte+link, botão WhatsApp) e monta a diagramação profissional automática direto no layout do blog. O Dr. Jorge nunca mexe em HTML/CSS.",
+      "criterios": "A partir do JSON aprovado, o post sai diagramado e padronizado (caixas de destaque, fonte+link, botão WhatsApp) sem o usuário tocar em código. Estimativa Antigravity: 2-3h."
+    },
+    {
+      "ref": "ROBO-06",
+      "titulo": "Página pública de notícias (só 4_publicado) + curtidas",
+      "prioridade": "P2",
+      "descricao": "A página pública mostra apenas os posts publicados (triagem/pauta/redação/descartada nunca aparecem), reaproveitando o blog atual. O leitor pode curtir (contador), estilo avaliações da Amazon.",
+      "criterios": "Só aparecem as notícias publicadas; curtir incrementa e guarda o contador, com proteção simples contra abuso."
+    },
+    {
+      "ref": "ROBO-07",
+      "titulo": "Comentários do público com moderação prévia obrigatória (is_hidden=1) + antispam + testes",
+      "prioridade": "P2",
+      "descricao": "Comentário com nome simples; por ser site de advogado, entra OCULTO por padrão (is_hidden=1) e só aparece após APROVAÇÃO no painel (aba de moderação: pendente/aprovado/removido), com antispam; o editor remove quando quiser. Guardar autor, texto, data, status. Rodar guardiões e npm test para garantir que nada quebrou.",
+      "criterios": "Comentário novo não aparece até ser aprovado; há aba de moderação e antispam; guardiões de arquitetura/RBAC e npm test passam. Estimativa Antigravity: 2-3h."
+    },
+    {
+      "ref": "ROBO-08",
+      "titulo": "Demais fontes oficiais, uma de cada vez (cada uma um adaptador isolado)",
+      "prioridade": "P3",
+      "descricao": "Depois do fluxo validado com a Agência Brasil, acrescentar fontes uma a uma, cada uma adaptador isolado (preferir RSS; raspagem só sem feed): Imprensa Nacional (Diário Oficial), STF, STJ, TST, gov.br e INSS, Governo de Minas, TJMG, Prefeitura de Juiz de Fora.",
+      "criterios": "Cada fonte entra isolada e só liga depois de testada ponta a ponta; se um site muda, só aquele adaptador conserta; sempre com fonte+link e dedupe."
+    },
+    {
+      "ref": "ROBO-09",
+      "titulo": "IA interna: camada de provedor + registro de chamadas e custo + cache",
+      "prioridade": "P3",
+      "descricao": "Para a IA ser nossa e portátil: uma camada fina que abstrai o modelo (trocar/atualizar sem reescrever o robô) e registra cada chamada (prompt usado, tokens, custo estimado, resultado), reaproveitando a observabilidade do projeto; cache de respostas para cortar custo (casa com a MELHORIA-03).",
+      "criterios": "Trocar/atualizar o modelo não exige reescrever o robô; há registro por chamada (prompt/tokens/custo) e um relatório simples de gasto; chamadas repetidas usam cache."
+    },
+    {
+      "ref": "ROBO-10",
+      "titulo": "IA interna: memória do escritório (aprende com os artigos aprovados e com as correções)",
+      "prioridade": "P3",
+      "descricao": "O que mais torna a IA 'nossa': uma memória (RAG) sobre os artigos JÁ aprovados e sobre as correções que o Dr. Jorge faz na caixa de revisão, para a redação sair cada vez mais no estilo e nas posições da casa — sem precisar de modelo próprio hospedado.",
+      "criterios": "Novos rascunhos usam como referência os artigos aprovados do escritório; correções recorrentes do Dr. Jorge passam a ser respeitadas sozinhas; mede-se a redução de edições necessárias ao longo do tempo."
+    },
+    {
+      "ref": "ROBO-11",
+      "titulo": "IA interna: guardião anti-invenção de leis (validador de citações jurídicas)",
+      "prioridade": "P3",
+      "descricao": "Validador que sinaliza qualquer lei, artigo ou decisão citada no rascunho que NÃO esteja no texto de origem, reforçando a regra 'nunca inventar' — proteção jurídica essencial para um site de advogado.",
+      "criterios": "Citação jurídica sem respaldo no texto de origem é sinalizada na caixa de revisão antes de publicar; o Dr. Jorge vê o alerta e decide; nada com alerta vai ao ar sem a conferência dele."
+    }
+  ]
+}
