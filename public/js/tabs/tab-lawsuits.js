@@ -334,6 +334,15 @@
                           <span>${mov.whatsapp_notified_at ? 'Notificado' : 'WhatsApp'}</span>
                         </button>
 
+                        <!-- RADAR-04: lançar prazo na Agenda a partir deste andamento (com confirmação) -->
+                        <button
+                          onclick="lancarPrazoDoAndamento('${mov.id}')"
+                          class="px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center space-x-1"
+                          title="Calcular e lançar um prazo na Agenda a partir deste andamento"
+                        >
+                          <span>⏰</span><span>Lançar prazo</span>
+                        </button>
+
                         ${mov.deadline_date && mov.deadline_status !== 'Informativo' ? `
                           <button 
                             onclick="toggleMovementStatus('${mov.id}', '${mov.deadline_status}')" 
@@ -926,6 +935,34 @@
       }
     }
 
+    // RADAR-04: lança um prazo na Agenda a partir de um andamento (o advogado confirma os dados).
+    async function lancarPrazoDoAndamento(movementId) {
+      const diasStr = prompt('Prazo em DIAS a partir deste andamento?\n(ex.: 15 para contestação, 5 para embargos)', '15');
+      if (diasStr === null) return;
+      const days = parseInt(diasStr, 10);
+      if (!days || days < 1) { alert('Informe um número de dias válido.'); return; }
+      const regime = (prompt('Regime da contagem?\nDigite: CPC (dias úteis), CLT, CPP (corridos) ou JEF', 'CPC') || 'cpc').trim().toLowerCase();
+      const title = prompt('Título do prazo na Agenda (opcional):', '') || '';
+      try {
+        const res = await fetch('/api/court/deadline/from-movement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ movement_id: movementId, days, regime, title })
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.success) {
+          let quando = d.deadline_date;
+          try { quando = new Date(d.deadline_date + 'T12:00').toLocaleDateString('pt-BR'); } catch (e) {}
+          alert(`✅ Prazo lançado na Agenda.\nData fatal: ${quando}`);
+          if (typeof loadLawsuits === 'function') await loadLawsuits();
+        } else {
+          alert('Não foi possível lançar o prazo: ' + (d.error || 'erro'));
+        }
+      } catch (e) {
+        alert('Erro ao conectar ao servidor.');
+      }
+    }
+
     function _esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
     async function previewClientPortal(lawsuitId) {
@@ -959,6 +996,7 @@
   window.publishAllToClient = publishAllToClient;
   window.previewClientPortal = previewClientPortal;
   window.atualizarProcessoRadar = atualizarProcessoRadar;
+  window.lancarPrazoDoAndamento = lancarPrazoDoAndamento;
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;
