@@ -834,6 +834,52 @@ juridicoRouter.post('/api/court/deadline/from-movement', requireAuth, (req, res)
   }
 });
 
+// 1d. Endpoint (RADAR-05): lançar uma AUDIÊNCIA na Agenda (com confirmação do advogado).
+juridicoRouter.post('/api/court/hearing/to-calendar', requireAuth, (req, res) => {
+  try {
+    const { lawsuit_id, date, title } = req.body || {};
+    if (!lawsuit_id || !date) return res.status(400).json({ error: 'Informe o processo e a data da audiência.' });
+    const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(lawsuit_id);
+    if (!law) return res.status(404).json({ error: 'Processo não encontrado.' });
+    if (!processoVisivel(req.user, law)) {
+      return res.status(403).json({ error: 'Sem permissão para agendar neste processo.' });
+    }
+    const dia = String(date).slice(0, 10);
+    const hora = String(date).length > 10 ? String(date).slice(11, 16) : '';
+    const eventId = `EVT-AUD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const icalUid = `audiencia-${Date.now()}@jorgealvimadvocacia.com.br`;
+    const titulo = (title && String(title).trim()) || 'Audiência';
+    db.prepare(`
+      INSERT INTO calendar_events (
+        id, title, description, event_type, start_datetime, end_datetime,
+        all_day, location, meeting_url, lawyer_id, lawyer_name,
+        client_id, client_name, lawsuit_id, lawsuit_number,
+        priority, status, color, ical_uid, notes, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, 'audiencia', ?, ?,
+        ?, 'Fórum / Tribunal', '', ?, ?,
+        ?, ?, ?, ?,
+        'alta', 'agendado', '#2563eb', ?, ?, datetime('now'), datetime('now')
+      )
+    `).run(
+      eventId, titulo, `Audiência importada do Radar (confirmada pelo advogado).`,
+      hora ? `${dia}T${hora}` : `${dia}T09:00`,
+      hora ? `${dia}T${hora}` : `${dia}T23:59`,
+      hora ? 0 : 1,
+      law.responsible_user_id || req.user?.userId || 'dr-jorge-alvim',
+      law.responsible_name || req.user?.name || 'Dr. Jorge Alvim',
+      law.client_id || null, law.client_name || '',
+      law.id, law.cnj_number || '',
+      icalUid, 'Audiência do processo (Radar).'
+    );
+    logAudit(req, { event_type: 'CRIACAO', event_name: 'AGENDAR_AUDIENCIA', module: 'RADAR', resource_id: law.id, description: `Audiência agendada para ${dia} no processo ${law.cnj_number || law.id}.` });
+    return res.status(201).json({ success: true, event_id: eventId, date: dia });
+  } catch (err) {
+    console.error('[ERRO] Falha ao agendar audiência:', err);
+    return res.status(500).json({ error: 'Erro ao agendar audiência.' });
+  }
+});
+
 // 2. Endpoint: Buscar Publicações em Tempo Real na ComunicaAPI (PJe / DJEN)
 juridicoRouter.get('/api/court/publications/search-live', requireAuth, async (req, res) => {
   try {

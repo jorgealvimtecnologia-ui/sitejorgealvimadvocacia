@@ -366,6 +366,28 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.equal(normalizarNome('José  CARLOS'), 'jose carlos');
   });
 
+  it('detalheParaImport extrai as AUDIÊNCIAS do detalhe (RADAR-05)', () => {
+    const det = {
+      numero_cnj: '50000001120268130145',
+      fontes: [{
+        sigla: 'TJMG',
+        capa: { classe: 'Procedimento Comum', audiencias: [{ data: '2026-11-20', tipo: 'Conciliação', situacao: 'Marcada', local: 'Sala 3' }] },
+        envolvidos: [{ nome: 'Fulano de Tal', polo: 'ATIVO' }],
+      }],
+    };
+    const pd = detalheParaImport(det, {});
+    assert.ok(Array.isArray(pd.audiencias));
+    assert.equal(pd.audiencias.length, 1);
+    assert.equal(pd.audiencias[0].tipo, 'Conciliação');
+    assert.ok(pd.audiencias[0].data, 'tem data');
+    assert.equal(pd.audiencias[0].local, 'Sala 3');
+  });
+
+  it('detalheParaImport sem audiências devolve lista vazia', () => {
+    const pd = detalheParaImport({ numero_cnj: '1', fontes: [{ capa: { classe: 'X' }, envolvidos: [] }] }, {});
+    assert.deepEqual(pd.audiencias, []);
+  });
+
   it('listarMovimentacoes monta a URL /movimentacoes do CNJ; movimentacaoParaMovimento mapeia', async () => {
     let capturado = null;
     const fetchImpl = async (url) => {

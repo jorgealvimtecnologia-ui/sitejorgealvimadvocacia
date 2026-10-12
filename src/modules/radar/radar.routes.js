@@ -410,14 +410,15 @@ function importarProcessoEscritorio(pd, session) {
 
   const resp = responsavelAoCriar(session, undefined);
   const lawsuitId = generateNextLawsuitId();
+  const audienciasJson = Array.isArray(pd.audiencias) && pd.audiencias.length ? JSON.stringify(pd.audiencias) : null;
   db.prepare(`INSERT INTO lawsuits (id, client_id, cnj_number, tribunal, instance, action_type, court_branch,
-                subject, judge_name, distribution_date, valor_causa, situacao, fase, status, notes,
+                subject, judge_name, distribution_date, valor_causa, situacao, fase, audiencias, status, notes,
                 responsible_user_id, responsible_name, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Em Andamento', ?, ?, ?, ?, ?)`).run(
     lawsuitId, clientId, numero, pd.tribunal_code || 'TJMG', pd.instance || '1ª Instância',
     pd.class_name || 'Ação Judicial', pd.court_branch || '',
     pd.subject || 'Importado do Radar (Escavador)', pd.judge_name || '', pd.distribution_date || '',
-    pd.valor_causa || '', pd.situacao || '', pd.fase || '',
+    pd.valor_causa || '', pd.situacao || '', pd.fase || '', audienciasJson,
     obs.join(' '), resp.id, resp.name, now, now);
 
   // TODAS as partes do processo (com seus advogados/OAB), de forma estruturada.
@@ -551,10 +552,12 @@ radarRouter.post('/api/radar/atualizar-processo/:id', requireAuth, async (req, r
         valor_causa = COALESCE(NULLIF(?,''), valor_causa),
         situacao = COALESCE(NULLIF(?,''), situacao),
         fase = COALESCE(NULLIF(?,''), fase),
+        audiencias = COALESCE(NULLIF(?,''), audiencias),
         updated_at = ?
       WHERE id = ?`).run(
       pd.class_name && pd.class_name !== 'Ação Judicial' ? pd.class_name : '', pd.subject || '', pd.court_branch || '',
       pd.judge_name || '', pd.distribution_date || '', pd.valor_causa || '', pd.situacao || '', pd.fase || '',
+      (Array.isArray(pd.audiencias) && pd.audiencias.length ? JSON.stringify(pd.audiencias) : ''),
       new Date().toISOString(), law.id);
   }
   // 2) Andamentos: grava só os NOVOS (dedupe por source_id).

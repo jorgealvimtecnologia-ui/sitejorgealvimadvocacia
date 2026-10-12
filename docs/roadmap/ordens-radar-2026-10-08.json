@@ -35,10 +35,19 @@
     },
     {
       "ref": "RADAR-05",
-      "titulo": "Radar: importar audiências e documentos/autos do processo (fechar o \"todos os dados\")",
+      "titulo": "Radar: importar AUDIÊNCIAS do processo e exibir na ficha (com opção de ir à Agenda)",
       "prioridade": "P2",
-      "descricao": "Para completar o 'trazer todos os dados do Escavador', faltam as audiências marcadas e os documentos públicos/autos (estes costumam ter custo maior por download).",
-      "criterios": "Audiências do processo gravadas e exibidas na ficha; documentos/autos públicos acessíveis a partir do processo, com o custo exibido antes de baixar."
+      "descricao": "Importar as audiencias marcadas do processo (data, hora, tipo, local) a partir do detalhe do Escavador e exibir na ficha do processo; com opcao de lancar na Agenda (com confirmacao do advogado). Audiencias sao leves (so metadados), sem encher o servidor.",
+      "criterios": "Audiencias do processo gravadas e exibidas na ficha; botao para lancar uma audiencia na Agenda (confirmacao do advogado); nada automatico; nada ao cliente.",
+      "estado": "FEITO no repositorio (falta publicar): migration 011 (lawsuits.audiencias, so metadados). detalheParaImport extrai audiencias (data/tipo/situacao/local) do detalhe do Escavador; gravadas na importacao e na atualizacao; GET /api/lawsuits devolve. Ficha do processo mostra bloco Audiencias com botao Agendar -> POST /api/court/hearing/to-calendar (evento audiencia na Agenda, com confirmacao; escopo processoVisivel; nada ao cliente). Documentos/autos ficaram na RADAR-06 (SUSPENSA). OBS: confirmar o campo exato das audiencias no Escavador no 1o teste real (a extracao e defensiva)."
+    },
+    {
+      "ref": "RADAR-06",
+      "titulo": "Radar: documentos/autos do processo (download) — SUSPENSO",
+      "prioridade": "P3",
+      "descricao": "Baixar/abrir os documentos publicos (peticoes, decisoes, sentencas) dos autos a partir do processo.",
+      "criterios": "Documentos acessiveis a partir do processo, com o custo exibido ANTES de baixar; nunca baixa sozinho; nao guarda arquivos pesados no servidor (preferir link/sob demanda).",
+      "estado": "SUSPENSA por decisao do Dr. Jorge (12/10/2026): guardar autos longos encheria o disco do servidor e o download no Escavador tem custo maior. Reavaliar no futuro por LINK/sob demanda (sem armazenar), com o preco exibido antes de cada download."
     }
   ]
 }

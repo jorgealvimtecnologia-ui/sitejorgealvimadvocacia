@@ -76,3 +76,26 @@ describe('RADAR-04: prazo na Agenda a partir do andamento', () => {
     assert.equal(r.status, 400);
   });
 });
+
+describe('RADAR-05: agendar audiência na Agenda', () => {
+  it('cria um evento audiencia ligado ao processo', async () => {
+    const r = await auth(request(app).post('/api/court/hearing/to-calendar'))
+      .send({ lawsuit_id: lawsuitId, date: '2026-11-20', title: 'Audiência de Conciliação' });
+    assert.equal(r.status, 201, JSON.stringify(r.body));
+    const ev = db.prepare(`SELECT * FROM calendar_events WHERE id = ?`).get(r.body.event_id);
+    assert.ok(ev, 'evento criado');
+    assert.equal(ev.event_type, 'audiencia');
+    assert.equal(ev.lawsuit_id, lawsuitId);
+    assert.ok(ev.start_datetime.startsWith('2026-11-20'));
+  });
+
+  it('sem data devolve 400', async () => {
+    const r = await auth(request(app).post('/api/court/hearing/to-calendar')).send({ lawsuit_id: lawsuitId });
+    assert.equal(r.status, 400);
+  });
+
+  it('processo inexistente devolve 404', async () => {
+    const r = await auth(request(app).post('/api/court/hearing/to-calendar')).send({ lawsuit_id: 'LAW-NAO-EXISTE', date: '2026-11-20' });
+    assert.equal(r.status, 404);
+  });
+});

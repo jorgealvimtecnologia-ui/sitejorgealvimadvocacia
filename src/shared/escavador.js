@@ -561,6 +561,19 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
   const numeroDig = soDigitos(d.numero_cnj || d.numeroProcessoUnico || primeiro(d, WIRE.campos.numero) || numeroCnj(fonte) || '');
   const numero = mascaraCnj(numeroDig) || numeroDig; // padrão do sistema é o CNJ COM máscara
   const sigla = String(fonte.sigla || fonte.sigla_tribunal || d.estado_origem?.sigla || primeiro(fonte, WIRE.campos.tribunalSigla) || '').toUpperCase();
+  // RADAR-05: audiências (leves — só metadados). Defensivo: procura em vários lugares do detalhe.
+  const audienciasBrutas = toArray(
+    primeiro(capa, ['audiencias', 'audiencias_futuras', 'proximas_audiencias'])
+    || primeiro(fonte, ['audiencias', 'audiencias_futuras', 'proximas_audiencias'])
+    || primeiro(d, ['audiencias', 'audiencias_futuras', 'proximas_audiencias'])
+    || []
+  );
+  const audiencias = audienciasBrutas.map((a) => ({
+    data: normalizaData(primeiro(a, ['data', 'data_audiencia', 'data_hora', 'datetime']) || ''),
+    tipo: String(primeiro(a, ['tipo', 'tipo_audiencia', 'nome', 'descricao']) || 'Audiência').trim(),
+    situacao: String(primeiro(a, ['situacao', 'status']) || '').trim(),
+    local: String(primeiro(a, ['local', 'sala', 'endereco', 'orgao']) || '').trim(),
+  })).filter((a) => a.data || a.tipo);
   return {
     numero_processo: numero,
     tribunal_code: sigla,
@@ -578,6 +591,7 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
     partes: partesDetalhadas,
     parte_contraria: parteContraria,
     cliente_sugerido: clienteSugerido,
+    audiencias,
     fase,
     link: fonte.url || d.url || d.link || (d.id ? `https://www.escavador.com/processos/${d.id}` : ''),
     detalhado: true,
