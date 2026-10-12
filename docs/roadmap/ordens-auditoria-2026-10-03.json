@@ -44,7 +44,7 @@
     {
       "ref": "AUD-27",
       "prioridade": "P0",
-      "estado": "as 17 funcoes existem na matriz (ROLE_TEMPLATES) e PASSAM no teste por funcao (tests/rbac-per-role.test.js, 11/10/2026); as 5 perguntas ja foram respondidas pelo Dr. Jorge (04/10); nenhuma regra por nome/login; marketing recebe blog/Meta Ads sem logs de auditoria; TI sem dados de clientes; Usuarios so do mestre. Equipe hoje = so o Dr. Jorge (cada pessoa = uma funcao). FALTA: publicar no servidor. (Escopo de dados a clientes/Radar = ordem P1 em separado.)",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): controle de acesso pelas 17 funcoes; teste por funcao valida cada uma; sem regras por nome. Equipe hoje = so o Dr. Jorge.",
       "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
       "descricao": "Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente. Já feito: a matriz ganhou colunas separadas (26 colunas), papel desconhecido deixa de virar Advogado, \"atendente\" é Secretária e o vínculo operador-colaborador é exato. Sobra cadastrar as 17 funções como perfis (etapa 1) e passar cada pessoa à função certa, com confirmação uma a uma, removendo as regras por nome (etapa 2).",
       "criterios": "As 17 funções existem como perfis na matriz e passam no teste por perfil (tests/rbac-per-role.test.js); cada pessoa tem exatamente uma função confirmada pelo mestre; nenhuma regra por nome próprio ou trecho de login; matriz aprovada pelo Dr. Jorge (cinco perguntas em docs/PAPEIS-E-PERMISSOES.md)."
@@ -52,7 +52,7 @@
     {
       "ref": "AUD-33",
       "prioridade": "P0",
-      "estado": "pendente: decisão do Dr. Jorge",
+      "estado": "CONCLUIDO: PR #8 mesclado na main (merge 3d7610a); a producao roda cecff6e a partir da main.",
       "titulo": "Mesclar o PR #8 na main (a produção roda o código da branch)",
       "descricao": "A produção foi publicada a partir da branch claude/awesome-allen-td2uwv (PR #8, ainda rascunho). A main não tem as correções de segurança. Um deploy feito a partir da main reverteria o login Google corrigido, as permissões por função e o cofre do .env.",
       "criterios": "PR #8 revisado e mesclado na main pelo Dr. Jorge; CI verde na main; próximo deploy sai da main e a versão no ar confere com o commit da main."
@@ -63,7 +63,7 @@
       "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
       "descricao": "A tabela court_holidays é semeada só até 2027, e não há arquivo de teste dedicado ao cálculo de dias úteis, recesso e contagem de prazo.",
       "criterios": "Feriados e recesso de 2028 a 2030 cadastrados, com cadastro/importação anual pelo painel; aviso quando faltar ano à frente; testes cobrindo dias úteis, feriado local, recesso forense, fim de semana e prazo que vence em dia não útil.",
-      "estado": "feito no repositório em 04/10/2026 (CI verde); falta publicar no servidor",
+      "estado": "CONCLUIDO e publicado em producao (deploy cecff6e (11/10/2026)): feriados forenses alem de 2027 + testes de calculo de prazo.",
       "nota_entrega": "Calendário gerado por regra (Páscoa) e estendido a cada partida até 4 anos à frente (hoje até 2030), sem apagar o que o escritório cadastrou; aviso de cobertura; feriados locais cadastráveis no painel (calculadora de prazos); motor de prazo separado e coberto por 20 testes (dias úteis, feriado, recesso 20/12–20/01, fim de semana, prorrogação, feriado local)."
     },
     {
@@ -88,7 +88,7 @@
       "titulo": "Observabilidade: logs estruturados, rastreamento de erros e alertas",
       "descricao": "Hoje só existe /health simples e console.log sem estrutura. Não há alerta quando o site cai, quando o scanner de prazos ou a sincronização com tribunais deixam de rodar, ou quando o disco enche.",
       "criterios": "Logs em JSON com identificador de requisição e sem dados sensíveis; rastreamento de erros; /health checa o banco; alerta quando site, scanner de prazos ou sync não rodarem; certificado a vencer e disco cheio monitorados.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar e ligar o monitor externo",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): logs estruturados, /health real, vigia de tarefas/disco/certificado.",
       "nota_entrega": "Logs JSON com id de requisição (X-Request-Id) sem corpo/token/query; /health checa banco, disco e tarefas automáticas (503 se o banco cair); vigia a cada 10 min avisa o mestre (tarefa parada, disco baixo, certificado); erros em anel + log. Falta: monitor EXTERNO de disponibilidade (ex.: UptimeRobot) apontando para /health e definir CERT_CHECK_HOST no cofre (ver docs/INFRA.md)."
     },
     {
@@ -105,7 +105,7 @@
       "titulo": "CI estrita: build funcionando e versões de Node alinhadas",
       "descricao": "O build do Vite falha ao parsear o HTML legado e fica como informativo; a CI usa Node 24 enquanto o Dockerfile e o README usam Node 22.",
       "criterios": "Build passa na CI ou é removido do pipeline com justificativa; Node igual em CI, Dockerfile e README; falhas de lint, testes, arquitetura e audit bloqueiam a entrega.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): CI estrita (build + versoes de Node).",
       "nota_entrega": "Node 24 em todo lugar (CI, Dockerfile, .nvmrc, engines, README) com teste que reprova divergência; o build do Vite já compila o HTML legado e agora BLOQUEIA a CI (sem continue-on-error)."
     },
     {
@@ -114,7 +114,7 @@
       "titulo": "Folga arquitetural: reduzir server.js e quebrar switchTab",
       "descricao": "server.js está em 3.127 de 3.200 linhas (restam 73) e switchTab em painel-1-app.js tem 295 linhas (teto de 250).",
       "criterios": "server.js com no máximo 2.800 linhas, com rotas extraídas para src/modules/<nome>/; switchTab com no máximo 250 linhas; npm run check:architecture sem avisos; npm test verde.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): server.js reduzido (esquema para src/db/schema.js) e switchTab quebrado.",
       "nota_entrega": "server.js de 3.141 para ~1.720 linhas (esquema do banco movido para src/db/schema.js, mesma ordem de execução); teto do guardião baixado para 2.000; switchTab de 300 para 241 linhas (permissões e reset de abas em funções/laço); teste e2e de troca de abas."
     },
     {
@@ -155,7 +155,7 @@
       "titulo": "Criptografia de documentos em repouso e backup externo automático e criptografado",
       "descricao": "Não foi encontrada criptografia dos arquivos de storage/clients e do drive do escritório. A cópia externa depende de alguém executar puxar-backup-hd.sh.",
       "criterios": "Documentos sensíveis cifrados em repouso (ou decisão formal documentada em contrário); backup externo agendado, cifrado e com verificação de integridade; chave de cifragem guardada fora do servidor.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar as chaves (passo a passo em docs/INFRA.md)",
+      "estado": "Codigo publicado (deploy cecff6e (11/10/2026)): documentos cifrados em repouso + backup externo cifrado. FALTA o Dr. Jorge ligar as chaves (DOC_ENC_KEY e destino do backup) conforme docs/INFRA.md.",
       "nota_entrega": "Backup cifrado com chave PÚBLICA (privada fica com o Dr. Jorge) + SHA-256 + conferência no teste semanal; documentos de clientes/drive cifrados em repouso (AES-256-GCM, chave DOC_ENC_KEY no cofre) com leitura transparente, migração segura dos antigos e verificação; uploads de HTML/SVG recusados. Falta: gerar e guardar as chaves, escolher destino do envio automático (rclone) e rodar a migração."
     },
     {
@@ -180,7 +180,7 @@
       "titulo": "Agendamento online de consulta ligado à agenda e ao CRM",
       "descricao": "O site capta contato por formulário e WhatsApp, mas não há marcação de horário pelo próprio visitante.",
       "criterios": "Visitante escolhe horário livre da agenda do advogado; cria o lead no funil e o evento na agenda; confirmação e lembrete por e-mail ou WhatsApp; cancelamento e remarcação possíveis.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar e o Dr. Jorge ligar (painel → Agenda → Agendamento online)",
+      "estado": "Codigo publicado (deploy cecff6e (11/10/2026)): agendamento online ligado a agenda/CRM. FALTA o Dr. Jorge ligar no painel (Agenda > Agendamento online) e configurar SMTP.",
       "nota_entrega": "Página pública /agendar (dia + horário livre da agenda do advogado, dados com consentimento LGPD, reCAPTCHA quando configurado); cada marcação vira lead no funil + evento \"consulta\" na agenda (que bloqueia o horário) + aviso no painel; confirmação por e-mail com convite .ics e link pessoal para remarcar/cancelar; lembrete 24 h antes; só e-mail (sem WhatsApp). Nasce DESLIGADO; só o mestre liga e configura. 26 testes + e2e no navegador."
     },
     {
@@ -189,7 +189,7 @@
       "titulo": "Portal do cliente: andamento em linguagem simples e \"o que preciso fazer\"",
       "descricao": "O portal tem cadastro, documentos e mensagens, mas não foi verificado se mostra a situação do processo de forma compreensível ao cliente.",
       "criterios": "Cada processo exibe uma frase de situação, linha do tempo simples e a ação esperada do cliente (ou \"nada a fazer agora\"); advogado escolhe o que fica visível; termos jurídicos explicados ao toque; validado em teste com clientes reais.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar. Validar com clientes reais quando houver (hoje só o Dr. Jorge)",
+      "estado": "Codigo publicado (deploy cecff6e (11/10/2026)): portal do cliente em linguagem simples. Validar com clientes reais quando houver.",
       "nota_entrega": "Portal: cada processo mostra \"como está\" em uma frase, \"o que você precisa fazer\" (destacado quando há ação), últimas novidades explicadas e dicionário com termos explicados ao toque. O advogado decide o que o cliente vê (processo e andamento a andamento; pré-visualização \"ver como o cliente vê\"; publicar todos). CORREÇÃO DE CONFIDENCIALIDADE: antes o portal enviava ao cliente notas internas, nome do juiz e a descrição interna de todos os andamentos; agora só sai o publicado, com título oficial + explicação simples. Andamentos novos nascem ocultos. Fase estimada sem percentual falso."
     },
     {
@@ -198,7 +198,7 @@
       "titulo": "Indicadores do dono: lucratividade por área, previsão de caixa e origem dos clientes",
       "descricao": "Há dashboard financeiro e funil de leads, mas faltam lucratividade por área do direito, previsão de caixa de 3 a 6 meses, retorno por canal de captação e separação clara entre dinheiro do cliente e do escritório.",
       "criterios": "Painel mostra receita por área, inadimplência, previsão de caixa e conversão lead para contrato por origem; valores de terceiros (alvarás, depósitos) contabilizados separadamente; números conferem com o livro caixa.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar. Os números só ficam ricos conforme houver dados lançados e leads com origem",
+      "estado": "Codigo publicado (deploy cecff6e (11/10/2026)): indicadores do dono. Os numeros enriquecem conforme houver dados lancados e leads com origem.",
       "nota_entrega": "Painel \"Indicadores do dono\" (Financeiro): receita e margem direta por área, inadimplência (idade e maiores devedores), previsão de caixa 3/6 meses (só entradas contratadas; saídas = maior entre lançadas e média 3 meses), origem dos clientes com conversão (lead→cliente→contrato) e dinheiro de terceiros (alvarás) separado; conferência automática contra o livro caixa (diferença zero). Nova captura de origem no site e no agendamento (UTM e só o domínio de referência, sessionStorage). Leads antigos ficam \"Não informado\". Limitações: área do cliente vem do processo/lead; despesas gerais não são rateadas; previsão não inclui saldo em conta."
     },
     {
@@ -207,7 +207,7 @@
       "titulo": "Design system: tokens, componentes e página-catálogo",
       "descricao": "A paleta navy/gold existe no Tailwind, mas há quase nenhuma variável CSS, nenhum catálogo de componentes e não há modo escuro no site.",
       "criterios": "Auditoria visual (cores, fontes e variações de botão em uso); tokens em variáveis CSS; componentes-base (botão, campo, tabela, modal, selo de prazo, linha do tempo) documentados em página-catálogo; modo escuro avaliado.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar. Migração das telas antigas é gradual (docs/DESIGN-SYSTEM.md)",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): design system (tokens, componentes, catalogo).",
       "nota_entrega": "Auditoria visual medida (3 versões do azul da marca, 83 cores soltas, 22 degradês de botão, dourado do texto sem contraste); tokens únicos com modo claro e escuro (contraste AA conferido por teste); componentes .ds-* sem cor solta; lógica única da cor do prazo (DS.deadlineTone); página-catálogo /design-system; agendamento já ligado aos tokens. Modo escuro avaliado: pronto nos tokens, NÃO ligado no painel/site até migrar as telas (evita texto ilegível)."
     },
     {
@@ -216,7 +216,7 @@
       "titulo": "Acessibilidade e desempenho com verificação automática",
       "descricao": "painel.html tem cerca de 716 KB e index.html cerca de 261 KB em arquivo único; poucas imagens em WebP/AVIF; acessibilidade sem teste automatizado. O script de Lighthouse existe, mas não roda na CI.",
       "criterios": "Orçamento de peso por página definido e medido; imagens em formatos modernos; teste de acessibilidade (por exemplo axe) e Lighthouse na CI com metas mínimas; contraste e navegação por teclado verificados.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): acessibilidade e desempenho com verificacao automatica.",
       "nota_entrega": "Testes automáticos na CI: axe-core (WCAG A/AA, zero violações nas páginas públicas) + navegação por teclado com foco visível; orçamento de peso por página (gzip, docs/perf-budget.json) que reprova quem engordar; Lighthouse com metas (desempenho 85 / acessib. 95 / boas práticas 90 / SEO 90) — hoje as páginas públicas estão em 98-100 de desempenho e 97-100 de acessibilidade. Imagens em webp/avif na mesma URL (capa do blog 616KB->34KB). Corrigido: contraste do Tailwind antigo (public/css/a11y-fixes.css), zoom no celular reabilitado, alvo de toque do olho da senha."
     },
     {
@@ -225,7 +225,7 @@
       "titulo": "Ambiente de homologação ativo e checklist de verificação da produção",
       "descricao": "O staging (homolog.jorgealvimadvocacia.com.br) está no ar e foi usado para validar as correções. Sobra a rotina periódica de verificação da produção.",
       "criterios": "Checklist periódico confirmando cron de backup, backup externo recente, validade do certificado, serviço ativo e versão implantada; staging sem dados reais de clientes.",
-      "estado": "feito no repositório em 04/10/2026; falta publicar e o cron rodar no servidor",
+      "estado": "Codigo publicado (deploy cecff6e (11/10/2026)): homologacao + checklist de producao. FALTA o cron rodar no servidor.",
       "nota_entrega": "scripts/producao-checklist.js: confere site/health, certificado HTTPS, backup diário recente, cópia externa cifrada, teste de restauração, disco, tarefas automáticas e versão publicada; reprova (exit 1) em problema grave. Agendado por setup-backup-cron.sh (segunda 05:00) com aviso por e-mail (scripts/avisar-producao.js). 8 testes. npm run check:producao."
     },
     {

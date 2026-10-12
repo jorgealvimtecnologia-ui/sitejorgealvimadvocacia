@@ -6,14 +6,16 @@
       "titulo": "Blog: nova categoria \"Direito do Marco Legal da Internet\"",
       "prioridade": "P2",
       "descricao": "Opção adicionada no seletor de Área/Categoria do blog (formulário de novo artigo e filtro do painel). Já implementado; validar em produção.",
-      "criterios": "A categoria aparece no seletor de categoria (novo artigo e filtro) e o artigo salva/filtra sem erro."
+      "criterios": "A categoria aparece no seletor de categoria (novo artigo e filtro) e o artigo salva/filtra sem erro.",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): categoria Direito do Marco Legal da Internet no blog."
     },
     {
       "ref": "SITE-02",
       "titulo": "Site: Áreas de Atuação sem fotos de pessoas",
       "prioridade": "P2",
       "descricao": "Trocar fotos com pessoas por ilustrações temáticas sem pessoas nos boxes Civil & Contratos, Família, Trabalhista e Militar & Forças Armadas (brasão/estrela). Já implementado; conferir no ar.",
-      "criterios": "Nenhum box de Áreas de Atuação exibe pessoas; Civil usa contrato/documento, Militar usa alusão às Forças Armadas (sem pessoas)."
+      "criterios": "Nenhum box de Áreas de Atuação exibe pessoas; Civil usa contrato/documento, Militar usa alusão às Forças Armadas (sem pessoas).",
+      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): Areas de Atuacao sem fotos de pessoas."
     },
     {
       "ref": "BLOG-01",
