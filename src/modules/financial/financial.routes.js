@@ -3,6 +3,7 @@
  * rescisões e integração Asaas. Extraído do server.js.
  */
 import express from 'express';
+import crypto from 'node:crypto';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
