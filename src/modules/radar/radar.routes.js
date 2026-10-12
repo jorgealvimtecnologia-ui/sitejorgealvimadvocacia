@@ -33,6 +33,7 @@ import { responsavelAoCriar } from '../../middleware/data-scope.js';
 import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
   criarMonitoramentoDiario, removerMonitoramento, buscarProcessos, buscarProcessosPorOab,
+  buscarProcessosPorEnvolvido,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
   detalharProcesso, detalheParaImport, listarMovimentacoes, movimentacaoParaMovimento,
 } from '../../shared/escavador.js';
@@ -464,8 +465,14 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
     if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('busca_oab', r.creditos); }
     if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
     encontrados = (r.itens || []).map((it) => detalheParaImport(it, { oab: b.oab, uf: b.uf || 'MG' }));
+  } else if (b.cpfCnpj || b.nome) {
+    // Processos da parte por CPF/CNPJ (ou nome) do envolvido (V2) — já estruturados.
+    const r = await buscarProcessosPorEnvolvido({ cpfCnpj: b.cpfCnpj, nome: b.nome });
+    if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('busca_envolvido', r.creditos); }
+    if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
+    encontrados = (r.itens || []).map((it) => detalheParaImport(it, { uf: b.uf || 'MG' }));
   } else {
-    return res.status(400).json({ error: 'Informe "oab" (para buscar e importar) ou "processos".' });
+    return res.status(400).json({ error: 'Informe "oab", "cpfCnpj"/"nome" (para buscar e importar) ou "processos".' });
   }
 
   // OAB do dono (p/ detectar o cliente = a parte que ELE representa). Do pedido ou do advogado padrão.
@@ -576,23 +583,26 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
   const b = req.body || {};
   if (!b.oab && !b.nome && !b.cpfCnpj && !b.numeroCnj) return res.status(400).json({ error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' });
 
-  // Por OAB: processos ESTRUTURADOS do advogado (V2). Demais: full-text em diários (V1).
+  // Por OAB ou por CPF/CNPJ/nome do ENVOLVIDO: processos ESTRUTURADOS (V2). Demais: full-text (V1).
   const porOab = !!b.oab && !b.nome && !b.cpfCnpj && !b.numeroCnj;
-  const r = porOab
-    ? await buscarProcessosPorOab({ oab: b.oab, uf: b.uf || 'MG' })
-    : await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG', nome: b.nome, cpfCnpj: b.cpfCnpj, numeroCnj: b.numeroCnj });
-  if (typeof r.creditos === 'number') registrarGasto(porOab ? 'busca_oab' : 'busca', r.creditos);
+  const porEnvolvido = !b.oab && !b.numeroCnj && (!!b.cpfCnpj || !!b.nome);
+  const estruturado = porOab || porEnvolvido;
+  let r;
+  if (porOab) r = await buscarProcessosPorOab({ oab: b.oab, uf: b.uf || 'MG' });
+  else if (porEnvolvido) r = await buscarProcessosPorEnvolvido({ cpfCnpj: b.cpfCnpj, nome: b.nome });
+  else r = await buscarProcessos({ oab: b.oab, uf: b.uf || 'MG', nome: b.nome, cpfCnpj: b.cpfCnpj, numeroCnj: b.numeroCnj });
+  if (typeof r.creditos === 'number') registrarGasto(porOab ? 'busca_oab' : (porEnvolvido ? 'busca_envolvido' : 'busca'), r.creditos);
   if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
   logAudit(req, { event_type: 'RADAR', event_name: 'BUSCA', module: 'RADAR', resource_id: soDigitos(b.oab || b.cpfCnpj || b.numeroCnj || '') || 'nome', description: 'Busca de processos no Escavador.' });
 
   const bruto = Array.isArray(r.itens) ? r.itens : (Array.isArray(r.data?.items) ? r.data.items : (Array.isArray(r.data) ? r.data : (r.data ? [r.data] : [])));
-  // Cada processo UMA vez (full-text repete por publicação). Por OAB já vem estruturado.
+  // Cada processo UMA vez (full-text repete por publicação). Estruturado já vem completo.
   const vistos = new Set();
   const processos = [];
   for (const it of bruto) {
-    const p = porOab ? detalheParaImport(it, { oab: b.oab, uf: b.uf || 'MG' }) : processoParaImport(it);
+    const p = estruturado ? detalheParaImport(it, { oab: b.oab, uf: b.uf || 'MG' }) : processoParaImport(it);
     if (!p.numero_processo || vistos.has(p.numero_processo)) continue;
-    if (porOab && !p.resumo) {
+    if (estruturado && !p.resumo) {
       p.resumo = [p.class_name, p.subject, p.parte_contraria ? `réu: ${p.parte_contraria}` : '']
         .filter(Boolean).join(' • ');
     }

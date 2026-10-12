@@ -58,6 +58,7 @@ export const WIRE = {
   rotasV2: {
     processoPorCnj: 'https://api.escavador.com/api/v2/processos/numero_cnj/',
     advogadoProcessos: 'https://api.escavador.com/api/v2/advogado/processos', // ?oab_numero=&oab_estado=
+    envolvidoProcessos: 'https://api.escavador.com/api/v2/envolvido/processos', // ?cpf_cnpj= | ?nome=
   },
   // Dentro do detalhe: a "capa" (dados do processo) e os "envolvidos" (partes + advogados).
   fontes: ['fontes', 'tribunais', 'fonte'],
@@ -361,6 +362,23 @@ export async function buscarProcessosPorOab({ oab, uf = 'MG', status = '', max =
   const query = { oab_numero: num, oab_estado: u, limit: 100 };
   if (status) query.status = status; // 'ATIVO' | 'INATIVO'
   const r = await escavadorPaginar(WIRE.rotasV2.advogadoProcessos, { query, env, fetchImpl, max });
+  return r;
+}
+
+/**
+ * RADAR-03 — Busca ESTRUTURADA por CPF/CNPJ (ou nome) do envolvido, via v2 /envolvido/processos.
+ * Diferente da busca full-text em diários (/busca), devolve os processos da parte já estruturados
+ * (capa + envolvidos), prontos para `detalheParaImport`. Prioriza cpfCnpj; cai para nome se não houver.
+ * @returns {{ok, itens, creditos}}
+ */
+export async function buscarProcessosPorEnvolvido({ cpfCnpj = '', nome = '', status = '', max = 300, env = process.env, fetchImpl = fetch }) {
+  const doc = soDigitos(cpfCnpj);
+  const query = { limit: 100 };
+  if (doc) query.cpf_cnpj = doc;
+  else if (String(nome || '').trim()) query.nome = String(nome).trim();
+  else return { ok: false, status: 0, error: 'Informe o CPF/CNPJ ou o nome do envolvido.' };
+  if (status) query.status = status; // 'ATIVO' | 'INATIVO'
+  const r = await escavadorPaginar(WIRE.rotasV2.envolvidoProcessos, { query, env, fetchImpl, max });
   return r;
 }
 

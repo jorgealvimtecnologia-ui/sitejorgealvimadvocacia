@@ -9,7 +9,7 @@ import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
   detalharProcesso, detalheParaImport, grauParaInstancia,
-  criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab,
+  criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab, buscarProcessosPorEnvolvido,
   listarMovimentacoes, movimentacaoParaMovimento,
 } from '../src/shared/escavador.js';
 
@@ -317,6 +317,35 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.match(capturado, /\/api\/v2\/advogado\/processos\?/);
     assert.match(capturado, /oab_numero=222943/);
     assert.match(capturado, /oab_estado=MG/);
+  });
+
+  it('buscarProcessosPorEnvolvido (RADAR-03) monta a URL V2 do envolvido com cpf_cnpj', async () => {
+    let capturado = null;
+    const fetchImpl = async (url) => {
+      capturado = String(url);
+      return fakeResponse({ body: { items: [{ numero_cnj: '1' }] } });
+    };
+    const r = await buscarProcessosPorEnvolvido({ cpfCnpj: '529.982.247-25', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.equal(r.itens.length, 1);
+    assert.match(capturado, /\/api\/v2\/envolvido\/processos\?/);
+    assert.match(capturado, /cpf_cnpj=52998224725/);
+  });
+
+  it('buscarProcessosPorEnvolvido cai para nome quando não há CPF/CNPJ', async () => {
+    let capturado = null;
+    const fetchImpl = async (url) => { capturado = String(url); return fakeResponse({ body: { items: [] } }); };
+    const r = await buscarProcessosPorEnvolvido({ nome: 'Fulano de Tal', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.match(capturado, /nome=Fulano/);
+  });
+
+  it('buscarProcessosPorEnvolvido sem CPF/CNPJ nem nome recusa (não gasta crédito)', async () => {
+    let chamou = false;
+    const fetchImpl = async () => { chamou = true; return fakeResponse({ body: {} }); };
+    const r = await buscarProcessosPorEnvolvido({ env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, false);
+    assert.equal(chamou, false, 'não deve chamar a API sem termo');
   });
 
   it('listarMovimentacoes monta a URL /movimentacoes do CNJ; movimentacaoParaMovimento mapeia', async () => {
