@@ -10,6 +10,7 @@ import {
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
   detalharProcesso, detalheParaImport, grauParaInstancia,
   criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab, buscarProcessosPorEnvolvido,
+  processoBateNomeCompleto, normalizarNome,
   listarMovimentacoes, movimentacaoParaMovimento,
 } from '../src/shared/escavador.js';
 
@@ -346,6 +347,23 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     const r = await buscarProcessosPorEnvolvido({ env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
     assert.equal(r.ok, false);
     assert.equal(chamou, false, 'não deve chamar a API sem termo');
+  });
+
+  it('buscarProcessosPorEnvolvido recusa nome de UMA palavra (evita homônimos)', async () => {
+    let chamou = false;
+    const fetchImpl = async () => { chamou = true; return fakeResponse({ body: { items: [] } }); };
+    const r = await buscarProcessosPorEnvolvido({ nome: 'José', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, false);
+    assert.equal(chamou, false, 'nome de uma palavra não deve nem chamar a API');
+    assert.match(r.error, /NOME COMPLETO/i);
+  });
+
+  it('processoBateNomeCompleto exige TODAS as palavras do nome numa mesma parte', () => {
+    const proc = { partes: [{ name: 'José Carlos da Silva Souza' }, { name: 'Banco XPTO S.A.' }] };
+    assert.equal(processoBateNomeCompleto(proc, 'José Carlos Souza'), true, 'todas as palavras presentes');
+    assert.equal(processoBateNomeCompleto(proc, 'jose carlos souza'), true, 'sem acento/maiúscula também casa');
+    assert.equal(processoBateNomeCompleto(proc, 'Maria Souza'), false, 'falta "Maria" em qualquer parte');
+    assert.equal(normalizarNome('José  CARLOS'), 'jose carlos');
   });
 
   it('listarMovimentacoes monta a URL /movimentacoes do CNJ; movimentacaoParaMovimento mapeia', async () => {

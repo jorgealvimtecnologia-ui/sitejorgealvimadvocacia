@@ -33,7 +33,7 @@ import { responsavelAoCriar } from '../../middleware/data-scope.js';
 import {
   escavadorConfig, escavadorConfigured, consultarSaldo, listarMonitoramentos,
   criarMonitoramentoDiario, removerMonitoramento, buscarProcessos, buscarProcessosPorOab,
-  buscarProcessosPorEnvolvido,
+  buscarProcessosPorEnvolvido, processoBateNomeCompleto,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, soDigitos,
   detalharProcesso, detalheParaImport, listarMovimentacoes, movimentacaoParaMovimento,
 } from '../../shared/escavador.js';
@@ -471,6 +471,8 @@ radarRouter.post('/api/radar/importar-processos', requireAuth, async (req, res) 
     if (typeof r.creditos === 'number') { creditos += r.creditos; registrarGasto('busca_envolvido', r.creditos); }
     if (!r.ok) return res.status(502).json({ error: `Escavador: ${r.error}` });
     encontrados = (r.itens || []).map((it) => detalheParaImport(it, { uf: b.uf || 'MG' }));
+    // Por nome: importa só os processos cuja parte casa com o nome completo.
+    if (b.nome && !b.cpfCnpj) encontrados = encontrados.filter((p) => processoBateNomeCompleto(p, b.nome));
   } else {
     return res.status(400).json({ error: 'Informe "oab", "cpfCnpj"/"nome" (para buscar e importar) ou "processos".' });
   }
@@ -609,7 +611,21 @@ radarRouter.post('/api/radar/buscar', requireAuth, async (req, res) => {
     vistos.add(p.numero_processo);
     processos.push(p);
   }
-  return res.json({ success: true, processos, creditos: r.creditos });
+
+  // Busca por NOME: só mantém os processos em que alguma PARTE casa com o nome COMPLETO
+  // digitado (evita a enxurrada de homônimos quando a API casa cada palavra isolada).
+  let processosFinais = processos;
+  let totalBruto = processos.length;
+  if (porEnvolvido && b.nome && !b.cpfCnpj) {
+    processosFinais = processos.filter(p => processoBateNomeCompleto(p, b.nome));
+  }
+
+  return res.json({
+    success: true,
+    processos: processosFinais,
+    creditos: r.creditos,
+    ...(processosFinais.length !== totalBruto ? { filtrados_por_nome: totalBruto - processosFinais.length } : {})
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -23,7 +23,7 @@
       "prioridade": "P2",
       "descricao": "Hoje a busca por CPF/CNPJ não retorna nada e a por nome traz homônimos (full-text). A API v2 tem o endpoint do envolvido (por nome ou CPF/CNPJ) que devolve os processos estruturados.",
       "criterios": "Buscar por CPF/CNPJ retorna os processos da parte (estruturados); busca por nome usa o endpoint do envolvido e reduz homônimos; resultados já vêm completos para 'Adicionar ao sistema'.",
-      "estado": "FEITO no repositorio (falta publicar): busca estruturada por CPF/CNPJ (e nome) via v2 /envolvido/processos (buscarProcessosPorEnvolvido). /api/radar/buscar e /api/radar/importar-processos ganharam o ramo porEnvolvido; resultados ja vem estruturados (capa+partes) para Adicionar ao sistema. Testes em tests/escavador.test.js. Sem mudanca no frontend (ja enviava cpfCnpj/nome)."
+      "estado": "FEITO no repositorio (falta publicar): busca estruturada por CPF/CNPJ (e nome) via v2 /envolvido/processos (buscarProcessosPorEnvolvido). /api/radar/buscar e /api/radar/importar-processos ganharam o ramo porEnvolvido; resultados ja vem estruturados (capa+partes) para Adicionar ao sistema. Testes em tests/escavador.test.js. Sem mudanca no frontend (ja enviava cpfCnpj/nome). MELHORIA busca por nome: exige nome COMPLETO (>=2 palavras); filtra os resultados mantendo so os processos cuja PARTE casa com o nome inteiro (processoBateNomeCompleto, sem acento/maiuscula); busca full-text V1 usa frase exata (aspas automaticas); UI recomenda CPF/CNPJ. Resolve o problema de trazer milhares de homonimos."
     },
     {
       "ref": "RADAR-04",

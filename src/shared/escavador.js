@@ -299,7 +299,8 @@ export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj
   } else if (cpfCnpj) {
     termo = soDigitos(cpfCnpj);
   } else if (nome) {
-    termo = String(nome).trim();
+    // Frase EXATA (aspas automáticas): evita casar cada palavra do nome isoladamente.
+    termo = `"${String(nome).trim().replace(/"/g, '')}"`;
   } else {
     return { ok: false, status: 0, error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' };
   }
@@ -374,9 +375,18 @@ export async function buscarProcessosPorOab({ oab, uf = 'MG', status = '', max =
 export async function buscarProcessosPorEnvolvido({ cpfCnpj = '', nome = '', status = '', max = 300, env = process.env, fetchImpl = fetch }) {
   const doc = soDigitos(cpfCnpj);
   const query = { limit: 100 };
-  if (doc) query.cpf_cnpj = doc;
-  else if (String(nome || '').trim()) query.nome = String(nome).trim();
-  else return { ok: false, status: 0, error: 'Informe o CPF/CNPJ ou o nome do envolvido.' };
+  const nomeLimpo = String(nome || '').trim().replace(/\s+/g, ' ');
+  if (doc) {
+    query.cpf_cnpj = doc;
+  } else if (nomeLimpo) {
+    // Nome completo: evita a enxurrada de homônimos de uma palavra só.
+    if (nomeLimpo.split(' ').length < 2) {
+      return { ok: false, status: 0, error: 'Digite o NOME COMPLETO (nome e sobrenome). Uma palavra só traz processos demais — ou use o CPF/CNPJ.' };
+    }
+    query.nome = nomeLimpo;
+  } else {
+    return { ok: false, status: 0, error: 'Informe o CPF/CNPJ ou o nome completo do envolvido.' };
+  }
   if (status) query.status = status; // 'ATIVO' | 'INATIVO'
   const r = await escavadorPaginar(WIRE.rotasV2.envolvidoProcessos, { query, env, fetchImpl, max });
   return r;
@@ -595,6 +605,29 @@ export function resumoTexto(texto, max = 200) {
 //  Utilitários puros
 // ---------------------------------------------------------------------------
 export function soDigitos(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+
+/** Normaliza texto para comparação: minúsculas, sem acento, espaços colapsados. */
+export function normalizarNome(v) {
+  return String(v == null ? '' : v)
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * O processo tem alguma PARTE cujo nome contém TODAS as palavras do nome buscado?
+ * (RADAR-03) Evita o resultado inflado quando a API casa cada palavra isolada.
+ */
+export function processoBateNomeCompleto(processo, nomeBusca) {
+  const termos = normalizarNome(nomeBusca).split(' ').filter(t => t.length >= 2);
+  if (!termos.length) return true; // sem termos úteis, não filtra
+  const nomes = [];
+  for (const p of (processo?.partes || [])) if (p?.name) nomes.push(normalizarNome(p.name));
+  for (const p of (processo?.polo_ativo || [])) if (typeof p === 'string') nomes.push(normalizarNome(p));
+  for (const p of (processo?.polo_passivo || [])) if (typeof p === 'string') nomes.push(normalizarNome(p));
+  if (processo?.cliente_sugerido) nomes.push(normalizarNome(processo.cliente_sugerido));
+  if (processo?.parte_contraria) nomes.push(normalizarNome(processo.parte_contraria));
+  return nomes.some(n => termos.every(t => n.includes(t)));
+}
 
 function primeiro(obj, chaves) {
   for (const k of chaves) {
