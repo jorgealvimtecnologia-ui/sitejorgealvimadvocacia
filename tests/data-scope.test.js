@@ -133,3 +133,63 @@ describe('lista de responsáveis (para o seletor do card)', () => {
     assert.deepEqual(r.body.operators, []);
   });
 });
+
+describe('escopo de dados — clientes (AUD-31)', () => {
+  const CLI_A = 'CLI-ESC-A', CLI_B = 'CLI-ESC-B', CLI_POOL = 'CLI-ESC-POOL';
+  before(() => {
+    const now = new Date().toISOString();
+    const ins = (id, resp) => db.prepare(
+      `INSERT INTO clients (id, client_type, full_name, cpf, email, phone, contract_status, responsible_lawyer_id, created_at, updated_at)
+       VALUES (?, 'PF', ?, '', '', '', 'Ativo', ?, ?, ?)`
+    ).run(id, `Cli ${id}`, resp, now, now);
+    ins(CLI_A, idA); ins(CLI_B, idB); ins(CLI_POOL, null);
+  });
+  const visiveis = async (token) => {
+    const r = await request(app).get('/api/clients').set(auth(token));
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    return (r.body.clients || []).map(c => c.id);
+  };
+  it('advogado A vê os seus clientes + o pool, nunca o de B', async () => {
+    const ids = await visiveis(tokenA);
+    assert.ok(ids.includes(CLI_A), 'A vê o seu cliente');
+    assert.ok(ids.includes(CLI_POOL), 'A vê o pool (sem responsável)');
+    assert.ok(!ids.includes(CLI_B), 'A NÃO vê o cliente de B');
+  });
+  it('o mestre vê todos os clientes', async () => {
+    const ids = await visiveis(masterToken);
+    assert.ok([CLI_A, CLI_B, CLI_POOL].every(x => ids.includes(x)));
+  });
+  it('abrir o cliente de B dá 403 para A', async () => {
+    const r = await request(app).get(`/api/clients/${CLI_B}`).set(auth(tokenA));
+    assert.equal(r.status, 403);
+  });
+});
+
+describe('escopo de dados — publicações/intimações (AUD-31)', () => {
+  const PUB_A = 'PUB-ESC-A', PUB_B = 'PUB-ESC-B', PUB_POOL = 'PUB-ESC-POOL';
+  before(async () => {
+    const lawA = await criarProcesso(tokenA, '5000010-11.2026.8.13.0145'); // dono: A
+    const lawB = await criarProcesso(tokenB, '5000011-22.2026.8.13.0145'); // dono: B
+    const now = new Date().toISOString();
+    const ins = (id, lawsuit) => db.prepare(
+      `INSERT INTO court_publications (id, numero_processo, tipo_comunicacao, lawsuit_id, status, created_at, updated_at)
+       VALUES (?, ?, 'Intimação', ?, 'nao_lido', ?, ?)`
+    ).run(id, id, lawsuit, now, now);
+    ins(PUB_A, lawA); ins(PUB_B, lawB); ins(PUB_POOL, null);
+  });
+  const visiveis = async (token) => {
+    const r = await request(app).get('/api/court/publications').set(auth(token));
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    return (r.body.publications || []).map(p => p.id);
+  };
+  it('advogado A vê as intimações do processo dele + as sem vínculo, não as de B', async () => {
+    const ids = await visiveis(tokenA);
+    assert.ok(ids.includes(PUB_A), 'A vê a intimação do seu processo');
+    assert.ok(ids.includes(PUB_POOL), 'A vê a intimação sem vínculo (pool)');
+    assert.ok(!ids.includes(PUB_B), 'A NÃO vê a intimação do processo de B');
+  });
+  it('o mestre vê todas as intimações', async () => {
+    const ids = await visiveis(masterToken);
+    assert.ok([PUB_A, PUB_B, PUB_POOL].every(x => ids.includes(x)));
+  });
+});

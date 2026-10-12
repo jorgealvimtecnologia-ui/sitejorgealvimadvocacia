@@ -10,6 +10,7 @@ import path from 'path';
 import { ROOT_DIR } from '../../config/constants.js';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
+import { publicacaoVisivel } from '../../middleware/data-scope.js';
 import { logAudit } from '../../middleware/audit.js';
 import { syncComunicaApi, registerSyncTask } from '../sync/sync.routes.js';
 import { generateNextLawsuitId, generateNextClientFullId } from '../../shared/ids.js';
@@ -868,7 +869,9 @@ juridicoRouter.get('/api/court/publications', requireAuth, (req, res) => {
 
     query += ` ORDER BY data_disponibilizacao DESC, created_at DESC LIMIT 100`;
 
-    const publications = db.prepare(query).all(...params);
+    // Escopo de dados (AUD-31): advogado/estagiário só veem as intimações de processos/clientes
+    // deles (ou sem vínculo). Mestre/sócio/secretária veem todas.
+    const publications = db.prepare(query).all(...params).filter(p => publicacaoVisivel(req.user, p));
 
     const stats = {
       total: db.prepare(`SELECT count(*) as count FROM court_publications`).get().count,

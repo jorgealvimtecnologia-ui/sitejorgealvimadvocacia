@@ -26,7 +26,9 @@ clientsRouter.get('/api/clients', requireAuth, (req, res) => {
       ? `SELECT * FROM clients ORDER BY created_at DESC`
       : `SELECT * FROM clients WHERE deleted_at IS NULL ORDER BY created_at DESC`;
 
-    const rows = db.prepare(query).all();
+    // Escopo de dados (AUD-31): advogado/estagiário só veem os clientes deles + os sem
+    // responsável (pool). Mestre/sócio/secretária (all/office) veem todos.
+    const rows = db.prepare(query).all().filter(c => clienteVisivel(req.user, c));
 
     // Quantas mensagens do cliente ainda não foram lidas pelo escritório (para o selo "💬 N").
     const naoLidas = {};
@@ -60,6 +62,10 @@ clientsRouter.get('/api/clients/:id', requireAuth, (req, res) => {
     const client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(id);
     if (!client) {
       return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+    // Escopo de dados (AUD-31): não abre o cliente de outro advogado.
+    if (!clienteVisivel(req.user, client)) {
+      return res.status(403).json({ error: 'Sem permissão para ver este cliente.' });
     }
     client.files = client.files ? JSON.parse(client.files) : [];
     return res.json({ success: true, client });
