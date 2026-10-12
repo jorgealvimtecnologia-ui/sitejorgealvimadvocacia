@@ -280,6 +280,30 @@
               </div>`;
             })()}
 
+            ${(() => {
+              // RADAR-05: audiências do processo (leves). Botão para lançar na Agenda (confirmação).
+              const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+              const auds = Array.isArray(law.audiencias) ? law.audiencias : [];
+              if (!auds.length) return '';
+              return `
+              <div class="pt-3 border-t border-slate-100">
+                <span class="text-slate-600 block text-xs uppercase font-bold mb-2 flex items-center space-x-1.5"><span>⚖️</span><span>Audiências (${auds.length})</span></span>
+                <div class="space-y-1.5">
+                  ${auds.map(a => {
+                    const quando = a.data ? (() => { try { return new Date(a.data + 'T12:00').toLocaleDateString('pt-BR'); } catch (e) { return esc(a.data); } })() : 'data a confirmar';
+                    return `
+                    <div class="flex items-center justify-between gap-2 border border-indigo-100 bg-indigo-50/40 rounded-xl px-3 py-1.5 text-xs">
+                      <div class="min-w-0">
+                        <strong class="text-navy-950">${esc(a.tipo || 'Audiência')}</strong>
+                        <span class="text-slate-500"> • ${quando}${a.local ? ' • ' + esc(a.local) : ''}${a.situacao ? ' • ' + esc(a.situacao) : ''}</span>
+                      </div>
+                      <button type="button" onclick="agendarAudiencia('${law.id}', '${esc(a.data || '')}', '${esc((a.tipo || 'Audiência')).replace(/'/g, '')}' )" class="flex-shrink-0 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]" title="Lançar esta audiência na Agenda">📅 Agendar</button>
+                    </div>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            })()}
+
             <!-- Tabela / Linhas de Andamentos do Processo -->
             <div class="pt-3 border-t border-slate-100 space-y-2">
               <div class="flex items-center justify-between">
@@ -332,6 +356,15 @@
                         >
                           <span>${mov.whatsapp_notified_at ? '✓' : '📲'}</span>
                           <span>${mov.whatsapp_notified_at ? 'Notificado' : 'WhatsApp'}</span>
+                        </button>
+
+                        <!-- RADAR-04: lançar prazo na Agenda a partir deste andamento (com confirmação) -->
+                        <button
+                          onclick="lancarPrazoDoAndamento('${mov.id}')"
+                          class="px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center space-x-1"
+                          title="Calcular e lançar um prazo na Agenda a partir deste andamento"
+                        >
+                          <span>⏰</span><span>Lançar prazo</span>
                         </button>
 
                         ${mov.deadline_date && mov.deadline_status !== 'Informativo' ? `
@@ -926,6 +959,54 @@
       }
     }
 
+    // RADAR-04: lança um prazo na Agenda a partir de um andamento (o advogado confirma os dados).
+    async function lancarPrazoDoAndamento(movementId) {
+      const diasStr = prompt('Prazo em DIAS a partir deste andamento?\n(ex.: 15 para contestação, 5 para embargos)', '15');
+      if (diasStr === null) return;
+      const days = parseInt(diasStr, 10);
+      if (!days || days < 1) { alert('Informe um número de dias válido.'); return; }
+      const regime = (prompt('Regime da contagem?\nDigite: CPC (dias úteis), CLT, CPP (corridos) ou JEF', 'CPC') || 'cpc').trim().toLowerCase();
+      const title = prompt('Título do prazo na Agenda (opcional):', '') || '';
+      try {
+        const res = await fetch('/api/court/deadline/from-movement', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ movement_id: movementId, days, regime, title })
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.success) {
+          let quando = d.deadline_date;
+          try { quando = new Date(d.deadline_date + 'T12:00').toLocaleDateString('pt-BR'); } catch (e) {}
+          alert(`✅ Prazo lançado na Agenda.\nData fatal: ${quando}`);
+          if (typeof loadLawsuits === 'function') await loadLawsuits();
+        } else {
+          alert('Não foi possível lançar o prazo: ' + (d.error || 'erro'));
+        }
+      } catch (e) {
+        alert('Erro ao conectar ao servidor.');
+      }
+    }
+
+    // RADAR-05: lança uma audiência do processo na Agenda (com confirmação do advogado).
+    async function agendarAudiencia(lawsuitId, data, tipo) {
+      if (!confirm(`Lançar na Agenda a audiência "${tipo || 'Audiência'}"${data ? ' de ' + data : ''}?`)) return;
+      try {
+        const res = await fetch('/api/court/hearing/to-calendar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ lawsuit_id: lawsuitId, date: data, title: tipo || 'Audiência' })
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.success) {
+          alert('✅ Audiência lançada na Agenda.');
+        } else {
+          alert('Não foi possível agendar: ' + (d.error || 'erro'));
+        }
+      } catch (e) {
+        alert('Erro ao conectar ao servidor.');
+      }
+    }
+
     function _esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
     async function previewClientPortal(lawsuitId) {
@@ -959,6 +1040,8 @@
   window.publishAllToClient = publishAllToClient;
   window.previewClientPortal = previewClientPortal;
   window.atualizarProcessoRadar = atualizarProcessoRadar;
+  window.lancarPrazoDoAndamento = lancarPrazoDoAndamento;
+  window.agendarAudiencia = agendarAudiencia;
   window.toggleMovementStatus = typeof toggleMovementStatus !== 'undefined' ? toggleMovementStatus : window.toggleMovementStatus;
   window.deleteMovement = typeof deleteMovement !== 'undefined' ? deleteMovement : window.deleteMovement;
   window.createMovementWhatsAppAuthModal = typeof createMovementWhatsAppAuthModal !== 'undefined' ? createMovementWhatsAppAuthModal : window.createMovementWhatsAppAuthModal;

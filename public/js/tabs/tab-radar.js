@@ -661,8 +661,8 @@
       if (uf) uf.classList.toggle('hidden', tipo !== 'oab');
       if (input) {
         input.placeholder = tipo === 'oab' ? 'nº da OAB (ex.: 222943)'
-          : tipo === 'nome' ? 'nome da pessoa/empresa'
-          : tipo === 'cpfCnpj' ? 'CPF ou CNPJ' : '0000000-00.0000.0.00.0000';
+          : tipo === 'nome' ? 'nome COMPLETO (ex.: José Carlos da Silva)'
+          : tipo === 'cpfCnpj' ? 'CPF ou CNPJ (resultado mais exato)' : '0000000-00.0000.0.00.0000';
       }
     }
 
@@ -670,6 +670,11 @@
       const tipo = (document.getElementById('esc-busca-tipo') || {}).value || 'numeroCnj';
       const termo = ((document.getElementById('esc-busca-input') || {}).value || '').trim();
       if (!termo) { escMsg('Digite um termo para buscar.', 'text-rose-700'); return; }
+      // Nome: exige nome completo (evita trazer milhares de homônimos). Para resultado exato, use CPF/CNPJ.
+      if (tipo === 'nome' && termo.split(/\s+/).filter(Boolean).length < 2) {
+        escMsg('Digite o NOME COMPLETO (nome e sobrenome) — uma palavra só traz processos demais. Para resultado exato, use CPF/CNPJ.', 'text-rose-700');
+        return;
+      }
       const payload = { [tipo]: termo };
       // Busca por OAB precisa do ESTADO (UF) para trazer a OAB certa (evita o homônimo de outro estado).
       if (tipo === 'oab') {

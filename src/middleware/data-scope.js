@@ -66,6 +66,32 @@ export function clienteVisivel(session, client) {
 }
 
 /**
+ * Uma PUBLICAÇÃO/intimação é visível para a sessão?
+ *  - all/office → vê todas;
+ *  - assigned/own → vê as SEM vínculo (pool do escritório) e as de um processo/cliente DELE.
+ * Reúsa a regra dos processos (responsible_user_id) e dos clientes (responsible_lawyer_id).
+ */
+export function publicacaoVisivel(session, pub) {
+  if (!pub) return false;
+  if (!limitaAoResponsavel(dataScopeOf(session))) return true; // all/office: vê tudo
+  // Sem vínculo de processo nem cliente = pool do escritório (não esconde o que já existe).
+  if (!pub.lawsuit_id && !pub.client_id) return true;
+  if (pub.lawsuit_id) {
+    try {
+      const law = db.prepare(`SELECT responsible_user_id FROM lawsuits WHERE id = ?`).get(pub.lawsuit_id);
+      if (law && (!law.responsible_user_id || law.responsible_user_id === session.userId)) return true;
+    } catch { /* ignora */ }
+  }
+  if (pub.client_id) {
+    try {
+      const cli = db.prepare(`SELECT responsible_lawyer_id FROM clients WHERE id = ?`).get(pub.client_id);
+      if (cli && (!cli.responsible_lawyer_id || cli.responsible_lawyer_id === session.userId)) return true;
+    } catch { /* ignora */ }
+  }
+  return false;
+}
+
+/**
  * Responsável a gravar ao CRIAR um processo:
  *  - se quem cria pode atribuir (mestre/sócio) e informou um responsável, usa o informado;
  *  - senão, se o escopo de quem cria é restrito (advogado/estagiário), o dono é ele mesmo;

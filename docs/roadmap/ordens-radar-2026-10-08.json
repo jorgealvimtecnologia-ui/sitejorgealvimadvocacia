@@ -22,21 +22,32 @@
       "titulo": "Radar: busca por CPF/CNPJ (e nome) estruturada via /api/v2/envolvido/processos",
       "prioridade": "P2",
       "descricao": "Hoje a busca por CPF/CNPJ não retorna nada e a por nome traz homônimos (full-text). A API v2 tem o endpoint do envolvido (por nome ou CPF/CNPJ) que devolve os processos estruturados.",
-      "criterios": "Buscar por CPF/CNPJ retorna os processos da parte (estruturados); busca por nome usa o endpoint do envolvido e reduz homônimos; resultados já vêm completos para 'Adicionar ao sistema'."
+      "criterios": "Buscar por CPF/CNPJ retorna os processos da parte (estruturados); busca por nome usa o endpoint do envolvido e reduz homônimos; resultados já vêm completos para 'Adicionar ao sistema'.",
+      "estado": "FEITO no repositorio (falta publicar): busca estruturada por CPF/CNPJ (e nome) via v2 /envolvido/processos (buscarProcessosPorEnvolvido). /api/radar/buscar e /api/radar/importar-processos ganharam o ramo porEnvolvido; resultados ja vem estruturados (capa+partes) para Adicionar ao sistema. Testes em tests/escavador.test.js. Sem mudanca no frontend (ja enviava cpfCnpj/nome). MELHORIA busca por nome: exige nome COMPLETO (>=2 palavras); filtra os resultados mantendo so os processos cuja PARTE casa com o nome inteiro (processoBateNomeCompleto, sem acento/maiuscula); busca full-text V1 usa frase exata (aspas automaticas); UI recomenda CPF/CNPJ. Resolve o problema de trazer milhares de homonimos."
     },
     {
       "ref": "RADAR-04",
       "titulo": "Radar/Agenda: levar prazos para a Agenda a partir dos andamentos (com confirmação do advogado)",
       "prioridade": "P2",
       "descricao": "Os andamentos/intimações importados não viram prazo na Agenda automaticamente. O cálculo de prazo é decisão do advogado (há o botão 'Calcular Prazo com 1 Clique').",
-      "criterios": "Ao calcular/confirmar um prazo a partir de um andamento ou intimação, ele aparece na Agenda do advogado; nada é lançado sozinho sem a confirmação; nada é enviado ao cliente automaticamente."
+      "criterios": "Ao calcular/confirmar um prazo a partir de um andamento ou intimação, ele aparece na Agenda do advogado; nada é lançado sozinho sem a confirmação; nada é enviado ao cliente automaticamente.",
+      "estado": "FEITO no repositorio (falta publicar): botao Lancar prazo em cada andamento (tab-lawsuits.js) -> POST /api/court/deadline/from-movement, que calcula a data fatal (computeLegalDeadline, feriados do banco) e cria um calendar_event prazo_fatal ligado ao processo. So com confirmacao do advogado (dias/regime/titulo); nada automatico; nada ao cliente. Escopo: nao lanca em processo de outro advogado. Testes em tests/radar-prazo-andamento.test.js."
     },
     {
       "ref": "RADAR-05",
-      "titulo": "Radar: importar audiências e documentos/autos do processo (fechar o \"todos os dados\")",
+      "titulo": "Radar: importar AUDIÊNCIAS do processo e exibir na ficha (com opção de ir à Agenda)",
       "prioridade": "P2",
-      "descricao": "Para completar o 'trazer todos os dados do Escavador', faltam as audiências marcadas e os documentos públicos/autos (estes costumam ter custo maior por download).",
-      "criterios": "Audiências do processo gravadas e exibidas na ficha; documentos/autos públicos acessíveis a partir do processo, com o custo exibido antes de baixar."
+      "descricao": "Importar as audiencias marcadas do processo (data, hora, tipo, local) a partir do detalhe do Escavador e exibir na ficha do processo; com opcao de lancar na Agenda (com confirmacao do advogado). Audiencias sao leves (so metadados), sem encher o servidor.",
+      "criterios": "Audiencias do processo gravadas e exibidas na ficha; botao para lancar uma audiencia na Agenda (confirmacao do advogado); nada automatico; nada ao cliente.",
+      "estado": "FEITO no repositorio (falta publicar): migration 011 (lawsuits.audiencias, so metadados). detalheParaImport extrai audiencias (data/tipo/situacao/local) do detalhe do Escavador; gravadas na importacao e na atualizacao; GET /api/lawsuits devolve. Ficha do processo mostra bloco Audiencias com botao Agendar -> POST /api/court/hearing/to-calendar (evento audiencia na Agenda, com confirmacao; escopo processoVisivel; nada ao cliente). Documentos/autos ficaram na RADAR-06 (SUSPENSA). OBS: confirmar o campo exato das audiencias no Escavador no 1o teste real (a extracao e defensiva)."
+    },
+    {
+      "ref": "RADAR-06",
+      "titulo": "Radar: documentos/autos do processo (download) — SUSPENSO",
+      "prioridade": "P3",
+      "descricao": "Baixar/abrir os documentos publicos (peticoes, decisoes, sentencas) dos autos a partir do processo.",
+      "criterios": "Documentos acessiveis a partir do processo, com o custo exibido ANTES de baixar; nunca baixa sozinho; nao guarda arquivos pesados no servidor (preferir link/sob demanda).",
+      "estado": "SUSPENSA por decisao do Dr. Jorge (12/10/2026): guardar autos longos encheria o disco do servidor e o download no Escavador tem custo maior. Reavaliar no futuro por LINK/sob demanda (sem armazenar), com o preco exibido antes de cada download."
     }
   ]
 }

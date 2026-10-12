@@ -98,6 +98,7 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
       ...law,
       movements: movementStmt.all(law.id),
       parties: partiesDe(law.id),
+      audiencias: (() => { try { return JSON.parse(law.audiencias || '[]'); } catch { return []; } })(),
     }));
 
     return res.json({ success: true, lawsuits: result });

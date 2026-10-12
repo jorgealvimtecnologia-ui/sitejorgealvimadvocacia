@@ -120,7 +120,7 @@
     {
       "ref": "AUD-31",
       "prioridade": "P1",
-      "estado": "pendente",
+      "estado": "FEITO no repositorio (falta publicar): escopo de dados estendido a CLIENTES (lista e abertura por id filtradas por clienteVisivel) e a PUBLICACOES/intimacoes (publicacaoVisivel, por processo/cliente vinculado ou pool). Processos ja estavam. Advogado/estagiario so veem os seus + o pool; mestre/socio/secretaria veem tudo. Testes em tests/data-scope.test.js.",
       "titulo": "Escopo de dados e somente leitura (advogado e estagiário só veem os seus processos)",
       "descricao": "Hoje cada aba só liga ou desliga: quem tem Processos vê todos os processos. O escopo de dados (data_scope) é gravado mas nenhum trecho do servidor o aplica, e não existe permissão de somente leitura. A primeira versão das 17 funções trata o \"restrito\" como desligado.",
       "criterios": "Advogado de escritório e estagiário veem só os processos em que são responsáveis, provado por teste na API; cliente só os seus; permissão de somente leitura por aba onde a matriz pedir; testes por função e por escopo."

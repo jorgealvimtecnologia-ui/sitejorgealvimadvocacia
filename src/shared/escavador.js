@@ -58,6 +58,7 @@ export const WIRE = {
   rotasV2: {
     processoPorCnj: 'https://api.escavador.com/api/v2/processos/numero_cnj/',
     advogadoProcessos: 'https://api.escavador.com/api/v2/advogado/processos', // ?oab_numero=&oab_estado=
+    envolvidoProcessos: 'https://api.escavador.com/api/v2/envolvido/processos', // ?cpf_cnpj= | ?nome=
   },
   // Dentro do detalhe: a "capa" (dados do processo) e os "envolvidos" (partes + advogados).
   fontes: ['fontes', 'tribunais', 'fonte'],
@@ -298,7 +299,8 @@ export async function buscarProcessos({ oab, uf = 'MG', nome, cpfCnpj, numeroCnj
   } else if (cpfCnpj) {
     termo = soDigitos(cpfCnpj);
   } else if (nome) {
-    termo = String(nome).trim();
+    // Frase EXATA (aspas automáticas): evita casar cada palavra do nome isoladamente.
+    termo = `"${String(nome).trim().replace(/"/g, '')}"`;
   } else {
     return { ok: false, status: 0, error: 'Informe oab, nome, cpfCnpj ou numeroCnj.' };
   }
@@ -361,6 +363,32 @@ export async function buscarProcessosPorOab({ oab, uf = 'MG', status = '', max =
   const query = { oab_numero: num, oab_estado: u, limit: 100 };
   if (status) query.status = status; // 'ATIVO' | 'INATIVO'
   const r = await escavadorPaginar(WIRE.rotasV2.advogadoProcessos, { query, env, fetchImpl, max });
+  return r;
+}
+
+/**
+ * RADAR-03 — Busca ESTRUTURADA por CPF/CNPJ (ou nome) do envolvido, via v2 /envolvido/processos.
+ * Diferente da busca full-text em diários (/busca), devolve os processos da parte já estruturados
+ * (capa + envolvidos), prontos para `detalheParaImport`. Prioriza cpfCnpj; cai para nome se não houver.
+ * @returns {{ok, itens, creditos}}
+ */
+export async function buscarProcessosPorEnvolvido({ cpfCnpj = '', nome = '', status = '', max = 300, env = process.env, fetchImpl = fetch }) {
+  const doc = soDigitos(cpfCnpj);
+  const query = { limit: 100 };
+  const nomeLimpo = String(nome || '').trim().replace(/\s+/g, ' ');
+  if (doc) {
+    query.cpf_cnpj = doc;
+  } else if (nomeLimpo) {
+    // Nome completo: evita a enxurrada de homônimos de uma palavra só.
+    if (nomeLimpo.split(' ').length < 2) {
+      return { ok: false, status: 0, error: 'Digite o NOME COMPLETO (nome e sobrenome). Uma palavra só traz processos demais — ou use o CPF/CNPJ.' };
+    }
+    query.nome = nomeLimpo;
+  } else {
+    return { ok: false, status: 0, error: 'Informe o CPF/CNPJ ou o nome completo do envolvido.' };
+  }
+  if (status) query.status = status; // 'ATIVO' | 'INATIVO'
+  const r = await escavadorPaginar(WIRE.rotasV2.envolvidoProcessos, { query, env, fetchImpl, max });
   return r;
 }
 
@@ -533,6 +561,19 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
   const numeroDig = soDigitos(d.numero_cnj || d.numeroProcessoUnico || primeiro(d, WIRE.campos.numero) || numeroCnj(fonte) || '');
   const numero = mascaraCnj(numeroDig) || numeroDig; // padrão do sistema é o CNJ COM máscara
   const sigla = String(fonte.sigla || fonte.sigla_tribunal || d.estado_origem?.sigla || primeiro(fonte, WIRE.campos.tribunalSigla) || '').toUpperCase();
+  // RADAR-05: audiências (leves — só metadados). Defensivo: procura em vários lugares do detalhe.
+  const audienciasBrutas = toArray(
+    primeiro(capa, ['audiencias', 'audiencias_futuras', 'proximas_audiencias'])
+    || primeiro(fonte, ['audiencias', 'audiencias_futuras', 'proximas_audiencias'])
+    || primeiro(d, ['audiencias', 'audiencias_futuras', 'proximas_audiencias'])
+    || []
+  );
+  const audiencias = audienciasBrutas.map((a) => ({
+    data: normalizaData(primeiro(a, ['data', 'data_audiencia', 'data_hora', 'datetime']) || ''),
+    tipo: String(primeiro(a, ['tipo', 'tipo_audiencia', 'nome', 'descricao']) || 'Audiência').trim(),
+    situacao: String(primeiro(a, ['situacao', 'status']) || '').trim(),
+    local: String(primeiro(a, ['local', 'sala', 'endereco', 'orgao']) || '').trim(),
+  })).filter((a) => a.data || a.tipo);
   return {
     numero_processo: numero,
     tribunal_code: sigla,
@@ -550,6 +591,7 @@ export function detalheParaImport(data, { oab = '', uf = '' } = {}) {
     partes: partesDetalhadas,
     parte_contraria: parteContraria,
     cliente_sugerido: clienteSugerido,
+    audiencias,
     fase,
     link: fonte.url || d.url || d.link || (d.id ? `https://www.escavador.com/processos/${d.id}` : ''),
     detalhado: true,
@@ -577,6 +619,29 @@ export function resumoTexto(texto, max = 200) {
 //  Utilitários puros
 // ---------------------------------------------------------------------------
 export function soDigitos(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+
+/** Normaliza texto para comparação: minúsculas, sem acento, espaços colapsados. */
+export function normalizarNome(v) {
+  return String(v == null ? '' : v)
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * O processo tem alguma PARTE cujo nome contém TODAS as palavras do nome buscado?
+ * (RADAR-03) Evita o resultado inflado quando a API casa cada palavra isolada.
+ */
+export function processoBateNomeCompleto(processo, nomeBusca) {
+  const termos = normalizarNome(nomeBusca).split(' ').filter(t => t.length >= 2);
+  if (!termos.length) return true; // sem termos úteis, não filtra
+  const nomes = [];
+  for (const p of (processo?.partes || [])) if (p?.name) nomes.push(normalizarNome(p.name));
+  for (const p of (processo?.polo_ativo || [])) if (typeof p === 'string') nomes.push(normalizarNome(p));
+  for (const p of (processo?.polo_passivo || [])) if (typeof p === 'string') nomes.push(normalizarNome(p));
+  if (processo?.cliente_sugerido) nomes.push(normalizarNome(processo.cliente_sugerido));
+  if (processo?.parte_contraria) nomes.push(normalizarNome(processo.parte_contraria));
+  return nomes.some(n => termos.every(t => n.includes(t)));
+}
 
 function primeiro(obj, chaves) {
   for (const k of chaves) {

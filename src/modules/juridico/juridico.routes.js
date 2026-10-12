@@ -10,6 +10,7 @@ import path from 'path';
 import { ROOT_DIR } from '../../config/constants.js';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
+import { publicacaoVisivel, processoVisivel } from '../../middleware/data-scope.js';
 import { logAudit } from '../../middleware/audit.js';
 import { syncComunicaApi, registerSyncTask } from '../sync/sync.routes.js';
 import { generateNextLawsuitId, generateNextClientFullId } from '../../shared/ids.js';
@@ -765,6 +766,120 @@ juridicoRouter.post('/api/legaltech/calculate-deadline', requireAuth, (req, res)
   }
 });
 
+// 1c. Endpoint (RADAR-04): lançar prazo na Agenda A PARTIR DE UM ANDAMENTO do processo.
+// Nada automático: só cria quando o advogado confirma aqui. Nada é enviado ao cliente.
+juridicoRouter.post('/api/court/deadline/from-movement', requireAuth, (req, res) => {
+  try {
+    const { movement_id, days = 15, regime = 'cpc', title } = req.body || {};
+    if (!movement_id) return res.status(400).json({ error: 'Informe o andamento (movement_id).' });
+
+    const mov = db.prepare(`SELECT * FROM lawsuit_movements WHERE id = ?`).get(movement_id);
+    if (!mov) return res.status(404).json({ error: 'Andamento não encontrado.' });
+    const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(mov.lawsuit_id);
+    if (!law) return res.status(404).json({ error: 'Processo do andamento não encontrado.' });
+    // Escopo de dados: não lança prazo em processo de outro advogado.
+    if (!processoVisivel(req.user, law)) {
+      return res.status(403).json({ error: 'Sem permissão para lançar prazo neste processo.' });
+    }
+
+    const base = mov.movement_date || new Date().toISOString().slice(0, 10);
+    const calc = calculateLegalDeadline(base, Number(days) || 15, regime, []);
+    const deadline = calc && calc.data_fatal;
+    if (!deadline) return res.status(422).json({ error: 'Não foi possível calcular o prazo.' });
+
+    const eventId = `EVT-PRAZO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const icalUid = `prazo-${Date.now()}@jorgealvimadvocacia.com.br`;
+    const titulo = (title && String(title).trim()) || `Prazo: ${mov.title || 'andamento'}`;
+
+    db.prepare(`
+      INSERT INTO calendar_events (
+        id, title, description, event_type, start_datetime, end_datetime,
+        all_day, location, meeting_url, lawyer_id, lawyer_name,
+        client_id, client_name, lawsuit_id, lawsuit_number,
+        priority, status, color, ical_uid, notes, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, 'prazo_fatal', ?, ?,
+        1, 'PJe / Tribunal', '', ?, ?,
+        ?, ?, ?, ?,
+        'fatal', 'agendado', '#dc2626', ?, ?, datetime('now'), datetime('now')
+      )
+    `).run(
+      eventId,
+      titulo,
+      `Prazo de ${Number(days) || 15} dias (${String(regime).toUpperCase()}) a partir do andamento de ${base}: ${mov.title || ''}`.trim(),
+      `${deadline}T00:00`,
+      `${deadline}T23:59`,
+      law.responsible_user_id || req.user?.userId || 'dr-jorge-alvim',
+      law.responsible_name || req.user?.name || 'Dr. Jorge Alvim',
+      law.client_id || null,
+      law.client_name || '',
+      law.id,
+      law.cnj_number || '',
+      icalUid,
+      `Lançado a partir de um andamento do Radar (confirmado pelo advogado).`
+    );
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'LANCAR_PRAZO_ANDAMENTO',
+      module: 'RADAR',
+      resource_id: law.id,
+      description: `Prazo lançado na Agenda a partir do andamento ${movement_id} do processo ${law.cnj_number || law.id}.`
+    });
+
+    return res.status(201).json({ success: true, deadline_date: deadline, event_id: eventId, calc });
+  } catch (err) {
+    console.error('[ERRO] Falha ao lançar prazo do andamento:', err);
+    return res.status(500).json({ error: 'Erro ao lançar prazo.' });
+  }
+});
+
+// 1d. Endpoint (RADAR-05): lançar uma AUDIÊNCIA na Agenda (com confirmação do advogado).
+juridicoRouter.post('/api/court/hearing/to-calendar', requireAuth, (req, res) => {
+  try {
+    const { lawsuit_id, date, title } = req.body || {};
+    if (!lawsuit_id || !date) return res.status(400).json({ error: 'Informe o processo e a data da audiência.' });
+    const law = db.prepare(`SELECT * FROM lawsuits WHERE id = ?`).get(lawsuit_id);
+    if (!law) return res.status(404).json({ error: 'Processo não encontrado.' });
+    if (!processoVisivel(req.user, law)) {
+      return res.status(403).json({ error: 'Sem permissão para agendar neste processo.' });
+    }
+    const dia = String(date).slice(0, 10);
+    const hora = String(date).length > 10 ? String(date).slice(11, 16) : '';
+    const eventId = `EVT-AUD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const icalUid = `audiencia-${Date.now()}@jorgealvimadvocacia.com.br`;
+    const titulo = (title && String(title).trim()) || 'Audiência';
+    db.prepare(`
+      INSERT INTO calendar_events (
+        id, title, description, event_type, start_datetime, end_datetime,
+        all_day, location, meeting_url, lawyer_id, lawyer_name,
+        client_id, client_name, lawsuit_id, lawsuit_number,
+        priority, status, color, ical_uid, notes, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, 'audiencia', ?, ?,
+        ?, 'Fórum / Tribunal', '', ?, ?,
+        ?, ?, ?, ?,
+        'alta', 'agendado', '#2563eb', ?, ?, datetime('now'), datetime('now')
+      )
+    `).run(
+      eventId, titulo, `Audiência importada do Radar (confirmada pelo advogado).`,
+      hora ? `${dia}T${hora}` : `${dia}T09:00`,
+      hora ? `${dia}T${hora}` : `${dia}T23:59`,
+      hora ? 0 : 1,
+      law.responsible_user_id || req.user?.userId || 'dr-jorge-alvim',
+      law.responsible_name || req.user?.name || 'Dr. Jorge Alvim',
+      law.client_id || null, law.client_name || '',
+      law.id, law.cnj_number || '',
+      icalUid, 'Audiência do processo (Radar).'
+    );
+    logAudit(req, { event_type: 'CRIACAO', event_name: 'AGENDAR_AUDIENCIA', module: 'RADAR', resource_id: law.id, description: `Audiência agendada para ${dia} no processo ${law.cnj_number || law.id}.` });
+    return res.status(201).json({ success: true, event_id: eventId, date: dia });
+  } catch (err) {
+    console.error('[ERRO] Falha ao agendar audiência:', err);
+    return res.status(500).json({ error: 'Erro ao agendar audiência.' });
+  }
+});
+
 // 2. Endpoint: Buscar Publicações em Tempo Real na ComunicaAPI (PJe / DJEN)
 juridicoRouter.get('/api/court/publications/search-live', requireAuth, async (req, res) => {
   try {
@@ -868,7 +983,9 @@ juridicoRouter.get('/api/court/publications', requireAuth, (req, res) => {
 
     query += ` ORDER BY data_disponibilizacao DESC, created_at DESC LIMIT 100`;
 
-    const publications = db.prepare(query).all(...params);
+    // Escopo de dados (AUD-31): advogado/estagiário só veem as intimações de processos/clientes
+    // deles (ou sem vínculo). Mestre/sócio/secretária veem todas.
+    const publications = db.prepare(query).all(...params).filter(p => publicacaoVisivel(req.user, p));
 
     const stats = {
       total: db.prepare(`SELECT count(*) as count FROM court_publications`).get().count,

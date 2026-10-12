@@ -9,7 +9,8 @@ import {
   escavadorConfigured, escavadorConfig, escavadorFetch, escavadorPaginar,
   extrairOcorrencias, ocorrenciaParaComunicaItem, processoParaImport, resumoTexto, normalizaData, mascaraCnj, soDigitos,
   detalharProcesso, detalheParaImport, grauParaInstancia,
-  criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab,
+  criarMonitoramentoDiario, criarMonitoramentoProcesso, buscarProcessosPorOab, buscarProcessosPorEnvolvido,
+  processoBateNomeCompleto, normalizarNome,
   listarMovimentacoes, movimentacaoParaMovimento,
 } from '../src/shared/escavador.js';
 
@@ -317,6 +318,74 @@ describe('Escavador — detalhe estruturado do processo (V2) "completa o máximo
     assert.match(capturado, /\/api\/v2\/advogado\/processos\?/);
     assert.match(capturado, /oab_numero=222943/);
     assert.match(capturado, /oab_estado=MG/);
+  });
+
+  it('buscarProcessosPorEnvolvido (RADAR-03) monta a URL V2 do envolvido com cpf_cnpj', async () => {
+    let capturado = null;
+    const fetchImpl = async (url) => {
+      capturado = String(url);
+      return fakeResponse({ body: { items: [{ numero_cnj: '1' }] } });
+    };
+    const r = await buscarProcessosPorEnvolvido({ cpfCnpj: '529.982.247-25', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.equal(r.itens.length, 1);
+    assert.match(capturado, /\/api\/v2\/envolvido\/processos\?/);
+    assert.match(capturado, /cpf_cnpj=52998224725/);
+  });
+
+  it('buscarProcessosPorEnvolvido cai para nome quando não há CPF/CNPJ', async () => {
+    let capturado = null;
+    const fetchImpl = async (url) => { capturado = String(url); return fakeResponse({ body: { items: [] } }); };
+    const r = await buscarProcessosPorEnvolvido({ nome: 'Fulano de Tal', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, true);
+    assert.match(capturado, /nome=Fulano/);
+  });
+
+  it('buscarProcessosPorEnvolvido sem CPF/CNPJ nem nome recusa (não gasta crédito)', async () => {
+    let chamou = false;
+    const fetchImpl = async () => { chamou = true; return fakeResponse({ body: {} }); };
+    const r = await buscarProcessosPorEnvolvido({ env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, false);
+    assert.equal(chamou, false, 'não deve chamar a API sem termo');
+  });
+
+  it('buscarProcessosPorEnvolvido recusa nome de UMA palavra (evita homônimos)', async () => {
+    let chamou = false;
+    const fetchImpl = async () => { chamou = true; return fakeResponse({ body: { items: [] } }); };
+    const r = await buscarProcessosPorEnvolvido({ nome: 'José', env: { ESCAVADOR_API_TOKEN: 't' }, fetchImpl });
+    assert.equal(r.ok, false);
+    assert.equal(chamou, false, 'nome de uma palavra não deve nem chamar a API');
+    assert.match(r.error, /NOME COMPLETO/i);
+  });
+
+  it('processoBateNomeCompleto exige TODAS as palavras do nome numa mesma parte', () => {
+    const proc = { partes: [{ name: 'José Carlos da Silva Souza' }, { name: 'Banco XPTO S.A.' }] };
+    assert.equal(processoBateNomeCompleto(proc, 'José Carlos Souza'), true, 'todas as palavras presentes');
+    assert.equal(processoBateNomeCompleto(proc, 'jose carlos souza'), true, 'sem acento/maiúscula também casa');
+    assert.equal(processoBateNomeCompleto(proc, 'Maria Souza'), false, 'falta "Maria" em qualquer parte');
+    assert.equal(normalizarNome('José  CARLOS'), 'jose carlos');
+  });
+
+  it('detalheParaImport extrai as AUDIÊNCIAS do detalhe (RADAR-05)', () => {
+    const det = {
+      numero_cnj: '50000001120268130145',
+      fontes: [{
+        sigla: 'TJMG',
+        capa: { classe: 'Procedimento Comum', audiencias: [{ data: '2026-11-20', tipo: 'Conciliação', situacao: 'Marcada', local: 'Sala 3' }] },
+        envolvidos: [{ nome: 'Fulano de Tal', polo: 'ATIVO' }],
+      }],
+    };
+    const pd = detalheParaImport(det, {});
+    assert.ok(Array.isArray(pd.audiencias));
+    assert.equal(pd.audiencias.length, 1);
+    assert.equal(pd.audiencias[0].tipo, 'Conciliação');
+    assert.ok(pd.audiencias[0].data, 'tem data');
+    assert.equal(pd.audiencias[0].local, 'Sala 3');
+  });
+
+  it('detalheParaImport sem audiências devolve lista vazia', () => {
+    const pd = detalheParaImport({ numero_cnj: '1', fontes: [{ capa: { classe: 'X' }, envolvidos: [] }] }, {});
+    assert.deepEqual(pd.audiencias, []);
   });
 
   it('listarMovimentacoes monta a URL /movimentacoes do CNJ; movimentacaoParaMovimento mapeia', async () => {
