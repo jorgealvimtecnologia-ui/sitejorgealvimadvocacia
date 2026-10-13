@@ -78,9 +78,10 @@ export function renderBlogHtml(slug) {
       ]
     };
     const schemaTag = `  <script type="application/ld+json">\n${JSON.stringify(blogSchema, null, 2)}\n  </script>\n`;
+    const claritySnippet = `  <!-- Microsoft Clarity -->\n  <script type="text/javascript">\n    (function(c,l,a,r,i,t,y){\n      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;\n      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n    })(window, document, "clarity", "script", "ywt44237s4");\n  </script>\n`;
 
     html = html.replace(/\s*<link rel="canonical"[^>]*>/g, '');
-    html = html.replace('</head>', `  <link rel="canonical" href="${canonical}" />\n  <meta property="og:url" content="${canonical}" />\n${schemaTag}</head>`);
+    html = html.replace('</head>', `  <link rel="canonical" href="${canonical}" />\n  <meta property="og:url" content="${canonical}" />\n${schemaTag}${claritySnippet}</head>`);
     return versionAssets(html);
   }
 
@@ -155,9 +156,12 @@ export function renderBlogHtml(slug) {
     html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${escapeAttr(title)}">`);
     html = html.replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${escapeAttr(desc)}">`);
     html = html.replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="${escapeAttr(image)}">`);
-    html = html.replace('</head>', `  <link rel="canonical" href="${canonical}" />\n  <meta property="og:url" content="${canonical}" />\n${schemaTag}</head>`);
+    const claritySnippet = `  <!-- Microsoft Clarity -->\n  <script type="text/javascript">\n    (function(c,l,a,r,i,t,y){\n      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;\n      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n    })(window, document, "clarity", "script", "ywt44237s4");\n  </script>\n`;
+
+    html = html.replace('</head>', `  <link rel="canonical" href="${canonical}" />\n  <meta property="og:url" content="${canonical}" />\n${schemaTag}${claritySnippet}</head>`);
   } else {
-    html = html.replace('</head>', `  <link rel="canonical" href="${canonical}" />\n  <meta property="og:url" content="${canonical}" />\n</head>`);
+    const claritySnippet = `  <!-- Microsoft Clarity -->\n  <script type="text/javascript">\n    (function(c,l,a,r,i,t,y){\n      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;\n      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n    })(window, document, "clarity", "script", "ywt44237s4");\n  </script>\n`;
+    html = html.replace('</head>', `  <link rel="canonical" href="${canonical}" />\n  <meta property="og:url" content="${canonical}" />\n${claritySnippet}</head>`);
   }
 
   return versionAssets(html);

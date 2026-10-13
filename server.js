@@ -318,7 +318,8 @@ function renderIndexHtml() {
   const recaptchaKey = (process.env.RECAPTCHA_SITE_KEY || '').trim();
   const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '4muf0aevm7zirobf01gdphiva6op9z').trim();
   const gscVerify = (process.env.GSC_VERIFICATION || '').trim();
-  const envSig = [pixel, ga, gtm, gads, mapsKey, recaptchaKey, fbVerify, gscVerify].join('|');
+  const clarityId = (process.env.CLARITY_PROJECT_ID || 'ywt44237s4').trim();
+  const envSig = [pixel, ga, gtm, gads, mapsKey, recaptchaKey, fbVerify, gscVerify, clarityId].join('|');
 
   if (__indexHtmlCache.html && __indexHtmlCache.mtimeMs === stat.mtimeMs && __indexHtmlCache.envSig === envSig) {
     return __indexHtmlCache.html;
@@ -388,6 +389,19 @@ function renderIndexHtml() {
     html = html.replace('</head>', recaptchaSnippet);
   }
 
+  // Microsoft Clarity (Mapas de Calor e Gravações de Sessão)
+  if (clarityId) {
+    const claritySnippet = `  <!-- Microsoft Clarity -->\n` +
+      `  <script type="text/javascript">\n` +
+      `    (function(c,l,a,r,i,t,y){\n` +
+      `      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n` +
+      `      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;\n` +
+      `      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n` +
+      `    })(window, document, "clarity", "script", "${clarityId}");\n` +
+      `  </script>\n</head>`;
+    html = html.replace('</head>', claritySnippet);
+  }
+
   html = versionAssets(html);
   __indexHtmlCache = { mtimeMs: stat.mtimeMs, envSig, html };
   return html;
@@ -427,6 +441,11 @@ app.get('/favicon.ico', (req, res) => {
 // Verificação de propriedade do Google Search Console (método arquivo HTML).
 app.get('/google964cd851b1cb11b6.html', (req, res) => {
   res.type('text/html').send('google-site-verification: google964cd851b1cb11b6.html');
+});
+
+// Verificação de propriedade do Bing Webmaster Tools (Microsoft)
+app.get('/BingSiteAuth.xml', (req, res) => {
+  res.type('application/xml').send('<?xml version="1.0"?><users><user>3C6B2075D520CF599BE385635C4B2CD8</user></users>');
 });
 
 // IndexNow — chave para notificar Bing/Yahoo/DuckDuckGo/Yandex sobre URLs novas.
