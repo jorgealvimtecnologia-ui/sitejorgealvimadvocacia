@@ -454,6 +454,11 @@
             <span>Blog Jurídico</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
+          <a href="#guia-justica" class="relative px-3 py-2 rounded-lg hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200 group flex items-center space-x-1 font-semibold text-emerald-800">
+            <span class="text-base leading-none">🏛️</span>
+            <span>Guia da Justiça</span>
+            <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-emerald-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
+          </a>
           <a href="#faq" class="relative px-3 py-2 rounded-lg hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200 group">
             <span>Dúvidas Frequentes</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
@@ -1793,6 +1798,617 @@
 
       </div>
     </section>
+
+    <!-- ================= SEÇÃO: GUIA NACIONAL DA JUSTIÇA, SEGURANÇA PÚBLICA & CIDADANIA ================= -->
+    <section id="guia-justica" class="py-16 sm:py-24 bg-gradient-to-b from-slate-900 via-navy-950 to-slate-900 text-white border-t border-gold-500/30 scroll-mt-20 relative overflow-hidden">
+      <!-- Glow decorativo de fundo -->
+      <div class="absolute -top-40 -right-40 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        <!-- Cabeçalho da Seção -->
+        <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gold-400/10 border border-gold-400/30 text-gold-300 text-xs font-bold uppercase tracking-widest mb-4">
+            <span>🏛️ Portal de Cidadania &amp; Acesso aos Órgãos Oficiais</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-serif font-bold text-white tracking-tight mb-4">
+            Guia Nacional da Justiça, Segurança Pública &amp; Cidadania
+          </h2>
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            Acesse rapidamente os links oficiais dos Tribunais Superiores, Justiça Federal e Estadual, Forças Armadas, Polícias Militares e Civis, Ministérios Públicos, Defensorias e Órgãos Federais.
+          </p>
+        </div>
+
+        <!-- Barra de Busca Instantânea com Filtro Rápido -->
+        <div class="max-w-2xl mx-auto mb-10">
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-400 text-lg">🔍</span>
+            <input 
+              type="text" 
+              id="busca-guia-orgaos" 
+              placeholder="Digite o órgão ou sigla (ex: STF, TRF6, PMMG, INSS, TJMG, Receita, Bombeiros...)" 
+              class="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400 focus:border-transparent transition-all shadow-inner"
+              oninput="filtrarGuiaOrgaos(this.value)"
+            />
+            <button 
+              id="limpar-busca-guia" 
+              onclick="limparFiltroGuiaOrgaos()" 
+              class="absolute right-3.5 text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded bg-slate-700/60 hidden"
+            >✕ Limpar</button>
+          </div>
+          <p class="text-center text-[11px] text-slate-400 mt-2 font-mono">
+            Mostrando os principais portais públicos de consulta processual, registro de BOs, certidões e serviços ao cidadão.
+          </p>
+        </div>
+
+        <!-- Abas de Navegação / Categorias -->
+        <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10">
+          <button onclick="trocarCategoriaGuia('todos')" class="guia-tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gold-500 text-navy-950 transition-all shadow" data-cat="todos">
+            Todos os Órgãos
+          </button>
+          <button onclick="trocarCategoriaGuia('tribunais')" class="guia-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all" data-cat="tribunais">
+            🏛️ Tribunais (STF/STJ/TRF/TJ)
+          </button>
+          <button onclick="trocarCategoriaGuia('seguranca')" class="guia-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all" data-cat="seguranca">
+            🛡️ Forças Armadas &amp; Segurança
+          </button>
+          <button onclick="trocarCategoriaGuia('essenciais')" class="guia-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all" data-cat="essenciais">
+            ⚖️ MP, Defensoria &amp; OAB
+          </button>
+          <button onclick="trocarCategoriaGuia('governo')" class="guia-tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all" data-cat="governo">
+            🇧🇷 INSS, Receita &amp; Cidadania
+          </button>
+        </div>
+
+        <!-- Grid de Cards de Links -->
+        <div id="grid-guia-orgaos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+          <!-- 1. TRIBUNAIS SUPERIORES -->
+          <a href="https://portal.stf.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="stf supremo tribunal federal brasilia constitucional">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-gold-400 font-mono">SUPREMO</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">STF — Supremo Tribunal Federal</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Guardião da Constituição, julgamento de Ações Diretas e repercussão geral.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">portal.stf.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.stj.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="stj superior tribunal justica recursos infraconstitucional">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-gold-400 font-mono">SUPERIOR</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">STJ — Superior Tribunal de Justiça</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Uniformização da legislação federal brasileira e temas repetitivos.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">stj.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.tst.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="tst tribunal superior trabalho trabalhista rescisao empregado clt">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-amber-400 font-mono">TRABALHO</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TST — Tribunal Superior do Trabalho</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Instância máxima da Justiça do Trabalho, dissídios e súmulas trabalhistas.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">tst.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.stm.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="stm superior tribunal militar forcas armadas exercito marinha aeronautica cpm cppm">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-400 font-mono">MILITAR</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">STM — Superior Tribunal Militar</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Justiça Militar da União, julgamento de crimes militares e oficiais das FFAA.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">stm.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.tse.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="tse tribunal superior eleitoral titulo eleitor votacao certidao quitacao">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">ELEITORAL</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TSE — Tribunal Superior Eleitoral</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Certidão de quitação eleitoral, regularização de título e pleitos eleitorais.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">tse.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.cnj.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="cnj conselho nacional justica metas processos datajud">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-purple-400 font-mono">CONSELHO</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">CNJ — Conselho Nacional de Justiça</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Fiscalização do Poder Judiciário, consulta DataJud e banco de mandados de prisão.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">cnj.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <!-- 2. JUSTIÇA FEDERAL (DESTAQUE TRF6 E TRF1) -->
+          <a href="https://portal.trf6.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border-2 border-gold-400/60 hover:border-gold-400 transition-all shadow-md hover:shadow-xl flex flex-col justify-between ring-1 ring-gold-400/30" data-cat="tribunais" data-keywords="trf6 trf 6 tribunal regional federal 6 regiao minas gerais belo horizonte juiz de fora inss federal">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold text-gold-300 bg-gold-400/20 px-2 py-0.5 rounded font-mono">MINAS GERAIS ⭐</span>
+                <span class="text-xs text-gold-300">↗</span>
+              </div>
+              <h3 class="font-bold text-gold-300 text-sm group-hover:text-white transition-colors">TRF-6 — Tribunal Regional Federal da 6ª Região</h3>
+              <p class="text-[12px] text-slate-200 mt-1 leading-snug font-medium">Justiça Federal em Minas Gerais (Juiz de Fora, BH e interior) — Ações contra INSS e União.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-300">
+              <span class="font-mono text-gold-300">trf6.jus.br</span>
+              <span class="text-emerald-400 font-bold">Subseção JF</span>
+            </div>
+          </a>
+
+          <a href="https://portal.trf1.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="trf1 trf 1 tribunal regional federal 1 regiao df go ba mt am pa ro rr ap to ac">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">FEDERAL TRF-1</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TRF-1 — 1ª Região (DF, GO, BA e Norte)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Jurisdição sobre o Distrito Federal e diversos estados do Norte, Centro-Oeste e Nordeste.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">trf1.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.trf2.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="trf2 trf 2 tribunal regional federal 2 regiao rj es rio de janeiro espirito santo">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">FEDERAL TRF-2</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TRF-2 — 2ª Região (RJ e ES)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Justiça Federal para o estado do Rio de Janeiro e Espírito Santo.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">trf2.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.trf3.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="trf3 trf 3 tribunal regional federal 3 regiao sp ms sao paulo mato grosso do sul">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">FEDERAL TRF-3</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TRF-3 — 3ª Região (SP e MS)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Jurisdição sobre o estado de São Paulo e Mato Grosso do Sul.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">trf3.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.trf4.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="trf4 trf 4 tribunal regional federal 4 regiao rs sc pr sul">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">FEDERAL TRF-4</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TRF-4 — 4ª Região (RS, SC e PR)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Justiça Federal para toda a Região Sul do Brasil (Rio Grande do Sul, Santa Catarina e Paraná).</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">trf4.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.trf5.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="trf5 trf 5 tribunal regional federal 5 regiao pe ce al se rn pb nordeste">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">FEDERAL TRF-5</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TRF-5 — 5ª Região (Nordeste)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Jurisdição sobre Pernambuco, Ceará, Alagoas, Sergipe, Rio Grande do Norte e Paraíba.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">trf5.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <!-- 3. TRIBUNAIS ESTADUAIS (DESTAQUE TJMG) -->
+          <a href="https://www.tjmg.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border-2 border-gold-400/60 hover:border-gold-400 transition-all shadow-md hover:shadow-xl flex flex-col justify-between ring-1 ring-gold-400/30" data-cat="tribunais" data-keywords="tjmg tribunal de justica de minas gerais comarca juiz de fora pje rupe certidao">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold text-gold-300 bg-gold-400/20 px-2 py-0.5 rounded font-mono">ESTADUAL MG ⭐</span>
+                <span class="text-xs text-gold-300">↗</span>
+              </div>
+              <h3 class="font-bold text-gold-300 text-sm group-hover:text-white transition-colors">TJMG — Tribunal de Justiça de Minas Gerais</h3>
+              <p class="text-[12px] text-slate-200 mt-1 leading-snug font-medium">Comarca de Juiz de Fora e comarcas de MG — Consulta PJe, certidões negativas e andamentos.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-300">
+              <span class="font-mono text-gold-300">tjmg.jus.br</span>
+              <span class="text-emerald-400 font-bold">Fórum Benjamin Colucci</span>
+            </div>
+          </a>
+
+          <a href="https://www.tjsp.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="tjsp tribunal justica sao paulo esaj cpopg">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-300 font-mono">ESTADUAL SP</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TJSP — Tribunal de Justiça de São Paulo</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Maior tribunal da América Latina — Consulta de processos e certidões estaduais em SP.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">tjsp.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.tjrj.jus.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="tribunais" data-keywords="tjrj tribunal justica rio de janeiro comarca capital interior">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-300 font-mono">ESTADUAL RJ</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">TJRJ — Tribunal de Justiça do Rio de Janeiro</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Justiça Estadual fluminense, consulta de processos de 1ª e 2ª instância no Rio.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">tjrj.jus.br</span>
+              <span class="text-emerald-400 font-bold">Oficial</span>
+            </div>
+          </a>
+
+          <!-- 4. SEGURANÇA PÚBLICA & FORÇAS ARMADAS -->
+          <a href="https://www.gov.br/pf/pt-br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="seguranca" data-keywords="pf policia federal passaporte antecedentes criminais sinarm armas delegacia">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-amber-400 font-mono">POLÍCIA FEDERAL</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">Polícia Federal (PF)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Emissão de Passaporte, Certidão de Antecedentes Criminais e Sistema Nacional de Armas (SINARM).</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">gov.br/pf</span>
+              <span class="text-emerald-400 font-bold">Passaportes &amp; SINARM</span>
+            </div>
+          </a>
+
+          <a href="https://www.gov.br/prf/pt-br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="seguranca" data-keywords="prf policia rodoviaria federal multas rodovias acidente boletim br 040">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-amber-400 font-mono">RODOVIÁRIA</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">Polícia Rodoviária Federal (PRF)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Consulta de multas em rodovias federais (BR-040), Boletim de Acidente de Trânsito (BAT) e alerta de roubo.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">gov.br/prf</span>
+              <span class="text-emerald-400 font-bold">Multas &amp; BAT</span>
+            </div>
+          </a>
+
+          <a href="https://www.policiamilitar.mg.gov.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border-2 border-emerald-500/50 hover:border-emerald-400 transition-all shadow-md hover:shadow-xl flex flex-col justify-between" data-cat="seguranca" data-keywords="pmmg policia militar minas gerais 2 bpm 27 bpm 4 rpm juiz de fora redsvoletim ocorrencia">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded font-mono">PMMG (MG) ⭐</span>
+                <span class="text-xs text-emerald-300">↗</span>
+              </div>
+              <h3 class="font-bold text-emerald-300 text-sm group-hover:text-white transition-colors">PMMG — Polícia Militar de Minas Gerais</h3>
+              <p class="text-[12px] text-slate-200 mt-1 leading-snug font-medium">4ª RPM Juiz de Fora (2º BPM e 27º BPM) — Emissão de Boletim de Ocorrência (REDS) e segurança preventiva.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-300">
+              <span class="font-mono text-emerald-300">policiamilitar.mg.gov.br</span>
+              <span class="text-emerald-400 font-bold">REDS Online</span>
+            </div>
+          </a>
+
+          <a href="https://www.policiacivil.mg.gov.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="seguranca" data-keywords="pcmg policia civil minas gerais delegacia virtual registro ocorrencia pericia juiz de fora">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-amber-300 font-mono">CIVIL MG</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">PCMG — Polícia Civil de Minas Gerais</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Delegacia Virtual (B.O. online de extravio, estelionato e golpes), atestados de antecedentes e identificação.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">policiacivil.mg.gov.br</span>
+              <span class="text-emerald-400 font-bold">Delegacia Virtual</span>
+            </div>
+          </a>
+
+          <a href="https://www.bombeiros.mg.gov.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="seguranca" data-keywords="cbmmg bombeiros corpo bombeiros minas gerais avcb protecao combate incendio 4 bbm">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-rose-400 font-mono">BOMBEIROS</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">CBMMG — Bombeiros Militares de Minas Gerais</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">4º BBM Juiz de Fora — Regularização e vistorias de AVCB, proteção contra incêndio e pânico.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">bombeiros.mg.gov.br</span>
+              <span class="text-emerald-400 font-bold">AVCB &amp; Vistorias</span>
+            </div>
+          </a>
+
+          <a href="https://www.eb.mil.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="seguranca" data-keywords="exercito brasileiro forcas armadas subtenente r1 alistamento militar certificado reservista 4 brigada">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-400 font-mono">FORÇAS ARMADAS</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">Exército Brasileiro (EB)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Portal Oficial — 4ª Brigada de Infantaria Leve de Montanha (JF), Certificado de Reservista e Legislação Militar.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">eb.mil.br</span>
+              <span class="text-emerald-400 font-bold">Força Terrestre</span>
+            </div>
+          </a>
+
+          <a href="https://defesacivil.mg.gov.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="seguranca" data-keywords="defesa civil minas gerais alertas desastres chuvas juiz de fora">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-orange-400 font-mono">DEFESA CIVIL</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">Defesa Civil de Minas Gerais (CEDEC)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Alertas meteorológicos via SMS, planos de contingência e suporte a calamidades e chuvas em MG.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">defesacivil.mg.gov.br</span>
+              <span class="text-emerald-400 font-bold">Alertas SMS</span>
+            </div>
+          </a>
+
+          <!-- 5. FUNÇÕES ESSENCIAIS À JUSTIÇA: MP, DEFENSORIAS & OAB -->
+          <a href="https://www.mpmg.mp.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="essenciais" data-keywords="mpmg ministerio publico minas gerais promotoria juiz de fora denuncia cidadao ouvidoria">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-gold-400 font-mono">MINISTÉRIO PÚBLICO</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">MPMG — Ministério Público de Minas Gerais</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Promotorias de Justiça em Juiz de Fora — Defesa do consumidor, idoso, patrimônio público e cidadania.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">mpmg.mp.br</span>
+              <span class="text-emerald-400 font-bold">Ouvidoria &amp; Denúncia</span>
+            </div>
+          </a>
+
+          <a href="https://defensoria.mg.def.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="essenciais" data-keywords="dpmg defensoria publica minas gerais juiz de fora assistencia judiciaria gratuita">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-400 font-mono">DEFENSORIA MG</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">DPMG — Defensoria Pública de MG</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Unidade Juiz de Fora — Assistência jurídica integral e gratuita aos cidadãos em vulnerabilidade.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">defensoria.mg.def.br</span>
+              <span class="text-emerald-400 font-bold">Justiça Gratuita</span>
+            </div>
+          </a>
+
+          <a href="https://www.mpf.mp.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="essenciais" data-keywords="mpf ministerio publico federal procuradoria republica pgr prm juiz de fora">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-sky-400 font-mono">FEDERAL</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">MPF — Ministério Público Federal</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Procuradoria da República em Juiz de Fora — Tutela dos direitos federais e combate à corrupção.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">mpf.mp.br</span>
+              <span class="text-emerald-400 font-bold">PRM Juiz de Fora</span>
+            </div>
+          </a>
+
+          <a href="https://oabmg.org.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="essenciais" data-keywords="oabmg ordem advogados brasil seccional minas gerais subsecao juiz de fora cna cadastro nacional">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-gold-300 font-mono">ADVOCACIA</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">OAB/MG — Ordem dos Advogados do Brasil</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Subseção Juiz de Fora &amp; Seccional MG — Cadastro Nacional dos Advogados (CNA) e tabela de honorários.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">oabmg.org.br</span>
+              <span class="text-emerald-400 font-bold">Subseção JF</span>
+            </div>
+          </a>
+
+          <!-- 6. ÓRGÃOS FEDERAIS & CIDADANIA (INSS, RECEITA, GOV.BR, IBAMA) -->
+          <a href="https://meu.inss.gov.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border-2 border-amber-400/60 hover:border-amber-400 transition-all shadow-md hover:shadow-xl flex flex-col justify-between ring-1 ring-amber-400/30" data-cat="governo" data-keywords="inss meu inss aposentadoria bpc loas pericia medica cnis extrato previdencia social">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded font-mono">PREVIDÊNCIA ⭐</span>
+                <span class="text-xs text-amber-300">↗</span>
+              </div>
+              <h3 class="font-bold text-amber-300 text-sm group-hover:text-white transition-colors">Meu INSS — Previdência Social</h3>
+              <p class="text-[12px] text-slate-200 mt-1 leading-snug font-medium">Extrato CNIS, agendamento de perícia médica, pedidos de Aposentadoria, BPC/LOAS e auxílios.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-300">
+              <span class="font-mono text-amber-300">meu.inss.gov.br</span>
+              <span class="text-emerald-400 font-bold">Central 135</span>
+            </div>
+          </a>
+
+          <a href="https://www.gov.br/receitafederal/pt-br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="governo" data-keywords="receita federal rfb ecac irpf imposto de renda cpf cnpj certidao negativa divida ativa">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-amber-400 font-mono">RECEITA FEDERAL</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">Receita Federal do Brasil (RFB)</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Portal e-CAC, restituição do Imposto de Renda (IRPF), regularização de CPF/CNPJ e certidões conjuntas.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">gov.br/receitafederal</span>
+              <span class="text-emerald-400 font-bold">e-CAC Oficial</span>
+            </div>
+          </a>
+
+          <a href="https://www.gov.br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="governo" data-keywords="gov br portal federal servicos carteira trabalho digital cnh digital fgts seguro desemprego">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-400 font-mono">PORTAL DO GOVERNO</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">Portal GOV.BR — Serviços ao Cidadão</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Conta Gov Ouro/Prata, Carteira de Trabalho Digital, CNH Digital, Seguro-Desemprego e FGTS.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">gov.br</span>
+              <span class="text-emerald-400 font-bold">Conta Única</span>
+            </div>
+          </a>
+
+          <a href="https://www.gov.br/ibama/pt-br" target="_blank" rel="noopener noreferrer" class="orgao-card group p-4 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-gold-400/80 transition-all shadow-sm hover:shadow-lg flex flex-col justify-between" data-cat="governo" data-keywords="ibama meio ambiente multas ambientais ctf cfam licenciamento ambiental embargos">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-400 font-mono">MEIO AMBIENTE</span>
+                <span class="text-xs text-slate-400 group-hover:text-gold-300 transition-colors">↗</span>
+              </div>
+              <h3 class="font-bold text-white text-sm group-hover:text-gold-300 transition-colors">IBAMA — Meio Ambiente &amp; Recursos Naturais</h3>
+              <p class="text-[12px] text-slate-300 mt-1 leading-snug">Cadastro Técnico Federal (CTF), consulta de autos de infração, multas ambientais e licenciamento.</p>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">
+              <span class="font-mono">gov.br/ibama</span>
+              <span class="text-emerald-400 font-bold">Multas &amp; CTF</span>
+            </div>
+          </a>
+
+        </div>
+
+        <!-- Mensagem de "Nenhum órgão encontrado" na busca -->
+        <div id="guia-sem-resultados" class="hidden text-center py-12">
+          <p class="text-slate-400 text-sm">Nenhum órgão ou tribunal encontrado para o termo digitado.</p>
+          <button onclick="limparFiltroGuiaOrgaos()" class="mt-3 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-gold-400 text-xs font-bold transition-all border border-slate-700">
+            Limpar busca e ver todos
+          </button>
+        </div>
+
+        <!-- Banner Exclusivo Dr. Jorge Alvim: Suporte em Processos nesses Órgãos -->
+        <div class="mt-12 p-6 rounded-3xl bg-gradient-to-r from-gold-500/10 via-amber-500/10 to-transparent border border-gold-400/30 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex items-center space-x-4">
+            <span class="text-3xl p-3 rounded-2xl bg-gold-400/20 text-gold-300 border border-gold-400/30">⚖️</span>
+            <div>
+              <h4 class="font-bold text-white text-base">Precisa de representação ou defesa em algum desses órgãos?</h4>
+              <p class="text-slate-300 text-xs sm:text-sm mt-0.5">
+                O Dr. Jorge Alvim (OAB/MG 222.943) atua perante o TRF6, TJMG, Justiça Militar (STM), INSS e Forças de Segurança Pública.
+              </p>
+            </div>
+          </div>
+          <a 
+            href="https://wa.me/5532998153429?text=Ol%C3%A1%2C%20Dr.%20Jorge%20Alvim!%20Acessei%20o%20Guia%20de%20%C3%93rg%C3%A3os%20do%20site%20e%20gostaria%20de%20orienta%C3%A7%C3%A3o%20jur%C3%ADdica%20para%20o%20meu%20caso." 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="whitespace-nowrap inline-flex items-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all"
+          >
+            <span>💬 Falar com a Equipe no WhatsApp</span>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Script de Busca & Filtro em Tempo Real do Guia de Órgãos -->
+    <script>
+      function filtrarGuiaOrgaos(termo) {
+        const busca = termo.toLowerCase().trim();
+        const cards = document.querySelectorAll('.orgao-card');
+        const limparBtn = document.getElementById('limpar-busca-guia');
+        const semResultados = document.getElementById('guia-sem-resultados');
+        let visiveis = 0;
+
+        if (limparBtn) limparBtn.classList.toggle('hidden', busca.length === 0);
+
+        cards.forEach(card => {
+          const textoCard = card.innerText.toLowerCase();
+          const keywords = card.getAttribute('data-keywords') || '';
+          const matches = busca === '' || textoCard.includes(busca) || keywords.toLowerCase().includes(busca);
+          card.classList.toggle('hidden', !matches);
+          if (matches) visiveis++;
+        });
+
+        if (semResultados) semResultados.classList.toggle('hidden', visiveis > 0);
+      }
+
+      function limparFiltroGuiaOrgaos() {
+        const input = document.getElementById('busca-guia-orgaos');
+        if (input) {
+          input.value = '';
+          filtrarGuiaOrgaos('');
+        }
+      }
+
+      function trocarCategoriaGuia(cat) {
+        limparFiltroGuiaOrgaos();
+        const btns = document.querySelectorAll('.guia-tab-btn');
+        btns.forEach(b => {
+          const isActive = b.getAttribute('data-cat') === cat;
+          b.classList.toggle('active', isActive);
+          if (isActive) {
+            b.classList.add('bg-gold-500', 'text-navy-950');
+            b.classList.remove('bg-slate-800/80', 'text-slate-200');
+          } else {
+            b.classList.remove('bg-gold-500', 'text-navy-950');
+            b.classList.add('bg-slate-800/80', 'text-slate-200');
+          }
+        });
+
+        const cards = document.querySelectorAll('.orgao-card');
+        cards.forEach(card => {
+          if (cat === 'todos' || card.getAttribute('data-cat') === cat) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      }
+    </script>
 
     <!-- ================= SEÇÃO CONTATO: AGENDAMENTO + MAPA ================= -->
     <section id="contato" class="py-14 sm:py-20 bg-warm-50 border-t border-slate-200">
