@@ -1825,6 +1825,11 @@
         #guia-justica .guia-card.mg{border-color:rgba(251,191,36,.55);box-shadow:0 0 0 1px rgba(251,191,36,.22)}
         #guia-justica .guia-card.mg .gc-tag{color:#fde68a}
         #guia-justica .guia-grupo.oculto,#guia-justica .guia-card.oculto{display:none}
+        /* Caixa de busca: fundo escuro e texto claro garantidos (não depende do Tailwind compilado) */
+        #guia-justica #busca-guia-orgaos{background:rgba(15,23,42,.92);color:#fff;border:1px solid #334155;caret-color:#fcd34d}
+        #guia-justica #busca-guia-orgaos::placeholder{color:#94a3b8;opacity:1}
+        #guia-justica #busca-guia-orgaos:focus{border-color:transparent;box-shadow:0 0 0 2px #fcd34d}
+        #guia-justica #limpar-busca-guia{background:rgba(51,65,85,.7);color:#e2e8f0}
       </style>
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
