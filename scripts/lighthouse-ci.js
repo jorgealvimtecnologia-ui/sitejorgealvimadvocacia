@@ -43,10 +43,21 @@ function auditar(p) {
   const out = path.join(tmp, `r${p.replace(/\W/g, '_')}.json`);
   execFileSync(path.join(ROOT, 'node_modules', '.bin', 'lighthouse'), [`http://localhost:${PORT}${p}`, '--output=json', `--output-path=${out}`,
     '--chrome-flags=--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage', '--preset=desktop', '--quiet'], { stdio: 'ignore', timeout: 180000 });
-  const c = JSON.parse(fs.readFileSync(out, 'utf8')).categories;
+  const report = JSON.parse(fs.readFileSync(out, 'utf8'));
+  const c = report.categories;
   const n = (k) => Math.round((c[k]?.score || 0) * 100);
-  return { desempenho: n('performance'), acessibilidade: n('accessibility'), boas_praticas: n('best-practices'), seo: n('seo') };
+  // Diagnóstico: auditorias reprovadas por categoria (ajuda a saber O QUE derrubou a nota na CI).
+  const falhasAud = {};
+  for (const [catKey, cat] of Object.entries(c)) {
+    falhasAud[catKey] = (cat.auditRefs || [])
+      .map((a) => report.audits[a.id])
+      .filter((au) => au && au.score !== null && au.score < 0.9)
+      .map((au) => au.id);
+  }
+  return { desempenho: n('performance'), acessibilidade: n('accessibility'), boas_praticas: n('best-practices'), seo: n('seo'), _falhas: falhasAud };
 }
+
+const META_LH = { desempenho: 'performance', acessibilidade: 'accessibility', boas_praticas: 'best-practices', seo: 'seo' };
 
 let falhas = 0;
 try {
@@ -54,9 +65,16 @@ try {
   console.log('\nLighthouse (metas: desempenho %d • acessibilidade %d • boas práticas %d • SEO %d)\n', METAS.desempenho, METAS.acessibilidade, METAS.boas_praticas, METAS.seo);
   for (const p of PAGINAS) {
     const r = auditar(p);
-    const ruins = Object.entries(METAS).filter(([k, meta]) => !(k === 'seo' && SEM_SEO.has(p)) && r[k] < meta).map(([k, meta]) => `${k} ${r[k]} < ${meta}`);
+    const falhasMeta = Object.entries(METAS).filter(([k, meta]) => !(k === 'seo' && SEM_SEO.has(p)) && r[k] < meta);
+    const ruins = falhasMeta.map(([k, meta]) => `${k} ${r[k]} < ${meta}`);
     console.log(`${ruins.length ? '✖' : '✓'} ${p.padEnd(14)} desempenho ${r.desempenho} • acessib. ${r.acessibilidade} • boas práticas ${r.boas_praticas} • SEO ${r.seo}${ruins.length ? `   ← ${ruins.join(', ')}` : ''}`);
-    if (ruins.length) falhas++;
+    if (ruins.length) {
+      falhas++;
+      for (const [k] of falhasMeta) {
+        const auds = (r._falhas && r._falhas[META_LH[k]]) || [];
+        if (auds.length) console.log(`      ↳ ${k}: ${auds.join(', ')}`);
+      }
+    }
   }
 } catch (e) {
   console.error(`✖ ${e.message}`);
