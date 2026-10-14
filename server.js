@@ -318,7 +318,7 @@ function renderIndexHtml() {
   const recaptchaKey = (process.env.RECAPTCHA_SITE_KEY || '').trim();
   const fbVerify = (process.env.META_BUSINESS_VERIFICATION || '4muf0aevm7zirobf01gdphiva6op9z').trim();
   const gscVerify = (process.env.GSC_VERIFICATION || '').trim();
-  const clarityId = (process.env.CLARITY_PROJECT_ID || 'ywt44237s4').trim();
+  const clarityId = noTracking ? '' : (process.env.CLARITY_PROJECT_ID || 'ywt44237s4').trim();
   const envSig = [pixel, ga, gtm, gads, mapsKey, recaptchaKey, fbVerify, gscVerify, clarityId].join('|');
 
   if (__indexHtmlCache.html && __indexHtmlCache.mtimeMs === stat.mtimeMs && __indexHtmlCache.envSig === envSig) {
