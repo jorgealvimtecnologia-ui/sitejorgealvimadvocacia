@@ -140,7 +140,7 @@ app.use((req, res, next) => {
     "img-src 'self' data: blob: https: https://lh3.googleusercontent.com https://www.googletagmanager.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://connect.facebook.net https://accounts.google.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.clarity.ms https://*.clarity.ms",
     "connect-src 'self' https: https://accounts.google.com https://oauth2.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net",
     "frame-src 'self' https: https://accounts.google.com https://www.googletagmanager.com https://www.google.com https://maps.google.com https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/"
   ].join('; '));
