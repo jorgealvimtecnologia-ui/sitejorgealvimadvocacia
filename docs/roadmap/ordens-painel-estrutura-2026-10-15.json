@@ -1,0 +1,53 @@
+{
+  "_comentario": "Reorganização das ABAS do painel e escopo de Usuários/Senhas por escritório (multi-escritório), pedidos pelo Dr. Jorge em 15/10/2026. REGRA DA CASA (CLAUDE.md): toda criação/renome/movimentação de aba exige atualizar o RBAC NA MESMA ALTERAÇÃO (MODULES + MODULE_PERM/ALWAYS_ALLOWED/MASTER_ONLY em painel-3.js; permissão e migration; matriz tab-users.js + colunas painel.html; regras em src/middleware/rbac-rules.js; menu em painel-1-app.js; teste tests/rbac-per-role.test.js). Estrutura atual: GROUPS = Visão Geral / Clientes & Atendimento / Jurídico / Financeiro / Escritório & Pessoas / Conteúdo & Compliance / Ferramentas & Sistema. Já existe o módulo 'offices' (Escritórios).",
+  "ordens": [
+    {
+      "ref": "UI-01",
+      "titulo": "Agrupar Calculadora + Editor de Texto + Explorador de Arquivos + Kanban numa aba 'Ferramentas de Escritório'",
+      "prioridade": "P2",
+      "descricao": "Reunir os utilitários (calc, editor, explorer, kanban) numa única aba/seção chamada 'Ferramentas de Escritório', com navegação interna entre eles, em vez de ficarem soltos no menu. Atualizar RBAC na mesma alteração.",
+      "criterios": "Existe uma aba 'Ferramentas de Escritório' que contém Calculadora, Editor de Texto, Explorador de Arquivos e Kanban; o menu não lista mais os quatro soltos; permissão e teste por função atualizados; nada de acesso indevido.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    },
+    {
+      "ref": "UI-02",
+      "titulo": "Unir Tráfego & Acessos + Manutenção & Saúde + Auditoria & Logs na aba 'Tráfego, Manutenção e Segurança'",
+      "prioridade": "P2",
+      "descricao": "Reunir as abas 'Tráfego & Acessos (IPs)' (pre-clients), 'Manutenção & Saúde' (maintenance) e 'Auditoria & Logs' (audit) numa única aba 'Tráfego, Manutenção e Segurança', com sub-seções. Esta aba também abrigará os 'Usuários & senhas geral do sistema' (ver RBAC-MULTI-02). Atualizar RBAC na mesma alteração (hoje: pre-clients=tab_leads, maintenance=MASTER_ONLY, audit=tab_audit — rever a permissão unificada).",
+      "criterios": "Existe a aba 'Tráfego, Manutenção e Segurança' com as três seções; permissões coerentes (parte sensível restrita a mestre/admin do sistema); menu e teste por função atualizados.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    },
+    {
+      "ref": "UI-03",
+      "titulo": "Mover 'Alertas & Prazos' para o menu Jurídico",
+      "prioridade": "P2",
+      "descricao": "A aba 'Alertas & Prazos' (notifications) hoje está no grupo 'Conteúdo & Compliance'. Movê-la para o menu 'Jurídico' (junto de Processos, Intimações, Agenda, Radar), que é onde faz sentido. Atualizar RBAC/menu na mesma alteração (hoje notifications=tab_alerts).",
+      "criterios": "A aba 'Alertas & Prazos' aparece no menu Jurídico; permissão mantida/coerente; teste por função atualizado.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    },
+    {
+      "ref": "RBAC-MULTI-01",
+      "titulo": "Usuários & Senhas POR ESCRITÓRIO: o proprietário gerencia só o seu escritório e seu pessoal",
+      "prioridade": "P2",
+      "descricao": "A aba 'Usuários & Senhas' do escritório deve ser visível do nível do PROPRIETÁRIO DO ESCRITÓRIO para baixo, e o proprietário só pode manipular senhas/usuários DO SEU PRÓPRIO escritório e do seu pessoal — nunca de outro escritório nem do sistema. Depende do conceito multi-escritório (módulo 'offices' já existe): cada usuário/cliente pertence a um escritório (office_id) e o escopo de dados respeita isso.",
+      "criterios": "O proprietário do escritório vê e gerencia apenas usuários/senhas do seu escritório; não enxerga nem altera usuários de outro escritório nem contas de sistema; teste por função cobre o isolamento entre escritórios.",
+      "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação)"
+    },
+    {
+      "ref": "RBAC-MULTI-02",
+      "titulo": "Usuários & Senhas GERAL DO SISTEMA na aba Manutenção e Segurança (RHABAC por escritório)",
+      "prioridade": "P2",
+      "descricao": "A gestão de 'Usuários & senhas geral do sistema' (todos os escritórios) fica dentro da aba 'Tráfego, Manutenção e Segurança', acessível só ao administrador do sistema (mestre), mostrando a RHABAC (permissões por função) de CADA escritório cadastrado. É o painel do dono do SISTEMA (acima dos proprietários de escritório).",
+      "criterios": "Só o admin do sistema acessa; lista os escritórios cadastrados e a RHABAC de cada um; o proprietário de escritório NÃO acessa esta visão geral; teste por função cobre a separação admin-do-sistema x proprietário-de-escritório.",
+      "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação)"
+    },
+    {
+      "ref": "RBAC-MULTI-00",
+      "titulo": "DECISÃO: o sistema vai hospedar VÁRIOS escritórios (multi-tenant)? Desenhar antes de construir",
+      "prioridade": "P2",
+      "descricao": "Os pedidos RBAC-MULTI-01/02 transformam o sistema em multi-escritório (vários escritórios de advocacia no mesmo sistema, cada um isolado, com um proprietário, e um admin de sistema acima de todos). É uma mudança de arquitetura: cada dado (cliente, processo, lead, usuário) passa a ter um 'office_id'; o escopo de dados (data-scope) e o RBAC ganham a camada de escritório; backup, cobrança e LGPD mudam. Antes de implementar, decidir com o Dr. Jorge o alcance (é SaaS para outros escritórios? ou só o escritório dele por ora?) e desenhar o modelo (tabela offices já existe como ponto de partida).",
+      "criterios": "Há uma decisão registrada do Dr. Jorge sobre ser ou não multi-escritório; se sim, um desenho aprovado (office_id em todas as tabelas, escopo por escritório, admin de sistema x proprietário) antes de qualquer código.",
+      "estado": "pendente (decisão do Dr. Jorge; é o pré-requisito de RBAC-MULTI-01 e 02)"
+    }
+  ]
+}
