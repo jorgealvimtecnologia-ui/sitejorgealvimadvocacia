@@ -60,30 +60,34 @@
     {
       "ref": "ROBO-08",
       "titulo": "Demais fontes oficiais, uma de cada vez (cada uma um adaptador isolado)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Depois do fluxo validado com a Agência Brasil, acrescentar fontes uma a uma, cada uma adaptador isolado (preferir RSS; raspagem só sem feed): Imprensa Nacional (Diário Oficial), STF, STJ, TST, gov.br e INSS, Governo de Minas, TJMG, Prefeitura de Juiz de Fora.",
-      "criterios": "Cada fonte entra isolada e só liga depois de testada ponta a ponta; se um site muda, só aquele adaptador conserta; sempre com fonte+link e dedupe."
+      "criterios": "Cada fonte entra isolada e só liga depois de testada ponta a ponta; se um site muda, só aquele adaptador conserta; sempre com fonte+link e dedupe.",
+      "estado": "[Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "ROBO-09",
       "titulo": "IA interna: camada de provedor + registro de chamadas e custo + cache",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Para a IA ser nossa e portátil: uma camada fina que abstrai o modelo (trocar/atualizar sem reescrever o robô) e registra cada chamada (prompt usado, tokens, custo estimado, resultado), reaproveitando a observabilidade do projeto; cache de respostas para cortar custo (casa com a MELHORIA-03).",
-      "criterios": "Trocar/atualizar o modelo não exige reescrever o robô; há registro por chamada (prompt/tokens/custo) e um relatório simples de gasto; chamadas repetidas usam cache."
+      "criterios": "Trocar/atualizar o modelo não exige reescrever o robô; há registro por chamada (prompt/tokens/custo) e um relatório simples de gasto; chamadas repetidas usam cache.",
+      "estado": "[Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "ROBO-10",
       "titulo": "IA interna: memória do escritório (aprende com os artigos aprovados e com as correções)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "O que mais torna a IA 'nossa': uma memória (RAG) sobre os artigos JÁ aprovados e sobre as correções que o Dr. Jorge faz na caixa de revisão, para a redação sair cada vez mais no estilo e nas posições da casa — sem precisar de modelo próprio hospedado.",
-      "criterios": "Novos rascunhos usam como referência os artigos aprovados do escritório; correções recorrentes do Dr. Jorge passam a ser respeitadas sozinhas; mede-se a redução de edições necessárias ao longo do tempo."
+      "criterios": "Novos rascunhos usam como referência os artigos aprovados do escritório; correções recorrentes do Dr. Jorge passam a ser respeitadas sozinhas; mede-se a redução de edições necessárias ao longo do tempo.",
+      "estado": "[Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "ROBO-11",
       "titulo": "IA interna: guardião anti-invenção de leis (validador de citações jurídicas)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Validador que sinaliza qualquer lei, artigo ou decisão citada no rascunho que NÃO esteja no texto de origem, reforçando a regra 'nunca inventar' — proteção jurídica essencial para um site de advogado.",
-      "criterios": "Citação jurídica sem respaldo no texto de origem é sinalizada na caixa de revisão antes de publicar; o Dr. Jorge vê o alerta e decide; nada com alerta vai ao ar sem a conferência dele."
+      "criterios": "Citação jurídica sem respaldo no texto de origem é sinalizada na caixa de revisão antes de publicar; o Dr. Jorge vê o alerta e decide; nada com alerta vai ao ar sem a conferência dele.",
+      "estado": "[Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     }
   ]
 }

@@ -36,18 +36,18 @@
     {
       "ref": "LEAD-05",
       "titulo": "Deixar o aviso de nova mensagem do cliente mais visível (além do sininho)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Hoje a mensagem do cliente avisa pelo sino e pelo contador na aba Clientes — NÃO aparece na 'Central de Foguetes' (que é só despacho interno) nem tem destaque na Visão Geral. Avaliar um destaque na Visão Geral/cockpit do painel (ex.: card 'Mensagens de clientes sem resposta') para o escritório não deixar cliente sem retorno.",
       "criterios": "A Visão Geral mostra, de forma visível, quantas mensagens de clientes estão sem resposta e leva direto a elas; sem misturar com os despachos internos (foguetes).",
-      "estado": "pendente (sugerido em 15/10/2026)"
+      "estado": "pendente (sugerido em 15/10/2026) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "LEAD-06",
       "titulo": "Opcional: botão manual 'avisar cliente' de marcos (nunca automático)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Se o Dr. Jorge quiser, dar a opção de avisar o cliente de um marco (ex.: 'recebemos seus documentos') — mas sempre MANUAL (um botão que o advogado aperta), nunca automático, mantendo a regra de que o escritório decide o que comunicar. Por padrão, as fases do lead continuam silenciosas para o cliente.",
       "criterios": "Existe um botão opcional de 'avisar cliente' em marcos escolhidos; nada é enviado ao cliente sem o advogado apertar; a regra 'nada automático ao cliente' é preservada.",
-      "estado": "pendente (sugerido em 15/10/2026; só se o Dr. Jorge quiser)"
+      "estado": "pendente (sugerido em 15/10/2026; só se o Dr. Jorge quiser) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     }
   ]
 }
