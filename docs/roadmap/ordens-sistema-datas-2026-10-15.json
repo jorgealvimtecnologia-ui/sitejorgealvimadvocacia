@@ -1,0 +1,21 @@
+{
+  "_comentario": "Correção de DATA/HORA: o sistema mistura horário de Brasília com o fuso do servidor Contabo e com o relógio (possivelmente errado) da máquina do usuário. Diagnóstico (15/10/2026): o banco grava em UTC (ok, 244 usos de toISOString); a maior parte do backend formata em America/Sao_Paulo (ok); MAS o frontend (public/js/modules/*.js) usa toLocaleString('pt-BR') SEM timeZone fixo, então exibe no fuso/relógio da máquina do usuário; e o Contabo não tem fuso forçado nem NTP garantido. Registrar no Roadmap Vivo do site quando a ROADMAP_AGENT_KEY estiver configurada (AUD-32).",
+  "ordens": [
+    {
+      "ref": "SYS-01",
+      "titulo": "Padronizar DATA/HORA em horário de Brasília em todo o sistema (fim da mistura de fusos)",
+      "prioridade": "P1",
+      "descricao": "Unificar o tratamento de data/hora para que TUDO apareça em horário de Brasília (America/Sao_Paulo), independente do relógio/fuso do servidor ou da máquina do usuário. Regra de ouro: GRAVAR sempre em UTC (toISOString, já é assim); EXIBIR sempre convertendo para America/Sao_Paulo; NUNCA confiar no relógio do cliente para carimbar horário (o servidor é quem carimba). Importante para prazos, audiências e financeiro, onde hora errada causa risco jurídico.",
+      "criterios": "1) server.js define process.env.TZ='America/Sao_Paulo' no boot (rede de segurança para qualquer formatação sem fuso). 2) Um helper único no frontend (ex.: formatarDataHora) que SEMPRE usa timeZone 'America/Sao_Paulo'; todos os new Date(x).toLocaleString('pt-BR') SEM timeZone em public/js/** passam a usar esse helper. 3) Nenhum horário autoritativo (created_at, mensagens, prazos, auditoria) é gerado pelo relógio do cliente — só pelo servidor. 4) (Opcional) teste/guardião que reprova toLocaleString/toLocaleDateString sem timeZone, para o problema não voltar. 5) Conferido na tela: a mesma data aparece igual em máquinas com fusos/relógios diferentes.",
+      "estado": "pendente (diagnóstico feito em 15/10/2026 a pedido do Dr. Jorge; causa: frontend sem fuso fixo + Contabo sem TZ/NTP)"
+    },
+    {
+      "ref": "SYS-02",
+      "titulo": "Servidor Contabo: fixar fuso America/Sao_Paulo e ligar atualização automática do relógio (NTP)",
+      "prioridade": "P1",
+      "descricao": "No servidor Contabo, definir o fuso oficial para America/Sao_Paulo e garantir que o relógio se atualize sozinho (NTP), para o relógio do servidor nunca ficar atrasado/adiantado. Ação de servidor (do Dr. Jorge/admin), complementa a SYS-01 no código.",
+      "criterios": "timedatectl set-timezone America/Sao_Paulo; timedatectl set-ntp true; timedatectl confirma fuso America/Sao_Paulo e 'System clock synchronized: yes'. Reiniciar o serviço após (o process.env.TZ do app também cobre no nível da aplicação).",
+      "estado": "pendente (ação de servidor do Dr. Jorge; anotado 15/10/2026)"
+    }
+  ]
+}
