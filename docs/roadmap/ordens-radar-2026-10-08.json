@@ -44,10 +44,10 @@
     {
       "ref": "RADAR-06",
       "titulo": "Radar: documentos/autos do processo (download) — SUSPENSO",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Baixar/abrir os documentos publicos (peticoes, decisoes, sentencas) dos autos a partir do processo.",
       "criterios": "Documentos acessiveis a partir do processo, com o custo exibido ANTES de baixar; nunca baixa sozinho; nao guarda arquivos pesados no servidor (preferir link/sob demanda).",
-      "estado": "SUSPENSA por decisao do Dr. Jorge (12/10/2026): guardar autos longos encheria o disco do servidor e o download no Escavador tem custo maior. Reavaliar no futuro por LINK/sob demanda (sem armazenar), com o preco exibido antes de cada download."
+      "estado": "SUSPENSA por decisao do Dr. Jorge (12/10/2026): guardar autos longos encheria o disco do servidor e o download no Escavador tem custo maior. Reavaliar no futuro por LINK/sob demanda (sem armazenar), com o preco exibido antes de cada download. [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     }
   ]
 }

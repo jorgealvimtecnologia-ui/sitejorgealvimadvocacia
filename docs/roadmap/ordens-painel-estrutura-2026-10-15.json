@@ -28,18 +28,18 @@
     {
       "ref": "RBAC-MULTI-01",
       "titulo": "Usuários & Senhas POR ESCRITÓRIO: o proprietário gerencia só o seu escritório e seu pessoal",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "A aba 'Usuários & Senhas' do escritório deve ser visível do nível do PROPRIETÁRIO DO ESCRITÓRIO para baixo, e o proprietário só pode manipular senhas/usuários DO SEU PRÓPRIO escritório e do seu pessoal — nunca de outro escritório nem do sistema. Depende do conceito multi-escritório (módulo 'offices' já existe): cada usuário/cliente pertence a um escritório (office_id) e o escopo de dados respeita isso.",
       "criterios": "O proprietário do escritório vê e gerencia apenas usuários/senhas do seu escritório; não enxerga nem altera usuários de outro escritório nem contas de sistema; teste por função cobre o isolamento entre escritórios.",
-      "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação)"
+      "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "RBAC-MULTI-02",
       "titulo": "Usuários & Senhas GERAL DO SISTEMA na aba Manutenção e Segurança (RHABAC por escritório)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "A gestão de 'Usuários & senhas geral do sistema' (todos os escritórios) fica dentro da aba 'Tráfego, Manutenção e Segurança', acessível só ao administrador do sistema (mestre), mostrando a RHABAC (permissões por função) de CADA escritório cadastrado. É o painel do dono do SISTEMA (acima dos proprietários de escritório).",
       "criterios": "Só o admin do sistema acessa; lista os escritórios cadastrados e a RHABAC de cada um; o proprietário de escritório NÃO acessa esta visão geral; teste por função cobre a separação admin-do-sistema x proprietário-de-escritório.",
-      "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação)"
+      "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "RBAC-MULTI-00",

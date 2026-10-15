@@ -20,10 +20,10 @@
     {
       "ref": "MKT-03",
       "titulo": "Marcar robôs na página de rastreamento de IPs/visitas (Tráfego & Acessos)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Na página de rastreamento de IPs/visitas (aba 'Tráfego & Acessos'), MARCAR cada acesso que for robô, identificando qual (Googlebot, Bingbot, Meta/Facebook, robôs de big tech em geral e outros crawlers/monitores conhecidos), para não confundir robô com pessoa real. Detecção por user-agent (e, quando der, por faixa de IP conhecida das big techs). Separar visivelmente 'humanos' x 'robôs' nas estatísticas, sem apagar o acesso — só rotular.",
       "criterios": "Cada linha da página de IPs mostra um selo quando é robô, com o nome do robô (ex.: 'Googlebot', 'Meta', 'Bingbot', 'Outro robô'); as métricas separam humanos de robôs; nenhum acesso é excluído, apenas marcado.",
-      "estado": "pendente (anotado/ampliado em 15/10/2026 a pedido do Dr. Jorge: marcar robôs de big tech e outros na página de rastreamento de IPs)"
+      "estado": "pendente (anotado/ampliado em 15/10/2026 a pedido do Dr. Jorge: marcar robôs de big tech e outros na página de rastreamento de IPs) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "MKT-04",
@@ -36,10 +36,10 @@
     {
       "ref": "MKT-05",
       "titulo": "WhatsApp automático de atendimento (chip dedicado → Evolution API + inbox)",
-      "prioridade": "P3",
+      "prioridade": "P2",
       "descricao": "Passo 1: comprar um chip/número dedicado para o escritório enviar/receber WhatsApp automaticamente (hoje o aviso depende do visitante apertar 'enviar' ou de um gateway inexistente). Passo 2 (se o negócio crescer): Evolution API + caixa de atendimento (inbox) dentro do painel. Também registrar no Roadmap Vivo do site as ordens pendentes quando a chave do agente estiver configurada (AUD-32).",
       "criterios": "Com o número dedicado: o escritório recebe aviso de lead/mensagem no WhatsApp sem ação do visitante. Fase 2: conversas aparecem no painel.",
-      "estado": "pendente (anotado em 15/10/2026, 'para depois'; depende de decisão/compra do Dr. Jorge)"
+      "estado": "pendente (anotado em 15/10/2026, 'para depois'; depende de decisão/compra do Dr. Jorge) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
     },
     {
       "ref": "MKT-06",
