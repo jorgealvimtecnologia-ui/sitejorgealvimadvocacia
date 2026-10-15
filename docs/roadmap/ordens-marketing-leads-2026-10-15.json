@@ -40,6 +40,14 @@
       "descricao": "Passo 1: comprar um chip/número dedicado para o escritório enviar/receber WhatsApp automaticamente (hoje o aviso depende do visitante apertar 'enviar' ou de um gateway inexistente). Passo 2 (se o negócio crescer): Evolution API + caixa de atendimento (inbox) dentro do painel. Também registrar no Roadmap Vivo do site as ordens pendentes quando a chave do agente estiver configurada (AUD-32).",
       "criterios": "Com o número dedicado: o escritório recebe aviso de lead/mensagem no WhatsApp sem ação do visitante. Fase 2: conversas aparecem no painel.",
       "estado": "pendente (anotado em 15/10/2026, 'para depois'; depende de decisão/compra do Dr. Jorge)"
+    },
+    {
+      "ref": "MKT-06",
+      "titulo": "Newsletter do blog: enviar as matérias novas aos cadastrados por e-mail",
+      "prioridade": "P2",
+      "descricao": "Colocar no blog um cadastro de newsletter (campo de e-mail com consentimento) e, quando um artigo novo for publicado, enviar automaticamente um e-mail aos inscritos avisando da matéria (título, resumo e link). Usa o SMTP que já existe. Casa com a isca digital (MKT-02) e com o robô de notícias (publicação de artigos). Incluir link de descadastro (unsubscribe) em todo e-mail, por LGPD.",
+      "criterios": "O blog tem um cadastro de e-mail (opt-in); ao publicar um artigo, os inscritos recebem um e-mail com título/resumo/link; cada e-mail traz link de descadastro; a lista de inscritos fica no painel. Nada é enviado sem o inscrito ter se cadastrado.",
+      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
     }
   ]
 }
