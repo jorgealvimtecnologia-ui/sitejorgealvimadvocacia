@@ -28,7 +28,7 @@
     {
       "ref": "RBAC-MULTI-01",
       "titulo": "Usuários & Senhas POR ESCRITÓRIO: o proprietário gerencia só o seu escritório e seu pessoal",
-      "prioridade": "P2",
+      "prioridade": "P3",
       "descricao": "A aba 'Usuários & Senhas' do escritório deve ser visível do nível do PROPRIETÁRIO DO ESCRITÓRIO para baixo, e o proprietário só pode manipular senhas/usuários DO SEU PRÓPRIO escritório e do seu pessoal — nunca de outro escritório nem do sistema. Depende do conceito multi-escritório (módulo 'offices' já existe): cada usuário/cliente pertence a um escritório (office_id) e o escopo de dados respeita isso.",
       "criterios": "O proprietário do escritório vê e gerencia apenas usuários/senhas do seu escritório; não enxerga nem altera usuários de outro escritório nem contas de sistema; teste por função cobre o isolamento entre escritórios.",
       "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação)"
@@ -36,7 +36,7 @@
     {
       "ref": "RBAC-MULTI-02",
       "titulo": "Usuários & Senhas GERAL DO SISTEMA na aba Manutenção e Segurança (RHABAC por escritório)",
-      "prioridade": "P2",
+      "prioridade": "P3",
       "descricao": "A gestão de 'Usuários & senhas geral do sistema' (todos os escritórios) fica dentro da aba 'Tráfego, Manutenção e Segurança', acessível só ao administrador do sistema (mestre), mostrando a RHABAC (permissões por função) de CADA escritório cadastrado. É o painel do dono do SISTEMA (acima dos proprietários de escritório).",
       "criterios": "Só o admin do sistema acessa; lista os escritórios cadastrados e a RHABAC de cada um; o proprietário de escritório NÃO acessa esta visão geral; teste por função cobre a separação admin-do-sistema x proprietário-de-escritório.",
       "estado": "pendente (pedido em 15/10/2026; DEPENDE da decisão de multi-escritório — ver observação)"
@@ -47,7 +47,7 @@
       "prioridade": "P2",
       "descricao": "Os pedidos RBAC-MULTI-01/02 transformam o sistema em multi-escritório (vários escritórios de advocacia no mesmo sistema, cada um isolado, com um proprietário, e um admin de sistema acima de todos). É uma mudança de arquitetura: cada dado (cliente, processo, lead, usuário) passa a ter um 'office_id'; o escopo de dados (data-scope) e o RBAC ganham a camada de escritório; backup, cobrança e LGPD mudam. Antes de implementar, decidir com o Dr. Jorge o alcance (é SaaS para outros escritórios? ou só o escritório dele por ora?) e desenhar o modelo (tabela offices já existe como ponto de partida).",
       "criterios": "Há uma decisão registrada do Dr. Jorge sobre ser ou não multi-escritório; se sim, um desenho aprovado (office_id em todas as tabelas, escopo por escritório, admin de sistema x proprietário) antes de qualquer código.",
-      "estado": "pendente (decisão do Dr. Jorge; é o pré-requisito de RBAC-MULTI-01 e 02)"
+      "estado": "DECIDIDO (15/10/2026): por ora NÃO — é só o escritório do Dr. Jorge; virar SaaS multi-escritório fica como POSSIBILIDADE FUTURA. Orientação prática: enquanto isso, não tomar decisões que travem a multi-tenancy no futuro (ex.: deixar caminho para um office_id), mas NÃO construir a camada de escritório agora. RBAC-MULTI-01 e 02 ficam adiados (P3) até a decisão de virar SaaS."
     }
   ]
 }
