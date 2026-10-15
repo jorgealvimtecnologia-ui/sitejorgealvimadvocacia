@@ -38,6 +38,7 @@ import { getClientIp } from './src/shared/net.js';
 import { generateNextClientId, generateNextLawsuitId } from './src/shared/ids.js';
 import { blogRouter } from './src/modules/blog/blog.routes.js';
 import { renderBlogHtml } from './src/modules/blog/blog.render.js';
+import { portalRouter } from './src/modules/portal/portal.routes.js';
 import { lawsuitsRouter } from './src/modules/lawsuits/lawsuits.routes.js';
 import { explorerRouter } from './src/modules/explorer/explorer.routes.js';
 import { officesRouter } from './src/modules/offices/offices.routes.js';
@@ -215,6 +216,7 @@ app.use(syncRouter);
 app.use(adminRequestsRouter);
 app.use(kanbanRouter);
 app.use(blogRouter);
+app.use(portalRouter);
 app.use(lawsuitsRouter);
 app.use(explorerRouter);
 app.use(officesRouter);
@@ -553,6 +555,18 @@ app.get('/blog/:slug', (req, res) => {
 
 app.get('/artigos', (req, res) => {
   res.redirect(301, '/blog');
+});
+
+// PREVIEW ISOLADO do novo portal de notícias (ROBO-13 aprovado). NÃO substitui o
+// blog: fica em /portal até o Dr. Jorge aprovar a troca em produção.
+app.get('/portal', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal.html');
 });
 
 // Vitrine do Advogado • Parceiro & Colaborador Amazon

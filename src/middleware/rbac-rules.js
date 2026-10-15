@@ -26,6 +26,7 @@ export const RULES = [
   [/^\/api\/blog\/posts\/[^/]+\/(comments|like|share)\b/, PUBLIC],
   [/^\/api\/blog\/track-click\b/, PUBLIC],
   [/^\/api\/blog\/(posts|categories)\b/, PUBLIC, ['GET']],
+  [/^\/api\/portal\//, PUBLIC, ['GET']],              // portal de notícias (preview isolado): só leitura pública
   [/^\/api\/esign\/(public|verify)\//, PUBLIC],
   [/^\/api\/esign\/requests\/[^/]+\/chancelado\b/, PUBLIC],
   [/^\/api\/client-portal\/magic-(info|upload)\//, PUBLIC],
