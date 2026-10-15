@@ -88,6 +88,14 @@
       "descricao": "Validador que sinaliza qualquer lei, artigo ou decisão citada no rascunho que NÃO esteja no texto de origem, reforçando a regra 'nunca inventar' — proteção jurídica essencial para um site de advogado.",
       "criterios": "Citação jurídica sem respaldo no texto de origem é sinalizada na caixa de revisão antes de publicar; o Dr. Jorge vê o alerta e decide; nada com alerta vai ao ar sem a conferência dele.",
       "estado": "[Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
+    },
+    {
+      "ref": "ROBO-12",
+      "titulo": "Refazer o PAINEL do blog: controle total das caixas de notícias + curtir/comentar + moderação + comentário vira LEAD",
+      "prioridade": "P2",
+      "descricao": "Reformular o painel de controle do blog (aba Blog & Moderação) para gerir TODAS as caixas de notícias do novo portal: ligar/desligar curtidas e comentários por matéria; caixa de moderação de comentários (pendente→aprovado→removido, com antispam, entra oculto por padrão); e, ao receber um comentário, CAPTAR nome + e-mail + telefone do autor e lançar automaticamente como NOVO LEAD na aba Atendimentos & Leads (origem: comentário do blog), para o escritório dar retorno. Também controlar editorias/destaque e o espaço da Vitrine Amazon (parceiro). Respeita a regra: comentário só aparece após aprovação; nada automático ao cliente. Complementa ROBO-02 (workstation) e ROBO-07 (comentários moderados).",
+      "criterios": "No painel, o Dr. Jorge liga/desliga curtir e comentar por matéria; modera comentários (aprovar/ocultar/remover); cada comentário gera um lead com nome/e-mail/telefone e origem no painel de Leads; controla editorias, destaque e a vitrine; antispam ativo.",
+      "estado": "pendente (pedido em 15/10/2026, a partir da maquete do portal de notícias)"
     }
   ]
 }
