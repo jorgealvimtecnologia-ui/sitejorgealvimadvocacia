@@ -19,11 +19,11 @@
     },
     {
       "ref": "MKT-03",
-      "titulo": "Filtro de robôs nas visitas (separar bots de pessoas reais)",
+      "titulo": "Marcar robôs na página de rastreamento de IPs/visitas (Tráfego & Acessos)",
       "prioridade": "P3",
-      "descricao": "Nas estatísticas de visita, distinguir acessos de robôs (Googlebot, crawler do Facebook, monitores) de visitantes humanos reais, para os números não enganarem.",
-      "criterios": "As métricas de visita marcam/excluem user-agents de bots conhecidos; o painel mostra 'humanos' x 'robôs'.",
-      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
+      "descricao": "Na página de rastreamento de IPs/visitas (aba 'Tráfego & Acessos'), MARCAR cada acesso que for robô, identificando qual (Googlebot, Bingbot, Meta/Facebook, robôs de big tech em geral e outros crawlers/monitores conhecidos), para não confundir robô com pessoa real. Detecção por user-agent (e, quando der, por faixa de IP conhecida das big techs). Separar visivelmente 'humanos' x 'robôs' nas estatísticas, sem apagar o acesso — só rotular.",
+      "criterios": "Cada linha da página de IPs mostra um selo quando é robô, com o nome do robô (ex.: 'Googlebot', 'Meta', 'Bingbot', 'Outro robô'); as métricas separam humanos de robôs; nenhum acesso é excluído, apenas marcado.",
+      "estado": "pendente (anotado/ampliado em 15/10/2026 a pedido do Dr. Jorge: marcar robôs de big tech e outros na página de rastreamento de IPs)"
     },
     {
       "ref": "MKT-04",
