@@ -11,7 +11,7 @@ import { logAudit } from '../../middleware/audit.js';
 import { uploadClientDoc } from '../../middleware/upload.js';
 import { STORAGE_DIR } from '../../config/constants.js';
 import { generateNextClientId } from '../../shared/ids.js';
-import { sendLawyerWhatsAppNotification } from '../../shared/notify.js';
+import { sendLawyerWhatsAppNotification, sendLeadEmailNotification } from '../../shared/notify.js';
 import { requireRecaptcha } from '../recaptcha/recaptcha.middleware.js';
 
 export const leadsRouter = express.Router();
@@ -194,6 +194,23 @@ leadsRouter.post('/api/leads', leadRateLimit, (req, res, next) => {
       `📲 *Falar com o Cliente:* https://wa.me/55${cleanClientPhone}`;
 
     sendLawyerWhatsAppNotification(leadNotifyMsg, { clientId, type: 'PUBLIC_LEAD' });
+
+    // ✉️ Aviso por e-mail ao escritório — canal confiável (o servidor envia sozinho,
+    // sem depender de gateway de WhatsApp nem de o visitante apertar "enviar").
+    sendLeadEmailNotification({
+      clientId,
+      name: name.trim(),
+      phone: phone.trim(),
+      area: area || 'Geral',
+      message: message ? message.trim() : '',
+      city: city ? city.trim() : ''
+    })
+      .then((r) => {
+        if (!r.sent) {
+          console.warn(`[LEADS] Aviso por e-mail NÃO enviado (${r.reason}) — lead #${clientId} está salvo no painel.`);
+        }
+      })
+      .catch(() => { /* aviso é best-effort; o lead já está salvo no painel */ });
 
     return res.status(201).json({
       success: true,
