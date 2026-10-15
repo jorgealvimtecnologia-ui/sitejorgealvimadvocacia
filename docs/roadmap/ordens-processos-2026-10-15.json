@@ -1,0 +1,37 @@
+{
+  "_comentario": "Melhorias na aba Processos & Prazos (lawsuits) e na importação do Radar Judicial (Escavador), pedidas pelo Dr. Jorge em 15/10/2026. Grounding no código: src/shared/escavador.js (detalheParaImport já extrai capa + envolvidos -> polo_ativo/polo_passivo); public/js/tabs/tab-lawsuits.js mostra law.parties e já trata status 'Arquivado'; lawsuits já tem coluna deleted_at. Registrar no Roadmap Vivo do site quando a ROADMAP_AGENT_KEY estiver configurada (AUD-32).",
+  "ordens": [
+    {
+      "ref": "PROC-01",
+      "titulo": "Radar: ao adicionar processo, importar também as PARTES e o máximo de campos do Escavador",
+      "prioridade": "P2",
+      "descricao": "Ao 'Adicionar ao sistema' um processo pela busca do Radar (Escavador), gravar também as PARTES (polo ativo/passivo, com nome, documento e OAB dos advogados) e o MAIOR número de campos que o Escavador fornece de cada processo: classe, assunto, órgão/vara, comarca, valor da causa, data de distribuição, situação/fase, juiz/relator, instância, grau, segredo de justiça, tribunal, última movimentação, audiências (já em RADAR-05), etc. Guardar o detalhe estruturado (process_data) completo para não perder informação. Não sobrescrever dados preenchidos à mão sem necessidade.",
+      "criterios": "Um processo recém-adicionado pelo Radar vem com partes (ativo/passivo + advogados) e com os campos do Escavador preenchidos (classe, assunto, vara, valor, distribuição, situação, juiz, etc.); nada que o Escavador fornece é descartado.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    },
+    {
+      "ref": "PROC-02",
+      "titulo": "Aba Processos: box resumido; andamentos só com 'clique para ver' (não abrir todos de uma vez)",
+      "prioridade": "P2",
+      "descricao": "Na aba Processos, listar todos os processos abertos de forma RESUMIDA (box compacto: número CNJ, partes, classe/assunto, vara, situação, próximo prazo). NÃO exibir todos os andamentos abertos de uma vez — mostrar um botão 'Clique aqui para ver os andamentos' que expande os andamentos só daquele processo quando o usuário quiser. Deixa a tela leve e rápida mesmo com muitos processos.",
+      "criterios": "A lista mostra processos em box resumido; os andamentos ficam recolhidos atrás de um botão por processo; a página não trava nem fica enorme com muitos processos/andamentos.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    },
+    {
+      "ref": "PROC-03",
+      "titulo": "Corrigir: vários processos não mostram as PARTES",
+      "prioridade": "P1",
+      "descricao": "Em vários processos as partes não aparecem na ficha, mesmo o código já mostrando law.parties. Investigar a causa (provável: processos antigos importados antes da extração de envolvidos, ou importados por full-text V1 sem partes estruturadas, ou mapeamento polo_ativo/polo_passivo -> parties não preenchido no retorno da API /api/lawsuits). Corrigir o mapeamento e, quando possível, re-enriquecer (botão 'Atualizar' do Radar) para puxar as partes que faltam. Mostrar aviso claro quando o processo não tem partes (em vez de sumir sem explicação).",
+      "criterios": "Processos com partes no Escavador passam a exibi-las; os sem partes mostram um aviso ('partes não disponíveis — atualizar pelo Radar') em vez de nada; re-atualizar pelo Radar preenche as partes faltantes.",
+      "estado": "pendente P1 (bug relatado em 15/10/2026)"
+    },
+    {
+      "ref": "PROC-04",
+      "titulo": "Arquivar processo no sistema + opção de mostrar processos arquivados",
+      "prioridade": "P2",
+      "descricao": "Adicionar a opção 'Arquivar processo' (soft-delete / status 'Arquivado' — já há status 'Arquivado' e coluna deleted_at como ponto de partida): o processo arquivado some da lista ativa mas fica guardado. Adicionar um filtro/opção 'Mostrar arquivados' para rever/reabrir. Coerente com a linha de arquivar (não apagar) usada em leads e intimações; exclusão definitiva, se houver, só pelo mestre.",
+      "criterios": "Existe botão 'Arquivar' no processo; arquivados somem da lista ativa; há filtro 'Mostrar arquivados'; dá para reabrir um arquivado; nenhum dado é perdido ao arquivar.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    }
+  ]
+}
