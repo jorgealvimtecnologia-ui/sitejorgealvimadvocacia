@@ -112,6 +112,22 @@
       "descricao": "Os links/itens da Amazon (programa de parceiro/associado) devem aparecer em TODAS as páginas do portal de notícias, não só na página inicial: página pública de notícias (home), página de cada matéria/artigo, páginas de categoria/editoria e página de resultados de busca. Fazer como um componente ÚNICO e reutilizável (um 'slot' da Vitrine Amazon) incluído no layout base do portal, para o Dr. Jorge cadastrar os produtos num só lugar e eles aparecerem em todo o site (ligado ao controle de vitrine do painel — ROBO-12). Dentro da matéria, usar formato discreto (ex.: faixa 'Indicações do escritório' no rodapé do artigo e/ou na lateral), sem atrapalhar a leitura. Incluir o aviso de parceria exigido pela Amazon (ex.: 'Como associado, o escritório pode receber por compras qualificadas') e respeitar a sobriedade de site de advogado. Os links abrem na Amazon (tag de associado), nunca coletam dado do leitor.",
       "criterios": "A Vitrine/links da Amazon aparece em todas as páginas do portal (home, matéria, categoria e busca) a partir de um único componente/cadastro; os produtos são geridos no painel (ROBO-12); há o aviso de parceria; o formato dentro do artigo é discreto e não prejudica a leitura; nenhum dado do leitor é coletado pelos links.",
       "estado": "pendente (pedido em 15/10/2026: links da Amazon em todas as páginas do portal)"
+    },
+    {
+      "ref": "ROBO-15",
+      "titulo": "Layout-base do portal: cabeçalho + Amazon + curtir/comentar + newsletter em TODAS as páginas (inclusive as de leitura)",
+      "prioridade": "P2",
+      "descricao": "A página principal leva o leitor para páginas internas (a matéria/artigo, categoria/editoria e busca). Todas essas páginas internas devem ter os MESMOS componentes da principal, a partir de um layout-base único reutilizável do portal: (1) nosso CABEÇALHO (selo da marca, navegação, busca, tema, WhatsApp) em todas elas; (2) VITRINE/links da AMAZON (ver ROBO-14); (3) CURTIDAS e COMENTÁRIOS (ROBO-06/07) — na página da matéria os comentários são daquela matéria e entram ocultos até aprovação; (4) caixa de CADASTRO DE NEWSLETTER 'Receba seu e-mail' (ROBO-06/MKT-06). Fazer como layout/template base para não repetir código e garantir consistência; o rodapé (OAB/MG 222.943 + aviso 'conteúdo informativo') também em todas. Respeita: comentário só aparece após aprovação; nada automático ao cliente.",
+      "criterios": "Toda página do portal (home, matéria, categoria, busca) renderiza a partir de um layout-base com cabeçalho, vitrine Amazon, curtir/comentar, newsletter e rodapé; a página da matéria mostra os comentários daquela matéria (ocultos até aprovação) e o botão de curtir; nada é duplicado no código; o visual é consistente com a maquete aprovada.",
+      "estado": "pendente (pedido em 15/10/2026: páginas de leitura com os mesmos componentes da principal)"
+    },
+    {
+      "ref": "ROBO-16",
+      "titulo": "Guia da Justiça como BARRA DE LINKS no portal (principal e páginas internas)",
+      "prioridade": "P2",
+      "descricao": "Transformar a 'Guia Nacional da Justiça, Segurança Pública & Cidadania' (hoje uma grade grande de cartões na home do site) numa BARRA DE LINKS compacta (faixa horizontal com os órgãos), presente na página principal do portal de notícias E dentro das páginas de leitura. Reaproveitar a MESMA lista de órgãos/links oficiais já cadastrada na Guia do index.html (STF, STJ, STM, TSE, TST, TRT3, TRF1, TRF6, TJMG, TJRJ, CNJ, MPF, MPMG, DPU, DPE-MG, OAB-MG, PF, PRF, PC-MG, PM-MG, CBM-MG, Exército, gov.br, INSS, Receita Federal, Governo de MG, DETRAN-MG, Prefeitura de JF) — fonte única, para não manter duas listas. Componente reutilizável no layout-base (ROBO-15); abre os links em nova aba. A Guia grande da home do site segue existindo; aqui é a versão em barra para o portal.",
+      "criterios": "O portal mostra a Guia da Justiça como barra de links na principal e nas páginas internas, usando a mesma lista de órgãos da Guia do site (sem duplicar cadastro); os links abrem o órgão oficial em nova aba; a barra é um componente único do layout-base.",
+      "estado": "pendente (pedido em 15/10/2026: Guia da Justiça vira barra de links no portal)"
     }
   ]
 }
