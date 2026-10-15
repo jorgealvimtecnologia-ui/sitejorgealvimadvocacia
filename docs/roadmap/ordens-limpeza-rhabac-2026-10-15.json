@@ -1,0 +1,13 @@
+{
+  "_comentario": "Limpeza do PESSOAL FICTÍCIO da matriz de Usuários & Senhas (RHABAC). A tela 'Usuários & Senhas' ainda mostra uma equipe de demonstração (Dra. Mariana, Dra. Camila, estagiários Gabriel e Lucas, Juliana, Patrícia, Fernanda, Carlos, etc.) que não existe de verdade — hoje a equipe é só o Dr. Jorge. Já existe script pronto: scripts/limpar-equipe-ficticia.js (remove os operadores de equipe da matriz; PRESERVA o mestre e TODOS os clientes/logins, inclusive os de teste). Registrar no Roadmap Vivo do site quando a ROADMAP_AGENT_KEY estiver configurada (AUD-32).",
+  "ordens": [
+    {
+      "ref": "RHABAC-01",
+      "titulo": "Limpar o pessoal fictício da matriz Usuários & Senhas (RHABAC) no servidor",
+      "prioridade": "P0",
+      "descricao": "A matriz de 'Usuários & Senhas' ainda lista uma equipe de demonstração (advogadas, estagiários, secretárias, gerente, motorista fictícios). Como hoje a equipe é só o Dr. Jorge, esses operadores fictícios devem sair da RHABAC. Usar o script pronto scripts/limpar-equipe-ficticia.js, que remove só as linhas de permissão dos OPERADORES de equipe (role_template fora de 'master' e 'cliente') e PRESERVA o mestre e TODOS os clientes/logins (inclusive os de teste do Dr. Jorge: Usuário Google, jorgealvim, jorgealvim1). Rodar NO SERVIDOR (onde está o leads.db real): primeiro a simulação (sem --aplicar), conferir, depois --aplicar; backup antes. Também vale rever os dados de demonstração que alimentam essa equipe fictícia para não voltarem num próximo deploy/seed.",
+      "criterios": "A tela 'Usuários & Senhas' mostra apenas o Dr. Jorge (mestre) e os clientes reais; nenhum advogado/estagiário/secretária fictício aparece; nenhum cliente nem login de teste foi apagado; a limpeza foi feita em transação, com backup antes. Conferir que não reaparecem após reiniciar o serviço.",
+      "estado": "pendente P0 (anotado 15/10/2026; script scripts/limpar-equipe-ficticia.js pronto — rodar no Contabo: simular, conferir, depois --aplicar com backup)"
+    }
+  ]
+}

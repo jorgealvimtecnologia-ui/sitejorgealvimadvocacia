@@ -1,0 +1,53 @@
+{
+  "_comentario": "Pendências de MARKETING / CAPTAÇÃO DE LEADS anotadas pelo Dr. Jorge em 15/10/2026 ('anotar para depois'). Caminho ÉTICO e LEGAL: converter visitante anônimo em lead identificado COM CONSENTIMENTO — nada de rastreio oculto/fingerprinting. Registrar no Roadmap Vivo do site quando a ROADMAP_AGENT_KEY estiver configurada (ver AUD-32).",
+  "ordens": [
+    {
+      "ref": "MKT-01",
+      "titulo": "Rastreio de ORIGEM das visitas (UTM/referer) — de onde vêm os visitantes",
+      "prioridade": "P2",
+      "descricao": "Saber se o visitante/lead veio de anúncio, do Google orgânico, de indicação ou do Instagram, usando parâmetros UTM e o 'referer' do navegador. É legal e sem espionagem (não identifica a pessoa, só a fonte do tráfego). Ajuda o Dr. Jorge a investir onde dá retorno.",
+      "criterios": "Cada lead gravado guarda a origem (utm_source/medium/campaign ou referer); o painel mostra um resumo por fonte. Sem coleta de dado pessoal oculto.",
+      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
+    },
+    {
+      "ref": "MKT-02",
+      "titulo": "Isca digital (lead magnet): guia grátis em troca do e-mail/WhatsApp",
+      "prioridade": "P2",
+      "descricao": "Oferecer um material útil (ex.: guia 'O que fazer se o benefício do INSS for negado') que o visitante baixa informando e-mail/WhatsApp. Assim a pessoa se identifica porque QUER — vira lead qualificado, com consentimento. É o caminho de maior retorno e menor risco jurídico.",
+      "criterios": "Página/seção de captura + envio automático do guia por e-mail + lead registrado no painel com a origem. Consentimento claro (LGPD).",
+      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
+    },
+    {
+      "ref": "MKT-03",
+      "titulo": "Marcar robôs na página de rastreamento de IPs/visitas (Tráfego & Acessos)",
+      "prioridade": "P3",
+      "descricao": "Na página de rastreamento de IPs/visitas (aba 'Tráfego & Acessos'), MARCAR cada acesso que for robô, identificando qual (Googlebot, Bingbot, Meta/Facebook, robôs de big tech em geral e outros crawlers/monitores conhecidos), para não confundir robô com pessoa real. Detecção por user-agent (e, quando der, por faixa de IP conhecida das big techs). Separar visivelmente 'humanos' x 'robôs' nas estatísticas, sem apagar o acesso — só rotular.",
+      "criterios": "Cada linha da página de IPs mostra um selo quando é robô, com o nome do robô (ex.: 'Googlebot', 'Meta', 'Bingbot', 'Outro robô'); as métricas separam humanos de robôs; nenhum acesso é excluído, apenas marcado.",
+      "estado": "pendente (anotado/ampliado em 15/10/2026 a pedido do Dr. Jorge: marcar robôs de big tech e outros na página de rastreamento de IPs)"
+    },
+    {
+      "ref": "MKT-04",
+      "titulo": "E-mail de novo lead 'à prova de tradutor' (trocar 'lead' por 'atendimento')",
+      "prioridade": "P2",
+      "descricao": "No aviso de novo lead por e-mail (PR #14), trocar a palavra 'lead' por 'atendimento/novo contato' no assunto e no corpo, para não ficar estranho se o cliente de e-mail traduzir automaticamente, e ficar claro para o Dr. Jorge.",
+      "criterios": "Assunto e corpo do e-mail de aviso usam 'atendimento/contato' em vez de 'lead'; testes de conteúdo atualizados.",
+      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
+    },
+    {
+      "ref": "MKT-05",
+      "titulo": "WhatsApp automático de atendimento (chip dedicado → Evolution API + inbox)",
+      "prioridade": "P3",
+      "descricao": "Passo 1: comprar um chip/número dedicado para o escritório enviar/receber WhatsApp automaticamente (hoje o aviso depende do visitante apertar 'enviar' ou de um gateway inexistente). Passo 2 (se o negócio crescer): Evolution API + caixa de atendimento (inbox) dentro do painel. Também registrar no Roadmap Vivo do site as ordens pendentes quando a chave do agente estiver configurada (AUD-32).",
+      "criterios": "Com o número dedicado: o escritório recebe aviso de lead/mensagem no WhatsApp sem ação do visitante. Fase 2: conversas aparecem no painel.",
+      "estado": "pendente (anotado em 15/10/2026, 'para depois'; depende de decisão/compra do Dr. Jorge)"
+    },
+    {
+      "ref": "MKT-06",
+      "titulo": "Newsletter do blog: enviar as matérias novas aos cadastrados por e-mail",
+      "prioridade": "P2",
+      "descricao": "Colocar no blog um cadastro de newsletter (campo de e-mail com consentimento) e, quando um artigo novo for publicado, enviar automaticamente um e-mail aos inscritos avisando da matéria (título, resumo e link). Usa o SMTP que já existe. Casa com a isca digital (MKT-02) e com o robô de notícias (publicação de artigos). Incluir link de descadastro (unsubscribe) em todo e-mail, por LGPD.",
+      "criterios": "O blog tem um cadastro de e-mail (opt-in); ao publicar um artigo, os inscritos recebem um e-mail com título/resumo/link; cada e-mail traz link de descadastro; a lista de inscritos fica no painel. Nada é enviado sem o inscrito ter se cadastrado.",
+      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
+    }
+  ]
+}

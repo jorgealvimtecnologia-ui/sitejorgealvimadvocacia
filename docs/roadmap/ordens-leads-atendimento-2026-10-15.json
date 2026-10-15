@@ -1,0 +1,53 @@
+{
+  "_comentario": "Melhorias no sistema de LEADS/ATENDIMENTOS e nos AVISOS ao advogado responsável, levantadas com o Dr. Jorge em 15/10/2026 a partir das telas do painel. Registrar no Roadmap Vivo do site quando a ROADMAP_AGENT_KEY estiver configurada (AUD-32). Observação confirmada no código: os leads JÁ são salvos no banco (tabela leads), convertidos ou não; as fases do lead são 100% internas e NÃO geram aviso ao cliente (respeita 'nada automático ao cliente').",
+  "ordens": [
+    {
+      "ref": "LEAD-01",
+      "titulo": "Leads não convertidos visíveis em 'Clientes e Contratos' (sub-aba Pré-clientes)",
+      "prioridade": "P2",
+      "descricao": "Os leads já ficam no banco (convertidos ou não), mas só aparecem na aba 'Atendimentos & Leads'. Criar uma sub-aba/visão 'Leads / Pré-clientes' dentro de Clientes e Contratos que lista os leads ainda NÃO convertidos, lendo da tabela leads (sem duplicar em clients, para não sujar a base e os relatórios). Fonte única: o lead continua lead até o 'Converter'.",
+      "criterios": "Em Clientes e Contratos há uma sub-aba/visão que mostra os leads não convertidos (nome, contato, área, fase, responsável); o escritório vê num só lugar quem é cliente e quem ainda é lead; nenhum dado é duplicado.",
+      "estado": "pendente (sugerido em 15/10/2026; aguarda escolha do Dr. Jorge — 'Fase C' do plano)"
+    },
+    {
+      "ref": "LEAD-02",
+      "titulo": "Exclusão de lead só pelo MESTRE + trocar apagar por ARQUIVAR (não perder lead)",
+      "prioridade": "P1",
+      "descricao": "Hoje qualquer usuário com acesso à aba pode EXCLUIR um lead de forma definitiva (apaga do banco + pasta de arquivos). Risco de perder um possível cliente. Mudar para: (1) exclusão restrita ao Mestre/dono (requireMaster + regra RBAC MASTER_ONLY no DELETE); (2) a ação padrão vira ARQUIVAR (soft-delete: marca deleted_at/arquivado, some da lista mas fica guardado por LGPD/histórico); só o Mestre arquiva e, se quiser, apaga de vez. Atualizar o RBAC na mesma alteração (regra da casa).",
+      "criterios": "Advogado/estagiário/secretária NÃO conseguem excluir lead (403). O botão padrão arquiva (reversível); o lead arquivado não aparece na lista ativa mas é recuperável. Só o Mestre apaga definitivamente. Teste por função cobre o bloqueio.",
+      "estado": "pendente (sugerido em 15/10/2026; é a 'Fase A' — a mais urgente, contra perda de dados)"
+    },
+    {
+      "ref": "LEAD-03",
+      "titulo": "Automatizar a FASE do lead pelos eventos do sistema (fim dos seletores manuais conflitantes)",
+      "prioridade": "P2",
+      "descricao": "Hoje há DOIS seletores manuais por linha (Status e Fase) que podem se contradizer (erro por manipulação do usuário). Automatizar a fase pelos cliques/eventos reais, já registrados em lead_events: chegou pelo site = Novo/Recebido; distribuído a um advogado = Em Atendimento; documentos enviados/cadastro iniciado = Em cadastro; clicou em Converter = Cadastro concluído; assinatura concluída = Concluído. Manter APENAS UM controle manual para o que o sistema não detecta (Desistiu / Arquivar), só para o responsável/mestre e com confirmação.",
+      "criterios": "A fase do lead reflete automaticamente os eventos reais; não há mais dois seletores que se contradizem; o único ajuste manual restante (Desistiu/Arquivar) é restrito e confirmado; some o risco de inconsistência por manipulação.",
+      "estado": "pendente (sugerido em 15/10/2026; é a 'Fase B' do plano)"
+    },
+    {
+      "ref": "LEAD-04",
+      "titulo": "Aviso ao ADVOGADO RESPONSÁVEL: garantir atribuição de responsável no lead/cliente",
+      "prioridade": "P2",
+      "descricao": "O aviso de mensagem do cliente (sino + e-mail) já vai para o responsável + donos + secretárias. MAS o advogado responsável só é avisado se o cliente TIVER um responsável atribuído; sem responsável, só donos/secretárias recebem (pool). Reforçar o fluxo de 'Distribuir' (atribuir responsável) — idealmente ligado à automação de fase (LEAD-03): distribuir = definir responsável = passar a avisá-lo. Opcional: alerta no painel quando um cliente fica muito tempo 'sem responsável'.",
+      "criterios": "Fica claro no painel quando um lead/cliente está 'sem responsável'; ao distribuir, o responsável passa a receber sino+e-mail das mensagens daquele cliente; teste confirma que mensagem nova do cliente avisa o responsável atribuído.",
+      "estado": "pendente (sugerido em 15/10/2026)"
+    },
+    {
+      "ref": "LEAD-05",
+      "titulo": "Deixar o aviso de nova mensagem do cliente mais visível (além do sininho)",
+      "prioridade": "P3",
+      "descricao": "Hoje a mensagem do cliente avisa pelo sino e pelo contador na aba Clientes — NÃO aparece na 'Central de Foguetes' (que é só despacho interno) nem tem destaque na Visão Geral. Avaliar um destaque na Visão Geral/cockpit do painel (ex.: card 'Mensagens de clientes sem resposta') para o escritório não deixar cliente sem retorno.",
+      "criterios": "A Visão Geral mostra, de forma visível, quantas mensagens de clientes estão sem resposta e leva direto a elas; sem misturar com os despachos internos (foguetes).",
+      "estado": "pendente (sugerido em 15/10/2026)"
+    },
+    {
+      "ref": "LEAD-06",
+      "titulo": "Opcional: botão manual 'avisar cliente' de marcos (nunca automático)",
+      "prioridade": "P3",
+      "descricao": "Se o Dr. Jorge quiser, dar a opção de avisar o cliente de um marco (ex.: 'recebemos seus documentos') — mas sempre MANUAL (um botão que o advogado aperta), nunca automático, mantendo a regra de que o escritório decide o que comunicar. Por padrão, as fases do lead continuam silenciosas para o cliente.",
+      "criterios": "Existe um botão opcional de 'avisar cliente' em marcos escolhidos; nada é enviado ao cliente sem o advogado apertar; a regra 'nada automático ao cliente' é preservada.",
+      "estado": "pendente (sugerido em 15/10/2026; só se o Dr. Jorge quiser)"
+    }
+  ]
+}
