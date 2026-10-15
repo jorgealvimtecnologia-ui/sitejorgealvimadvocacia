@@ -1,0 +1,29 @@
+{
+  "_comentario": "Melhorias na aba Intimações & DJEN (court_publications), pedidas pelo Dr. Jorge em 15/10/2026, com sugestões adicionais do sistema ('na minha omissão'). Contexto confirmado nas telas: as intimações exibidas são de terceiros (Dr. Roberto Medeiros Fonseca, OAB/MG 165430 — NÃO a OAB do Dr. Jorge, 222.943) e há DUPLICAÇÃO (a mesma intimação 5005273-21.2023.8.13.0133 aparece 2x). Já existe RADAR-02 (limpar intimações fictícias via scripts/limpar-demo.js, KEEP_OAB=222943) e publicacaoVisivel (escopo). Registrar no Roadmap Vivo do site quando a ROADMAP_AGENT_KEY estiver configurada (AUD-32).",
+  "ordens": [
+    {
+      "ref": "INTIM-01",
+      "titulo": "Limpar TODAS as intimações fictícias/de terceiros (manter só a OAB do titular) e remover duplicadas",
+      "prioridade": "P1",
+      "descricao": "A lista de Intimações está cheia de registros de demonstração/de terceiros (ex.: OAB/MG 165430 de 'Dr. Roberto Medeiros Fonseca'), e a mesma intimação aparece duplicada. Limpar tudo que não é do Dr. Jorge e deduplicar. Usar scripts/limpar-demo.js (KEEP_OAB=222943: apaga court_publications cuja OAB não contém a do Dr. Jorge) no servidor (simular, conferir, --aplicar, backup antes). Complementa a RADAR-02. Também adicionar dedupe (não gravar a mesma intimação 2x, por processo+data+órgão) para não voltar.",
+      "criterios": "A aba Intimações mostra apenas intimações da OAB 222943/MG (Dr. Jorge); nenhuma intimação de terceiro; nenhuma duplicada; dedupe impede reentradas; feito com backup e em transação.",
+      "estado": "pendente P1 (anotado 15/10/2026; script limpar-demo.js pronto — rodar no Contabo)"
+    },
+    {
+      "ref": "INTIM-02",
+      "titulo": "Botões de ação no box de cada intimação (fluxo completo)",
+      "prioridade": "P2",
+      "descricao": "Acrescentar, no cartão de cada intimação, os botões: (1) Calcular prazo [já existe 'Calcular Prazo com 1 Clique']; (2) Lançar na Agenda levando os dados do processo (cria evento prazo_fatal ligado ao processo, reaproveitando RADAR-04/calculateLegalDeadline, com confirmação do advogado); (3) Advogado ciente (registra ciência: quem + data/hora, trilha legal); (4) Notificar o cliente (MANUAL, nunca automático — respeita 'nada automático ao cliente'; usa o canal do cliente); (5) Arquivar (soft-delete: some da lista mas fica guardado); (6) Excluir (restrito ao MESTRE, como LEAD-02). Atualizar RBAC/escopo (publicacaoVisivel) na mesma alteração.",
+      "criterios": "Cada intimação tem os 6 botões; 'Lançar na Agenda' cria o prazo com os dados do processo; 'Advogado ciente' grava quem/quando; 'Notificar cliente' é manual; 'Arquivar' é reversível; 'Excluir' só o mestre; tudo com trilha de auditoria; teste por função cobre as permissões.",
+      "estado": "pendente (pedido em 15/10/2026)"
+    },
+    {
+      "ref": "INTIM-03",
+      "titulo": "Sugestões do sistema: guarda de dados, lançamento e eventos (melhorias extras)",
+      "prioridade": "P2",
+      "descricao": "Ideias adicionais (a pedido do Dr. Jorge, 'na minha omissão'): (a) VINCULAR a intimação ao processo/cliente automaticamente pelo CNJ (e marcar quando não há processo cadastrado); (b) STATUS automático da intimação pelos eventos (Nova -> Lida -> Advogado ciente -> Prazo lançado -> Arquivada), sem seletor manual conflitante (como LEAD-03); (c) TRILHA DE CIÊNCIA com quem/quando (valor jurídico) + ALERTAS ESCALONADOS se a intimação ficar sem ciência por X dias (risco de perder prazo); (d) GUARDA DE DADOS: nunca excluir de verdade uma intimação que já teve prazo lançado/ciência (preservar por LGPD/segurança — só arquivar); (e) FILTRO inteligente por OAB do titular (222943) para não entrar lixo de terceiros; (f) checar PRAZO EM DOBRO em casos especiais (litisconsórcio/Defensoria) antes de gravar o prazo; (g) exportar/gerar documento da intimação (Gerar doc) com os dados já preenchidos.",
+      "criterios": "Intimação vinculada ao processo pelo CNJ; status reflete os eventos reais; ciência com trilha e alerta escalonado; intimação com prazo lançado não pode ser apagada (só arquivada); filtro por OAB do titular; aviso de prazo em dobro quando aplicável.",
+      "estado": "pendente (sugestões do sistema, anotadas 15/10/2026 — avaliar com o Dr. Jorge quais entrar)"
+    }
+  ]
+}
