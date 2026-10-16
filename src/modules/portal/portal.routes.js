@@ -15,6 +15,7 @@ import { db } from '../../config/db.js';
 import { requireMaster } from '../../middleware/auth.js';
 import { ensurePortalSchema, PORTAL_LIMITS } from './portal.schema.js';
 import { coletar } from './portal.collector.js';
+import { sendEmail, isEmailConfigured } from '../../shared/email.js';
 
 // Garante as tabelas da esteira (idempotente), sem tocar no blog/produção.
 ensurePortalSchema(db);
@@ -262,6 +263,22 @@ portalRouter.post('/api/portal/newsletter/unsubscribe', (req, res) => {
   }
 });
 
+// Descadastro por LINK (GET) — é o link que vai no rodapé de cada boletim.
+// Responde uma página simples de confirmação (sem login).
+portalRouter.get('/api/portal/newsletter/unsubscribe', (req, res) => {
+  const token = String(req.query.token || '').trim();
+  const sub = token ? db.prepare('SELECT id FROM portal_newsletter WHERE token = ?').get(token) : null;
+  if (sub) db.prepare('UPDATE portal_newsletter SET ativo=0, unsubscribed_at=? WHERE id=?').run(nowISO(), sub.id);
+  res.set('Content-Type', 'text/html; charset=utf-8').send(
+    '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>Boletim — Jornal Alvim</title>'
+    + '<div style="font-family:system-ui,Arial;max-width:520px;margin:12vh auto;padding:0 20px;text-align:center;color:#0A192F">'
+    + '<h1 style="color:#B8860B">Jornal Alvim</h1><p style="font-size:1.1rem">'
+    + (sub ? 'Pronto! Você foi <b>descadastrado</b> do nosso boletim. Não enviaremos mais e-mails.' : 'Link inválido ou inscrição não encontrada.')
+    + '</p><p><a href="/portal" style="color:#B8860B;font-weight:700">Voltar ao portal</a></p></div>'
+  );
+});
+
 // ================== ADMIN DO PORTAL (ESTEIRA / ROBÔ) =======================
 // Todas exigem sessão de mestre (requireMaster) + regra RBAC MASTER em
 // /api/portal/admin. São as "caixas de controle" do Dr. Jorge.
@@ -467,4 +484,72 @@ portalRouter.get('/api/portal/admin/newsletter', requireMaster, (req, res) => {
   const subs = db.prepare(q).all();
   const ativos = db.prepare('SELECT COUNT(*) AS n FROM portal_newsletter WHERE ativo=1').get().n;
   res.json({ success: true, subscribers: subs, ativos });
+});
+
+// ---- BOLETIM (campanhas de newsletter) — compor e disparar, só o mestre. ----
+function stripTags(s) { return String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
+function baseUrl(req) { return `${req.protocol}://${req.get('host')}`; }
+// Monta o HTML do e-mail: cabeçalho do escritório + corpo + rodapé com descadastro.
+function montarEmail(bodyHtml, unsubUrl) {
+  return '<div style="font-family:system-ui,Arial,sans-serif;max-width:620px;margin:0 auto;color:#0A192F">'
+    + '<div style="background:#0A192F;color:#fff;padding:18px 22px;border-radius:10px 10px 0 0">'
+    + '<span style="color:#D4AF37;font-weight:800;font-size:1.2rem">Jornal Alvim</span>'
+    + '<div style="font-size:.8rem;opacity:.85">Boletim do portal de notícias · Jorge Alvim Advocacia</div></div>'
+    + '<div style="border:1px solid #e5e5e5;border-top:0;padding:22px;font-size:1rem;line-height:1.6">' + bodyHtml + '</div>'
+    + '<div style="padding:14px 22px;color:#777;font-size:.78rem;text-align:center">'
+    + 'Você recebe este boletim porque se inscreveu no portal. '
+    + '<a href="' + unsubUrl + '" style="color:#B8860B">Descadastrar</a>.</div></div>';
+}
+
+portalRouter.get('/api/portal/admin/newsletter/campaigns', requireMaster, (req, res) => {
+  const campaigns = db.prepare('SELECT * FROM portal_newsletter_campaigns ORDER BY created_at DESC LIMIT 100').all();
+  res.json({ success: true, campaigns, emailConfigurado: isEmailConfigured() });
+});
+
+portalRouter.post('/api/portal/admin/newsletter/campaigns', requireMaster, (req, res) => {
+  const b = req.body || {};
+  const subject = String(b.subject || '').trim();
+  const body = String(b.body || '').trim();
+  if (!subject || !body) return res.status(400).json({ error: 'Preencha o assunto e o texto do boletim.' });
+  const info = db.prepare('INSERT INTO portal_newsletter_campaigns (subject, body, status, created_at) VALUES (?,?,?,?)')
+    .run(subject.slice(0, 200), body, 'rascunho', nowISO());
+  res.json({ success: true, id: info.lastInsertRowid });
+});
+
+// Enviar TESTE para um e-mail (normalmente o do próprio Dr. Jorge).
+portalRouter.post('/api/portal/admin/newsletter/test', requireMaster, async (req, res) => {
+  const b = req.body || {};
+  const to = String(b.email || '').trim();
+  if (!emailOk(to)) return res.status(400).json({ error: 'Informe um e-mail válido para o teste.' });
+  if (!b.subject || !b.body) return res.status(400).json({ error: 'Preencha o assunto e o texto.' });
+  const html = montarEmail(String(b.body), baseUrl(req) + '/api/portal/newsletter/unsubscribe?token=TESTE');
+  const r = await sendEmail({ to, subject: '[TESTE] ' + String(b.subject), html, text: stripTags(b.body) });
+  res.json({ success: true, enviado: r.sent, motivo: r.reason || null, emailConfigurado: isEmailConfigured() });
+});
+
+// DISPARAR o boletim para todos os assinantes ativos (ação do mestre).
+portalRouter.post('/api/portal/admin/newsletter/campaigns/:id/send', requireMaster, async (req, res) => {
+  try {
+    const camp = db.prepare('SELECT * FROM portal_newsletter_campaigns WHERE id = ?').get(req.params.id);
+    if (!camp) return res.status(404).json({ error: 'Boletim não encontrado.' });
+    if (camp.status === 'enviado') return res.status(400).json({ error: 'Este boletim já foi enviado.' });
+    if (!isEmailConfigured()) {
+      return res.json({ success: false, emailConfigurado: false,
+        error: 'E-mail (SMTP) não está configurado neste servidor. Configure SMTP_HOST/SMTP_USER/SMTP_PASS no cofre (.env.enc) para disparar o boletim.' });
+    }
+    const subs = db.prepare('SELECT email, token FROM portal_newsletter WHERE ativo=1').all();
+    const base = baseUrl(req);
+    let enviados = 0;
+    for (const s of subs) {
+      const html = montarEmail(camp.body, base + '/api/portal/newsletter/unsubscribe?token=' + encodeURIComponent(s.token || ''));
+      const r = await sendEmail({ to: s.email, subject: camp.subject, html, text: stripTags(camp.body) });
+      if (r.sent) enviados++;
+    }
+    db.prepare('UPDATE portal_newsletter_campaigns SET status=?, total=?, sent_count=?, sent_at=? WHERE id=?')
+      .run('enviado', subs.length, enviados, nowISO(), camp.id);
+    res.json({ success: true, enviados, total: subs.length, emailConfigurado: true });
+  } catch (err) {
+    console.error('Erro ao disparar boletim:', err);
+    res.status(500).json({ error: 'Erro ao disparar o boletim.' });
+  }
 });

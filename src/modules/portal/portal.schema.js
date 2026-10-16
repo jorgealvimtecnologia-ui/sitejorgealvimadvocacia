@@ -98,6 +98,17 @@ export function ensurePortalSchema(db) {
       unsubscribed_at TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS portal_newsletter_campaigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      subject TEXT NOT NULL,
+      body TEXT,
+      status TEXT NOT NULL DEFAULT 'rascunho',   -- 'rascunho' | 'enviado'
+      total INTEGER DEFAULT 0,
+      sent_count INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL,
+      sent_at TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS portal_likes (
       slug TEXT PRIMARY KEY,
       count INTEGER NOT NULL DEFAULT 0,

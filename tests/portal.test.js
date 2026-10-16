@@ -200,6 +200,43 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.equal(ativo, 0, 'após cancelar, fica inativo');
   });
 
+  it('boletim: cria rascunho, lista e dispara (sem SMTP responde sem enviar, sem quebrar)', async () => {
+    const create = await request(app).post('/api/portal/admin/newsletter/campaigns')
+      .set('Authorization', `Bearer ${token}`).send({ subject: 'Edição de teste', body: '<p>Olá!</p>' });
+    assert.equal(create.status, 200);
+    assert.ok(create.body.id, 'deve devolver o id do rascunho');
+
+    const list = await request(app).get('/api/portal/admin/newsletter/campaigns').set('Authorization', `Bearer ${token}`);
+    assert.equal(list.status, 200);
+    assert.ok(list.body.campaigns.some(c => c.id === create.body.id));
+    assert.equal(typeof list.body.emailConfigurado, 'boolean');
+
+    // Disparo: em ambiente de teste não há SMTP → não envia, mas responde ok (não quebra).
+    const send = await request(app).post(`/api/portal/admin/newsletter/campaigns/${create.body.id}/send`)
+      .set('Authorization', `Bearer ${token}`).send({});
+    assert.equal(send.status, 200);
+    assert.equal(send.body.emailConfigurado, false);
+    assert.equal(send.body.success, false, 'sem SMTP, não dispara');
+  });
+
+  it('boletim exige mestre e valida campos (400 sem assunto/texto)', async () => {
+    const noauth = await request(app).post('/api/portal/admin/newsletter/campaigns').send({ subject: 'x', body: 'y' });
+    assert.equal(noauth.status, 401);
+    const bad = await request(app).post('/api/portal/admin/newsletter/campaigns')
+      .set('Authorization', `Bearer ${token}`).send({ subject: '', body: '' });
+    assert.equal(bad.status, 400);
+  });
+
+  it('descadastro por link (GET token) desativa a inscrição', async () => {
+    const now = new Date().toISOString();
+    db.prepare("INSERT INTO portal_newsletter (email, nome, ativo, token, origem, created_at) VALUES ('link@ex.com','Link',1,'tok-teste-123','portal',?)").run(now);
+    const res = await request(app).get('/api/portal/newsletter/unsubscribe?token=tok-teste-123');
+    assert.equal(res.status, 200);
+    assert.match(res.text, /descadastrado/i);
+    const ativo = db.prepare("SELECT ativo FROM portal_newsletter WHERE email='link@ex.com'").get().ativo;
+    assert.equal(ativo, 0);
+  });
+
   it('curtir/comentar em slug inexistente devolve 404', async () => {
     const c = await request(app).post('/api/portal/posts/nao-existe-zzz/comment').send({ texto: 'x' });
     assert.equal(c.status, 404);
