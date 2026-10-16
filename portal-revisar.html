@@ -170,7 +170,7 @@
 </main>
 
 <script>
-  var TK=null; try{TK=localStorage.getItem('ja-portal-adm');}catch(e){}
+  var TK=null; try{TK=localStorage.getItem('ja_admin_token');}catch(e){}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
   function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){showLogin();throw new Error('401');}return r.json();});}
@@ -186,12 +186,12 @@
     err.textContent='';
     fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})
       .then(function(r){return r.json();}).then(function(d){
-        if(d&&d.success&&d.token){TK=d.token;try{localStorage.setItem('ja-portal-adm',TK);}catch(e){}showPainel();}
+        if(d&&d.success&&d.token){TK=d.token;try{localStorage.setItem('ja_admin_token',TK);}catch(e){}showPainel();}
         else err.textContent='Usuário ou senha inválidos.';
       }).catch(function(){err.textContent='Falha ao entrar.';});
   });
   document.getElementById('lg-pass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('lg-btn').click();});
-  document.getElementById('logout').addEventListener('click',function(){try{localStorage.removeItem('ja-portal-adm');}catch(e){}TK=null;showLogin();});
+  document.getElementById('logout').addEventListener('click',function(){try{localStorage.removeItem('ja_admin_token');}catch(e){}TK=null;showLogin();});
 
   // Controle central
   function loadOverview(){
