@@ -6,7 +6,7 @@
 import { describe, it, after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import { parseRss } from '../src/modules/portal/portal.collector.js';
+import { parseRss, parseCapa } from '../src/modules/portal/portal.collector.js';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -121,6 +121,15 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.ok(s.body.sources.length > 0 && t.body.terms.length > 0);
   });
 
+  it('fontes sem feed (INSS, Gov MG, TJMG, PJF) vêm no modo "capa do dia"', async () => {
+    const s = await request(app).get('/api/portal/admin/sources').set('Authorization', `Bearer ${token}`);
+    const byKey = Object.fromEntries(s.body.sources.map(f => [f.skey, f]));
+    for (const k of ['inss', 'gov_mg', 'tjmg', 'pjf']) {
+      assert.equal(byKey[k]?.modo, 'capa', `${k} deve estar em modo capa`);
+      assert.ok(/^https?:\/\//.test(byKey[k]?.url || ''), `${k} deve ter URL oficial`);
+    }
+  });
+
   it('POST /api/portal/admin/collect exige mestre (401 sem token)', async () => {
     const res = await request(app).post('/api/portal/admin/collect');
     assert.equal(res.status, 401);
@@ -139,5 +148,16 @@ describe('Robô — leitor de RSS', () => {
     assert.equal(items[0].link, 'https://exemplo/noticia-1');
     assert.equal(items[0].author, 'Agência Brasil');
     assert.ok(!/</.test(items[0].description), 'descrição deve vir sem HTML');
+  });
+
+  it('parseCapa extrai manchetes da home, ignora menus curtos e resolve URL relativa', () => {
+    const html = '<nav><a href="/sobre">Sobre</a></nav>'
+      + '<a href="/noticias/inss-amplia-prazo-do-bpc-em-2026">INSS amplia prazo do BPC para segurados em 2026</a>'
+      + '<a href="/logo.png">logo</a>';
+    const items = parseCapa(html, 'https://www.gov.br/inss/pt-br/noticias');
+    assert.equal(items.length, 1, 'só a manchete deve passar');
+    assert.match(items[0].title, /INSS amplia prazo/);
+    assert.equal(items[0].link, 'https://www.gov.br/noticias/inss-amplia-prazo-do-bpc-em-2026');
+    assert.equal(items[0].views, null, 'capa não inventa visualizações');
   });
 });

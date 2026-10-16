@@ -110,20 +110,35 @@ export function ensurePortalSchema(db) {
   const sourceCount = db.prepare('SELECT COUNT(*) AS n FROM portal_sources').get().n;
   if (sourceCount === 0) {
     const ins = db.prepare(
-      'INSERT INTO portal_sources (skey, name, nivel, type, url, ativo, created_at) VALUES (?,?,?,?,?,?,?)'
+      'INSERT INTO portal_sources (skey, name, nivel, type, modo, url, ativo, created_at) VALUES (?,?,?,?,?,?,?,?)'
     );
+    // modo 'rss' = feed de últimas; modo 'capa' = manchete da home/página de
+    // notícias do órgão (p/ quem não tem feed confiável). URLs oficiais; o Dr.
+    // Jorge pode ajustar qualquer link pelo ✎ na Central, se o órgão mudar.
     const seed = [
-      ['agencia_brasil', 'Agência Brasil (EBC)', 'federal', 'rss', 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', 1],
-      ['stf', 'STF — Notícias', 'federal', 'rss', 'https://portal.stf.jus.br/', 0],
-      ['stj', 'STJ — Notícias', 'federal', 'rss', 'https://www.stj.jus.br/', 0],
-      ['inss', 'gov.br / INSS', 'federal', 'rss', 'https://www.gov.br/inss/pt-br', 0],
-      ['gov_mg', 'Governo de Minas Gerais', 'estadual', 'rss', 'https://www.mg.gov.br/', 0],
-      ['mpmg', 'MPMG — Notícias', 'estadual', 'rss', 'https://www.mpmg.mp.br/', 0],
-      ['tjmg', 'TJMG — Notícias', 'estadual', 'rss', 'https://www.tjmg.jus.br/', 0],
-      ['pjf', 'Prefeitura de Juiz de Fora', 'municipal', 'rss', 'https://www.pjf.mg.gov.br/', 0]
+      ['agencia_brasil', 'Agência Brasil (EBC)', 'federal', 'rss', 'rss', 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', 1],
+      ['stf', 'STF — Notícias', 'federal', 'rss', 'rss', 'https://portal.stf.jus.br/', 0],
+      ['stj', 'STJ — Notícias', 'federal', 'rss', 'rss', 'https://www.stj.jus.br/', 0],
+      ['inss', 'gov.br / INSS', 'federal', 'rss', 'capa', 'https://www.gov.br/inss/pt-br/noticias', 0],
+      ['gov_mg', 'Governo de Minas Gerais', 'estadual', 'rss', 'capa', 'https://www.agenciaminas.mg.gov.br/', 0],
+      ['mpmg', 'MPMG — Notícias', 'estadual', 'rss', 'rss', 'https://www.mpmg.mp.br/', 0],
+      ['tjmg', 'TJMG — Notícias', 'estadual', 'rss', 'capa', 'https://www.tjmg.jus.br/portal-tjmg/noticias/', 0],
+      ['pjf', 'Prefeitura de Juiz de Fora', 'municipal', 'rss', 'capa', 'https://www.pjf.mg.gov.br/noticias/', 0]
     ];
-    for (const s of seed) ins.run(s[0], s[1], s[2], s[3], s[4], s[5], now);
+    for (const s of seed) ins.run(s[0], s[1], s[2], s[3], s[4], s[5], s[6], now);
   }
+
+  // Backfill das fontes "capa do dia" em bancos já existentes: só atualiza
+  // quando a URL ainda é a placeholder original (não toca no que o Dr. Jorge
+  // já ajustou à mão). Idempotente: após rodar, a URL muda e não casa de novo.
+  const capaDefaults = [
+    ['inss', 'https://www.gov.br/inss/pt-br/noticias', 'https://www.gov.br/inss/pt-br'],
+    ['gov_mg', 'https://www.agenciaminas.mg.gov.br/', 'https://www.mg.gov.br/'],
+    ['tjmg', 'https://www.tjmg.jus.br/portal-tjmg/noticias/', 'https://www.tjmg.jus.br/'],
+    ['pjf', 'https://www.pjf.mg.gov.br/noticias/', 'https://www.pjf.mg.gov.br/']
+  ];
+  const updCapa = db.prepare("UPDATE portal_sources SET modo='capa', url=? WHERE skey=? AND url=?");
+  for (const [skey, novaUrl, antigaUrl] of capaDefaults) updCapa.run(novaUrl, skey, antigaUrl);
 
   // Termos de busca (o robô filtra as notícias por eles).
   const termCount = db.prepare('SELECT COUNT(*) AS n FROM portal_terms').get().n;
