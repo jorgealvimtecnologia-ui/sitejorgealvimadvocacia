@@ -260,11 +260,12 @@ portalRouter.put('/api/portal/admin/sources/:id', requireMaster, (req, res) => {
   const src = db.prepare('SELECT * FROM portal_sources WHERE id = ?').get(req.params.id);
   if (!src) return res.status(404).json({ error: 'Fonte não encontrada.' });
   const body = req.body || {};
-  // ativo só muda quando enviado; url pode ser editada (endereço do feed RSS).
+  // ativo/url/modo mudam só quando enviados.
   const ativo = ('ativo' in body) ? (body.ativo ? 1 : 0) : src.ativo;
   const url = (body.url !== undefined) ? String(body.url).trim() : src.url;
-  db.prepare('UPDATE portal_sources SET ativo=?, url=? WHERE id=?').run(ativo, url, src.id);
-  res.json({ success: true, ativo, url });
+  const modo = (body.modo === 'capa' || body.modo === 'rss') ? body.modo : (src.modo || 'rss');
+  db.prepare('UPDATE portal_sources SET ativo=?, url=?, modo=? WHERE id=?').run(ativo, url, modo, src.id);
+  res.json({ success: true, ativo, url, modo });
 });
 
 // Termos de busca: listar, adicionar, ligar/desligar.

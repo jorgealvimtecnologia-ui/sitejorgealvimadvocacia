@@ -59,6 +59,7 @@ export function ensurePortalSchema(db) {
       name TEXT NOT NULL,
       nivel TEXT,
       type TEXT DEFAULT 'rss',
+      modo TEXT DEFAULT 'rss',   -- 'rss' (feed de últimas) ou 'capa' (manchete da home do órgão)
       url TEXT,
       ativo INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
@@ -96,8 +97,9 @@ export function ensurePortalSchema(db) {
     );
   `);
 
-  // Migração defensiva: bancos antigos ganham a coluna de visualizações da fonte.
+  // Migração defensiva: bancos antigos ganham as colunas novas.
   try { db.exec('ALTER TABLE portal_items ADD COLUMN source_views INTEGER'); } catch (e) { /* já existe */ }
+  try { db.exec("ALTER TABLE portal_sources ADD COLUMN modo TEXT DEFAULT 'rss'"); } catch (e) { /* já existe */ }
 
   const now = new Date().toISOString();
 

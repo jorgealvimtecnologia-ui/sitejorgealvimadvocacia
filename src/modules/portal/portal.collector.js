@@ -63,6 +63,30 @@ export function parseRss(xml) {
   return items;
 }
 
+function absUrl(href, base) { try { return new URL(href, base).href; } catch (e) { return href; } }
+
+// Lê a PÁGINA INICIAL do órgão e extrai as manchetes (a "capa do dia").
+// Heurística: links para páginas de notícia com texto de manchete (sem inventar).
+export function parseCapa(html, baseUrl) {
+  const items = [];
+  const seen = new Set();
+  const re = /<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    const href = m[1];
+    const text = decodeEntities(m[2]);
+    if (!text || text.length < 25) continue;                 // ignora menus/botões curtos
+    if (!/(noticia|materia|conteudo|imprensa|\/20\d{2}\/|\/20\d{2}-)/i.test(href)) continue; // parece notícia
+    if (/\.(jpg|png|svg|gif|css|js|pdf)(\?|$)/i.test(href)) continue;
+    const link = absUrl(href, baseUrl);
+    if (seen.has(link)) continue;
+    seen.add(link);
+    items.push({ title: text.slice(0, 300), link, pubDate: '', description: '', author: '', views: null });
+    if (items.length >= 10) break;
+  }
+  return items;
+}
+
 async function fetchText(url, timeoutMs = 20000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -107,12 +131,19 @@ export async function coletar(db, opts = {}) {
     try { xml = await fetchText(fonte.url); }
     catch (e) { resumo.fonte_erros.push(`${fonte.name}: ${e.message}`); continue; }
 
-    const itens = parseRss(xml).filter(i => i.title && i.link);
-    // Filtra pelos termos ativos (se houver termos). Mantém a ORDEM do feed (mais recentes primeiro).
-    const casam = termos.length
-      ? itens.filter(i => { const hay = norm(i.title + ' ' + i.description); return termos.some(t => hay.includes(t)); })
-      : itens;
-    if (!casam.length) { resumo.detalhes.push(`${fonte.name}: nada novo que case com os termos`); continue; }
+    let casam;
+    if (fonte.modo === 'capa') {
+      // Modo CAPA: pega a manchete principal da home do órgão (a "notícia do dia").
+      casam = parseCapa(xml, fonte.url);
+      if (!casam.length) { resumo.detalhes.push(`${fonte.name}: não encontrei manchetes na capa`); continue; }
+    } else {
+      // Modo RSS: últimas notícias do feed, filtradas pelos termos ativos.
+      const itens = parseRss(xml).filter(i => i.title && i.link);
+      casam = termos.length
+        ? itens.filter(i => { const hay = norm(i.title + ' ' + i.description); return termos.some(t => hay.includes(t)); })
+        : itens;
+      if (!casam.length) { resumo.detalhes.push(`${fonte.name}: nada novo que case com os termos`); continue; }
+    }
 
     // 1 por fonte por ciclo: escolhe por MAIOR nº de visualizações (quando a
     // fonte informa) e, no empate/ausência, pela data mais recente. Sem inventar.
