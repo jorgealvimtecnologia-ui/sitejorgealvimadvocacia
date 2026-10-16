@@ -135,6 +135,15 @@
       </div>
     </div>
 
+    <!-- BLOG — MATÉRIAS & ARTIGOS (autoral do Dr. Jorge) -->
+    <div class="box">
+      <div class="bh"><h3>✍️ Blog — Matérias &amp; Artigos</h3><button class="btn sm primary" id="blog-new" style="margin-left:auto">+ Nova matéria</button></div>
+      <div class="bd">
+        <div id="blog-editor-new"></div>
+        <div id="blog-list"><div class="muted">Carregando…</div></div>
+      </div>
+    </div>
+
     <!-- FONTES & TERMOS -->
     <div class="box">
       <div class="bh"><h3>🔌 Fontes &amp; Termos do Robô</h3></div>
@@ -173,7 +182,7 @@
 
   // Sem caixa de senha própria: usa a sessão do painel. Se não houver, só avisa.
   function semSessao(){document.getElementById('authnote').hidden=false;document.getElementById('painel').hidden=true;}
-  function showPainel(){document.getElementById('authnote').hidden=true;document.getElementById('painel').hidden=false;loadOverview();loadItems(curFase);loadSources();loadTerms();loadComments();loadLeads();}
+  function showPainel(){document.getElementById('authnote').hidden=true;document.getElementById('painel').hidden=false;loadOverview();loadItems(curFase);loadBlog();loadSources();loadTerms();loadComments();loadLeads();}
 
   // Controle central
   function loadOverview(){
@@ -310,6 +319,58 @@
       }).join('')+'</table>';
     }).catch(function(){});
   }
+
+  // ===== Blog — Matérias & Artigos (reaproveita /api/admin/blog/posts) =====
+  var CATS=['Direito Civil & Bancário','Direito Previdenciário','Direito do Consumidor','Trânsito & CNH','Trabalhista','Direito de Família','Direito Militar','Informativo Geral','Direito do Marco Legal da Internet'];
+  function blogEditor(p){
+    p=p||{id:'',title:'',category:'',summary:'',content:'',is_published:1};
+    var opts=CATS.map(function(c){return '<option'+(p.category===c?' selected':'')+'>'+esc(c)+'</option>';}).join('');
+    return '<div class="editor open" style="border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:12px">'
+      +'<label>Título</label><input data-bf="title" value="'+esc(p.title)+'">'
+      +'<label>Categoria</label><select data-bf="category" style="width:100%;font-family:inherit;font-size:.9rem;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)"><option value="">— escolher —</option>'+opts+'</select>'
+      +'<label>Resumo</label><input data-bf="summary" value="'+esc(p.summary||'')+'">'
+      +'<label>Conteúdo (HTML)</label><textarea data-bf="content">'+esc(p.content||'')+'</textarea>'
+      +'<label style="display:flex;align-items:center;gap:8px;margin-top:10px;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink)"><input type="checkbox" data-bf="is_published"'+(p.is_published?' checked':'')+'> Publicado (aparece na home/blog)</label>'
+      +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-bact="save" data-id="'+(p.id||'')+'">Salvar</button><button class="btn sm" data-bact="cancel" data-id="'+(p.id||'')+'">Cancelar</button></div>'
+      +'</div>';
+  }
+  function blogRow(p){
+    var st=p.is_published?'<span style="color:var(--green);font-weight:700">● Publicado</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Rascunho</span>';
+    return '<div class="item" data-id="'+p.id+'"><h4>'+esc(p.title)+'</h4>'
+      +'<div class="src">'+esc(p.category||'')+' · '+st+' · '+(p.views_count||0)+' leituras · '+fmtDate(p.published_at||p.created_at)+'</div>'
+      +'<div class="acts"><button class="btn sm" data-bact="edit" data-id="'+p.id+'">Editar</button>'
+      +'<button class="btn sm" data-bact="toggle" data-id="'+p.id+'" data-pub="'+(p.is_published?0:1)+'">'+(p.is_published?'Despublicar':'Publicar')+'</button>'
+      +'<a class="btn sm" href="/portal/'+encodeURIComponent(p.slug||'')+'" target="_blank">Ver ↗</a>'
+      +'<button class="btn sm danger" data-bact="del" data-id="'+p.id+'">Excluir</button></div>'
+      +'<div id="bed-'+p.id+'"></div></div>';
+  }
+  var BLOG_CACHE=[];
+  function loadBlog(){
+    var box=document.getElementById('blog-list');box.innerHTML='<div class="muted">Carregando…</div>';
+    api('/api/admin/blog/posts').then(function(d){
+      if(!d.success)return;BLOG_CACHE=d.posts||[];
+      box.innerHTML=BLOG_CACHE.length?BLOG_CACHE.map(blogRow).join(''):'<div class="muted">Nenhuma matéria ainda.</div>';
+    }).catch(function(){});
+  }
+  function collectBlog(scope){var body={};Array.prototype.forEach.call(scope.querySelectorAll('[data-bf]'),function(f){body[f.getAttribute('data-bf')]=(f.type==='checkbox')?f.checked:f.value;});return body;}
+  function findPost(id){return BLOG_CACHE.find(function(x){return String(x.id)===String(id);});}
+  document.getElementById('blog-new').addEventListener('click',function(){var h=document.getElementById('blog-editor-new');h.innerHTML=h.innerHTML?'':blogEditor(null);});
+  document.getElementById('blog-editor-new').addEventListener('click',function(e){
+    var b=e.target.closest('[data-bact]');if(!b)return;var act=b.getAttribute('data-bact');
+    if(act==='cancel'){this.innerHTML='';return;}
+    if(act==='save'){var body=collectBlog(this);if(!body.title||!body.category||!body.content){alert('Título, categoria e conteúdo são obrigatórios.');return;}
+      api('/api/admin/blog/posts',{method:'POST',body:body}).then(function(){document.getElementById('blog-editor-new').innerHTML='';loadBlog();});}
+  });
+  document.getElementById('blog-list').addEventListener('click',function(e){
+    var b=e.target.closest('[data-bact]');if(!b)return;var id=b.getAttribute('data-id'),act=b.getAttribute('data-bact');
+    if(act==='edit'){var h=document.getElementById('bed-'+id);if(h.innerHTML){h.innerHTML='';return;}var p=findPost(id);if(p)h.innerHTML=blogEditor(p);return;}
+    if(act==='cancel'){document.getElementById('bed-'+id).innerHTML='';return;}
+    if(act==='save'){var h2=document.getElementById('bed-'+id),body=collectBlog(h2);if(!body.title||!body.category||!body.content){alert('Título, categoria e conteúdo são obrigatórios.');return;}
+      api('/api/admin/blog/posts/'+id,{method:'PUT',body:body}).then(function(){loadBlog();});return;}
+    if(act==='toggle'){var p2=findPost(id);if(!p2)return;
+      api('/api/admin/blog/posts/'+id,{method:'PUT',body:{title:p2.title,category:p2.category,content:p2.content,summary:p2.summary,tags:p2.tags,is_published:b.getAttribute('data-pub')==='1'}}).then(function(){loadBlog();});return;}
+    if(act==='del'){if(!confirm('Excluir esta matéria definitivamente?'))return;api('/api/admin/blog/posts/'+id,{method:'DELETE'}).then(function(){loadBlog();});return;}
+  });
 
   // início: abre a Central direto usando a sessão do painel.
   if(TK){ api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){}); }
