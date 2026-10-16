@@ -77,15 +77,22 @@
   @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
   .robobar b{color:var(--gold)}
   /* Guia da Justiça — barra de links clara (aparece em todas as páginas do portal) */
-  .guiabar{background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .guiabar{position:relative;background:var(--surface-2);border-bottom:1px solid var(--line)}
   .guiabar .inner{display:flex;align-items:center;gap:12px;padding-block:8px}
+  .guiabar .inner::after{content:"";position:absolute;top:0;bottom:0;right:0;width:36px;background:linear-gradient(to right,transparent,var(--surface-2));pointer-events:none}
   .guiabar .gb-lbl{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:var(--gold);text-transform:uppercase;white-space:nowrap}
   .guiabar .gb-lbl svg{width:14px;height:14px}
-  .guiabar .gb-links{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .guiabar .gb-links{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:0 30px 3px 0;scroll-snap-type:x proximity}
   .guiabar .gb-links::-webkit-scrollbar{height:5px}
   .guiabar .gb-links::-webkit-scrollbar-thumb{background:rgba(15,23,42,.2);border-radius:3px}
-  .guiabar .gb-links a{flex:none;font-size:.72rem;font-weight:600;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .guiabar .gb-links a{flex:none;scroll-snap-align:start;font-size:.72rem;font-weight:600;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
   .guiabar .gb-links a:hover{background:var(--gold-bright);color:#201500;border-color:var(--gold-bright)}
+  @media (max-width:560px){
+    .guiabar .inner{gap:8px}
+    .guiabar .gb-lbl{font-size:.62rem}
+    .guiabar .gb-lbl span{display:none}
+    .guiabar .gb-links a{font-size:.7rem;padding:4px 9px}
+  }
 
   /* Hero + busca */
   .hero{text-align:center;padding-block:34px 8px}
@@ -222,7 +229,7 @@
   footer .small{font-size:.76rem;line-height:1.6;color:var(--ink-soft)} footer a{color:var(--gold);font-weight:600}
 
   @media (max-width:880px){.cols{grid-template-columns:1fr}aside{position:static}.feat{grid-template-columns:1fr}.feat .thumb{min-height:170px}.prods{grid-template-columns:repeat(2,1fr)}}
-  @media (max-width:560px){.grid,.sources{grid-template-columns:1fr}.hero h1{font-size:2rem}nav.mainnav .lnk{display:none}.wa span{display:none}.wa{padding:9px 11px}}
+  @media (max-width:560px){.grid,.sources{grid-template-columns:1fr}.hero h1{font-size:2rem}nav.mainnav .lnk{display:none}nav.mainnav .amz{display:none}.brand .kick{font-size:.5rem;letter-spacing:.08em}.wa span{display:none}.wa{padding:9px 11px}}
 </style>
 </head>
 <body>
@@ -243,7 +250,7 @@
   </div>
   <div class="robobar"><div class="wrap gut inner"><span class="pulse" aria-hidden="true"></span><span>Atualizado automaticamente de <b>fontes oficiais</b> (federais, estaduais e municipais) e <b>revisado pelo Dr. Jorge</b> antes de publicar.</span></div></div>
   <div class="guiabar"><div class="wrap gut inner">
-    <span class="gb-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 21h10M12 6l-7 2 2.4 5A3 3 0 0 1 5 13M12 6l7 2-2.4 5A3 3 0 0 0 19 13"/></svg>Guia da Justiça</span>
+    <span class="gb-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 21h10M12 6l-7 2 2.4 5A3 3 0 0 1 5 13M12 6l7 2-2.4 5A3 3 0 0 0 19 13"/></svg><span>Guia da Justiça</span></span>
     <div class="gb-links">
       <a href="https://portal.stf.jus.br" target="_blank" rel="noopener">STF</a>
       <a href="https://www.stj.jus.br" target="_blank" rel="noopener">STJ</a>
