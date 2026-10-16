@@ -15,11 +15,16 @@ const nowISO = () => new Date().toISOString();
 
 function decodeEntities(s) {
   return String(s || '')
+    // 1) tira o invólucro CDATA
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
+    // 2) decodifica entidades ANTES de tirar tags (senão &lt;p&gt; viraria texto "<p>")
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ')
+    // 3) remove imagens/tags (inclusive o logo da fonte) deixando só o texto
+    .replace(/<[^>]+>/g, ' ')
+    // 4) por fim o & e normaliza espaços
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ').trim();
 }
 function tagText(block, tag) {
