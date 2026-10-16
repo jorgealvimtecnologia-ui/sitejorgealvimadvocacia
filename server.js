@@ -569,6 +569,18 @@ app.get('/portal', (req, res) => {
   sendFreshFile(res, 'portal.html');
 });
 
+// Leitura de uma matéria do portal (preview). A matéria é carregada pelo
+// front-end via /api/portal/posts/:slug (somente leitura).
+app.get('/portal/:slug', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal-artigo.html');
+});
+
 // Vitrine do Advogado • Parceiro & Colaborador Amazon
 app.get(['/amazon', '/amazon.html', '/amazon-colaborador', '/amazon-colaborador.html', '/parceiro-amazon', '/vitrine-amazon'], (req, res) => {
   sendFreshFile(res, 'amazon-colaborador.html');

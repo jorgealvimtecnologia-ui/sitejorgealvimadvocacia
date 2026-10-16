@@ -52,4 +52,18 @@ describe('Portal de notícias (preview isolado)', () => {
     const res = await request(app).post('/api/portal/posts').send({ title: 'x' });
     assert.ok(res.status === 403 || res.status === 404, `esperado 403/404, veio ${res.status}`);
   });
+
+  it('GET /portal/:slug serve a página de leitura da matéria', async () => {
+    const res = await request(app).get('/portal/qualquer-slug');
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /html/);
+    assert.ok(res.text.includes('Jornal Alvim'), 'deve conter o cabeçalho do portal');
+    assert.ok(res.text.includes('/public/portal.css'), 'deve usar o CSS compartilhado');
+  });
+
+  it('GET /public/portal.css é servido', async () => {
+    const res = await request(app).get('/public/portal.css');
+    assert.equal(res.status, 200);
+    assert.match(res.headers['content-type'] || '', /css/);
+  });
 });
