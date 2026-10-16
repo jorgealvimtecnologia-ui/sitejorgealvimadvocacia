@@ -156,8 +156,9 @@
 
     <!-- FONTES & TERMOS -->
     <div class="box">
-      <div class="bh"><h3>🔌 Fontes &amp; Termos do Robô</h3></div>
+      <div class="bh"><h3>🔌 Fontes &amp; Termos do Robô</h3><button class="btn sm primary" id="collect-now" style="margin-left:auto">🤖 Coletar agora</button></div>
       <div class="bd">
+        <div id="collect-result" class="muted" style="margin-bottom:10px;display:none"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px" id="ft-grid">
           <div><div class="tag2" style="margin-bottom:8px">Fontes oficiais (ligar/desligar)</div><div id="sources"></div></div>
           <div><div class="tag2" style="margin-bottom:8px">Termos de busca</div><div class="chips" id="terms"></div>
@@ -336,6 +337,22 @@
       }).join('')+'</table>';
     }).catch(function(){});
   }
+
+  // ===== Robô: Coletar agora =====
+  document.getElementById('collect-now').addEventListener('click',function(){
+    var btn=this,out=document.getElementById('collect-result'),old=btn.textContent;
+    btn.disabled=true;btn.textContent='Coletando…';out.style.display='block';out.innerHTML='Buscando nas fontes ativas… (pode levar alguns segundos)';
+    api('/api/portal/admin/collect',{method:'POST'}).then(function(d){
+      if(d&&d.success){var r=d.resumo;
+        out.innerHTML='✅ Coleta concluída: <b>'+r.inseridas+'</b> nova(s) · '+r.substituidas+' atualizada(s) · '+r.puladas+' repetida(s)'
+          +(r.expiradas?(' · '+r.expiradas+' vencida(s) descartada(s)'):'')
+          +(r.pausado?' · <span style="color:var(--c-golpe);font-weight:700">FILA CHEIA — robô pausou</span>':'')
+          +((r.fonte_erros&&r.fonte_erros.length)?('<br><span style="color:var(--mun)">Avisos: '+r.fonte_erros.map(esc).join('; ')+'</span>'):'');
+        loadItems('1_triagem');loadOverview();
+      } else { out.textContent='Não foi possível coletar agora.'; }
+      btn.disabled=false;btn.textContent=old;
+    }).catch(function(){out.textContent='Falha na coleta (confira se o servidor tem acesso à internet).';btn.disabled=false;btn.textContent=old;});
+  });
 
   // ===== Blog — Matérias & Artigos (reaproveita /api/admin/blog/posts) =====
   var CATS=['Direito Civil & Bancário','Direito Previdenciário','Direito do Consumidor','Trânsito & CNH','Trabalhista','Direito de Família','Direito Militar','Informativo Geral','Direito do Marco Legal da Internet'];

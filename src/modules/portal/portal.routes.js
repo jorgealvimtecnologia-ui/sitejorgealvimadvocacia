@@ -13,9 +13,22 @@ import express from 'express';
 import { db } from '../../config/db.js';
 import { requireMaster } from '../../middleware/auth.js';
 import { ensurePortalSchema, PORTAL_LIMITS } from './portal.schema.js';
+import { coletar } from './portal.collector.js';
 
 // Garante as tabelas da esteira (idempotente), sem tocar no blog/produção.
 ensurePortalSchema(db);
+
+// Agendador SEMANAL do robô (coleta automática). Só fora de teste; não trava o
+// processo (unref). O robô nunca publica — só enche a Triagem para o Dr. Jorge.
+if (process.env.NODE_ENV !== 'test') {
+  const UMA_SEMANA = 7 * 24 * 3600 * 1000;
+  const timer = setInterval(() => {
+    coletar(db)
+      .then(r => console.log(`🤖 [PORTAL ROBÔ] coleta semanal: ${r.inseridas} nova(s), ${r.substituidas} atualizada(s), ${r.puladas} repetida(s)${r.pausado ? ' — FILA CHEIA, pausado' : ''}`))
+      .catch(e => console.warn('🤖 [PORTAL ROBÔ] coleta semanal falhou:', e.message));
+  }, UMA_SEMANA);
+  if (timer.unref) timer.unref();
+}
 
 export const portalRouter = express.Router();
 
@@ -96,6 +109,18 @@ portalRouter.get('/api/portal/admin/overview', requireMaster, (req, res) => {
   } catch (err) {
     console.error('Erro no overview do portal:', err);
     res.status(500).json({ error: 'Erro ao carregar o painel.' });
+  }
+});
+
+// Coletar agora: o robô busca nas fontes ativas e enche a Triagem (só o mestre).
+portalRouter.post('/api/portal/admin/collect', requireMaster, async (req, res) => {
+  try {
+    const onlySkey = req.body && req.body.skey ? String(req.body.skey) : undefined;
+    const resumo = await coletar(db, { onlySkey });
+    res.json({ success: true, resumo });
+  } catch (err) {
+    console.error('Erro na coleta do robô:', err);
+    res.status(500).json({ error: 'Erro ao coletar notícias: ' + err.message });
   }
 });
 

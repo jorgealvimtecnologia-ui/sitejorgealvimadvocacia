@@ -6,6 +6,7 @@
 import { describe, it, after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
+import { parseRss } from '../src/modules/portal/portal.collector.js';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -114,5 +115,25 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     const s = await request(app).get('/api/portal/admin/sources').set('Authorization', `Bearer ${token}`);
     const t = await request(app).get('/api/portal/admin/terms').set('Authorization', `Bearer ${token}`);
     assert.ok(s.body.sources.length > 0 && t.body.terms.length > 0);
+  });
+
+  it('POST /api/portal/admin/collect exige mestre (401 sem token)', async () => {
+    const res = await request(app).post('/api/portal/admin/collect');
+    assert.equal(res.status, 401);
+  });
+});
+
+describe('Robô — leitor de RSS', () => {
+  it('parseRss extrai título, link, data e autor (limpa HTML/CDATA)', () => {
+    const xml = '<rss><channel><item><title>INSS amplia prazo do BPC</title>'
+      + '<link>https://exemplo/noticia-1</link><pubDate>Thu, 16 Oct 2026 09:00:00 -0300</pubDate>'
+      + '<dc:creator>Agência Brasil</dc:creator><description><![CDATA[O <b>INSS</b> anunciou]]></description>'
+      + '</item></channel></rss>';
+    const items = parseRss(xml);
+    assert.equal(items.length, 1);
+    assert.match(items[0].title, /INSS amplia/);
+    assert.equal(items[0].link, 'https://exemplo/noticia-1');
+    assert.equal(items[0].author, 'Agência Brasil');
+    assert.ok(!/</.test(items[0].description), 'descrição deve vir sem HTML');
   });
 });
