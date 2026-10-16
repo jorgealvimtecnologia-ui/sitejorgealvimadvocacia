@@ -3,7 +3,7 @@
  * Garante que /portal serve a página e que /api/portal/posts responde
  * sem login, e que NÃO há rota de escrita no portal.
  */
-import { describe, it, after } from 'node:test';
+import { describe, it, after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import path from 'node:path';
