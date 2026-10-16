@@ -73,6 +73,23 @@ describe('Portal de notícias (preview isolado)', () => {
     assert.equal(res.status, 200);
     assert.ok(res.text.includes('Central de Comando'), 'deve conter a central de comando');
   });
+
+  it('GET /portal/todas serve a lista completa de notícias', async () => {
+    const res = await request(app).get('/portal/todas');
+    assert.equal(res.status, 200);
+    assert.ok(res.text.includes('Todas as notícias'), 'deve conter o título da lista');
+    assert.ok(res.text.includes('/public/portal.css'), 'deve usar o CSS compartilhado');
+  });
+
+  it('GET /api/portal/feed devolve lista paginada (blog + oficiais publicados)', async () => {
+    const res = await request(app).get('/api/portal/feed?limit=5');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(Array.isArray(res.body.items), 'items deve ser array');
+    assert.ok(res.body.items.length <= 5, 'respeita o limite');
+    assert.equal(typeof res.body.total, 'number');
+    assert.equal(typeof res.body.hasMore, 'boolean');
+  });
 });
 
 describe('Portal — caixas de controle (admin, só mestre)', () => {

@@ -88,6 +88,42 @@ portalRouter.get('/api/portal/official', (req, res) => {
   }
 });
 
+// Feed COMPLETO (público): todos os artigos do blog publicados + todas as
+// transcrições oficiais já publicadas, do mais novo ao mais antigo, paginado.
+// Aproveita 100% do que já existe no blog — nada é recadastrado ou duplicado.
+portalRouter.get('/api/portal/feed', (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 12, 50);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+    const q = (req.query.q || '').trim().toLowerCase();
+
+    const blog = db.prepare(
+      `SELECT slug, title, summary, category, author_name, author_oab, likes_count,
+              published_at, created_at, 'blog' AS tipo, NULL AS source, NULL AS source_date
+         FROM blog_posts WHERE is_published = 1`
+    ).all();
+    const oficial = db.prepare(
+      `SELECT slug, title, summary, category, NULL AS author_name, NULL AS author_oab, likes_count,
+              published_at, created_at, 'oficial' AS tipo, source, source_date
+         FROM portal_items WHERE fase = '4_publicado'`
+    ).all();
+
+    let todos = blog.concat(oficial);
+    if (q) {
+      todos = todos.filter(p => ((p.title || '') + ' ' + (p.summary || '') + ' ' + (p.category || '')).toLowerCase().includes(q));
+    }
+    const dt = (p) => new Date(p.published_at || p.created_at || 0).getTime() || 0;
+    todos.sort((a, b) => dt(b) - dt(a));
+
+    const total = todos.length;
+    const items = todos.slice(offset, offset + limit);
+    res.json({ success: true, items, total, offset, limit, hasMore: offset + items.length < total });
+  } catch (err) {
+    console.error('Erro no feed do portal:', err);
+    res.status(500).json({ error: 'Erro ao carregar as notícias.' });
+  }
+});
+
 // Uma notícia por slug (público, só leitura). Procura no blog e, se não achar,
 // nas transcrições oficiais publicadas pela esteira (portal_items).
 portalRouter.get('/api/portal/posts/:slug', (req, res) => {

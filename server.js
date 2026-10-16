@@ -581,6 +581,18 @@ app.get('/portal/revisar', (req, res) => {
   sendFreshFile(res, 'portal-revisar.html');
 });
 
+// Lista completa de notícias do portal (todos os artigos do blog publicados +
+// transcrições publicadas). Definida ANTES de /portal/:slug para ter prioridade.
+app.get('/portal/todas', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal-todas.html');
+});
+
 // Leitura de uma matéria do portal (preview). A matéria é carregada pelo
 // front-end via /api/portal/posts/:slug (somente leitura).
 app.get('/portal/:slug', (req, res) => {
