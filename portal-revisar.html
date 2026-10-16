@@ -308,20 +308,28 @@
     api('/api/portal/admin/terms',{method:'POST',body:{termo:v}}).then(function(){inp.value='';loadTerms();});
   });
 
-  // Moderação
+  // Moderação — comentários REAIS do blog (/api/admin/blog/comments)
+  function commentRow(c){
+    var st=c.is_hidden?'<span style="color:var(--mun);font-weight:700">● Oculto (aguardando)</span>':'<span style="color:var(--green);font-weight:700">● Aprovado</span>';
+    return '<div class="row"><div class="meta2"><div class="nm">'+esc(c.author_name||'Anônimo')+' '+st+'</div>'
+      +'<div class="sub">'+esc(c.comment_text||'')+'</div>'
+      +'<div class="sub" style="color:var(--ink-faint)">'+esc(c.post_title||c.post_slug||'')+(c.author_email||c.author_phone?(' · '+esc(c.author_email||c.author_phone)):'')+'</div></div>'
+      +(c.is_hidden?'<button class="btn sm pub" data-cact="toggle" data-id="'+c.id+'">Aprovar</button>':'<button class="btn sm" data-cact="toggle" data-id="'+c.id+'">Ocultar</button>')
+      +'<button class="btn sm" data-cact="lead" data-id="'+c.id+'">Virar lead</button>'
+      +'<button class="btn sm danger" data-cact="del" data-id="'+c.id+'">Excluir</button></div>';
+  }
   function loadComments(){
-    api('/api/portal/admin/comments').then(function(d){
-      if(!d.success)return;var box=document.getElementById('comments');
-      if(!d.comments.length){box.innerHTML='<div class="muted">Sem comentários no momento.</div>';return;}
-      box.innerHTML=d.comments.map(function(c){
-        return '<div class="row"><div class="meta2"><div class="nm">'+esc(c.author_name||'Anônimo')+' <span class="sub">('+esc(c.status)+')</span></div><div class="sub">'+esc(c.comment_text||'')+'</div></div>'
-          +'<button class="btn sm pub" data-id="'+c.id+'" data-st="aprovado">Aprovar</button><button class="btn sm danger" data-id="'+c.id+'" data-st="removido">Remover</button></div>';
-      }).join('');
+    var box=document.getElementById('comments');
+    api('/api/admin/blog/comments').then(function(d){
+      if(!d||!d.success)return;
+      box.innerHTML=(d.comments&&d.comments.length)?d.comments.map(commentRow).join(''):'<div class="muted">Sem comentários no momento.</div>';
     }).catch(function(){});
   }
   document.getElementById('comments').addEventListener('click',function(e){
-    var b=e.target.closest('[data-st]');if(!b)return;
-    api('/api/portal/admin/comments/'+b.getAttribute('data-id'),{method:'PUT',body:{status:b.getAttribute('data-st')}}).then(function(){loadComments();loadOverview();});
+    var b=e.target.closest('[data-cact]');if(!b)return;var id=b.getAttribute('data-id'),act=b.getAttribute('data-cact');
+    if(act==='toggle'){api('/api/admin/blog/comments/'+id+'/toggle-visibility',{method:'PUT'}).then(function(){loadComments();});return;}
+    if(act==='lead'){api('/api/admin/blog/comments/'+id+'/convert-to-lead',{method:'POST'}).then(function(d){if(d&&d.success)alert('Comentário transformado em lead no painel de Atendimentos!');loadComments();loadLeads();});return;}
+    if(act==='del'){if(!confirm('Excluir este comentário definitivamente?'))return;api('/api/admin/blog/comments/'+id,{method:'DELETE'}).then(function(){loadComments();});return;}
   });
 
   // Leads
