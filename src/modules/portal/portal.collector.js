@@ -65,6 +65,13 @@ export function parseRss(xml) {
 
 function absUrl(href, base) { try { return new URL(href, base).href; } catch (e) { return href; } }
 
+// Texto que NÃO é manchete: legendas de foto, créditos, bylines, rótulos de
+// navegação e chamadas genéricas. Evita que o robô traga "Crédito: Fulano",
+// "Foto: ...", "Leia mais", etc. como se fosse notícia (sem inventar nada).
+const NAO_MANCHETE = /^(cr[eé]dito|foto|fotos|imagem|imagens|v[ií]deo|v[ií]deos|[aá]udio|arte|ilustra|infogr[aá]fico|charge|legenda|arquivo|divulga[cç][aã]o|reprodu[cç][aã]o|ampliar|compartilh|leia\b|saiba\b|veja\b|clique|acesse|baixe|inscreva|cadastre|assine|newsletter|menu|p[aá]gina\s+inicial|voltar|pr[oó]xim|anterior)/i;
+// Crédito de foto típico de assessorias (ex.: "… / Imprensa MG", "Ascom/Secom").
+const CREDITO_FOTO = /(\/\s*(imprensa|ascom|secom|comunica[cç][aã]o)\b)|\b(ascom|secom)[\s/]|©|\bfoto[:/]/i;
+
 // Lê a PÁGINA INICIAL do órgão e extrai as manchetes (a "capa do dia").
 // Heurística: links para páginas de notícia com texto de manchete (sem inventar).
 export function parseCapa(html, baseUrl) {
@@ -76,8 +83,10 @@ export function parseCapa(html, baseUrl) {
     const href = m[1];
     const text = decodeEntities(m[2]);
     if (!text || text.length < 25) continue;                 // ignora menus/botões curtos
+    if (text.split(/\s+/).length < 4) continue;              // manchete tem ao menos 4 palavras
+    if (NAO_MANCHETE.test(text) || CREDITO_FOTO.test(text)) continue; // legenda/crédito/rótulo, não é notícia
     if (!/(noticia|materia|conteudo|imprensa|\/20\d{2}\/|\/20\d{2}-)/i.test(href)) continue; // parece notícia
-    if (/\.(jpg|png|svg|gif|css|js|pdf)(\?|$)/i.test(href)) continue;
+    if (/\.(jpg|png|svg|gif|gifv|webp|avif|mp4|css|js|pdf)(\?|$)/i.test(href)) continue;
     const link = absUrl(href, baseUrl);
     if (seen.has(link)) continue;
     seen.add(link);

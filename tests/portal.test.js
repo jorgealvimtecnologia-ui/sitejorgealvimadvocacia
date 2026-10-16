@@ -269,4 +269,15 @@ describe('Robô — leitor de RSS', () => {
     assert.equal(items[0].link, 'https://www.gov.br/noticias/inss-amplia-prazo-do-bpc-em-2026');
     assert.equal(items[0].views, null, 'capa não inventa visualizações');
   });
+
+  it('parseCapa ignora legendas de foto e créditos (não é manchete)', () => {
+    const html =
+        '<a href="/noticias/credito-foto-abc">Crédito: Gil Leonardi / Imprensa MG</a>'
+      + '<a href="/noticias/foto-governador">Foto: Governador durante evento oficial em BH</a>'
+      + '<a href="/noticias/leia-mais-xyz">Leia mais sobre as ações do governo estadual</a>'
+      + '<a href="/noticias/materia-real-aposentados">Governo de MG amplia atendimento a aposentados em 2026</a>';
+    const items = parseCapa(html, 'https://www.agenciaminas.mg.gov.br/');
+    assert.equal(items.length, 1, 'só a manchete real deve passar');
+    assert.match(items[0].title, /amplia atendimento a aposentados/);
+  });
 });
