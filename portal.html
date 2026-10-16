@@ -111,54 +111,30 @@
           <p class="empty" id="empty" hidden>Nenhum artigo nesta área no momento.</p>
         </div>
 
-        <!-- DIVISÃO GRANDE -->
-        <div class="bigdiv">
-          <div class="lines"><span></span><span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span><span></span></div>
-          <div class="lbl">Notícias das Fontes Oficiais</div>
-          <div class="sub">Coletadas automaticamente de órgãos públicos — locais, estaduais e federais — e revisadas pelo escritório.</div>
-        </div>
-
-        <!-- 3) CAIXAS DE NOTÍCIAS -->
-        <div class="sources">
-          <div class="srcbox" style="--lvl:var(--loc)">
-            <div class="sh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><div class="tt">Notícias Locais<small>Juiz de Fora e região</small></div></div>
-            <ul class="srclist">
-              <li><a href="#">Mutirão de conciliação do TJMG atende comarca de Juiz de Fora</a><div class="m"><span>TJMG · Comarca JF</span><span class="dot"></span><span>1 h</span></div></li>
-              <li><a href="#">Procon-JF alerta para golpe do falso boleto de água</a><div class="m"><span>Procon-JF</span><span class="dot"></span><span>5 h</span></div></li>
-              <li><a href="#">Detran-MG abre vagas de reabilitação de CNH na região</a><div class="m"><span>Detran-MG</span><span class="dot"></span><span>Ontem</span></div></li>
-            </ul>
-            <a class="more" href="#">Ver todas as locais →</a>
+        <!-- RESUMO DO PAINEL DE NOTÍCIAS (no lugar do antigo box gigante) -->
+        <div class="digest">
+          <div class="dh">
+            <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span>
+            <div><div class="t">Resumo do painel de notícias</div><div class="s">Últimas das fontes oficiais — coletadas pelo robô e revisadas pelo escritório</div></div>
           </div>
-
-          <div class="srcbox" style="--lvl:var(--fed)">
-            <div class="sh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span><div class="tt">Agências Federais<small>União · gov.br</small></div></div>
-            <ul class="srclist">
-              <li><a href="#">INSS retoma o pente-fino do BPC/LOAS em todo o país</a><div class="m"><span>Agência Brasil</span><span class="dot"></span><span>2 h</span></div></li>
-              <li><a href="#">STJ reconhece dever do banco de devolver valor no golpe do Pix</a><div class="m"><span>STJ</span><span class="dot"></span><span>4 h</span></div></li>
-              <li><a href="#">PF deflagra operação contra fraudes em benefícios</a><div class="m"><span>Polícia Federal</span><span class="dot"></span><span>Ontem</span></div></li>
-            </ul>
-            <a class="more" href="#">Ver todas as federais →</a>
+          <div class="dg-tabs" id="dg-tabs">
+            <button class="tb" data-lvl="todos" aria-pressed="true" type="button" style="--c:var(--ink-faint)">Todas</button>
+            <button class="tb" data-lvl="local" aria-pressed="false" type="button" style="--c:var(--loc)">Locais</button>
+            <button class="tb" data-lvl="federal" aria-pressed="false" type="button" style="--c:var(--fed)">Federais</button>
+            <button class="tb" data-lvl="estadual" aria-pressed="false" type="button" style="--c:var(--est)">Estaduais</button>
+            <button class="tb" data-lvl="municipal" aria-pressed="false" type="button" style="--c:var(--mun)">Municipais</button>
           </div>
-
-          <div class="srcbox" style="--lvl:var(--est)">
-            <div class="sh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span><div class="tt">Agências Estaduais<small>Governo de Minas Gerais</small></div></div>
-            <ul class="srclist">
-              <li><a href="#">MPMG notifica empresas por descontos indevidos de aposentados</a><div class="m"><span>MPMG</span><span class="dot"></span><span>3 h</span></div></li>
-              <li><a href="#">Governo de MG amplia atendimento digital ao cidadão</a><div class="m"><span>mg.gov.br</span><span class="dot"></span><span>Ontem</span></div></li>
-              <li><a href="#">PCMG orienta registro de B.O. online para golpes</a><div class="m"><span>Polícia Civil-MG</span><span class="dot"></span><span>2 dias</span></div></li>
-            </ul>
-            <a class="more" href="#">Ver todas as estaduais →</a>
+          <div class="dg-list" id="dg-list">
+            <a class="dg-item" data-lvl="federal" href="#" style="--c:var(--fed)"><span class="lv"></span><span class="ct"><span class="tt">INSS retoma o pente-fino do BPC/LOAS em todo o país</span><span class="m"><span>Agência Brasil</span><span class="dot"></span><span>2 h</span></span></span></a>
+            <a class="dg-item" data-lvl="local" href="#" style="--c:var(--loc)"><span class="lv"></span><span class="ct"><span class="tt">Mutirão de conciliação do TJMG atende comarca de Juiz de Fora</span><span class="m"><span>TJMG · Comarca JF</span><span class="dot"></span><span>1 h</span></span></span></a>
+            <a class="dg-item" data-lvl="federal" href="#" style="--c:var(--fed)"><span class="lv"></span><span class="ct"><span class="tt">STJ reconhece dever do banco de devolver valor no golpe do Pix</span><span class="m"><span>STJ</span><span class="dot"></span><span>4 h</span></span></span></a>
+            <a class="dg-item" data-lvl="estadual" href="#" style="--c:var(--est)"><span class="lv"></span><span class="ct"><span class="tt">MPMG notifica empresas por descontos indevidos de aposentados</span><span class="m"><span>MPMG</span><span class="dot"></span><span>3 h</span></span></span></a>
+            <a class="dg-item" data-lvl="local" href="#" style="--c:var(--loc)"><span class="lv"></span><span class="ct"><span class="tt">Procon-JF alerta para golpe do falso boleto de água</span><span class="m"><span>Procon-JF</span><span class="dot"></span><span>5 h</span></span></span></a>
+            <a class="dg-item" data-lvl="municipal" href="#" style="--c:var(--mun)"><span class="lv"></span><span class="ct"><span class="tt">Prefeitura de JF divulga calendário do IPTU 2026</span><span class="m"><span>PJF</span><span class="dot"></span><span>6 h</span></span></span></a>
+            <a class="dg-item" data-lvl="federal" href="#" style="--c:var(--fed)"><span class="lv"></span><span class="ct"><span class="tt">PF deflagra operação contra fraudes em benefícios</span><span class="m"><span>Polícia Federal</span><span class="dot"></span><span>Ontem</span></span></span></a>
+            <a class="dg-item" data-lvl="municipal" href="#" style="--c:var(--mun)"><span class="lv"></span><span class="ct"><span class="tt">Câmara aprova lei municipal de proteção ao consumidor idoso</span><span class="m"><span>Câmara JF</span><span class="dot"></span><span>Ontem</span></span></span></a>
           </div>
-
-          <div class="srcbox" style="--lvl:var(--mun)">
-            <div class="sh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span><div class="tt">Agências Municipais<small>Prefeitura de Juiz de Fora</small></div></div>
-            <ul class="srclist">
-              <li><a href="#">Prefeitura de JF divulga calendário do IPTU 2026</a><div class="m"><span>PJF</span><span class="dot"></span><span>6 h</span></div></li>
-              <li><a href="#">Câmara aprova lei municipal de proteção ao consumidor idoso</a><div class="m"><span>Câmara JF</span><span class="dot"></span><span>Ontem</span></div></li>
-              <li><a href="#">Mutirão de renegociação de dívidas municipais</a><div class="m"><span>PJF · Fazenda</span><span class="dot"></span><span>2 dias</span></div></li>
-            </ul>
-            <a class="more" href="#">Ver todas as municipais →</a>
-          </div>
+          <div class="dg-foot"><span>Cada notícia credita a fonte oficial; quando o Dr. Jorge comenta, a análise aparece assinada.</span><a class="more" href="#">Ver todas →</a></div>
         </div>
 
         <!-- 4) VITRINE AMAZON -->
@@ -296,26 +272,39 @@
       .catch(function(){/* offline: mantém o exemplo */});
   })();
 
-  /* ---- Preenche as caixas de Fontes Oficiais com o que o robô publicou ---- */
+  /* ---- Resumo do painel: preenche com o que o robô publicou + abas por nível ---- */
   (function(){
     function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
     function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
-    function boxByLabel(txt){var bs=document.querySelectorAll('.srcbox');for(var i=0;i<bs.length;i++){if(new RegExp(txt).test(bs[i].textContent))return bs[i].querySelector('.srclist');}return null;}
-    function li(it){
-      var extra='';
-      if(it.source_views!=null)extra='<span class="dot"></span><span>👁 '+it.source_views+'</span>';
-      return '<li><a href="/portal/'+encodeURIComponent(it.slug||'')+'">'+esc(it.title)+'</a>'
-        +'<div class="m"><span>'+esc(it.source||'')+'</span><span class="dot"></span><span>'+fmtDate(it.source_date||it.published_at)+'</span>'+extra+'</div></li>';
+    var COR={local:'var(--loc)',federal:'var(--fed)',estadual:'var(--est)',municipal:'var(--mun)'};
+    function item(it,lvl){
+      var extra=(it.source_views!=null)?'<span class="dot"></span><span>👁 '+it.source_views+'</span>':'';
+      return '<a class="dg-item" data-lvl="'+lvl+'" href="/portal/'+encodeURIComponent(it.slug||'')+'" style="--c:'+(COR[lvl]||'var(--fed)')+'"><span class="lv"></span>'
+        +'<span class="ct"><span class="tt">'+esc(it.title)+'</span>'
+        +'<div class="m"><span>'+esc(it.source||'')+'</span><span class="dot"></span><span>'+fmtDate(it.source_date||it.published_at)+'</span>'+extra+'</div></span></a>';
     }
+    function bindTabs(){
+      var tabs=document.querySelectorAll('#dg-tabs .tb');
+      tabs.forEach(function(t){t.addEventListener('click',function(){
+        tabs.forEach(function(x){x.setAttribute('aria-pressed','false');});t.setAttribute('aria-pressed','true');
+        var lvl=t.getAttribute('data-lvl');
+        document.querySelectorAll('#dg-list .dg-item').forEach(function(it){
+          it.hidden = (lvl!=='todos' && it.getAttribute('data-lvl')!==lvl);
+        });
+      });});
+    }
+    bindTabs();
     fetch('/api/portal/official',{headers:{'Accept':'application/json'}})
       .then(function(r){return r.ok?r.json():null;})
       .then(function(d){
         if(!d||!d.success||!d.grupos)return; // sem dados: mantém os exemplos
-        var map=[['Notícias Locais','local'],['Agências Federais','federal'],['Agências Estaduais','estadual'],['Agências Municipais','municipal']];
-        map.forEach(function(p){
-          var ul=boxByLabel(p[0]),itens=d.grupos[p[1]]||[];
-          if(ul&&itens.length)ul.innerHTML=itens.map(li).join('');
-        });
+        var ordem=['local','federal','estadual','municipal'],linhas=[];
+        // intercala um de cada nível por vez, para o resumo ficar variado
+        var max=0;ordem.forEach(function(k){max=Math.max(max,(d.grupos[k]||[]).length);});
+        if(!max)return;
+        for(var i=0;i<max;i++){ordem.forEach(function(k){var arr=d.grupos[k]||[];if(arr[i])linhas.push(item(arr[i],k));});}
+        var list=document.getElementById('dg-list');
+        if(list&&linhas.length)list.innerHTML=linhas.join('');
       })
       .catch(function(){/* offline: mantém o exemplo */});
   })();

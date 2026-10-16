@@ -172,6 +172,28 @@ nav.mainnav a.lnk:hover{color:var(--ink);background:var(--tint)}
 .srcbox .more{display:block;text-align:center;font-size:.76rem;font-weight:700;color:var(--gold);padding:11px;border-top:1px solid var(--line-soft)}
 .srcbox .more:hover{background:var(--surface-2)}
 
+/* RESUMO DO PAINEL — substitui o "box gigante" das fontes oficiais (compacto) */
+.digest{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin:40px 0 0}
+.digest .dh{display:flex;align-items:center;gap:11px;padding:14px 18px;background:var(--surface-2);color:var(--ink);border-bottom:1px solid var(--line);border-top:3px solid var(--gold)}
+.digest .dh .mk{flex:none;width:34px;height:34px;border-radius:9px;border:1.5px solid var(--gold);display:grid;place-items:center;color:var(--gold)}
+.digest .dh .mk svg{width:18px;height:18px}
+.digest .dh .t{font-family:"Fraunces",serif;font-weight:700;font-size:1.12rem;line-height:1.15;color:var(--ink)}
+.digest .dh .s{font-size:.72rem;color:var(--ink-soft)}
+.dg-tabs{display:flex;gap:5px;flex-wrap:wrap;padding:12px 16px 2px}
+.dg-tabs .tb{font-size:.72rem;font-weight:700;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.dg-tabs .tb::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c,var(--fed))}
+.dg-tabs .tb[aria-pressed="true"]{background:var(--gold);color:#201500;border-color:var(--gold)}
+.dg-list{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;padding:10px 18px 6px}
+.dg-item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.dg-item .lv{flex:none;margin-top:5px;width:7px;height:7px;border-radius:50%;background:var(--c,var(--fed))}
+.dg-item .ct{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dg-item .tt{font-size:.9rem;font-weight:600;color:var(--ink)}
+.dg-item:hover .tt{color:var(--gold)}
+.dg-item .m{font-size:.72rem;color:var(--ink-faint);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dg-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 18px;border-top:1px solid var(--line-soft);background:var(--surface-2);font-size:.76rem;color:var(--ink-soft)}
+.dg-foot .more{font-weight:700;color:var(--gold);white-space:nowrap}
+@media (max-width:560px){.dg-list{grid-template-columns:1fr}}
+
 /* Vitrine Amazon (faixa grande) */
 .amazon{margin-top:26px;background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--gold-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .amazon .ah{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
