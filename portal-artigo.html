@@ -186,11 +186,19 @@
         document.getElementById('crumb-cat').textContent=p.category||'Matéria';
         document.getElementById('art-tag').textContent=p.category||'Matéria';
         document.getElementById('art-title').textContent=p.title;
-        document.getElementById('art-author').textContent=(p.author_name||'Dr. Jorge')+(p.author_oab?(' · '+p.author_oab):'');
-        document.getElementById('art-date').textContent=fmtDate(p.published_at||p.created_at);
+        var ehOficial=(p.tipo==='oficial');
+        document.getElementById('art-author').textContent=ehOficial
+          ? ('Transcrição oficial · '+(p.source||'Fonte')+(p.fonte_autor?(' · '+p.fonte_autor):''))
+          : ((p.author_name||'Dr. Jorge')+(p.author_oab?(' · '+p.author_oab):''));
+        document.getElementById('art-date').textContent=fmtDate(p.source_date||p.published_at||p.created_at);
         var views=(p.views_count||0);document.getElementById('art-views').textContent=views+(views===1?' leitura':' leituras');
         document.getElementById('art-lead').textContent=p.summary||'';
-        document.getElementById('art-body').innerHTML=p.content||'';
+        var corpo=p.content||'';
+        if(ehOficial&&p.source_url){
+          corpo+='<p style="margin-top:18px;padding:12px 15px;border-left:3px solid var(--gold);background:var(--surface-2);border-radius:8px;font-size:.92rem">'
+            +'📄 Resumo da notícia oficial. <a href="'+p.source_url+'" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:underline">Leia a íntegra na fonte oficial ('+ (p.source||'fonte') +') ↗</a></p>';
+        }
+        document.getElementById('art-body').innerHTML=corpo;
         var n=p.likes_count||0,bl=document.getElementById('big-like');
         bl.setAttribute('data-likes',n);document.getElementById('like-n').textContent=n;
         bindLike(bl,slug);

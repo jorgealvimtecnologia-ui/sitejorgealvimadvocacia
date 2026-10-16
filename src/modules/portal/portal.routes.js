@@ -61,7 +61,33 @@ portalRouter.get('/api/portal/posts', (req, res) => {
   }
 });
 
-// Uma notícia por slug (público, só leitura; não incrementa contadores).
+// Notícias oficiais PUBLICADAS pelo robô (transcrições), agrupadas por nível —
+// alimenta as caixas de "Fontes Oficiais" da home. Público, só leitura.
+portalRouter.get('/api/portal/official', (req, res) => {
+  try {
+    const rows = db.prepare(
+      `SELECT i.slug, i.title, i.summary, i.source, i.source_url, i.source_date,
+              COALESCE(s.nivel, i.category) AS nivel, i.published_at
+         FROM portal_items i
+         LEFT JOIN portal_sources s ON s.name = i.source
+        WHERE i.fase = '4_publicado'
+        ORDER BY i.published_at DESC`
+    ).all();
+    const grupos = { local: [], federal: [], estadual: [], municipal: [] };
+    for (const r of rows) {
+      const nv = (r.nivel || '').toLowerCase();
+      const g = grupos[nv] ? nv : 'federal';
+      if (grupos[g].length < PORTAL_LIMITS.MANCHETES_POR_BOX) grupos[g].push(r);
+    }
+    res.json({ success: true, grupos });
+  } catch (err) {
+    console.error('Erro ao listar oficiais do portal:', err);
+    res.status(500).json({ error: 'Erro ao carregar notícias oficiais.' });
+  }
+});
+
+// Uma notícia por slug (público, só leitura). Procura no blog e, se não achar,
+// nas transcrições oficiais publicadas pela esteira (portal_items).
 portalRouter.get('/api/portal/posts/:slug', (req, res) => {
   try {
     const post = db.prepare(
@@ -71,8 +97,37 @@ portalRouter.get('/api/portal/posts/:slug', (req, res) => {
          FROM blog_posts
         WHERE slug = ? AND is_published = 1`
     ).get(req.params.slug);
-    if (!post) return res.status(404).json({ error: 'Notícia não encontrada.' });
-    res.json({ success: true, post });
+    if (post) { post.tipo = 'blog'; return res.json({ success: true, post }); }
+
+    const item = db.prepare(
+      `SELECT id, slug, title, summary, category, content, raw_text, source,
+              source_url, source_date, fonte_autor, views_count, likes_count,
+              published_at, created_at, updated_at
+         FROM portal_items
+        WHERE slug = ? AND fase = '4_publicado'`
+    ).get(req.params.slug);
+    if (!item) return res.status(404).json({ error: 'Notícia não encontrada.' });
+
+    res.json({ success: true, post: {
+      id: 'portal-' + item.id,
+      slug: item.slug,
+      title: item.title,
+      summary: item.summary,
+      category: item.category,
+      content: item.content || item.raw_text || '',
+      tipo: 'oficial',
+      source: item.source,
+      source_url: item.source_url,
+      source_date: item.source_date,
+      fonte_autor: item.fonte_autor,
+      author_name: null,
+      author_oab: null,
+      views_count: item.views_count || 0,
+      likes_count: item.likes_count || 0,
+      published_at: item.published_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    } });
   } catch (err) {
     console.error('Erro ao obter notícia do portal:', err);
     res.status(500).json({ error: 'Erro ao carregar notícia.' });

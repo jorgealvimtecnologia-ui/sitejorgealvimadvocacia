@@ -281,6 +281,28 @@
       })
       .catch(function(){/* offline: mantém o exemplo */});
   })();
+
+  /* ---- Preenche as caixas de Fontes Oficiais com o que o robô publicou ---- */
+  (function(){
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
+    function boxByLabel(txt){var bs=document.querySelectorAll('.srcbox');for(var i=0;i<bs.length;i++){if(new RegExp(txt).test(bs[i].textContent))return bs[i].querySelector('.srclist');}return null;}
+    function li(it){
+      return '<li><a href="/portal/'+encodeURIComponent(it.slug||'')+'">'+esc(it.title)+'</a>'
+        +'<div class="m"><span>'+esc(it.source||'')+'</span><span class="dot"></span><span>'+fmtDate(it.source_date||it.published_at)+'</span></div></li>';
+    }
+    fetch('/api/portal/official',{headers:{'Accept':'application/json'}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){
+        if(!d||!d.success||!d.grupos)return; // sem dados: mantém os exemplos
+        var map=[['Notícias Locais','local'],['Agências Federais','federal'],['Agências Estaduais','estadual'],['Agências Municipais','municipal']];
+        map.forEach(function(p){
+          var ul=boxByLabel(p[0]),itens=d.grupos[p[1]]||[];
+          if(ul&&itens.length)ul.innerHTML=itens.map(li).join('');
+        });
+      })
+      .catch(function(){/* offline: mantém o exemplo */});
+  })();
 </script>
 </body>
 </html>
