@@ -93,23 +93,19 @@
     <div><div class="name">Central de Comando do Portal</div><div class="tag2">Esteira do robô · revisão &amp; publicação</div></div>
     <div class="sp">
       <a class="btn sm" href="/portal" target="_blank">Ver o portal ↗</a>
-      <button class="btn sm" id="logout" hidden>Sair</button>
     </div>
   </div>
 </div>
 
 <main class="wrap gut" style="padding-bottom:40px">
 
-  <!-- PRECISA ENTRAR NO PAINEL (sem caixa de senha aqui) -->
-  <div class="login" id="login" style="text-align:center">
-    <h2>Central de Comando</h2>
-    <p>Esta área é do proprietário (mestre). Entre no painel uma vez e a Central abre sozinha aqui.</p>
-    <a class="btn primary" href="/painel" target="_blank" style="display:block;width:100%;margin-bottom:9px;text-decoration:none">Abrir o painel e entrar</a>
-    <button class="btn" id="lg-retry" style="width:100%">Já entrei — mostrar a Central</button>
+  <!-- Aviso discreto só se a sessão do painel não estiver presente -->
+  <div id="authnote" hidden style="background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:12px 16px;margin:16px 0;font-size:.88rem;color:var(--ink-soft)">
+    Esta área faz parte do painel do sistema. Faça login no <a href="/painel" target="_blank" style="color:var(--gold);font-weight:700">painel</a> e recarregue esta página.
   </div>
 
   <!-- PAINEL -->
-  <div id="painel" hidden>
+  <div id="painel">
 
     <!-- CONTROLE CENTRAL -->
     <div class="box">
@@ -171,21 +167,13 @@
   var TK=null; try{TK=localStorage.getItem('ja_admin_token');}catch(e){}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
-  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){showLogin();throw new Error('401');}return r.json();});}
+  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){semSessao();throw new Error('401');}return r.json();});}
 
   var FASE_LABEL={'1_triagem':'Triagem','2_pauta':'Pauta','3_redacao':'Redação','4_publicado':'Publicadas','descartada':'Descartadas'};
 
-  function showLogin(){document.getElementById('login').hidden=false;document.getElementById('painel').hidden=true;document.getElementById('logout').hidden=true;}
-  function showPainel(){document.getElementById('login').hidden=true;document.getElementById('painel').hidden=false;document.getElementById('logout').hidden=false;loadOverview();loadItems(curFase);loadSources();loadTerms();loadComments();loadLeads();}
-
-  // Sem caixa de senha: tenta a sessão do painel; o botão "Já entrei" re-tenta.
-  function tentarEntrar(){
-    try{TK=localStorage.getItem('ja_admin_token');}catch(e){}
-    if(!TK){showLogin();return;}
-    api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){showLogin();});
-  }
-  document.getElementById('lg-retry').addEventListener('click',tentarEntrar);
-  document.getElementById('logout').addEventListener('click',function(){try{localStorage.removeItem('ja_admin_token');}catch(e){}TK=null;showLogin();});
+  // Sem caixa de senha própria: usa a sessão do painel. Se não houver, só avisa.
+  function semSessao(){document.getElementById('authnote').hidden=false;document.getElementById('painel').hidden=true;}
+  function showPainel(){document.getElementById('authnote').hidden=true;document.getElementById('painel').hidden=false;loadOverview();loadItems(curFase);loadSources();loadTerms();loadComments();loadLeads();}
 
   // Controle central
   function loadOverview(){
@@ -323,9 +311,9 @@
     }).catch(function(){});
   }
 
-  // início
-  if(TK){ api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){showLogin();}); }
-  else showLogin();
+  // início: abre a Central direto usando a sessão do painel.
+  if(TK){ api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){}); }
+  else semSessao();
 </script>
 </body>
 </html>
