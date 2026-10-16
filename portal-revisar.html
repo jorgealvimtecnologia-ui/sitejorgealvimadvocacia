@@ -99,12 +99,7 @@
 
 <main class="wrap gut" style="padding-bottom:40px">
 
-  <!-- Aviso discreto só se a sessão do painel não estiver presente -->
-  <div id="authnote" hidden style="background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:12px 16px;margin:16px 0;font-size:.88rem;color:var(--ink-soft)">
-    Esta área faz parte do painel do sistema. Faça login no <a href="/painel" target="_blank" style="color:var(--gold);font-weight:700">painel</a> e recarregue esta página.
-  </div>
-
-  <!-- PAINEL -->
+  <!-- PAINEL (acesso controlado pela RHABAC do painel do sistema) -->
   <div id="painel">
 
     <!-- CONTROLE CENTRAL -->
@@ -191,13 +186,12 @@
   var TK=null; try{TK=localStorage.getItem('ja_admin_token');}catch(e){}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
-  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){semSessao();throw new Error('401');}return r.json();});}
+  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){throw new Error('401');}return r.json();});}
 
   var FASE_LABEL={'1_triagem':'Triagem','2_pauta':'Pauta','3_redacao':'Redação','4_publicado':'Publicadas','descartada':'Descartadas'};
 
   // Sem caixa de senha própria: usa a sessão do painel. Se não houver, só avisa.
-  function semSessao(){document.getElementById('authnote').hidden=false;document.getElementById('painel').hidden=true;}
-  function showPainel(){document.getElementById('authnote').hidden=true;document.getElementById('painel').hidden=false;loadOverview();loadItems(curFase);loadBlog();loadFaqs();loadBoxes();loadSources();loadTerms();loadComments();loadLeads();}
+  function showPainel(){loadOverview();loadItems(curFase);loadBlog();loadFaqs();loadBoxes();loadSources();loadTerms();loadComments();loadLeads();}
 
   // Controle central
   function loadOverview(){
@@ -476,9 +470,9 @@
       api('/api/admin/site/practice-areas/'+id,{method:'PUT',body:body}).then(function(){loadBoxes();});return;}
   });
 
-  // início: abre a Central direto usando a sessão do painel.
-  if(TK){ api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){}); }
-  else semSessao();
+  // início: mostra a Central direto. O acesso é controlado pela RHABAC do painel
+  // do sistema (quando integrada como aba); aqui a página apenas carrega os dados.
+  showPainel();
 </script>
 </body>
 </html>
