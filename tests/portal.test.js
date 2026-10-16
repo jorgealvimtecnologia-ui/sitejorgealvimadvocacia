@@ -66,4 +66,53 @@ describe('Portal de notícias (preview isolado)', () => {
     assert.equal(res.status, 200);
     assert.match(res.headers['content-type'] || '', /css/);
   });
+
+  it('GET /portal/revisar serve a central de comando', async () => {
+    const res = await request(app).get('/portal/revisar');
+    assert.equal(res.status, 200);
+    assert.ok(res.text.includes('Central de Comando'), 'deve conter a central de comando');
+  });
+});
+
+describe('Portal — caixas de controle (admin, só mestre)', () => {
+  const MASTER = { username: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' };
+  let token = '';
+  before(async () => {
+    const r = await request(app).post('/api/auth/login').send(MASTER);
+    token = r.body.token;
+  });
+
+  it('bloqueia o admin sem login (401)', async () => {
+    const res = await request(app).get('/api/portal/admin/overview');
+    assert.equal(res.status, 401);
+  });
+
+  it('overview responde para o mestre com fila/limites', async () => {
+    const res = await request(app).get('/api/portal/admin/overview').set('Authorization', `Bearer ${token}`);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(typeof res.body.overview.fila_total === 'number');
+    assert.equal(res.body.limites.FILA_MAX, 40);
+    assert.equal(res.body.limites.MANCHETES_POR_BOX, 5);
+  });
+
+  it('lista itens da esteira (seed de exemplo)', async () => {
+    const res = await request(app).get('/api/portal/admin/items').set('Authorization', `Bearer ${token}`);
+    assert.equal(res.status, 200);
+    assert.ok(Array.isArray(res.body.items));
+  });
+
+  it('itens oficiais não levam assinatura do Dr. Jorge (transcrição)', async () => {
+    const res = await request(app).get('/api/portal/admin/items?fase=1_triagem').set('Authorization', `Bearer ${token}`);
+    const oficial = (res.body.items || []).find((i) => i.tipo === 'oficial');
+    assert.ok(oficial, 'deve haver item oficial no seed');
+    assert.ok(!oficial.author_name, 'transcrição oficial não tem author_name');
+    assert.ok(oficial.source, 'transcrição deve creditar a fonte');
+  });
+
+  it('lista fontes e termos', async () => {
+    const s = await request(app).get('/api/portal/admin/sources').set('Authorization', `Bearer ${token}`);
+    const t = await request(app).get('/api/portal/admin/terms').set('Authorization', `Bearer ${token}`);
+    assert.ok(s.body.sources.length > 0 && t.body.terms.length > 0);
+  });
 });

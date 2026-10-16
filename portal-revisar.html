@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Central de Comando do Portal — Jornal Alvim</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/public/portal.css">
+<style>
+  .adm-top{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--line)}
+  .adm-top .inner{display:flex;align-items:center;gap:12px;padding-block:12px}
+  .adm-top .name{font-family:"Fraunces",serif;font-weight:700;font-size:1.15rem}
+  .adm-top .tag2{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .adm-top .sp{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{font-family:inherit;font-weight:700;font-size:.82rem;border-radius:9px;padding:9px 13px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft)}
+  .btn:hover{border-color:var(--gold);color:var(--gold)}
+  .btn.primary{background:var(--gold);color:#201500;border-color:var(--gold)} .btn.primary:hover{background:var(--gold-bright);color:#201500}
+  .btn.pub{background:var(--green);color:#fff;border-color:var(--green)} .btn.pub:hover{background:var(--green-bright);color:#fff}
+  .btn.danger:hover{border-color:var(--c-golpe);color:var(--c-golpe)}
+  .btn.sm{font-size:.76rem;padding:6px 10px}
+  /* login */
+  .login{max-width:360px;margin:60px auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:var(--shadow)}
+  .login h2{font-size:1.3rem;margin-bottom:4px}
+  .login p{color:var(--ink-soft);font-size:.88rem;margin:0 0 16px}
+  .login input{width:100%;font-family:inherit;font-size:.95rem;padding:11px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);margin-bottom:10px}
+  .login .err{color:var(--c-golpe);font-size:.82rem;font-weight:600;min-height:18px}
+  /* control center */
+  .cc{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:18px 0}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow)}
+  .stat .n{font-family:"Fraunces",serif;font-weight:700;font-size:1.7rem;line-height:1}
+  .stat .l{font-size:.72rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+  .stat.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
+  .filawrap{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 16px;margin-bottom:8px;box-shadow:var(--shadow)}
+  .filawrap .hd{display:flex;justify-content:space-between;align-items:baseline;font-size:.82rem;color:var(--ink-soft);margin-bottom:7px}
+  .filawrap .hd b{color:var(--ink);font-size:.95rem}
+  .filabar{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+  .filabar>span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--green-bright))}
+  .filabar.warn>span{background:linear-gradient(90deg,#d97706,var(--c-golpe))}
+  .limites{font-size:.74rem;color:var(--ink-faint);margin-top:8px;line-height:1.5}
+  /* boxes */
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:16px 0;box-shadow:var(--shadow);overflow:hidden}
+  .box>.bh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft);background:var(--surface-2)}
+  .box>.bh h3{font-size:1.05rem}
+  .box>.bh .cmd{margin-left:auto;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#201500;background:var(--gold);padding:3px 9px;border-radius:5px}
+  .box>.bd{padding:14px 18px}
+  .fase-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .ftab{font-family:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:7px 13px;cursor:pointer}
+  .ftab[aria-pressed="true"]{background:var(--navy);color:var(--surface);border-color:var(--navy)}
+  :root[data-theme="dark"] .ftab[aria-pressed="true"]{color:#0e1627}
+  .item{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:11px}
+  .item .tp{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-bottom:6px}
+  .tp.oficial{background:var(--fed);color:#fff} .tp.blog{background:var(--gold);color:#201500}
+  .item h4{font-size:1.05rem;margin:2px 0 4px}
+  .item .src{font-size:.75rem;color:var(--ink-faint);display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .item .src a{color:var(--gold);font-weight:600}
+  .item .sm{font-size:.88rem;color:var(--ink-soft);margin:7px 0 0}
+  .item .acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+  .editor{margin-top:11px;border-top:1px dashed var(--line);padding-top:11px;display:none}
+  .editor.open{display:block}
+  .editor label{display:block;font-size:.72rem;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 3px}
+  .editor input,.editor textarea{width:100%;font-family:inherit;font-size:.9rem;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+  .editor textarea{min-height:120px;resize:vertical}
+  .muted{color:var(--ink-faint);font-size:.85rem;padding:14px;text-align:center}
+  /* toggles / listas */
+  .row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft)}
+  .row:first-child{border-top:none}
+  .row .meta2{flex:1;min-width:0}
+  .row .nm{font-weight:600;font-size:.9rem}
+  .row .sub{font-size:.72rem;color:var(--ink-faint)}
+  .niv{font-size:.6rem;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:4px;color:#fff}
+  .niv.federal{background:var(--fed)}.niv.estadual{background:var(--est)}.niv.municipal{background:var(--mun)}.niv.local{background:var(--loc)}
+  .sw{position:relative;width:42px;height:24px;flex:none;border-radius:999px;background:var(--line);border:none;cursor:pointer;transition:background .15s}
+  .sw[aria-pressed="true"]{background:var(--green)}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw[aria-pressed="true"]::after{left:20px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .tchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.8rem;font-weight:600;cursor:pointer}
+  .tchip[aria-pressed="true"]{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+  .tchip[aria-pressed="false"]{opacity:.5;text-decoration:line-through}
+  .addterm{display:flex;gap:7px;margin-top:11px}
+  .addterm input{flex:1;font-family:inherit;font-size:.86rem;padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+  table.leads{width:100%;border-collapse:collapse;font-size:.85rem}
+  table.leads th,table.leads td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-soft)}
+  table.leads th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint)}
+</style>
+</head>
+<body>
+
+<div class="adm-top">
+  <div class="wrap gut inner">
+    <div><div class="name">Central de Comando do Portal</div><div class="tag2">Esteira do robô · revisão &amp; publicação</div></div>
+    <div class="sp">
+      <a class="btn sm" href="/portal" target="_blank">Ver o portal ↗</a>
+      <button class="btn sm" id="logout" hidden>Sair</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap gut" style="padding-bottom:40px">
+
+  <!-- LOGIN -->
+  <div class="login" id="login">
+    <h2>Entrar</h2>
+    <p>Acesso restrito ao proprietário (mestre).</p>
+    <input id="lg-user" type="text" placeholder="Usuário" autocomplete="username">
+    <input id="lg-pass" type="password" placeholder="Senha" autocomplete="current-password">
+    <div class="err" id="lg-err"></div>
+    <button class="btn primary" id="lg-btn" style="width:100%">Entrar</button>
+  </div>
+
+  <!-- PAINEL -->
+  <div id="painel" hidden>
+
+    <!-- CONTROLE CENTRAL -->
+    <div class="box">
+      <div class="bh"><h3>🧭 Controle Central</h3><span class="cmd" id="cmd-ind">Esteira</span></div>
+      <div class="bd">
+        <div class="filawrap">
+          <div class="hd"><span>Fila de revisão (itens aguardando publicação)</span><b id="fila-txt">0 / 40</b></div>
+          <div class="filabar" id="fila-bar"><span style="width:0%"></span></div>
+          <div class="limites" id="limites-txt"></div>
+        </div>
+        <div class="cc" id="cc"></div>
+      </div>
+    </div>
+
+    <!-- ESTEIRA -->
+    <div class="box">
+      <div class="bh"><h3>🗂️ Esteira de Matérias</h3><span class="cmd">Caixa no comando</span></div>
+      <div class="bd">
+        <div class="fase-tabs" id="fase-tabs">
+          <button class="ftab" data-fase="1_triagem" aria-pressed="true" type="button">Triagem</button>
+          <button class="ftab" data-fase="2_pauta" aria-pressed="false" type="button">Pauta</button>
+          <button class="ftab" data-fase="3_redacao" aria-pressed="false" type="button">Redação</button>
+          <button class="ftab" data-fase="4_publicado" aria-pressed="false" type="button">Publicadas</button>
+          <button class="ftab" data-fase="descartada" aria-pressed="false" type="button">Descartadas</button>
+        </div>
+        <div id="items"><div class="muted">Carregando…</div></div>
+      </div>
+    </div>
+
+    <!-- FONTES & TERMOS -->
+    <div class="box">
+      <div class="bh"><h3>🔌 Fontes &amp; Termos do Robô</h3></div>
+      <div class="bd">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px" id="ft-grid">
+          <div><div class="tag2" style="margin-bottom:8px">Fontes oficiais (ligar/desligar)</div><div id="sources"></div></div>
+          <div><div class="tag2" style="margin-bottom:8px">Termos de busca</div><div class="chips" id="terms"></div>
+            <div class="addterm"><input id="new-term" type="text" placeholder="Novo termo (ex.: FGTS)"><button class="btn sm primary" id="add-term">Adicionar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODERAÇÃO -->
+    <div class="box">
+      <div class="bh"><h3>💬 Moderação de Comentários</h3></div>
+      <div class="bd"><div id="comments"><div class="muted">Sem comentários pendentes.</div></div></div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="box">
+      <div class="bh"><h3>🎯 Captação de Leads (curtida · comentário · newsletter)</h3></div>
+      <div class="bd"><div id="leads"><div class="muted">Nenhum lead ainda.</div></div></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  var TK=null; try{TK=localStorage.getItem('ja-portal-adm');}catch(e){}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
+  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){showLogin();throw new Error('401');}return r.json();});}
+
+  var FASE_LABEL={'1_triagem':'Triagem','2_pauta':'Pauta','3_redacao':'Redação','4_publicado':'Publicadas','descartada':'Descartadas'};
+
+  function showLogin(){document.getElementById('login').hidden=false;document.getElementById('painel').hidden=true;document.getElementById('logout').hidden=true;}
+  function showPainel(){document.getElementById('login').hidden=true;document.getElementById('painel').hidden=false;document.getElementById('logout').hidden=false;loadOverview();loadItems(curFase);loadSources();loadTerms();loadComments();loadLeads();}
+
+  // Login
+  document.getElementById('lg-btn').addEventListener('click',function(){
+    var u=document.getElementById('lg-user').value,p=document.getElementById('lg-pass').value,err=document.getElementById('lg-err');
+    err.textContent='';
+    fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d&&d.success&&d.token){TK=d.token;try{localStorage.setItem('ja-portal-adm',TK);}catch(e){}showPainel();}
+        else err.textContent='Usuário ou senha inválidos.';
+      }).catch(function(){err.textContent='Falha ao entrar.';});
+  });
+  document.getElementById('lg-pass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('lg-btn').click();});
+  document.getElementById('logout').addEventListener('click',function(){try{localStorage.removeItem('ja-portal-adm');}catch(e){}TK=null;showLogin();});
+
+  // Controle central
+  function loadOverview(){
+    api('/api/portal/admin/overview').then(function(d){
+      if(!d.success)return;var o=d.overview,L=d.limites;
+      var cc=document.getElementById('cc');
+      var cards=[['Triagem',o.triagem],['Pauta',o.pauta],['Redação',o.redacao],['Publicadas',o.publicado],['Coment. pendentes',o.comentarios_pendentes],['Leads',o.leads],['Fontes ativas',o.fontes_ativas]];
+      cc.innerHTML=cards.map(function(c){return '<div class="stat"><div class="n">'+c[1]+'</div><div class="l">'+c[0]+'</div></div>';}).join('');
+      var pct=Math.min(100,Math.round(o.fila_total/o.fila_max*100));
+      document.getElementById('fila-txt').textContent=o.fila_total+' / '+o.fila_max;
+      var bar=document.getElementById('fila-bar');bar.firstElementChild.style.width=pct+'%';bar.className='filabar'+(pct>=80?' warn':'');
+      document.getElementById('limites-txt').innerHTML='Freios ativos: <b>'+L.POR_FONTE_POR_CICLO+'</b> notícia por órgão/ciclo · <b>'+L.MANCHETES_POR_BOX+'</b> manchetes por box ('+L.BOXES_HOME+' boxes) · validade <b>'+L.VALIDADE_DIAS+' dias</b> · coleta <b>'+L.CADENCIA+'</b>'+(o.fila_cheia?' · <span style="color:var(--c-golpe);font-weight:700">FILA CHEIA: robô pausado</span>':'');
+    }).catch(function(){});
+  }
+
+  // Esteira
+  var curFase='1_triagem';
+  Array.prototype.forEach.call(document.querySelectorAll('#fase-tabs .ftab'),function(t){
+    t.addEventListener('click',function(){
+      Array.prototype.forEach.call(document.querySelectorAll('#fase-tabs .ftab'),function(x){x.setAttribute('aria-pressed','false');});
+      t.setAttribute('aria-pressed','true');curFase=t.getAttribute('data-fase');
+      document.getElementById('cmd-ind').textContent=FASE_LABEL[curFase];
+      loadItems(curFase);
+    });
+  });
+
+  function actionsFor(it){
+    var id=it.id;
+    if(it.fase==='1_triagem')return '<button class="btn sm primary" data-act="fase" data-to="2_pauta" data-id="'+id+'">Aprovar pauta →</button><button class="btn sm danger" data-act="fase" data-to="descartada" data-id="'+id+'">Descartar</button>';
+    if(it.fase==='2_pauta')return '<button class="btn sm" data-act="edit" data-id="'+id+'">Redigir / Editar</button><button class="btn sm primary" data-act="fase" data-to="3_redacao" data-id="'+id+'">Enviar p/ Redação →</button><button class="btn sm danger" data-act="fase" data-to="descartada" data-id="'+id+'">Descartar</button>';
+    if(it.fase==='3_redacao')return '<button class="btn sm" data-act="edit" data-id="'+id+'">Editar</button><button class="btn sm pub" data-act="publicar" data-id="'+id+'">✓ Publicar</button><button class="btn sm danger" data-act="fase" data-to="descartada" data-id="'+id+'">Descartar</button>';
+    if(it.fase==='4_publicado')return '<a class="btn sm" href="/portal/'+encodeURIComponent(it.slug||'')+'" target="_blank">Ver no portal ↗</a><button class="btn sm danger" data-act="fase" data-to="descartada" data-id="'+id+'">Despublicar</button>';
+    if(it.fase==='descartada')return '<button class="btn sm" data-act="fase" data-to="1_triagem" data-id="'+id+'">Restaurar</button>';
+    return '';
+  }
+  function creditLine(it){
+    if(it.tipo==='blog'){return '<span class="jorge">Matéria autoral — '+esc(it.author_name||'Dr. Jorge')+(it.author_oab?(' · '+esc(it.author_oab)):'')+'</span>';}
+    var parts=['<b>Transcrição oficial</b> · '+esc(it.source||'Fonte')];
+    if(it.source_date)parts.push('publicado em '+fmtDate(it.source_date));
+    if(it.fonte_autor)parts.push('autor: '+esc(it.fonte_autor));
+    var s=parts.join(' · ');
+    if(it.source_url)s+=' · <a href="'+esc(it.source_url)+'" target="_blank" rel="noopener">abrir fonte ↗</a>';
+    return s;
+  }
+  function itemCard(it){
+    var tp=it.tipo==='blog'?'<span class="tp blog">Blog (autoral)</span>':'<span class="tp oficial">Oficial (transcrição)</span>';
+    return '<div class="item" data-id="'+it.id+'">'+tp
+      +'<h4>'+esc(it.title)+'</h4>'
+      +'<div class="src">'+creditLine(it)+(it.category?(' · '+esc(it.category)):'')+'</div>'
+      +'<p class="sm">'+esc(it.summary||'')+'</p>'
+      +'<div class="acts">'+actionsFor(it)+'</div>'
+      +'<div class="editor" id="ed-'+it.id+'">'
+        +'<label>Título</label><input data-f="title" value="'+esc(it.title)+'">'
+        +'<label>Categoria</label><input data-f="category" value="'+esc(it.category||'')+'">'
+        +'<label>Resumo</label><input data-f="summary" value="'+esc(it.summary||'')+'">'
+        +'<label>Conteúdo (HTML)</label><textarea data-f="content">'+esc(it.content||it.raw_text||'')+'</textarea>'
+        +'<div class="acts"><button class="btn sm primary" data-act="salvar" data-id="'+it.id+'">Salvar</button><button class="btn sm" data-act="edit" data-id="'+it.id+'">Fechar</button></div>'
+      +'</div></div>';
+  }
+  function loadItems(fase){
+    var box=document.getElementById('items');box.innerHTML='<div class="muted">Carregando…</div>';
+    api('/api/portal/admin/items?fase='+encodeURIComponent(fase)).then(function(d){
+      if(!d.success)return;
+      if(!d.items.length){box.innerHTML='<div class="muted">Nenhuma matéria nesta caixa.</div>';return;}
+      box.innerHTML=d.items.map(itemCard).join('');
+    }).catch(function(){});
+  }
+  document.getElementById('items').addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b)return;var id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
+    if(act==='edit'){var ed=document.getElementById('ed-'+id);if(ed)ed.classList.toggle('open');return;}
+    if(act==='fase'){api('/api/portal/admin/items/'+id+'/fase',{method:'POST',body:{fase:b.getAttribute('data-to')}}).then(function(){loadItems(curFase);loadOverview();});return;}
+    if(act==='publicar'){if(!confirm('Publicar esta matéria no portal?'))return;api('/api/portal/admin/items/'+id+'/publicar',{method:'POST'}).then(function(){loadItems(curFase);loadOverview();});return;}
+    if(act==='salvar'){
+      var ed=document.getElementById('ed-'+id),body={};
+      Array.prototype.forEach.call(ed.querySelectorAll('[data-f]'),function(f){body[f.getAttribute('data-f')]=f.value;});
+      api('/api/portal/admin/items/'+id,{method:'PUT',body:body}).then(function(){loadItems(curFase);});return;
+    }
+  });
+
+  // Fontes
+  function loadSources(){
+    api('/api/portal/admin/sources').then(function(d){
+      if(!d.success)return;var box=document.getElementById('sources');
+      box.innerHTML=d.sources.map(function(s){
+        return '<div class="row"><span class="niv '+esc(s.nivel||'')+'">'+esc(s.nivel||'')+'</span><div class="meta2"><div class="nm">'+esc(s.name)+'</div><div class="sub">'+esc(s.url||'')+'</div></div>'
+          +'<button class="sw" data-id="'+s.id+'" aria-pressed="'+(s.ativo?'true':'false')+'" title="ligar/desligar"></button></div>';
+      }).join('');
+    }).catch(function(){});
+  }
+  document.getElementById('sources').addEventListener('click',function(e){
+    var b=e.target.closest('.sw');if(!b)return;var on=b.getAttribute('aria-pressed')==='true';
+    api('/api/portal/admin/sources/'+b.getAttribute('data-id'),{method:'PUT',body:{ativo:!on}}).then(function(){b.setAttribute('aria-pressed',(!on).toString());loadOverview();});
+  });
+
+  // Termos
+  function loadTerms(){
+    api('/api/portal/admin/terms').then(function(d){
+      if(!d.success)return;var box=document.getElementById('terms');
+      box.innerHTML=d.terms.map(function(t){return '<button class="tchip" data-id="'+t.id+'" aria-pressed="'+(t.ativo?'true':'false')+'">'+esc(t.termo)+'</button>';}).join('');
+    }).catch(function(){});
+  }
+  document.getElementById('terms').addEventListener('click',function(e){
+    var b=e.target.closest('.tchip');if(!b)return;var on=b.getAttribute('aria-pressed')==='true';
+    api('/api/portal/admin/terms/'+b.getAttribute('data-id'),{method:'PUT',body:{ativo:!on}}).then(function(){b.setAttribute('aria-pressed',(!on).toString());});
+  });
+  document.getElementById('add-term').addEventListener('click',function(){
+    var inp=document.getElementById('new-term'),v=inp.value.trim();if(!v)return;
+    api('/api/portal/admin/terms',{method:'POST',body:{termo:v}}).then(function(){inp.value='';loadTerms();});
+  });
+
+  // Moderação
+  function loadComments(){
+    api('/api/portal/admin/comments').then(function(d){
+      if(!d.success)return;var box=document.getElementById('comments');
+      if(!d.comments.length){box.innerHTML='<div class="muted">Sem comentários no momento.</div>';return;}
+      box.innerHTML=d.comments.map(function(c){
+        return '<div class="row"><div class="meta2"><div class="nm">'+esc(c.author_name||'Anônimo')+' <span class="sub">('+esc(c.status)+')</span></div><div class="sub">'+esc(c.comment_text||'')+'</div></div>'
+          +'<button class="btn sm pub" data-id="'+c.id+'" data-st="aprovado">Aprovar</button><button class="btn sm danger" data-id="'+c.id+'" data-st="removido">Remover</button></div>';
+      }).join('');
+    }).catch(function(){});
+  }
+  document.getElementById('comments').addEventListener('click',function(e){
+    var b=e.target.closest('[data-st]');if(!b)return;
+    api('/api/portal/admin/comments/'+b.getAttribute('data-id'),{method:'PUT',body:{status:b.getAttribute('data-st')}}).then(function(){loadComments();loadOverview();});
+  });
+
+  // Leads
+  function loadLeads(){
+    api('/api/portal/admin/leads').then(function(d){
+      if(!d.success)return;var box=document.getElementById('leads');
+      if(!d.leads.length){box.innerHTML='<div class="muted">Nenhum lead ainda. Curtidas, comentários e cadastros na newsletter aparecerão aqui.</div>';return;}
+      box.innerHTML='<table class="leads"><tr><th>Origem</th><th>Nome</th><th>Contato</th><th>Data</th></tr>'+d.leads.map(function(l){
+        return '<tr><td>'+esc(l.origem)+'</td><td>'+esc(l.nome||'')+'</td><td>'+esc(l.email||l.telefone||'')+'</td><td>'+fmtDate(l.created_at)+'</td></tr>';
+      }).join('')+'</table>';
+    }).catch(function(){});
+  }
+
+  // início
+  if(TK){ api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){showLogin();}); }
+  else showLogin();
+</script>
+</body>
+</html>

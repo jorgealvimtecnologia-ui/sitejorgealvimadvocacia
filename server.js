@@ -569,6 +569,18 @@ app.get('/portal', (req, res) => {
   sendFreshFile(res, 'portal.html');
 });
 
+// Caixas de controle do portal (esteira do robô). A página é pública, mas as
+// APIs /api/portal/admin exigem sessão de mestre — definida ANTES de /portal/:slug.
+app.get('/portal/revisar', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal-revisar.html');
+});
+
 // Leitura de uma matéria do portal (preview). A matéria é carregada pelo
 // front-end via /api/portal/posts/:slug (somente leitura).
 app.get('/portal/:slug', (req, res) => {
