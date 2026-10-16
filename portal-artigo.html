@@ -191,7 +191,11 @@
           ? ('Transcrição oficial · '+(p.source||'Fonte')+(p.fonte_autor?(' · '+p.fonte_autor):''))
           : ((p.author_name||'Dr. Jorge')+(p.author_oab?(' · '+p.author_oab):''));
         document.getElementById('art-date').textContent=fmtDate(p.source_date||p.published_at||p.created_at);
-        var views=(p.views_count||0);document.getElementById('art-views').textContent=views+(views===1?' leitura':' leituras');
+        if(ehOficial){
+          document.getElementById('art-views').textContent=(p.source_views!=null)?(p.source_views+' visualizações na fonte'):'visualizações: — (não informado)';
+        } else {
+          var views=(p.views_count||0);document.getElementById('art-views').textContent=views+(views===1?' leitura':' leituras');
+        }
         document.getElementById('art-lead').textContent=p.summary||'';
         var corpo=p.content||'';
         if(ehOficial&&p.source_url){

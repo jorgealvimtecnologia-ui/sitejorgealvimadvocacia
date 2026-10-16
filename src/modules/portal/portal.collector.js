@@ -30,6 +30,14 @@ function norm(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
+// Extrai o número de visualizações SÓ se o feed informar (nunca inventa).
+function viewsOf(block) {
+  const m = block.match(/<(views|hits|pageviews|popularity|popularidade|readcount|read_count|acessos|visualizacoes)[^>]*>\s*(?:<!\[CDATA\[)?\s*(\d+)/i);
+  return m ? parseInt(m[2], 10) : null;
+}
+// Converte pubDate em número para ordenar por data (0 quando não dá).
+function dateVal(s) { const d = new Date(s); return isNaN(d) ? 0 : d.getTime(); }
+
 // Leitor de RSS/Atom bem simples (suficiente para feeds de órgãos oficiais).
 export function parseRss(xml) {
   const items = [];
@@ -43,7 +51,8 @@ export function parseRss(xml) {
       link,
       pubDate: tagText(b, 'pubDate') || tagText(b, 'published') || tagText(b, 'updated') || tagText(b, 'dc:date'),
       description: tagText(b, 'description') || tagText(b, 'summary') || tagText(b, 'content:encoded'),
-      author: tagText(b, 'dc:creator') || tagText(b, 'author') || ''
+      author: tagText(b, 'dc:creator') || tagText(b, 'author') || '',
+      views: viewsOf(b) // null quando o feed não informa (nunca inventamos)
     });
   }
   return items;
@@ -100,7 +109,14 @@ export async function coletar(db, opts = {}) {
       : itens;
     if (!casam.length) { resumo.detalhes.push(`${fonte.name}: nada novo que case com os termos`); continue; }
 
-    const nova = casam[0]; // 1 por fonte por ciclo = a mais recente que casa
+    // 1 por fonte por ciclo: escolhe por MAIOR nº de visualizações (quando a
+    // fonte informa) e, no empate/ausência, pela data mais recente. Sem inventar.
+    const ordenadas = casam.slice().sort((a, b) => {
+      const va = (a.views == null ? -1 : a.views), vb = (b.views == null ? -1 : b.views);
+      if (vb !== va) return vb - va;
+      return dateVal(b.pubDate) - dateVal(a.pubDate);
+    });
+    const nova = ordenadas[0];
     const externalId = fonte.skey + '|' + (nova.link || nova.title);
 
     // Dedupe: já existe em qualquer fase? então pula.
@@ -113,10 +129,12 @@ export async function coletar(db, opts = {}) {
 
     const now = nowISO();
     db.prepare(
-      `INSERT INTO portal_items (fase, tipo, source, source_url, source_date, fonte_autor, external_id, title, summary, category, raw_text, created_at, updated_at)
-       VALUES ('1_triagem','oficial',?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO portal_items (fase, tipo, source, source_url, source_date, fonte_autor, source_views, external_id, title, summary, category, raw_text, created_at, updated_at)
+       VALUES ('1_triagem','oficial',?,?,?,?,?,?,?,?,?,?,?,?)`
     ).run(
-      fonte.name, nova.link || '', nova.pubDate || now, nova.author || '', externalId,
+      fonte.name, nova.link || '', nova.pubDate || now, nova.author || '',
+      (nova.views == null ? null : nova.views),
+      externalId,
       (nova.title || '').slice(0, 300),
       (nova.description || '').slice(0, 600),
       fonte.nivel || null,

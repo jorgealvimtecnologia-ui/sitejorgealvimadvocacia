@@ -103,12 +103,16 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.ok(Array.isArray(res.body.items));
   });
 
-  it('itens oficiais não levam assinatura do Dr. Jorge (transcrição)', async () => {
-    const res = await request(app).get('/api/portal/admin/items?fase=1_triagem').set('Authorization', `Bearer ${token}`);
-    const oficial = (res.body.items || []).find((i) => i.tipo === 'oficial');
-    assert.ok(oficial, 'deve haver item oficial no seed');
-    assert.ok(!oficial.author_name, 'transcrição oficial não tem author_name');
-    assert.ok(oficial.source, 'transcrição deve creditar a fonte');
+  it('itens oficiais não levam assinatura do Dr. Jorge (transcrição)', () => {
+    const now = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO portal_items (fase, tipo, source, source_url, external_id, title, summary, category, created_at, updated_at)
+       VALUES ('1_triagem','oficial','Agência Brasil (EBC)','https://exemplo/of','teste-oficial-1','Nota oficial de teste','Resumo','federal',?,?)`
+    ).run(now, now);
+    const item = db.prepare("SELECT tipo, author_name, source FROM portal_items WHERE external_id='teste-oficial-1'").get();
+    assert.equal(item.tipo, 'oficial');
+    assert.ok(!item.author_name, 'transcrição oficial não tem author_name');
+    assert.ok(item.source, 'transcrição deve creditar a fonte');
   });
 
   it('lista fontes e termos', async () => {

@@ -288,8 +288,10 @@
     function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
     function boxByLabel(txt){var bs=document.querySelectorAll('.srcbox');for(var i=0;i<bs.length;i++){if(new RegExp(txt).test(bs[i].textContent))return bs[i].querySelector('.srclist');}return null;}
     function li(it){
+      var extra='';
+      if(it.source_views!=null)extra='<span class="dot"></span><span>👁 '+it.source_views+'</span>';
       return '<li><a href="/portal/'+encodeURIComponent(it.slug||'')+'">'+esc(it.title)+'</a>'
-        +'<div class="m"><span>'+esc(it.source||'')+'</span><span class="dot"></span><span>'+fmtDate(it.source_date||it.published_at)+'</span></div></li>';
+        +'<div class="m"><span>'+esc(it.source||'')+'</span><span class="dot"></span><span>'+fmtDate(it.source_date||it.published_at)+'</span>'+extra+'</div></li>';
     }
     fetch('/api/portal/official',{headers:{'Accept':'application/json'}})
       .then(function(r){return r.ok?r.json():null;})

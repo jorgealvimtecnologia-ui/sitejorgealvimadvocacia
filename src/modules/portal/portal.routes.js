@@ -67,11 +67,11 @@ portalRouter.get('/api/portal/official', (req, res) => {
   try {
     const rows = db.prepare(
       `SELECT i.slug, i.title, i.summary, i.source, i.source_url, i.source_date,
-              COALESCE(s.nivel, i.category) AS nivel, i.published_at
+              i.fonte_autor, i.source_views, COALESCE(s.nivel, i.category) AS nivel, i.published_at
          FROM portal_items i
          LEFT JOIN portal_sources s ON s.name = i.source
         WHERE i.fase = '4_publicado'
-        ORDER BY i.published_at DESC`
+        ORDER BY (i.source_views IS NULL), i.source_views DESC, i.published_at DESC`
     ).all();
     const grupos = { local: [], federal: [], estadual: [], municipal: [] };
     for (const r of rows) {
@@ -101,7 +101,7 @@ portalRouter.get('/api/portal/posts/:slug', (req, res) => {
 
     const item = db.prepare(
       `SELECT id, slug, title, summary, category, content, raw_text, source,
-              source_url, source_date, fonte_autor, views_count, likes_count,
+              source_url, source_date, fonte_autor, source_views, views_count, likes_count,
               published_at, created_at, updated_at
          FROM portal_items
         WHERE slug = ? AND fase = '4_publicado'`
@@ -120,6 +120,7 @@ portalRouter.get('/api/portal/posts/:slug', (req, res) => {
       source_url: item.source_url,
       source_date: item.source_date,
       fonte_autor: item.fonte_autor,
+      source_views: item.source_views,
       author_name: null,
       author_oab: null,
       views_count: item.views_count || 0,

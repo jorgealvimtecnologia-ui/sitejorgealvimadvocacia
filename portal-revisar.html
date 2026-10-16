@@ -127,6 +127,22 @@
           <button class="ftab" data-fase="descartada" aria-pressed="false" type="button">Descartadas</button>
         </div>
         <div id="items"><div class="muted">Carregando…</div></div>
+
+        <!-- CAPTAÇÃO: seletores de fontes/termos + botão captar, embaixo da esteira -->
+        <div style="margin-top:18px;border-top:1px dashed var(--line);padding-top:14px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+            <span class="tag2">🤖 Captação de matérias</span>
+            <span style="font-size:.8rem;color:var(--ink-soft)">Ative as fontes e clique em captar — as matérias caem na Triagem.</span>
+            <button class="btn sm primary" id="collect-now" style="margin-left:auto">🤖 Captar matérias</button>
+          </div>
+          <div id="collect-result" class="muted" style="margin-bottom:12px;display:none"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px" id="ft-grid">
+            <div><div class="tag2" style="margin-bottom:8px">Fontes oficiais (ligar/desligar)</div><div id="sources"></div></div>
+            <div><div class="tag2" style="margin-bottom:8px">Termos de busca</div><div class="chips" id="terms"></div>
+              <div class="addterm"><input id="new-term" type="text" placeholder="Novo termo (ex.: FGTS)"><button class="btn sm primary" id="add-term">Adicionar</button></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -152,20 +168,6 @@
     <div class="box">
       <div class="bh"><h3>🏠 Boxes da Home (Áreas de Atuação)</h3></div>
       <div class="bd"><div id="boxes-list"><div class="muted">Carregando…</div></div></div>
-    </div>
-
-    <!-- FONTES & TERMOS -->
-    <div class="box">
-      <div class="bh"><h3>🔌 Fontes &amp; Termos do Robô</h3><button class="btn sm primary" id="collect-now" style="margin-left:auto">🤖 Coletar agora</button></div>
-      <div class="bd">
-        <div id="collect-result" class="muted" style="margin-bottom:10px;display:none"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px" id="ft-grid">
-          <div><div class="tag2" style="margin-bottom:8px">Fontes oficiais (ligar/desligar)</div><div id="sources"></div></div>
-          <div><div class="tag2" style="margin-bottom:8px">Termos de busca</div><div class="chips" id="terms"></div>
-            <div class="addterm"><input id="new-term" type="text" placeholder="Novo termo (ex.: FGTS)"><button class="btn sm primary" id="add-term">Adicionar</button></div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- MODERAÇÃO -->
@@ -232,7 +234,8 @@
     if(it.tipo==='blog'){return '<span class="jorge">Matéria autoral — '+esc(it.author_name||'Dr. Jorge')+(it.author_oab?(' · '+esc(it.author_oab)):'')+'</span>';}
     var parts=['<b>Transcrição oficial</b> · '+esc(it.source||'Fonte')];
     if(it.source_date)parts.push('publicado em '+fmtDate(it.source_date));
-    if(it.fonte_autor)parts.push('autor: '+esc(it.fonte_autor));
+    parts.push('autor: '+(it.fonte_autor?esc(it.fonte_autor):'—'));
+    parts.push('👁 '+(it.source_views!=null?it.source_views+' visualizações':'— (a fonte não informa)'));
     var s=parts.join(' · ');
     if(it.source_url)s+=' · <a href="'+esc(it.source_url)+'" target="_blank" rel="noopener">abrir fonte ↗</a>';
     return s;
@@ -348,6 +351,10 @@
           +(r.expiradas?(' · '+r.expiradas+' vencida(s) descartada(s)'):'')
           +(r.pausado?' · <span style="color:var(--c-golpe);font-weight:700">FILA CHEIA — robô pausou</span>':'')
           +((r.fonte_erros&&r.fonte_erros.length)?('<br><span style="color:var(--mun)">Avisos: '+r.fonte_erros.map(esc).join('; ')+'</span>'):'');
+        // vai para a Triagem para o Dr. Jorge ver o que foi captado
+        curFase='1_triagem';
+        Array.prototype.forEach.call(document.querySelectorAll('#fase-tabs .ftab'),function(x){x.setAttribute('aria-pressed', x.getAttribute('data-fase')==='1_triagem'?'true':'false');});
+        document.getElementById('cmd-ind').textContent='Triagem';
         loadItems('1_triagem');loadOverview();
       } else { out.textContent='Não foi possível coletar agora.'; }
       btn.disabled=false;btn.textContent=old;

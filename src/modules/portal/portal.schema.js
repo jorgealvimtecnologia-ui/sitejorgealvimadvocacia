@@ -43,6 +43,7 @@ export function ensurePortalSchema(db) {
       raw_text TEXT,
       author_name TEXT,                       -- preenchido SÓ em matéria autoral do blog (Dr. Jorge)
       author_oab TEXT,                        -- idem (OAB/MG) — nunca em transcrição oficial
+      source_views INTEGER,                   -- visualizações NA FONTE, só quando o órgão informa (NULL = desconhecido, nunca inventar)
       likes_count INTEGER DEFAULT 0,
       views_count INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
@@ -95,6 +96,9 @@ export function ensurePortalSchema(db) {
     );
   `);
 
+  // Migração defensiva: bancos antigos ganham a coluna de visualizações da fonte.
+  try { db.exec('ALTER TABLE portal_items ADD COLUMN source_views INTEGER'); } catch (e) { /* já existe */ }
+
   const now = new Date().toISOString();
 
   // Fontes oficiais (desligadas por padrão; o Dr. Jorge liga quando quiser).
@@ -125,17 +129,7 @@ export function ensurePortalSchema(db) {
     for (const t of seed) ins.run(t, 1, now);
   }
 
-  // Pautas de exemplo (demonstração da esteira) — só se estiver vazio.
-  const itemCount = db.prepare('SELECT COUNT(*) AS n FROM portal_items').get().n;
-  if (itemCount === 0) {
-    const ins = db.prepare(
-      'INSERT INTO portal_items (fase, tipo, source, source_url, source_date, external_id, title, summary, category, raw_text, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
-    );
-    const seed = [
-      ['1_triagem', 'oficial', 'Agência Brasil (EBC)', 'https://agenciabrasil.ebc.com.br/', now, 'demo-1', 'INSS retoma pente-fino do BPC/LOAS em todo o país', 'Governo anuncia revisão de benefícios assistenciais; beneficiários devem atualizar o CadÚnico.', 'Previdenciário', 'Texto bruto da notícia da fonte oficial (exemplo de transcrição).', now, now],
-      ['1_triagem', 'oficial', 'STJ', 'https://www.stj.jus.br/', now, 'demo-2', 'STJ reconhece dever do banco de devolver valor no golpe do Pix', 'Decisão reforça a responsabilidade das instituições financeiras em fraudes eletrônicas.', 'Direito Civil & Bancário', 'Texto bruto da notícia da fonte oficial (exemplo de transcrição).', now, now],
-      ['2_pauta', 'oficial', 'Governo de Minas Gerais', 'https://www.mg.gov.br/', now, 'demo-3', 'Detran-MG abre mutirão de regularização de CNH', 'Programa estadual facilita a reabilitação de habilitação em várias comarcas.', 'Trânsito & CNH', 'Texto bruto da notícia da fonte oficial (exemplo de transcrição).', now, now]
-    ];
-    for (const s of seed) ins.run(...s);
-  }
+  // A esteira começa VAZIA: enche só quando o Dr. Jorge ativa fontes e capta.
+  // Remove pautas de exemplo antigas (dados fictícios do scaffolding inicial).
+  db.prepare("DELETE FROM portal_items WHERE external_id LIKE 'demo-%'").run();
 }
