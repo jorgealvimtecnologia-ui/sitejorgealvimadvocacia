@@ -102,6 +102,19 @@
   <!-- PAINEL (acesso controlado pela RHABAC do painel do sistema) -->
   <div id="painel">
 
+    <!-- AVISO de sessão: a Central usa o login do painel -->
+    <div id="auth-aviso" class="box" hidden style="border:1px solid var(--gold);background:var(--surface-2)">
+      <div class="bd" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:1.5rem">🔒</span>
+        <div style="flex:1;min-width:220px">
+          <div style="font-weight:800">Sua sessão do painel expirou (ou você ainda não entrou).</div>
+          <div class="muted" style="font-size:.85rem">A Central usa o login do painel. Entre no painel e recarregue esta página para gerenciar o robô, o blog, as FAQs e os boxes da home.</div>
+        </div>
+        <a class="btn sm primary" href="/painel" target="_blank" rel="noopener">Abrir o painel →</a>
+        <button class="btn sm" type="button" onclick="location.reload()">Já entrei — recarregar</button>
+      </div>
+    </div>
+
     <!-- CONTROLE CENTRAL -->
     <div class="box">
       <div class="bh"><h3>🧭 Controle Central</h3><span class="cmd" id="cmd-ind">Esteira</span></div>
@@ -207,7 +220,14 @@
   var TK=null; try{TK=localStorage.getItem('ja_admin_token');}catch(e){}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
-  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){throw new Error('401');}return r.json();});}
+  function mostrarAviso(){
+    var b=document.getElementById('auth-aviso');if(b)b.hidden=false;
+    ['items','blog-list','faqs','boxes','sources','terms','comments','leads','nl-campaigns'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&/Carregando/.test(el.innerHTML))el.innerHTML='<div class="muted">— entre no painel para ver —</div>';
+    });
+  }
+  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){mostrarAviso();throw new Error('401');}return r.json();});}
 
   var FASE_LABEL={'1_triagem':'Triagem','2_pauta':'Pauta','3_redacao':'Redação','4_publicado':'Publicadas','descartada':'Descartadas'};
 
@@ -264,6 +284,7 @@
     return '<div class="item" data-id="'+it.id+'">'+tp+selo
       +'<h4>'+esc(it.title)+'</h4>'
       +'<div class="src">'+creditLine(it)+(it.category?(' · '+esc(it.category)):'')+'</div>'
+      +(it.fase==='4_publicado'?'<div class="src" style="color:var(--ink-faint)">no portal: 👁 '+(it.views_count||0)+' leitura(s) · ❤ '+(it.likes_count||0)+' curtida(s)</div>':'')
       +'<p class="sm">'+esc(it.summary||'')+'</p>'
       +'<div class="acts">'+actionsFor(it)+'</div>'
       +'<div class="editor" id="ed-'+it.id+'">'
@@ -460,35 +481,70 @@
   // ===== Blog — Matérias & Artigos (reaproveita /api/admin/blog/posts) =====
   var CATS=['Direito Civil & Bancário','Direito Previdenciário','Direito do Consumidor','Trânsito & CNH','Trabalhista','Direito de Família','Direito Militar','Informativo Geral','Direito do Marco Legal da Internet'];
   function blogEditor(p){
-    p=p||{id:'',title:'',category:'',summary:'',content:'',is_published:1};
+    p=p||{id:'',title:'',category:'',summary:'',content:'',cover_image:'',tags:'',is_published:1};
     var opts=CATS.map(function(c){return '<option'+(p.category===c?' selected':'')+'>'+esc(c)+'</option>';}).join('');
     return '<div class="editor open" style="border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:12px">'
       +'<label>Título</label><input data-bf="title" value="'+esc(p.title)+'">'
       +'<label>Categoria</label><select data-bf="category" style="width:100%;font-family:inherit;font-size:.9rem;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)"><option value="">— escolher —</option>'+opts+'</select>'
-      +'<label>Resumo</label><input data-bf="summary" value="'+esc(p.summary||'')+'">'
+      +'<label>Resumo (aparece nos cards e na busca do Google)</label><input data-bf="summary" value="'+esc(p.summary||'')+'">'
       +'<label>Conteúdo (HTML)</label><textarea data-bf="content">'+esc(p.content||'')+'</textarea>'
+      +'<div style="border:1px dashed var(--line);border-radius:10px;padding:11px 12px;margin-top:11px">'
+        +'<div style="font-weight:700;font-size:.78rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🔎 SEO &amp; Mídia</div>'
+        +'<label>Imagem de capa — aparece no card e no compartilhamento</label>'
+        +'<input data-bf="cover_image" value="'+esc(p.cover_image||'')+'" placeholder="/img/blog/… (use o botão Anexar) ou cole um link">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin:8px 0">'
+          +'<label class="btn sm" style="cursor:pointer;margin:0">📎 Anexar mídia<input type="file" accept="image/*" data-bupload style="display:none"></label>'
+          +'<span class="bupload-st muted" style="font-size:.78rem"></span>'
+        +'</div>'
+        +'<img class="bcover-prev" alt="" src="'+esc(p.cover_image||'')+'" style="'+(p.cover_image?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
+        +'<label style="margin-top:8px">Palavras-chave (SEO) — separe por vírgula</label>'
+        +'<input data-bf="tags" value="'+esc(p.tags||'')+'" placeholder="ex.: INSS, BPC, aposentadoria">'
+      +'</div>'
       +'<label style="display:flex;align-items:center;gap:8px;margin-top:10px;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink)"><input type="checkbox" data-bf="is_published"'+(p.is_published?' checked':'')+'> Publicado (aparece na home/blog)</label>'
       +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-bact="save" data-id="'+(p.id||'')+'">Salvar</button><button class="btn sm" data-bact="cancel" data-id="'+(p.id||'')+'">Cancelar</button></div>'
       +'</div>';
   }
   function blogRow(p){
     var st=p.is_published?'<span style="color:var(--green);font-weight:700">● Publicado</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Rascunho</span>';
+    var cmt=CMT_COUNT[p.slug]||0;
+    var stats='👁 '+(p.views_count||0)+' · ❤ '+(p.likes_count||0)+' · 💬 '+cmt+' · ↗ '+(p.shares_count||0);
     return '<div class="item" data-id="'+p.id+'"><h4>'+esc(p.title)+'</h4>'
-      +'<div class="src">'+esc(p.category||'')+' · '+st+' · '+(p.views_count||0)+' leituras · '+fmtDate(p.published_at||p.created_at)+'</div>'
+      +'<div class="src">'+esc(p.category||'')+' · '+st+' · '+fmtDate(p.published_at||p.created_at)+'</div>'
+      +'<div class="src" style="color:var(--ink-faint)">'+stats+'</div>'
       +'<div class="acts"><button class="btn sm" data-bact="edit" data-id="'+p.id+'">Editar</button>'
       +'<button class="btn sm" data-bact="toggle" data-id="'+p.id+'" data-pub="'+(p.is_published?0:1)+'">'+(p.is_published?'Despublicar':'Publicar')+'</button>'
       +'<a class="btn sm" href="/portal/'+encodeURIComponent(p.slug||'')+'" target="_blank">Ver ↗</a>'
       +'<button class="btn sm danger" data-bact="del" data-id="'+p.id+'">Excluir</button></div>'
       +'<div id="bed-'+p.id+'"></div></div>';
   }
-  var BLOG_CACHE=[];
+  var BLOG_CACHE=[],CMT_COUNT={};
   function loadBlog(){
     var box=document.getElementById('blog-list');box.innerHTML='<div class="muted">Carregando…</div>';
     api('/api/admin/blog/posts').then(function(d){
       if(!d.success)return;BLOG_CACHE=d.posts||[];
-      box.innerHTML=BLOG_CACHE.length?BLOG_CACHE.map(blogRow).join(''):'<div class="muted">Nenhuma matéria ainda.</div>';
+      function render(){box.innerHTML=BLOG_CACHE.length?BLOG_CACHE.map(blogRow).join(''):'<div class="muted">Nenhuma matéria ainda.</div>';}
+      api('/api/admin/blog/comments').then(function(c){
+        CMT_COUNT={};
+        if(c&&c.comments)c.comments.forEach(function(x){var s=x.post_slug||'';CMT_COUNT[s]=(CMT_COUNT[s]||0)+1;});
+        render();
+      }).catch(render);
     }).catch(function(){});
   }
+  // Anexar mídia (upload) — preenche a imagem de capa do editor aberto.
+  document.getElementById('painel').addEventListener('change',function(e){
+    var inp=e.target.closest('input[data-bupload]');if(!inp||!inp.files||!inp.files[0])return;
+    var ed=inp.closest('.editor'),st=ed.querySelector('.bupload-st'),prev=ed.querySelector('.bcover-prev'),cover=ed.querySelector('[data-bf="cover_image"]');
+    var fd=new FormData();fd.append('file',inp.files[0]);
+    if(st)st.textContent='Enviando…';
+    var h={};if(TK)h['Authorization']='Bearer '+TK;
+    fetch('/api/admin/blog/upload',{method:'POST',headers:h,body:fd})
+      .then(function(r){return r.json().catch(function(){return null;});})
+      .then(function(d){
+        if(d&&d.success&&d.url){if(cover)cover.value=d.url;if(prev){prev.src=d.url;prev.style.display='';}if(st)st.textContent='✓ anexado';}
+        else{if(st)st.textContent=(d&&d.error)||'falha no upload';}
+      })
+      .catch(function(){if(st)st.textContent='falha no upload';});
+  });
   function collectBlog(scope){var body={};Array.prototype.forEach.call(scope.querySelectorAll('[data-bf]'),function(f){body[f.getAttribute('data-bf')]=(f.type==='checkbox')?f.checked:f.value;});return body;}
   function findPost(id){return BLOG_CACHE.find(function(x){return String(x.id)===String(id);});}
   document.getElementById('blog-new').addEventListener('click',function(){var h=document.getElementById('blog-editor-new');h.innerHTML=h.innerHTML?'':blogEditor(null);});
