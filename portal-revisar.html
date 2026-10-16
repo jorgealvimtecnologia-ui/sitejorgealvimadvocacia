@@ -280,12 +280,21 @@
     api('/api/portal/admin/sources').then(function(d){
       if(!d.success)return;var box=document.getElementById('sources');
       box.innerHTML=d.sources.map(function(s){
-        return '<div class="row"><span class="niv '+esc(s.nivel||'')+'">'+esc(s.nivel||'')+'</span><div class="meta2"><div class="nm">'+esc(s.name)+'</div><div class="sub">'+esc(s.url||'')+'</div></div>'
+        return '<div class="row"><span class="niv '+esc(s.nivel||'')+'">'+esc(s.nivel||'')+'</span><div class="meta2"><div class="nm">'+esc(s.name)+'</div><div class="sub">'+esc(s.url||'(sem endereço de feed)')+'</div></div>'
+          +'<button class="btn sm edit-feed" data-id="'+s.id+'" data-url="'+esc(s.url||'')+'" title="editar endereço do feed RSS">✎ feed</button>'
           +'<button class="sw" data-id="'+s.id+'" aria-pressed="'+(s.ativo?'true':'false')+'" title="ligar/desligar"></button></div>';
       }).join('');
     }).catch(function(){});
   }
   document.getElementById('sources').addEventListener('click',function(e){
+    var ed=e.target.closest('.edit-feed');
+    if(ed){
+      var atual=ed.getAttribute('data-url')||'';
+      var nova=prompt('Endereço do feed RSS desta fonte (cole o link do RSS do órgão):',atual);
+      if(nova===null)return; // cancelou
+      api('/api/portal/admin/sources/'+ed.getAttribute('data-id'),{method:'PUT',body:{url:nova.trim()}}).then(function(){loadSources();});
+      return;
+    }
     var b=e.target.closest('.sw');if(!b)return;var on=b.getAttribute('aria-pressed')==='true';
     api('/api/portal/admin/sources/'+b.getAttribute('data-id'),{method:'PUT',body:{ativo:!on}}).then(function(){b.setAttribute('aria-pressed',(!on).toString());loadOverview();});
   });

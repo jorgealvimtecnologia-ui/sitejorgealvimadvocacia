@@ -257,11 +257,14 @@ portalRouter.get('/api/portal/admin/sources', requireMaster, (req, res) => {
   res.json({ success: true, sources: db.prepare('SELECT * FROM portal_sources ORDER BY nivel, name').all() });
 });
 portalRouter.put('/api/portal/admin/sources/:id', requireMaster, (req, res) => {
-  const src = db.prepare('SELECT id FROM portal_sources WHERE id = ?').get(req.params.id);
+  const src = db.prepare('SELECT * FROM portal_sources WHERE id = ?').get(req.params.id);
   if (!src) return res.status(404).json({ error: 'Fonte não encontrada.' });
-  const ativo = req.body && req.body.ativo ? 1 : 0;
-  db.prepare('UPDATE portal_sources SET ativo=? WHERE id=?').run(ativo, src.id);
-  res.json({ success: true, ativo });
+  const body = req.body || {};
+  // ativo só muda quando enviado; url pode ser editada (endereço do feed RSS).
+  const ativo = ('ativo' in body) ? (body.ativo ? 1 : 0) : src.ativo;
+  const url = (body.url !== undefined) ? String(body.url).trim() : src.url;
+  db.prepare('UPDATE portal_sources SET ativo=?, url=? WHERE id=?').run(ativo, url, src.id);
+  res.json({ success: true, ativo, url });
 });
 
 // Termos de busca: listar, adicionar, ligar/desligar.
