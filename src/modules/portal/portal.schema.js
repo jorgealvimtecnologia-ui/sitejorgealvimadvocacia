@@ -87,6 +87,12 @@ export function ensurePortalSchema(db) {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS portal_likes (
+      slug TEXT PRIMARY KEY,
+      count INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS portal_leads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       origem TEXT NOT NULL,

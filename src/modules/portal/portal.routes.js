@@ -136,6 +136,82 @@ portalRouter.get('/api/portal/posts/:slug', (req, res) => {
   }
 });
 
+// Resolve um post PUBLICADO por slug (no blog ou nas transcrições oficiais).
+// Devolve a base de curtidas e, para item do portal, o id — ou null se não existe.
+function publishedBySlug(slug) {
+  const b = db.prepare('SELECT id, likes_count FROM blog_posts WHERE slug = ? AND is_published = 1').get(slug);
+  if (b) return { kind: 'blog', id: b.id, likesBase: b.likes_count || 0 };
+  const i = db.prepare("SELECT id, likes_count FROM portal_items WHERE slug = ? AND fase = '4_publicado'").get(slug);
+  if (i) return { kind: 'portal', id: i.id, likesBase: i.likes_count || 0 };
+  return null;
+}
+
+// -------- INTERAÇÃO PÚBLICA (curtir / comentar) do portal --------
+// Comentar: entra OCULTO (pendente) e só aparece depois que o Dr. Jorge aprova
+// na Central (Moderação). Nunca publica nada automaticamente.
+portalRouter.post('/api/portal/posts/:slug/comment', (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const found = publishedBySlug(slug);
+    if (!found) return res.status(404).json({ error: 'Notícia não encontrada.' });
+    const b = req.body || {};
+    const texto = String(b.texto || b.comment_text || '').trim();
+    if (!texto) return res.status(400).json({ error: 'Escreva um comentário.' });
+    const ip = String(req.headers['x-forwarded-for'] || (req.socket && req.socket.remoteAddress) || '').slice(0, 60);
+    db.prepare(
+      `INSERT INTO portal_comments (item_id, slug, author_name, author_email, author_phone, comment_text, status, is_hidden, ip_address, created_at)
+       VALUES (?,?,?,?,?,?, 'pendente', 1, ?, ?)`
+    ).run(
+      found.kind === 'portal' ? found.id : null, slug,
+      String(b.nome || b.author_name || '').slice(0, 120),
+      String(b.email || b.author_email || '').slice(0, 160),
+      String(b.telefone || b.author_phone || '').slice(0, 40),
+      texto.slice(0, 2000), ip, nowISO()
+    );
+    res.json({ success: true, message: 'Comentário enviado! Ele passará por moderação antes de aparecer.' });
+  } catch (err) {
+    console.error('Erro ao comentar no portal:', err);
+    res.status(500).json({ error: 'Erro ao enviar comentário.' });
+  }
+});
+
+// Lista só os comentários APROVADOS e visíveis (público).
+portalRouter.get('/api/portal/posts/:slug/comments', (req, res) => {
+  try {
+    const comments = db.prepare(
+      "SELECT author_name, comment_text, created_at FROM portal_comments WHERE slug = ? AND status = 'aprovado' AND is_hidden = 0 ORDER BY created_at DESC LIMIT 100"
+    ).all(req.params.slug);
+    res.json({ success: true, comments });
+  } catch (err) {
+    console.error('Erro ao listar comentários do portal:', err);
+    res.status(500).json({ error: 'Erro ao carregar comentários.' });
+  }
+});
+
+// Curtidas: contagem (GET) e curtir/descurtir (POST). Base do post + curtidas do portal.
+portalRouter.get('/api/portal/posts/:slug/likes', (req, res) => {
+  const found = publishedBySlug(req.params.slug);
+  if (!found) return res.status(404).json({ error: 'Notícia não encontrada.' });
+  const row = db.prepare('SELECT count FROM portal_likes WHERE slug = ?').get(req.params.slug);
+  res.json({ success: true, likes: found.likesBase + (row ? row.count : 0) });
+});
+portalRouter.post('/api/portal/posts/:slug/like', (req, res) => {
+  try {
+    const found = publishedBySlug(req.params.slug);
+    if (!found) return res.status(404).json({ error: 'Notícia não encontrada.' });
+    const dir = (req.body && req.body.unlike) ? -1 : 1;
+    const row = db.prepare('SELECT count FROM portal_likes WHERE slug = ?').get(req.params.slug);
+    let c = (row ? row.count : 0) + dir;
+    if (c < 0) c = 0;
+    if (row) db.prepare('UPDATE portal_likes SET count = ?, updated_at = ? WHERE slug = ?').run(c, nowISO(), req.params.slug);
+    else db.prepare('INSERT INTO portal_likes (slug, count, updated_at) VALUES (?,?,?)').run(req.params.slug, c, nowISO());
+    res.json({ success: true, likes: found.likesBase + c });
+  } catch (err) {
+    console.error('Erro ao curtir no portal:', err);
+    res.status(500).json({ error: 'Erro ao registrar curtida.' });
+  }
+});
+
 // ================== ADMIN DO PORTAL (ESTEIRA / ROBÔ) =======================
 // Todas exigem sessão de mestre (requireMaster) + regra RBAC MASTER em
 // /api/portal/admin. São as "caixas de controle" do Dr. Jorge.
@@ -307,6 +383,22 @@ portalRouter.put('/api/portal/admin/comments/:id', requireMaster, (req, res) => 
   if (!c) return res.status(404).json({ error: 'Comentário não encontrado.' });
   const hidden = status === 'aprovado' ? 0 : 1;
   db.prepare('UPDATE portal_comments SET status=?, is_hidden=? WHERE id=?').run(status, hidden, c.id);
+  res.json({ success: true });
+});
+// Excluir um comentário definitivamente.
+portalRouter.delete('/api/portal/admin/comments/:id', requireMaster, (req, res) => {
+  const c = db.prepare('SELECT id FROM portal_comments WHERE id = ?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Comentário não encontrado.' });
+  db.prepare('DELETE FROM portal_comments WHERE id = ?').run(c.id);
+  res.json({ success: true });
+});
+// Transformar um comentário em lead (captação) do portal.
+portalRouter.post('/api/portal/admin/comments/:id/to-lead', requireMaster, (req, res) => {
+  const c = db.prepare('SELECT * FROM portal_comments WHERE id = ?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Comentário não encontrado.' });
+  db.prepare(
+    `INSERT INTO portal_leads (origem, nome, email, telefone, slug, created_at) VALUES ('comentario',?,?,?,?,?)`
+  ).run(c.author_name || '', c.author_email || '', c.author_phone || '', c.slug || '', nowISO());
   res.json({ success: true });
 });
 

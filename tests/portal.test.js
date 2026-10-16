@@ -134,6 +134,48 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     const res = await request(app).post('/api/portal/admin/collect');
     assert.equal(res.status, 401);
   });
+
+  it('curtir e comentar de verdade: comentário entra oculto, aparece só após aprovar', async () => {
+    const now = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO portal_items (fase, tipo, source, source_url, external_id, slug, title, summary, category, published_at, created_at, updated_at)
+       VALUES ('4_publicado','oficial','Agência Brasil (EBC)','https://exemplo/of','teste-pub-1','materia-publica-teste','Matéria publicada de teste','Resumo','federal',?,?,?)`
+    ).run(now, now, now);
+    const slug = 'materia-publica-teste';
+
+    // Comentar (público, sem login) → entra oculto, não aparece ainda.
+    const post = await request(app).post(`/api/portal/posts/${slug}/comment`)
+      .send({ nome: 'Fulano', email: 'f@ex.com', telefone: '32999', texto: 'Ótima notícia!' });
+    assert.equal(post.status, 200);
+    assert.equal(post.body.success, true);
+    let pub = await request(app).get(`/api/portal/posts/${slug}/comments`);
+    assert.equal(pub.body.comments.length, 0, 'comentário não pode aparecer antes de aprovar');
+
+    // Mestre aprova na Central.
+    const cid = db.prepare("SELECT id FROM portal_comments WHERE slug=? ORDER BY id DESC").get(slug).id;
+    const mod = await request(app).put(`/api/portal/admin/comments/${cid}`)
+      .set('Authorization', `Bearer ${token}`).send({ status: 'aprovado' });
+    assert.equal(mod.status, 200);
+    pub = await request(app).get(`/api/portal/posts/${slug}/comments`);
+    assert.equal(pub.body.comments.length, 1, 'agora o comentário aprovado aparece');
+
+    // Curtir incrementa; GET devolve a contagem.
+    const like = await request(app).post(`/api/portal/posts/${slug}/like`).send({});
+    assert.equal(like.status, 200);
+    assert.equal(like.body.likes, 1);
+    const likes = await request(app).get(`/api/portal/posts/${slug}/likes`);
+    assert.equal(likes.body.likes, 1);
+    // Descurtir volta.
+    const unlike = await request(app).post(`/api/portal/posts/${slug}/like`).send({ unlike: true });
+    assert.equal(unlike.body.likes, 0);
+  });
+
+  it('curtir/comentar em slug inexistente devolve 404', async () => {
+    const c = await request(app).post('/api/portal/posts/nao-existe-zzz/comment').send({ texto: 'x' });
+    assert.equal(c.status, 404);
+    const l = await request(app).post('/api/portal/posts/nao-existe-zzz/like').send({});
+    assert.equal(l.status, 404);
+  });
 });
 
 describe('Robô — leitor de RSS', () => {
