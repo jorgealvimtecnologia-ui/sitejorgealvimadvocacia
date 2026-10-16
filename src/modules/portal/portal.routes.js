@@ -10,6 +10,7 @@
  *    até o Dr. Jorge aprovar a troca em produção.
  */
 import express from 'express';
+import { randomUUID } from 'node:crypto';
 import { db } from '../../config/db.js';
 import { requireMaster } from '../../middleware/auth.js';
 import { ensurePortalSchema, PORTAL_LIMITS } from './portal.schema.js';
@@ -212,6 +213,55 @@ portalRouter.post('/api/portal/posts/:slug/like', (req, res) => {
   }
 });
 
+// -------- NEWSLETTER (cadastro público real) --------
+// Guarda o assinante numa lista deduplicada (portal_newsletter) e registra um
+// lead de origem 'newsletter' na captação. O ENVIO do boletim é passo à parte.
+const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').trim());
+portalRouter.post('/api/portal/newsletter', (req, res) => {
+  try {
+    const b = req.body || {};
+    const email = String(b.email || '').trim().toLowerCase();
+    const nome = String(b.nome || '').trim().slice(0, 120);
+    if (!emailOk(email)) return res.status(400).json({ error: 'Informe um e-mail válido.' });
+    const existente = db.prepare('SELECT id, ativo FROM portal_newsletter WHERE email = ?').get(email);
+    let novo = false;
+    if (!existente) {
+      db.prepare('INSERT INTO portal_newsletter (email, nome, ativo, token, origem, created_at) VALUES (?,?,1,?,?,?)')
+        .run(email, nome, randomUUID(), String(b.origem || 'portal').slice(0, 40), nowISO());
+      novo = true;
+    } else if (!existente.ativo) {
+      db.prepare('UPDATE portal_newsletter SET ativo=1, unsubscribed_at=NULL WHERE id=?').run(existente.id);
+      novo = true;
+    }
+    // Só vira lead quando é inscrição nova/reativada (não duplica a cada reenvio).
+    if (novo) {
+      db.prepare("INSERT INTO portal_leads (origem, nome, email, telefone, slug, created_at) VALUES ('newsletter',?,?, '', '', ?)")
+        .run(nome, email, nowISO());
+    }
+    res.json({ success: true, message: 'Pronto! Você receberá nosso boletim. (Pode cancelar quando quiser.)' });
+  } catch (err) {
+    console.error('Erro ao cadastrar newsletter:', err);
+    res.status(500).json({ error: 'Erro ao cadastrar e-mail.' });
+  }
+});
+// Cancelar inscrição (por token do e-mail ou pelo próprio e-mail).
+portalRouter.post('/api/portal/newsletter/unsubscribe', (req, res) => {
+  try {
+    const b = req.body || {};
+    const token = String(b.token || '').trim();
+    const email = String(b.email || '').trim().toLowerCase();
+    const sub = token
+      ? db.prepare('SELECT id FROM portal_newsletter WHERE token = ?').get(token)
+      : (email ? db.prepare('SELECT id FROM portal_newsletter WHERE email = ?').get(email) : null);
+    if (!sub) return res.status(404).json({ error: 'Inscrição não encontrada.' });
+    db.prepare('UPDATE portal_newsletter SET ativo=0, unsubscribed_at=? WHERE id=?').run(nowISO(), sub.id);
+    res.json({ success: true, message: 'Inscrição cancelada.' });
+  } catch (err) {
+    console.error('Erro ao cancelar newsletter:', err);
+    res.status(500).json({ error: 'Erro ao cancelar inscrição.' });
+  }
+});
+
 // ================== ADMIN DO PORTAL (ESTEIRA / ROBÔ) =======================
 // Todas exigem sessão de mestre (requireMaster) + regra RBAC MASTER em
 // /api/portal/admin. São as "caixas de controle" do Dr. Jorge.
@@ -224,6 +274,7 @@ portalRouter.get('/api/portal/admin/overview', requireMaster, (req, res) => {
     for (const f of fases) byFase[f.fase] = f.n;
     const comentarios = db.prepare("SELECT COUNT(*) AS n FROM portal_comments WHERE status='pendente'").get().n;
     const leads = db.prepare('SELECT COUNT(*) AS n FROM portal_leads').get().n;
+    const newsletter = db.prepare('SELECT COUNT(*) AS n FROM portal_newsletter WHERE ativo=1').get().n;
     const fontesAtivas = db.prepare('SELECT COUNT(*) AS n FROM portal_sources WHERE ativo=1').get().n;
     const fila = (byFase['1_triagem'] || 0) + (byFase['2_pauta'] || 0) + (byFase['3_redacao'] || 0);
     res.json({ success: true, overview: {
@@ -234,6 +285,7 @@ portalRouter.get('/api/portal/admin/overview', requireMaster, (req, res) => {
       descartada: byFase['descartada'] || 0,
       comentarios_pendentes: comentarios,
       leads,
+      newsletter,
       fontes_ativas: fontesAtivas,
       fila_total: fila,
       fila_max: PORTAL_LIMITS.FILA_MAX,
@@ -405,4 +457,14 @@ portalRouter.post('/api/portal/admin/comments/:id/to-lead', requireMaster, (req,
 // Captação de leads (curtida / comentário / newsletter).
 portalRouter.get('/api/portal/admin/leads', requireMaster, (req, res) => {
   res.json({ success: true, leads: db.prepare('SELECT * FROM portal_leads ORDER BY created_at DESC LIMIT 300').all() });
+});
+
+// Assinantes da newsletter (lista real, deduplicada; só os ativos por padrão).
+portalRouter.get('/api/portal/admin/newsletter', requireMaster, (req, res) => {
+  const todos = req.query.todos === '1';
+  const q = 'SELECT id, email, nome, ativo, origem, created_at, unsubscribed_at FROM portal_newsletter'
+    + (todos ? '' : ' WHERE ativo=1') + ' ORDER BY created_at DESC LIMIT 500';
+  const subs = db.prepare(q).all();
+  const ativos = db.prepare('SELECT COUNT(*) AS n FROM portal_newsletter WHERE ativo=1').get().n;
+  res.json({ success: true, subscribers: subs, ativos });
 });

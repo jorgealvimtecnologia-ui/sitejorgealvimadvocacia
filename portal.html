@@ -219,7 +219,21 @@
   (function(){var chips=document.querySelectorAll('#filters .chip'),cards=document.querySelectorAll('#grid .card'),empty=document.getElementById('empty');
     chips.forEach(function(c){c.addEventListener('click',function(){chips.forEach(function(x){x.setAttribute('aria-pressed','false');});c.setAttribute('aria-pressed','true');var cat=c.getAttribute('data-cat'),v=0;cards.forEach(function(k){var ok=cat==='todos'||k.getAttribute('data-cat')===cat;k.hidden=!ok;if(ok)v++;});empty.hidden=v>0;});});})();
   (function(){document.querySelectorAll('.like').forEach(function(b,i){var key='ja-l3-'+i,base=parseInt(b.getAttribute('data-likes'),10)||0,s=b.querySelector('span'),on=false;try{on=localStorage.getItem(key)==='1';}catch(e){}function r(){s.textContent=base+(on?1:0);b.setAttribute('aria-pressed',on?'true':'false');}r();b.addEventListener('click',function(){on=!on;try{localStorage.setItem(key,on?'1':'0');}catch(e){}r();});});})();
-  (function(){var f=document.getElementById('news-form'),ok=document.getElementById('news-ok'),em=document.getElementById('news-email');f.addEventListener('submit',function(e){e.preventDefault();if(!em.value)return;ok.hidden=false;em.value='';em.disabled=true;});})();
+  (function(){
+    var f=document.getElementById('news-form'),ok=document.getElementById('news-ok'),em=document.getElementById('news-email');
+    if(!f)return;
+    f.addEventListener('submit',function(e){
+      e.preventDefault();if(!em.value)return;
+      var btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
+      fetch('/api/portal/newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em.value,origem:'home'})})
+        .then(function(r){return r.json().catch(function(){return null;});})
+        .then(function(d){
+          if(d&&d.success){ok.textContent='✓ '+(d.message||'Inscrição confirmada. Obrigado!');ok.hidden=false;em.value='';em.disabled=true;}
+          else{ok.textContent=(d&&d.error)||'Não foi possível cadastrar agora. Tente novamente.';ok.hidden=false;if(btn)btn.disabled=false;}
+        })
+        .catch(function(){ok.textContent='Não foi possível cadastrar agora. Tente novamente.';ok.hidden=false;if(btn)btn.disabled=false;});
+    });
+  })();
   (function(){var f=document.getElementById('cform'),ok=document.getElementById('cf-ok');f.addEventListener('submit',function(e){e.preventDefault();var n=document.getElementById('cf-nome').value,t=document.getElementById('cf-tel').value,em=document.getElementById('cf-email').value;if(!n||!t||!em)return;ok.hidden=false;['cf-nome','cf-tel','cf-email','cf-msg'].forEach(function(id){document.getElementById(id).value='';});});})();
   document.getElementById('wa').addEventListener('click',function(){var s=this.querySelector('span');if(s)s.textContent='(32) 99145-6703';});
 

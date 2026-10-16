@@ -257,7 +257,21 @@
   }
 
   /* Formulários (prévia) */
-  (function(){var f=document.getElementById('news-form'),ok=document.getElementById('news-ok'),em=document.getElementById('news-email');f.addEventListener('submit',function(e){e.preventDefault();if(!em.value)return;ok.hidden=false;em.value='';em.disabled=true;});})();
+  (function(){
+    var f=document.getElementById('news-form'),ok=document.getElementById('news-ok'),em=document.getElementById('news-email');
+    if(!f)return;
+    f.addEventListener('submit',function(e){
+      e.preventDefault();if(!em.value)return;
+      var btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
+      fetch('/api/portal/newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em.value,origem:'materia'})})
+        .then(function(r){return r.json().catch(function(){return null;});})
+        .then(function(d){
+          if(d&&d.success){ok.textContent='✓ '+(d.message||'Inscrição confirmada. Obrigado!');ok.hidden=false;em.value='';em.disabled=true;}
+          else{ok.textContent=(d&&d.error)||'Não foi possível cadastrar agora. Tente novamente.';ok.hidden=false;if(btn)btn.disabled=false;}
+        })
+        .catch(function(){ok.textContent='Não foi possível cadastrar agora. Tente novamente.';ok.hidden=false;if(btn)btn.disabled=false;});
+    });
+  })();
   (function(){
     var f=document.getElementById('cform'),ok=document.getElementById('cf-ok');
     f.addEventListener('submit',function(e){

@@ -170,6 +170,36 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.equal(unlike.body.likes, 0);
   });
 
+  it('newsletter real: cadastra, deduplica, recusa e-mail inválido e cancela', async () => {
+    // E-mail inválido → 400.
+    const bad = await request(app).post('/api/portal/newsletter').send({ email: 'sem-arroba' });
+    assert.equal(bad.status, 400);
+
+    // Cadastro público válido.
+    const ok1 = await request(app).post('/api/portal/newsletter').send({ email: 'Leitor@Exemplo.com', nome: 'Leitor' });
+    assert.equal(ok1.status, 200);
+    assert.equal(ok1.body.success, true);
+
+    // Deduplicado (e-mail normalizado em minúsculas): 1 assinante, 1 lead.
+    await request(app).post('/api/portal/newsletter').send({ email: 'leitor@exemplo.com' });
+    const subs = db.prepare("SELECT COUNT(*) AS n FROM portal_newsletter WHERE email='leitor@exemplo.com'").get().n;
+    assert.equal(subs, 1, 'não pode duplicar assinante');
+    const leads = db.prepare("SELECT COUNT(*) AS n FROM portal_leads WHERE origem='newsletter' AND email='leitor@exemplo.com'").get().n;
+    assert.equal(leads, 1, 'reenvio não cria lead duplicado');
+
+    // Lista admin exige mestre e conta o ativo.
+    const noauth = await request(app).get('/api/portal/admin/newsletter');
+    assert.equal(noauth.status, 401);
+    const list = await request(app).get('/api/portal/admin/newsletter').set('Authorization', `Bearer ${token}`);
+    assert.ok(list.body.ativos >= 1);
+
+    // Cancelar inscrição pelo e-mail.
+    const unsub = await request(app).post('/api/portal/newsletter/unsubscribe').send({ email: 'leitor@exemplo.com' });
+    assert.equal(unsub.status, 200);
+    const ativo = db.prepare("SELECT ativo FROM portal_newsletter WHERE email='leitor@exemplo.com'").get().ativo;
+    assert.equal(ativo, 0, 'após cancelar, fica inativo');
+  });
+
   it('curtir/comentar em slug inexistente devolve 404', async () => {
     const c = await request(app).post('/api/portal/posts/nao-existe-zzz/comment').send({ texto: 'x' });
     assert.equal(c.status, 404);

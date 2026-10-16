@@ -201,7 +201,7 @@
     api('/api/portal/admin/overview').then(function(d){
       if(!d.success)return;var o=d.overview,L=d.limites;
       var cc=document.getElementById('cc');
-      var cards=[['Triagem',o.triagem],['Pauta',o.pauta],['Redação',o.redacao],['Publicadas',o.publicado],['Coment. pendentes',o.comentarios_pendentes],['Leads',o.leads],['Fontes ativas',o.fontes_ativas]];
+      var cards=[['Triagem',o.triagem],['Pauta',o.pauta],['Redação',o.redacao],['Publicadas',o.publicado],['Coment. pendentes',o.comentarios_pendentes],['Leads',o.leads],['Newsletter',o.newsletter||0],['Fontes ativas',o.fontes_ativas]];
       cc.innerHTML=cards.map(function(c){return '<div class="stat"><div class="n">'+c[1]+'</div><div class="l">'+c[0]+'</div></div>';}).join('');
       var pct=Math.min(100,Math.round(o.fila_total/o.fila_max*100));
       document.getElementById('fila-txt').textContent=o.fila_total+' / '+o.fila_max;
