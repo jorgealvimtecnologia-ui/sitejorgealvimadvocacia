@@ -100,14 +100,12 @@
 
 <main class="wrap gut" style="padding-bottom:40px">
 
-  <!-- LOGIN -->
-  <div class="login" id="login">
-    <h2>Entrar</h2>
-    <p>Acesso restrito ao proprietário (mestre).</p>
-    <input id="lg-user" type="text" placeholder="Usuário" autocomplete="username">
-    <input id="lg-pass" type="password" placeholder="Senha" autocomplete="current-password">
-    <div class="err" id="lg-err"></div>
-    <button class="btn primary" id="lg-btn" style="width:100%">Entrar</button>
+  <!-- PRECISA ENTRAR NO PAINEL (sem caixa de senha aqui) -->
+  <div class="login" id="login" style="text-align:center">
+    <h2>Central de Comando</h2>
+    <p>Esta área é do proprietário (mestre). Entre no painel uma vez e a Central abre sozinha aqui.</p>
+    <a class="btn primary" href="/painel" target="_blank" style="display:block;width:100%;margin-bottom:9px;text-decoration:none">Abrir o painel e entrar</a>
+    <button class="btn" id="lg-retry" style="width:100%">Já entrei — mostrar a Central</button>
   </div>
 
   <!-- PAINEL -->
@@ -180,17 +178,13 @@
   function showLogin(){document.getElementById('login').hidden=false;document.getElementById('painel').hidden=true;document.getElementById('logout').hidden=true;}
   function showPainel(){document.getElementById('login').hidden=true;document.getElementById('painel').hidden=false;document.getElementById('logout').hidden=false;loadOverview();loadItems(curFase);loadSources();loadTerms();loadComments();loadLeads();}
 
-  // Login
-  document.getElementById('lg-btn').addEventListener('click',function(){
-    var u=document.getElementById('lg-user').value,p=document.getElementById('lg-pass').value,err=document.getElementById('lg-err');
-    err.textContent='';
-    fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})})
-      .then(function(r){return r.json();}).then(function(d){
-        if(d&&d.success&&d.token){TK=d.token;try{localStorage.setItem('ja_admin_token',TK);}catch(e){}showPainel();}
-        else err.textContent='Usuário ou senha inválidos.';
-      }).catch(function(){err.textContent='Falha ao entrar.';});
-  });
-  document.getElementById('lg-pass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('lg-btn').click();});
+  // Sem caixa de senha: tenta a sessão do painel; o botão "Já entrei" re-tenta.
+  function tentarEntrar(){
+    try{TK=localStorage.getItem('ja_admin_token');}catch(e){}
+    if(!TK){showLogin();return;}
+    api('/api/portal/admin/overview').then(function(){showPainel();}).catch(function(){showLogin();});
+  }
+  document.getElementById('lg-retry').addEventListener('click',tentarEntrar);
   document.getElementById('logout').addEventListener('click',function(){try{localStorage.removeItem('ja_admin_token');}catch(e){}TK=null;showLogin();});
 
   // Controle central
