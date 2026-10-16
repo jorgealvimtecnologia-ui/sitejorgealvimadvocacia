@@ -401,7 +401,7 @@
     if(act==='aprovar'||act==='ocultar'){
       api('/api/portal/admin/comments/'+id,{method:'PUT',body:{status:act==='aprovar'?'aprovado':'pendente'}}).then(function(){loadComments();loadOverview();});return;
     }
-    if(act==='lead'){api('/api/portal/admin/comments/'+id+'/to-lead',{method:'POST'}).then(function(d){if(d&&d.success)alert('Comentário transformado em lead!');loadLeads();});return;}
+    if(act==='lead'){api('/api/portal/admin/comments/'+id+'/to-lead',{method:'POST'}).then(function(d){if(d&&d.success)alert(d.message||'Comentário enviado para a caixa de Leads do painel!');loadLeads();loadOverview();}).catch(function(){alert('Não foi possível transformar em lead.');});return;}
     if(act==='del'){if(!confirm('Excluir este comentário definitivamente?'))return;api('/api/portal/admin/comments/'+id,{method:'DELETE'}).then(function(){loadComments();loadOverview();});return;}
   });
 

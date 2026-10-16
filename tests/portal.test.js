@@ -254,6 +254,24 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.equal(ativo, 0);
   });
 
+  it('"Virar lead" manda o comentário para a caixa principal de leads (Atendimentos)', async () => {
+    const now = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO portal_comments (slug, author_name, author_email, author_phone, comment_text, status, is_hidden, created_at)
+       VALUES ('materia-x','Fulano de Tal','fulano@ex.com','32999','Comentário bacana', 'aprovado', 0, ?)`
+    ).run(now);
+    const cid = db.prepare("SELECT id FROM portal_comments WHERE author_name='Fulano de Tal' ORDER BY id DESC").get().id;
+    const antes = db.prepare('SELECT COUNT(*) AS n FROM leads').get().n;
+    const res = await request(app).post(`/api/portal/admin/comments/${cid}/to-lead`).set('Authorization', `Bearer ${token}`).send({});
+    assert.equal(res.status, 200);
+    assert.ok(res.body.lead_id, 'deve devolver o id do lead criado');
+    const depois = db.prepare('SELECT COUNT(*) AS n FROM leads').get().n;
+    assert.equal(depois, antes + 1, 'um lead novo deve entrar na tabela principal');
+    const lead = db.prepare('SELECT name, area FROM leads WHERE id = ?').get(res.body.lead_id);
+    assert.equal(lead.name, 'Fulano de Tal');
+    assert.match(lead.area, /Portal/);
+  });
+
   it('curtir/comentar em slug inexistente devolve 404', async () => {
     const c = await request(app).post('/api/portal/posts/nao-existe-zzz/comment').send({ texto: 'x' });
     assert.equal(c.status, 404);

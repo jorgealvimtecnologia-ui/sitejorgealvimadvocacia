@@ -16,6 +16,7 @@ import { requireMaster } from '../../middleware/auth.js';
 import { ensurePortalSchema, PORTAL_LIMITS } from './portal.schema.js';
 import { coletar } from './portal.collector.js';
 import { sendEmail, isEmailConfigured } from '../../shared/email.js';
+import { generateNextClientId } from '../../shared/ids.js';
 
 // Garante as tabelas da esteira (idempotente), sem tocar no blog/produção.
 ensurePortalSchema(db);
@@ -501,14 +502,36 @@ portalRouter.delete('/api/portal/admin/comments/:id', requireMaster, (req, res) 
   db.prepare('DELETE FROM portal_comments WHERE id = ?').run(c.id);
   res.json({ success: true });
 });
-// Transformar um comentário em lead (captação) do portal.
+// Transformar um comentário em lead — vai para a CAIXA PRINCIPAL de leads do
+// painel (tabela `leads`, Atendimentos), igual ao blog. Também registra na
+// captação do portal (portal_leads) para o histórico local.
 portalRouter.post('/api/portal/admin/comments/:id/to-lead', requireMaster, (req, res) => {
-  const c = db.prepare('SELECT * FROM portal_comments WHERE id = ?').get(req.params.id);
-  if (!c) return res.status(404).json({ error: 'Comentário não encontrado.' });
-  db.prepare(
-    `INSERT INTO portal_leads (origem, nome, email, telefone, slug, created_at) VALUES ('comentario',?,?,?,?,?)`
-  ).run(c.author_name || '', c.author_email || '', c.author_phone || '', c.slug || '', nowISO());
-  res.json({ success: true });
+  try {
+    const c = db.prepare('SELECT * FROM portal_comments WHERE id = ?').get(req.params.id);
+    if (!c) return res.status(404).json({ error: 'Comentário não encontrado.' });
+
+    const newLeadId = generateNextClientId();
+    const now = nowISO();
+    const nome = (c.author_name || 'Comentarista do Portal').trim();
+    const telefone = (c.author_phone || '').trim();
+    const area = 'Portal de Notícias';
+    const mensagem = `Lead originado de comentário no portal (matéria '${c.slug || '—'}'): "${c.comment_text}". E-mail: ${c.author_email || '—'}`;
+
+    db.prepare(
+      `INSERT INTO leads (id, created_at, name, phone, area, message, files, status, social_media, website, google_business)
+       VALUES (?, ?, ?, ?, ?, ?, '[]', 'Novo', '', '', '')`
+    ).run(newLeadId, now, nome, telefone, area, mensagem);
+
+    // Histórico local do portal (não duplica contato no CRM — é só registro da origem).
+    db.prepare(
+      `INSERT INTO portal_leads (origem, nome, email, telefone, slug, created_at) VALUES ('comentario',?,?,?,?,?)`
+    ).run(nome, c.author_email || '', telefone, c.slug || '', now);
+
+    res.json({ success: true, lead_id: newLeadId, message: 'Comentário enviado para a caixa de Leads (Atendimentos) do painel: Lead #' + newLeadId });
+  } catch (err) {
+    console.error('Erro ao converter comentário do portal em lead:', err);
+    res.status(500).json({ error: 'Erro ao transformar em lead.' });
+  }
 });
 
 // Captação de leads (curtida / comentário / newsletter).
