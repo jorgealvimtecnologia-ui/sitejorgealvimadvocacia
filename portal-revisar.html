@@ -293,6 +293,18 @@
         +'<label>Resumo</label><input data-f="summary" value="'+esc(it.summary||'')+'">'
         +'<label>Conteúdo (HTML)</label><textarea data-f="content">'+esc(it.content||it.raw_text||'')+'</textarea>'
         +'<label>💬 Comentário do Dr. Jorge (sua análise — aparece ASSINADA no site, em destaque)</label><textarea data-f="comentario" placeholder="2–3 linhas suas: o que esta notícia significa para o leitor/cliente. É isto que vira conteúdo seu.">'+esc(it.comentario||'')+'</textarea>'
+        +'<div style="border:1px dashed var(--line);border-radius:10px;padding:11px 12px;margin-top:11px">'
+          +'<div style="font-weight:700;font-size:.78rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🔎 SEO &amp; Mídia</div>'
+          +'<label>Imagem de capa — aparece no card e no compartilhamento</label>'
+          +'<input data-f="cover_image" value="'+esc(it.cover_image||'')+'" placeholder="/img/blog/… (use o botão Anexar) ou cole um link">'
+          +'<div style="display:flex;align-items:center;gap:10px;margin:8px 0">'
+            +'<label class="btn sm" style="cursor:pointer;margin:0">📎 Anexar mídia<input type="file" accept="image/*" data-bupload style="display:none"></label>'
+            +'<span class="bupload-st muted" style="font-size:.78rem"></span>'
+          +'</div>'
+          +'<img class="bcover-prev" alt="" src="'+esc(it.cover_image||'')+'" style="'+(it.cover_image?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
+          +'<label style="margin-top:8px">Palavras-chave (SEO) — separe por vírgula</label>'
+          +'<input data-f="tags" value="'+esc(it.tags||'')+'" placeholder="ex.: INSS, BPC, aposentadoria">'
+        +'</div>'
         +'<div class="acts"><button class="btn sm primary" data-act="salvar" data-id="'+it.id+'">Salvar</button><button class="btn sm" data-act="edit" data-id="'+it.id+'">Fechar</button></div>'
       +'</div></div>';
   }
@@ -533,11 +545,15 @@
   // Anexar mídia (upload) — preenche a imagem de capa do editor aberto.
   document.getElementById('painel').addEventListener('change',function(e){
     var inp=e.target.closest('input[data-bupload]');if(!inp||!inp.files||!inp.files[0])return;
-    var ed=inp.closest('.editor'),st=ed.querySelector('.bupload-st'),prev=ed.querySelector('.bcover-prev'),cover=ed.querySelector('[data-bf="cover_image"]');
-    var fd=new FormData();fd.append('file',inp.files[0]);
+    var ed=inp.closest('.editor'),st=ed.querySelector('.bupload-st'),prev=ed.querySelector('.bcover-prev');
+    var covsel=inp.getAttribute('data-covsel')||'[data-bf="cover_image"],[data-f="cover_image"]';
+    var cover=ed.querySelector(covsel);
+    var url=inp.getAttribute('data-upurl')||'/api/admin/blog/upload';
+    var field=inp.getAttribute('data-upfield')||'file';
+    var fd=new FormData();fd.append(field,inp.files[0]);
     if(st)st.textContent='Enviando…';
     var h={};if(TK)h['Authorization']='Bearer '+TK;
-    fetch('/api/admin/blog/upload',{method:'POST',headers:h,body:fd})
+    fetch(url,{method:'POST',headers:h,body:fd})
       .then(function(r){return r.json().catch(function(){return null;});})
       .then(function(d){
         if(d&&d.success&&d.url){if(cover)cover.value=d.url;if(prev){prev.src=d.url;prev.style.display='';}if(st)st.textContent='✓ anexado';}
@@ -578,12 +594,12 @@
       +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-qact="save" data-id="'+(f.id||'')+'">Salvar</button><button class="btn sm" data-qact="cancel" data-id="'+(f.id||'')+'">Cancelar</button></div></div>';
   }
   function faqRow(f){
-    var st=f.is_active?'<span style="color:var(--green);font-weight:700">● Ativa</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Oculta</span>';
+    var st=f.is_active?'<span style="color:var(--green);font-weight:700">● Publicada</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Rascunho</span>';
     return '<div class="item" data-id="'+f.id+'"><h4>'+esc(f.question)+'</h4>'
       +'<div class="src">'+esc(f.category_label||'Geral')+' · '+st+'</div>'
       +'<p class="sm">'+esc((f.answer||'').replace(/<[^>]+>/g,'')).slice(0,160)+'</p>'
       +'<div class="acts"><button class="btn sm" data-qact="edit" data-id="'+f.id+'">Editar</button>'
-      +'<button class="btn sm" data-qact="toggle" data-id="'+f.id+'" data-act2="'+(f.is_active?0:1)+'">'+(f.is_active?'Ocultar':'Ativar')+'</button>'
+      +'<button class="btn sm '+(f.is_active?'':'pub')+'" data-qact="toggle" data-id="'+f.id+'" data-act2="'+(f.is_active?0:1)+'">'+(f.is_active?'Despublicar':'Publicar')+'</button>'
       +'<button class="btn sm danger" data-qact="del" data-id="'+f.id+'">Excluir</button></div>'
       +'<div id="fed-'+f.id+'"></div></div>';
   }
@@ -622,6 +638,16 @@
       +'<label>Selo (badge)</label><input data-xf="badge" value="'+esc(a.badge||'')+'">'
       +'<label>Rótulo do botão</label><input data-xf="action_label" value="'+esc(a.action_label||'')+'">'
       +'<label>Link do botão</label><input data-xf="action_link" value="'+esc(a.action_link||'')+'">'
+      +'<div style="border:1px dashed var(--line);border-radius:10px;padding:11px 12px;margin-top:11px">'
+        +'<div style="font-weight:700;font-size:.78rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🖼️ Imagem do box</div>'
+        +'<label>Imagem (aparece no card da home)</label>'
+        +'<input data-xf="image_url" value="'+esc(a.image_url||'')+'" placeholder="/img/areas/… (use o botão Anexar) ou cole um link">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin:8px 0">'
+          +'<label class="btn sm" style="cursor:pointer;margin:0">📎 Anexar mídia<input type="file" accept="image/*" data-bupload data-upurl="/api/admin/site/practice-areas/upload-image" data-upfield="image" data-covsel="[data-xf=&quot;image_url&quot;]" style="display:none"></label>'
+          +'<span class="bupload-st muted" style="font-size:.78rem"></span>'
+        +'</div>'
+        +'<img class="bcover-prev" alt="" src="'+esc(a.image_url||'')+'" style="'+(a.image_url?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
+      +'</div>'
       +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-xact="save" data-id="'+a.id+'">Salvar</button><button class="btn sm" data-xact="cancel" data-id="'+a.id+'">Cancelar</button></div></div>';
   }
   function boxRow(a){

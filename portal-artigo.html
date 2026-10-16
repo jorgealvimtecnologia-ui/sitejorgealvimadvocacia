@@ -210,6 +210,9 @@
           corpo+='<p style="margin-top:18px;padding:12px 15px;border-left:3px solid var(--gold);background:var(--surface-2);border-radius:8px;font-size:.92rem">'
             +'📄 Resumo da notícia oficial. <a href="'+p.source_url+'" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:underline">Leia a íntegra na fonte oficial ('+ (p.source||'fonte') +') ↗</a></p>';
         }
+        if(p.cover_image&&String(p.cover_image).trim()){
+          corpo='<img src="'+String(p.cover_image).replace(/"/g,'&quot;')+'" alt="" style="width:100%;max-height:380px;object-fit:cover;border-radius:12px;margin-bottom:16px">'+corpo;
+        }
         document.getElementById('art-body').innerHTML=corpo;
         bindLike(document.getElementById('big-like'),slug);
         loadLikes(slug);

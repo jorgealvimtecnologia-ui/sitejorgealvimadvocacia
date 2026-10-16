@@ -42,6 +42,8 @@ export function ensurePortalSchema(db) {
       content TEXT,
       raw_text TEXT,
       comentario TEXT,                        -- análise autoral do Dr. Jorge (assinada), opcional, exibida em destaque
+      cover_image TEXT,                       -- imagem de capa (mídia), opcional
+      tags TEXT,                              -- palavras-chave (SEO), opcional
       author_name TEXT,                       -- preenchido SÓ em matéria autoral do blog (Dr. Jorge)
       author_oab TEXT,                        -- idem (OAB/MG) — nunca em transcrição oficial
       source_views INTEGER,                   -- visualizações NA FONTE, só quando o órgão informa (NULL = desconhecido, nunca inventar)
@@ -129,6 +131,8 @@ export function ensurePortalSchema(db) {
   // Migração defensiva: bancos antigos ganham as colunas novas.
   try { db.exec('ALTER TABLE portal_items ADD COLUMN source_views INTEGER'); } catch (e) { /* já existe */ }
   try { db.exec('ALTER TABLE portal_items ADD COLUMN comentario TEXT'); } catch (e) { /* já existe */ }
+  try { db.exec('ALTER TABLE portal_items ADD COLUMN cover_image TEXT'); } catch (e) { /* já existe */ }
+  try { db.exec('ALTER TABLE portal_items ADD COLUMN tags TEXT'); } catch (e) { /* já existe */ }
   try { db.exec("ALTER TABLE portal_sources ADD COLUMN modo TEXT DEFAULT 'rss'"); } catch (e) { /* já existe */ }
 
   const now = new Date().toISOString();
