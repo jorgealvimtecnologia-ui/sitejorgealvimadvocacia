@@ -198,6 +198,14 @@
         }
         document.getElementById('art-lead').textContent=p.summary||'';
         var corpo=p.content||'';
+        if(p.comentario&&String(p.comentario).trim()){
+          var cmt=String(p.comentario).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          corpo='<aside style="margin:0 0 20px;padding:16px 18px;border:1px solid var(--gold);border-left:4px solid var(--gold);background:var(--surface-2);border-radius:10px">'
+            +'<div style="font-weight:800;color:var(--gold);font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">⚖️ Análise do Dr. Jorge Alvim</div>'
+            +'<div style="font-size:1.02rem;line-height:1.6">'+cmt+'</div>'
+            +'<div style="margin-top:8px;font-size:.8rem;opacity:.75">Jorge Alvim · OAB/MG 222.943</div>'
+            +'</aside>'+corpo;
+        }
         if(ehOficial&&p.source_url){
           corpo+='<p style="margin-top:18px;padding:12px 15px;border-left:3px solid var(--gold);background:var(--surface-2);border-radius:8px;font-size:.92rem">'
             +'📄 Resumo da notícia oficial. <a href="'+p.source_url+'" target="_blank" rel="noopener" style="color:var(--gold);font-weight:700;text-decoration:underline">Leia a íntegra na fonte oficial ('+ (p.source||'fonte') +') ↗</a></p>';

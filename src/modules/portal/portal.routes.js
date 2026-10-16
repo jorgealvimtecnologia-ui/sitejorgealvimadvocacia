@@ -100,7 +100,7 @@ portalRouter.get('/api/portal/posts/:slug', (req, res) => {
     if (post) { post.tipo = 'blog'; return res.json({ success: true, post }); }
 
     const item = db.prepare(
-      `SELECT id, slug, title, summary, category, content, raw_text, source,
+      `SELECT id, slug, title, summary, category, content, raw_text, comentario, source,
               source_url, source_date, fonte_autor, source_views, views_count, likes_count,
               published_at, created_at, updated_at
          FROM portal_items
@@ -115,6 +115,7 @@ portalRouter.get('/api/portal/posts/:slug', (req, res) => {
       summary: item.summary,
       category: item.category,
       content: item.content || item.raw_text || '',
+      comentario: item.comentario || '',
       tipo: 'oficial',
       source: item.source,
       source_url: item.source_url,
@@ -200,14 +201,15 @@ portalRouter.put('/api/portal/admin/items/:id', requireMaster, (req, res) => {
   try {
     const item = db.prepare('SELECT * FROM portal_items WHERE id = ?').get(req.params.id);
     if (!item) return res.status(404).json({ error: 'Matéria não encontrada.' });
-    const { title, summary, category, content, fase } = req.body || {};
+    const { title, summary, category, content, comentario, fase } = req.body || {};
     db.prepare(
-      `UPDATE portal_items SET title=?, summary=?, category=?, content=?, fase=?, updated_at=? WHERE id=?`
+      `UPDATE portal_items SET title=?, summary=?, category=?, content=?, comentario=?, fase=?, updated_at=? WHERE id=?`
     ).run(
       title != null ? title : item.title,
       summary != null ? summary : item.summary,
       category != null ? category : item.category,
       content != null ? content : item.content,
+      comentario != null ? comentario : item.comentario,
       fase != null ? fase : item.fase,
       nowISO(), item.id
     );

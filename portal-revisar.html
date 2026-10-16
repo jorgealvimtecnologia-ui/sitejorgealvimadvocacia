@@ -242,7 +242,8 @@
   }
   function itemCard(it){
     var tp=it.tipo==='blog'?'<span class="tp blog">Blog (autoral)</span>':'<span class="tp oficial">Oficial (transcrição)</span>';
-    return '<div class="item" data-id="'+it.id+'">'+tp
+    var selo=(it.comentario&&String(it.comentario).trim())?'<span class="tp" style="background:#B8860B;color:#fff">⚖️ com sua análise</span>':'';
+    return '<div class="item" data-id="'+it.id+'">'+tp+selo
       +'<h4>'+esc(it.title)+'</h4>'
       +'<div class="src">'+creditLine(it)+(it.category?(' · '+esc(it.category)):'')+'</div>'
       +'<p class="sm">'+esc(it.summary||'')+'</p>'
@@ -252,6 +253,7 @@
         +'<label>Categoria</label><input data-f="category" value="'+esc(it.category||'')+'">'
         +'<label>Resumo</label><input data-f="summary" value="'+esc(it.summary||'')+'">'
         +'<label>Conteúdo (HTML)</label><textarea data-f="content">'+esc(it.content||it.raw_text||'')+'</textarea>'
+        +'<label>💬 Comentário do Dr. Jorge (sua análise — aparece ASSINADA no site, em destaque)</label><textarea data-f="comentario" placeholder="2–3 linhas suas: o que esta notícia significa para o leitor/cliente. É isto que vira conteúdo seu.">'+esc(it.comentario||'')+'</textarea>'
         +'<div class="acts"><button class="btn sm primary" data-act="salvar" data-id="'+it.id+'">Salvar</button><button class="btn sm" data-act="edit" data-id="'+it.id+'">Fechar</button></div>'
       +'</div></div>';
   }
