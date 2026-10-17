@@ -93,6 +93,24 @@
     return raw.trim();
   }
 
+  const PJ_PATTERNS = [
+    /\b(ltda|eireli|s[\.\/\s]?a|me|epp|s\/s)\b/i,
+    /\b(auto\s*pe[cç]as?|posto|supermercado|farm[aá]cia|drogaria|oficina|restaurante|pizzaria|padaria|hotel|pousada|lanchonete|buffet)\b/i,
+    /\b(cl[ií]nica|hospital|laborat[oó]rio|advocacia|advogados|contabilidade|assessoria|consultoria|est[uú]dio|pet\s*shop|veterin[aá]ria)\b/i,
+    /\b(distribuidora|com[eé]rcio|ind[uú]stria|servi[cç]os|transportes|log[ií]stica|engenharia|construtora|incorporadora|imobili[aá]ria|corretora)\b/i,
+    /\b([oó]tica|gr[aá]fica|papelaria|vidra[cç]aria|marmoraria|serralheria|metal[uú]rgica|madeireira|m[oó]veis|ve[ií]culos|concession[aá]ria|lava\s*(jato|r[aá]pido))\b/i,
+    /\b(associa[cç][aã]o|instituto|funda[cç][aã]o|cooperativa|coop|sindicato|igreja|prefeitura|c[aâ]mara|secretaria|tribunal|cart[oó]rio|banco|seguros)\b/i,
+    /\b(academia|escola|col[eé]gio|faculdade|universidade|tecnologia|sistemas|inform[aá]tica)\b/i
+  ];
+
+  function detectClientType(name, org, notes) {
+    const target = `${name || ''} ${org || ''} ${notes || ''}`.toLowerCase();
+    for (const pat of PJ_PATTERNS) {
+      if (pat.test(target)) return 'PJ';
+    }
+    return 'PF';
+  }
+
   const DEFAULT_CLIENT_ID = '285571475823-69gr5k4lft10ghf14skvsg06fv1pqkt4.apps.googleusercontent.com';
   let _clientId = DEFAULT_CLIENT_ID;
 
@@ -202,13 +220,15 @@
         const extraPhones = phones.slice(1).join(', ');
 
         if (name || mainPhone) {
+          const cName = name || `Contato ${mainPhone}`;
           parsed.push({
-            name: name || `Contato ${mainPhone}`,
+            name: cName,
             phone: formatPhone(mainPhone),
             email: emails[0] || '',
             organization: org,
             city: extractCityFromAddress(addresses[0] || ''),
             notes: [notes, extraPhones ? `Outros fones: ${extraPhones}` : ''].filter(Boolean).join(' | '),
+            client_type: detectClientType(cName, org, notes),
             source: 'Google Contacts (Gmail)',
             selected: true
           });
@@ -308,13 +328,15 @@
         if (current && (current.name || current.phones.length > 0 || current.emails.length > 0)) {
           const mainPhone = current.phones[0] || '';
           const extraPhones = current.phones.slice(1).join(', ');
+          const cName = current.name || (mainPhone ? `Contato ${mainPhone}` : 'Sem Nome');
           contacts.push({
-            name: current.name || (mainPhone ? `Contato ${mainPhone}` : 'Sem Nome'),
+            name: cName,
             phone: formatPhone(mainPhone),
             email: current.emails[0] || '',
             organization: current.org || '',
             city: extractCityFromAddress(current.address || ''),
             notes: [current.notes, extraPhones ? `Outros fones: ${extraPhones}` : ''].filter(Boolean).join(' | '),
+            client_type: detectClientType(cName, current.org, current.notes),
             source: `Arquivo VCF (${fileName})`,
             selected: true
           });
@@ -496,13 +518,15 @@
       const phone = formatPhone(rawPhone);
 
       if (name || phone) {
+        const cName = name || `Contato ${phone}`;
         contacts.push({
-          name: name || `Contato ${phone}`,
+          name: cName,
           phone: phone,
           email: email,
           city: city,
           organization: org,
           notes: notes,
+          client_type: detectClientType(cName, org, notes),
           source: sourceName,
           selected: true
         });
@@ -547,11 +571,17 @@
 
     const total = _parsedContacts.length;
     const withPhone = _parsedContacts.filter(c => c.phone).length;
+    const pfCount = _parsedContacts.filter(c => c.client_type === 'PF').length;
+    const pjCount = _parsedContacts.filter(c => c.client_type === 'PJ').length;
     const duplicates = _parsedContacts.filter(c => isContactDuplicate(c)).length;
     const selected = _parsedContacts.filter(c => c.selected).length;
 
     document.getElementById('stat-preview-total').textContent = total;
     document.getElementById('stat-preview-phones').textContent = withPhone;
+    const elPf = document.getElementById('stat-preview-pf');
+    if (elPf) elPf.textContent = pfCount;
+    const elPj = document.getElementById('stat-preview-pj');
+    if (elPj) elPj.textContent = pjCount;
     document.getElementById('stat-preview-duplicates').textContent = duplicates;
     document.getElementById('stat-preview-selected').textContent = selected;
 
@@ -610,7 +640,13 @@
             <input type="checkbox" ${c.selected ? 'checked' : ''} onchange="toggleSelectContact(${c._originalIdx}, this.checked)" class="rounded text-amber-600 focus:ring-amber-500 cursor-pointer" />
           </td>
           <td class="p-2.5 font-bold text-slate-800">
-            ${escapeHtml(c.name)}
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span>${escapeHtml(c.name)}</span>
+              ${c.client_type === 'PJ'
+                ? `<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 font-bold text-[9px] border border-purple-300">🏢 PJ</span>`
+                : `<span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 font-bold text-[9px] border border-blue-200">👤 PF</span>`
+              }
+            </div>
             ${c.organization ? `<div class="text-[10px] font-normal text-slate-500">${escapeHtml(c.organization)}</div>` : ''}
           </td>
           <td class="p-2.5 font-mono text-slate-700">

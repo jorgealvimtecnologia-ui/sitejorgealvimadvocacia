@@ -42,6 +42,26 @@ function formatPhoneBR(raw) {
   return raw.trim();
 }
 
+const PJ_PATTERNS = [
+  /\b(ltda|eireli|s[\.\/\s]?a|me|epp|s\/s)\b/i,
+  /\b(auto\s*pe[cç]as?|posto|supermercado|farm[aá]cia|drogaria|oficina|restaurante|pizzaria|padaria|hotel|pousada|lanchonete|buffet)\b/i,
+  /\b(cl[ií]nica|hospital|laborat[oó]rio|advocacia|advogados|contabilidade|assessoria|consultoria|est[uú]dio|pet\s*shop|veterin[aá]ria)\b/i,
+  /\b(distribuidora|com[eé]rcio|ind[uú]stria|servi[cç]os|transportes|log[ií]stica|engenharia|construtora|incorporadora|imobili[aá]ria|corretora)\b/i,
+  /\b([oó]tica|gr[aá]fica|papelaria|vidra[cç]aria|marmoraria|serralheria|metal[uú]rgica|madeireira|m[oó]veis|ve[ií]culos|concession[aá]ria|lava\s*(jato|r[aá]pido))\b/i,
+  /\b(associa[cç][aã]o|instituto|funda[cç][aã]o|cooperativa|coop|sindicato|igreja|prefeitura|c[aâ]mara|secretaria|tribunal|cart[oó]rio|banco|seguros)\b/i,
+  /\b(academia|escola|col[eé]gio|faculdade|universidade|tecnologia|sistemas|inform[aá]tica)\b/i
+];
+
+function detectClientType(c) {
+  if (c.client_type === 'PJ' || c.client_type === 'PF') return c.client_type;
+  if (c.cnpj && String(c.cnpj).trim()) return 'PJ';
+  const target = `${c.name || c.full_name || ''} ${c.organization || ''} ${c.profession || ''} ${c.notes || ''}`.toLowerCase();
+  for (const pat of PJ_PATTERNS) {
+    if (pat.test(target)) return 'PJ';
+  }
+  return 'PF';
+}
+
 /**
  * 1. GET /api/contacts/google-config
  * Retorna credenciais e escopos para Google People API / GIS
@@ -216,7 +236,7 @@ contactsRouter.post('/api/contacts/import-batch', requireAuth, (req, res) => {
         } else {
           // Destino: Clientes
           const clientId = generateNextClientFullId();
-          const clientType = c.client_type || (c.cnpj ? 'PJ' : 'PF');
+          const clientType = detectClientType(c);
           const noteInfo = [
             c.notes ? c.notes : '',
             sourceTag ? `Fonte: ${sourceTag}` : ''
