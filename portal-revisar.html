@@ -750,7 +750,9 @@
         +'</div>'
         +'<img class="bcover-prev" alt="" src="'+esc(a.image_url||'')+'" style="'+(a.image_url?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
       +'</div>'
-      +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-xact="save" data-id="'+a.id+'">Salvar</button><button class="btn sm" data-xact="cancel" data-id="'+a.id+'">Cancelar</button></div></div>';
+      +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-xact="save" data-id="'+a.id+'">Salvar</button><button class="btn sm" data-xact="cancel" data-id="'+a.id+'">Cancelar</button>'
+      +(a.id?'<button class="btn sm danger" data-xact="del" data-id="'+a.id+'">Excluir</button>':'')
+      +'</div></div>';
   }
   function boxRow(a){
     var st=a.is_active?'<span style="color:var(--green);font-weight:700">● Publicado</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Oculto</span>';
