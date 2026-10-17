@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Todas as notícias do portal jurídico de Jorge Alvim Advocacia — prévia (em testes).">
+<title>Todas as notícias — Jornal Alvim</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/public/portal.css">
+<style>
+  .todas-head{padding:28px 0 6px}
+  .todas-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media(max-width:620px){.todas-grid{grid-template-columns:1fr}}
+  .tcard{display:flex;flex-direction:column;gap:5px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c,var(--navy));border-radius:13px;padding:14px 16px;box-shadow:var(--shadow);text-decoration:none;transition:all .2s}
+  .tcard:hover{box-shadow:0 12px 26px -10px rgba(10,25,47,.22);transform:translateY(-2px)}
+  .tcard .tk{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c,var(--navy))}
+  .tcard h3{font-size:1.02rem;line-height:1.25;color:var(--ink)}
+  .tcard:hover h3{color:var(--gold)}
+  .tcard p{font-size:.86rem;color:var(--ink-soft);margin:0}
+  .tcard .m{margin-top:4px;font-size:.73rem;color:var(--ink-faint);display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .tsearch{display:flex;gap:8px;margin-top:14px;max-width:560px}
+  .tsearch input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:11px 14px;font:inherit}
+  .tsearch button{border:0;background:var(--navy);color:#fff;font-weight:700;border-radius:10px;padding:0 18px;cursor:pointer}
+  .tmore{display:block;margin:26px auto 0;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;border-radius:999px;padding:11px 22px;cursor:pointer}
+  .tmore:hover{background:var(--gold);color:#201500;border-color:var(--gold)}
+  .tcount{font-size:.8rem;color:var(--ink-faint);margin-top:4px}
+  .tempty{text-align:center;color:var(--ink-soft);padding:30px 0}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap gut top-row">
+    <div class="brand">
+      <span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 21h10M12 6l-7 2 2.4 5A3 3 0 0 1 5 13M12 6l7 2-2.4 5A3 3 0 0 0 19 13"/></svg></span>
+      <div><div class="name">Jornal Alvim</div><div class="kick">Informativo Jurídico · OAB/MG 222.943</div></div>
+    </div>
+    <nav class="mainnav">
+      <a class="lnk" href="/">Início</a>
+      <a class="amz" href="/portal#vitrine"><span class="pz">PARCEIRO</span> Vitrine Amazon</a>
+      <a class="lnk" href="/cliente">Área do Cliente</a>
+      <button class="icon-btn" id="theme" type="button" aria-label="Alternar tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    </nav>
+  </div>
+  <div class="guiabar"><div class="wrap gut inner">
+    <span class="gb-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 21h10M12 6l-7 2 2.4 5A3 3 0 0 1 5 13M12 6l7 2-2.4 5A3 3 0 0 0 19 13"/></svg><span>Guia da Justiça</span></span>
+    <div class="gb-links">
+      <a href="https://portal.stf.jus.br" target="_blank" rel="noopener">STF</a>
+      <a href="https://www.stj.jus.br" target="_blank" rel="noopener">STJ</a>
+      <a href="https://www.stm.jus.br" target="_blank" rel="noopener">STM</a>
+      <a href="https://www.tse.jus.br" target="_blank" rel="noopener">TSE</a>
+      <a href="https://www.tst.jus.br" target="_blank" rel="noopener">TST</a>
+      <a href="https://portal.trt3.jus.br" target="_blank" rel="noopener">TRT3</a>
+      <a href="https://portal.trf1.jus.br" target="_blank" rel="noopener">TRF1</a>
+      <a href="https://portal.trf6.jus.br" target="_blank" rel="noopener">TRF6</a>
+      <a href="https://www.tjmg.jus.br" target="_blank" rel="noopener">TJMG</a>
+      <a href="https://www.cnj.jus.br" target="_blank" rel="noopener">CNJ</a>
+      <a href="https://www.mpf.mp.br" target="_blank" rel="noopener">MPF</a>
+      <a href="https://www.mpmg.mp.br" target="_blank" rel="noopener">MPMG</a>
+      <a href="https://www.dpu.def.br" target="_blank" rel="noopener">DPU</a>
+      <a href="https://www.oabmg.org.br" target="_blank" rel="noopener">OAB-MG</a>
+      <a href="https://www.gov.br/pf/pt-br" target="_blank" rel="noopener">PF</a>
+      <a href="https://www.gov.br/inss/pt-br" target="_blank" rel="noopener">INSS</a>
+      <a href="https://www.gov.br" target="_blank" rel="noopener">gov.br</a>
+      <a href="https://www.mg.gov.br" target="_blank" rel="noopener">Governo de MG</a>
+      <a href="https://www.pjf.mg.gov.br" target="_blank" rel="noopener">Prefeitura de JF</a>
+    </div>
+  </div></div>
+</header>
+
+<main>
+  <section class="wrap gut todas-head">
+    <div class="barline"><span class="mini">Arquivo</span><h2>Todas as notícias</h2><span class="rule"></span></div>
+    <p style="color:var(--ink-soft);max-width:60ch">Tudo o que já publicamos — artigos do blog e transcrições oficiais revisadas pelo escritório, do mais novo ao mais antigo.</p>
+    <form class="tsearch" id="tsearch" role="search">
+      <input id="tq" type="search" placeholder="Buscar por assunto (ex.: INSS, Pix, CNH, pensão)…" aria-label="Buscar">
+      <button type="submit">Buscar</button>
+    </form>
+    <div class="tcount" id="tcount"></div>
+  </section>
+
+  <section class="wrap gut" style="padding-bottom:40px">
+    <div class="todas-grid" id="grid"></div>
+    <p class="tempty" id="empty" hidden>Nenhuma notícia encontrada.</p>
+    <button class="tmore" id="more" type="button" hidden>Carregar mais</button>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap gut inner">
+    <div><div class="fbrand">Jornal Alvim · Notícias Jurídicas</div><div class="small">Jorge Alvim Advocacia &amp; Consultoria Jurídica · OAB/MG 222.943<br>Rua Henrique Dias, 259 — Benfica, Juiz de Fora/MG</div></div>
+    <div class="small" style="text-align:right"><a href="/portal">← Voltar ao portal</a></div>
+  </div>
+</footer>
+
+<script>
+  (function(){var root=document.documentElement,btn=document.getElementById('theme');try{var s=localStorage.getItem('ja-tema');if(s)root.setAttribute('data-theme',s);}catch(e){}
+    btn.addEventListener('click',function(){var cur=root.getAttribute('data-theme');var dk=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;var n=dk?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('ja-tema',n);}catch(e){}});})();
+
+  (function(){
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    function fmt(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
+    var NIV={local:'var(--loc)',federal:'var(--fed)',estadual:'var(--est)',municipal:'var(--mun)'};
+    var grid=document.getElementById('grid'),moreBtn=document.getElementById('more'),empty=document.getElementById('empty'),countEl=document.getElementById('tcount');
+    var LIMIT=12,offset=0,total=0,q='',loading=false;
+
+    function card(p){
+      var ehBlog=(p.tipo==='blog');
+      var cor=ehBlog?'var(--navy)':(NIV[(p.category||'').toLowerCase()]||'var(--fed)');
+      var selo=ehBlog?'Artigo do Dr. Jorge':('Oficial · '+esc(p.source||'fonte'));
+      var data=fmt(p.published_at||p.source_date||p.created_at);
+      return '<a class="tcard" href="/portal/'+encodeURIComponent(p.slug||'')+'" style="--c:'+cor+'">'
+        +'<span class="tk">'+esc(p.category||(ehBlog?'Artigo':'Notícia'))+'</span>'
+        +'<h3>'+esc(p.title)+'</h3>'
+        +(p.summary?'<p>'+esc(p.summary)+'</p>':'')
+        +'<div class="m"><span>'+selo+'</span>'+(data?'<span class="dot"></span><span>'+data+'</span>':'')+'</div></a>';
+    }
+    function load(reset){
+      if(loading)return;loading=true;moreBtn.disabled=true;
+      if(reset){offset=0;grid.innerHTML='';}
+      var url='/api/portal/feed?offset='+offset+'&limit='+LIMIT+(q?('&q='+encodeURIComponent(q)):'');
+      fetch(url,{headers:{'Accept':'application/json'}})
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(d){
+          loading=false;moreBtn.disabled=false;
+          if(!d||!d.success){moreBtn.hidden=true;return;}
+          total=d.total;offset+=d.items.length;
+          if(d.items.length)grid.insertAdjacentHTML('beforeend',d.items.map(card).join(''));
+          empty.hidden=!(total===0);
+          moreBtn.hidden=!d.hasMore;
+          countEl.textContent=total+(total===1?' notícia':' notícias')+(q?(' para "'+q+'"'):'');
+        })
+        .catch(function(){loading=false;moreBtn.disabled=false;moreBtn.hidden=true;});
+    }
+    moreBtn.addEventListener('click',function(){load(false);});
+    document.getElementById('tsearch').addEventListener('submit',function(e){e.preventDefault();q=document.getElementById('tq').value.trim();load(true);});
+    load(true);
+  })();
+</script>
+</body>
+</html>

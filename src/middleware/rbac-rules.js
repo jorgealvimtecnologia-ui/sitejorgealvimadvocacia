@@ -26,6 +26,10 @@ export const RULES = [
   [/^\/api\/blog\/posts\/[^/]+\/(comments|like|share)\b/, PUBLIC],
   [/^\/api\/blog\/track-click\b/, PUBLIC],
   [/^\/api\/blog\/(posts|categories)\b/, PUBLIC, ['GET']],
+  [/^\/api\/portal\/admin\//, MASTER],                // caixas de controle do portal (esteira/robô): só o mestre
+  [/^\/api\/portal\/posts\/[^/]+\/(comment|like)\b/, PUBLIC, ['POST']], // curtir/comentar público (comentário entra oculto p/ moderação)
+  [/^\/api\/portal\/newsletter(\/unsubscribe)?$/, PUBLIC, ['POST']],    // cadastro/cancelamento público da newsletter
+  [/^\/api\/portal\//, PUBLIC, ['GET']],              // portal de notícias (preview isolado): só leitura pública
   [/^\/api\/esign\/(public|verify)\//, PUBLIC],
   [/^\/api\/esign\/requests\/[^/]+\/chancelado\b/, PUBLIC],
   [/^\/api\/client-portal\/magic-(info|upload)\//, PUBLIC],
@@ -74,6 +78,7 @@ export const RULES = [
 
   // ---- Módulos do painel controlados pela matriz de permissões (mestre sempre) ----
   [/^\/api\/clients(\/|$)/, tab('tab_clients')],
+  [/^\/api\/contacts(\/|$)/, tab('tab_clients')], // Importação de contatos (Google, celular, planilhas)
   [/^\/api\/ocr(\/|$)/, tab('tab_clients')],   // OCR zero-digitação alimenta o cadastro de clientes
   [/^\/api\/leads(\/|$)/, tab('tab_leads')],
   [/^\/api\/lawsuits(\/|$)/, tab('tab_lawsuits')],

@@ -378,7 +378,7 @@ blogRouter.post('/api/blog/posts/:slug/comments', (req, res) => {
       INSERT INTO blog_comments (
         post_id, post_slug, author_name, author_email, author_phone,
         comment_text, is_hidden, ip_address, user_agent, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
     `).run(
       post.id,
       slug,
@@ -425,7 +425,7 @@ blogRouter.post('/api/blog/posts/:slug/comments', (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Comentário publicado com sucesso! Obrigado por participar.',
+      message: 'Comentário enviado! Ele passará por moderação antes de aparecer. Obrigado por participar.',
       comment: {
         id: result.lastInsertRowid,
         author_name: author_name.trim(),

@@ -38,6 +38,7 @@ import { getClientIp } from './src/shared/net.js';
 import { generateNextClientId, generateNextLawsuitId } from './src/shared/ids.js';
 import { blogRouter } from './src/modules/blog/blog.routes.js';
 import { renderBlogHtml } from './src/modules/blog/blog.render.js';
+import { portalRouter } from './src/modules/portal/portal.routes.js';
 import { lawsuitsRouter } from './src/modules/lawsuits/lawsuits.routes.js';
 import { explorerRouter } from './src/modules/explorer/explorer.routes.js';
 import { officesRouter } from './src/modules/offices/offices.routes.js';
@@ -50,6 +51,7 @@ import { financialRouter } from './src/modules/financial/financial.routes.js';
 import { generateNextClientFullId } from './src/shared/ids.js';
 import { sendLawyerWhatsAppNotification } from './src/shared/notify.js';
 import { clientsRouter } from './src/modules/clients/clients.routes.js';
+import { contactsRouter } from './src/modules/contacts/contacts.routes.js';
 import { leadsRouter } from './src/modules/leads/leads.routes.js';
 import { visitsRouter } from './src/modules/visits/visits.routes.js';
 import { juridicoRouter, seedCourtHolidays } from './src/modules/juridico/juridico.routes.js';
@@ -215,6 +217,7 @@ app.use(syncRouter);
 app.use(adminRequestsRouter);
 app.use(kanbanRouter);
 app.use(blogRouter);
+app.use(portalRouter);
 app.use(lawsuitsRouter);
 app.use(explorerRouter);
 app.use(officesRouter);
@@ -223,6 +226,7 @@ app.use(calendarRouter);
 app.use(hrRouter);
 app.use(financialRouter);
 app.use(clientsRouter);
+app.use(contactsRouter);
 app.use(leadsRouter);
 app.use(visitsRouter);
 app.use(juridicoRouter);
@@ -553,6 +557,54 @@ app.get('/blog/:slug', (req, res) => {
 
 app.get('/artigos', (req, res) => {
   res.redirect(301, '/blog');
+});
+
+// PREVIEW ISOLADO do novo portal de notícias (ROBO-13 aprovado). NÃO substitui o
+// blog: fica em /portal até o Dr. Jorge aprovar a troca em produção.
+app.get('/portal', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal.html');
+});
+
+// Caixas de controle do portal (esteira do robô). A página é pública, mas as
+// APIs /api/portal/admin exigem sessão de mestre — definida ANTES de /portal/:slug.
+app.get('/portal/revisar', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal-revisar.html');
+});
+
+// Lista completa de notícias do portal (todos os artigos do blog publicados +
+// transcrições publicadas). Definida ANTES de /portal/:slug para ter prioridade.
+app.get('/portal/todas', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal-todas.html');
+});
+
+// Leitura de uma matéria do portal (preview). A matéria é carregada pelo
+// front-end via /api/portal/posts/:slug (somente leitura).
+app.get('/portal/:slug', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  });
+  sendFreshFile(res, 'portal-artigo.html');
 });
 
 // Vitrine do Advogado • Parceiro & Colaborador Amazon

@@ -10,9 +10,74 @@
 
     // ================= 2. GESTÃO DE CLIENTES & CONTRATOS =================
 
+    let clientsCurrentPage = 1;
+    const CLIENTS_PAGE_SIZE = 25;
+    let lastClientsFiltered = [];
+    let _clientsViewMode = 'compact';
+    try {
+      const savedMode = localStorage.getItem('clients_view_mode');
+      if (savedMode === 'expanded' || savedMode === 'compact') {
+        _clientsViewMode = savedMode;
+      }
+    } catch (e) {}
+
+    function setClientsViewMode(mode) {
+      _clientsViewMode = mode === 'expanded' ? 'expanded' : 'compact';
+      try { localStorage.setItem('clients_view_mode', _clientsViewMode); } catch (e) {}
+      updateViewModeButtons();
+      renderClients(lastClientsFiltered && lastClientsFiltered.length > 0 ? lastClientsFiltered : allClients);
+    }
+    window.setClientsViewMode = setClientsViewMode;
+
+    function updateViewModeButtons() {
+      const btnCompact = document.getElementById('btn-view-mode-compact');
+      const btnExpanded = document.getElementById('btn-view-mode-expanded');
+      if (btnCompact && btnExpanded) {
+        if (_clientsViewMode === 'compact') {
+          btnCompact.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-white text-navy-950 shadow-xs border border-slate-200/80 cursor-pointer';
+          btnExpanded.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-500 hover:text-slate-800 cursor-pointer';
+        } else {
+          btnExpanded.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-white text-navy-950 shadow-xs border border-slate-200/80 cursor-pointer';
+          btnCompact.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-500 hover:text-slate-800 cursor-pointer';
+        }
+      }
+    }
+    window.updateViewModeButtons = updateViewModeButtons;
+
+    function toggleClientDetails(clientId) {
+      const detailsEl = document.getElementById(`client-details-${clientId}`);
+      const toggleBtn = document.getElementById(`btn-toggle-details-${clientId}`);
+      if (!detailsEl) return;
+      const isHidden = detailsEl.classList.contains('hidden');
+      if (isHidden) {
+        detailsEl.classList.remove('hidden');
+        if (toggleBtn) {
+          toggleBtn.innerHTML = `<span>🔼</span><span>Recolher Ficha</span>`;
+          toggleBtn.className = 'inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-colors shadow-xs cursor-pointer';
+        }
+      } else {
+        detailsEl.classList.add('hidden');
+        if (toggleBtn) {
+          toggleBtn.innerHTML = `<span>👁️</span><span>Ficha Completa</span>`;
+          toggleBtn.className = 'inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition-colors shadow-xs cursor-pointer';
+        }
+      }
+    }
+    window.toggleClientDetails = toggleClientDetails;
+
+    function goToClientsPage(page) {
+      clientsCurrentPage = page;
+      renderClients(lastClientsFiltered && lastClientsFiltered.length > 0 ? lastClientsFiltered : allClients);
+      const container = document.getElementById('clients-boxes-container');
+      if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    window.goToClientsPage = goToClientsPage;
+
     async function loadClients() {
       try {
-        const res = await fetch('/api/clients', { headers: getAuthHeaders() });
+        const res = await fetch('/api/clients', { headers: getAuthHeaders(), cache: 'no-store' });
         if (res.status === 401) {
           handleLogout();
           return;
@@ -20,6 +85,8 @@
         const data = await res.json();
         if (data.success) {
           allClients = data.clients;
+          window.allClients = data.clients;
+          clientsCurrentPage = 1;
           renderClients(allClients);
           updateClientsStats(allClients);
         }
@@ -77,24 +144,86 @@
         return matchesQuery && matchesType && matchesStatus;
       });
 
+      clientsCurrentPage = 1;
       renderClients(filtered);
     }
 
     function renderClients(clients) {
+      lastClientsFiltered = clients || [];
       const container = document.getElementById('clients-boxes-container');
+      if (!container) return;
       
-      if (clients.length === 0) {
+      if (!clients || clients.length === 0) {
         container.innerHTML = `
           <div class="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-400 space-y-3 shadow-sm">
             <div class="text-4xl">📂</div>
-            <p class="font-bold text-slate-600">Nenhum cliente ou contrato cadastrado no momento.</p>
-            <p class="text-xs">Clique no botão <strong>➕ Novo Cliente & Contrato</strong> acima para adicionar o primeiro registro.</p>
+            <p class="font-bold text-slate-600">Nenhum cliente ou contrato encontrado.</p>
+            <p class="text-xs">Tente buscar por outro termo ou clique no botão <strong>➕ Novo Cliente & Contrato</strong> acima.</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = clients.map(client => {
+      const totalCount = clients.length;
+      const totalPages = Math.ceil(totalCount / CLIENTS_PAGE_SIZE) || 1;
+      if (clientsCurrentPage > totalPages) clientsCurrentPage = totalPages;
+      if (clientsCurrentPage < 1) clientsCurrentPage = 1;
+
+      const startIdx = (clientsCurrentPage - 1) * CLIENTS_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + CLIENTS_PAGE_SIZE, totalCount);
+      const pageItems = clients.slice(startIdx, endIdx);
+
+      const renderPaginationBar = () => {
+        if (totalPages <= 1) return '';
+        return `
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-white rounded-2xl border border-slate-200 shadow-xs mb-4">
+            <div class="text-xs text-slate-600 font-semibold flex items-center gap-2">
+              <span>Exibindo <strong>${startIdx + 1} - ${endIdx}</strong> de <strong>${totalCount}</strong> clientes</span>
+              ${totalCount >= 100 ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">⚡ Paginação Otimizada (Instantânea)</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button 
+                type="button" 
+                onclick="goToClientsPage(1)" 
+                ${clientsCurrentPage === 1 ? 'disabled class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+                title="Primeira Página"
+              >
+                ⏮
+              </button>
+              <button 
+                type="button" 
+                onclick="goToClientsPage(${clientsCurrentPage - 1})" 
+                ${clientsCurrentPage === 1 ? 'disabled class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+              >
+                ◀ Anterior
+              </button>
+              <span class="px-3.5 py-1.5 bg-amber-50 text-amber-950 border border-amber-200 rounded-xl text-xs font-extrabold">
+                Página ${clientsCurrentPage} de ${totalPages}
+              </span>
+              <button 
+                type="button" 
+                onclick="goToClientsPage(${clientsCurrentPage + 1})" 
+                ${clientsCurrentPage === totalPages ? 'disabled class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+              >
+                Próxima ▶
+              </button>
+              <button 
+                type="button" 
+                onclick="goToClientsPage(${totalPages})" 
+                ${clientsCurrentPage === totalPages ? 'disabled class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+                title="Última Página"
+              >
+                ⏭
+              </button>
+            </div>
+          </div>
+        `;
+      };
+
+      window._clientsPaginationTop = renderPaginationBar();
+      window._clientsPaginationBottom = totalPages > 1 ? renderPaginationBar() : '';
+
+      container.innerHTML = (window._clientsPaginationTop ? window._clientsPaginationTop : '') + pageItems.map(client => {
         const isPJ = client.client_type === 'PJ';
         const typeBadge = isPJ 
           ? `<span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 font-bold text-xs border border-indigo-200">🏢 Pessoa Jurídica (Empresa)</span>`
@@ -145,86 +274,111 @@
           <!-- BOX INDIVIDUAL DO CLIENTE (DESIGN CLARO EXECUTIVO) -->
           <div class="bg-white rounded-3xl border border-slate-200 shadow-md hover:shadow-lg transition-all overflow-hidden" id="client-box-${client.id}">
             
-            <!-- Topo do Box -->
-            <div class="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div class="space-y-1 min-w-0">
+            <!-- Topo do Box (Linha Principal Executiva / Compacta) -->
+            <div class="p-4 sm:p-5 bg-slate-50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3.5">
+              <div class="space-y-1.5 min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-md bg-gold-100 text-gold-900 font-mono text-xs font-bold border border-gold-300">
+                  <span class="px-2 py-0.5 rounded-md bg-gold-100 text-gold-900 font-mono text-xs font-bold border border-gold-300">
                     #${client.id}
                   </span>
                   ${typeBadge}
-                  <span class="px-2.5 py-0.5 rounded-md font-bold text-xs border ${statusClass}">
+                  <span class="px-2 py-0.5 rounded-md font-bold text-xs border ${statusClass}">
                     ● ${client.contract_status || 'Ativo'}
                   </span>
+                  ${client.cpf ? `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono text-xs border border-slate-200">CPF: ${client.cpf}</span>` : ''}
+                  ${client.cnpj ? `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono text-xs border border-slate-200">CNPJ: ${client.cnpj}</span>` : ''}
+                  ${client.city ? `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs border border-slate-200">📍 ${client.city}${client.state ? ` - ${client.state}` : ''}</span>` : ''}
                 </div>
-                <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950 truncate pt-1">
-                  ${client.full_name}
-                </h3>
+                <div class="flex flex-wrap items-center gap-3 pt-0.5">
+                  <h3 class="font-serif font-bold text-base sm:text-lg text-navy-950 truncate">
+                    ${client.full_name}
+                  </h3>
+                  ${client.phone ? `
+                    <div class="inline-flex items-center space-x-1.5 text-xs text-slate-700 font-semibold bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">
+                      <span>📞 ${client.phone}</span>
+                      ${cleanPhone ? `
+                        <a href="https://wa.me/55${cleanPhone}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] inline-flex items-center space-x-1 shadow-xs transition-colors" title="Conversar no WhatsApp">
+                          <span>💬 WhatsApp</span>
+                        </a>
+                      ` : ''}
+                    </div>
+                  ` : ''}
+                  ${contractVal > 0 ? `
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg ${balanceVal > 0 ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-emerald-50 text-emerald-900 border border-emerald-200'}">
+                      💰 Total: ${formatMoney(contractVal)} | Saldo: ${formatMoney(balanceVal)}
+                    </span>
+                  ` : ''}
+                </div>
               </div>
 
-              <!-- Botões de Ação do Box (Incluindo Botão SALVAR direto no Box) -->
-              <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
+              <!-- Botões de Ação do Box -->
+              <div class="flex flex-wrap items-center gap-1.5 w-full xl:w-auto justify-start xl:justify-end">
                 
+                <!-- Botão Alternador Ficha Completa -->
+                <button 
+                  type="button" 
+                  id="btn-toggle-details-${client.id}"
+                  onclick="toggleClientDetails('${client.id}')" 
+                  class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl ${_clientsViewMode === 'expanded' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'} font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  title="Expandir ou recolher todos os dados cadastrais, contratos e processos deste cliente"
+                >
+                  <span>${_clientsViewMode === 'expanded' ? '🔼' : '👁️'}</span>
+                  <span>${_clientsViewMode === 'expanded' ? 'Recolher Ficha' : 'Ficha Completa'}</span>
+                </button>
+
                 <!-- Kit Inicial (1 Clique) -->
                 <button 
                   onclick="openKitInicialModal('${client.id}')" 
-                  class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   title="Gerar Kit Inicial (Procuração, Contrato e Hipossuficiência) em 1 clique"
                 >
                   <span>📄</span>
-                  <span>Kit Inicial</span>
+                  <span>Kit</span>
                 </button>
 
-                <!-- Link Mágico de Documentos -->
+                <!-- Link Mágico -->
                 <button 
                   onclick="generateClientMagicUploadLink('${client.id}')" 
-                  class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   title="Enviar Link Mágico para o cliente enviar fotos/PDFs de documentos pelo WhatsApp"
                 >
                   <span>📎</span>
-                  <span>Link Mágico</span>
+                  <span class="hidden sm:inline">Link Mágico</span>
                 </button>
 
                 <!-- Cobrar / PIX -->
                 <button 
                   onclick="sendPixPaymentReminder('${client.id}', '${(client.full_name || '').replace(/'/g, "\\'")}', '${client.phone || ''}', '${client.balance_due || 0}')" 
-                  class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   title="Enviar lembrete amigável de honorários com chave PIX pelo WhatsApp"
                 >
                   <span>💰</span>
-                  <span>Cobrar PIX</span>
+                  <span>Cobrar</span>
                 </button>
 
-                <!-- BOTÃO SALVAR DIRETO NO BOX -->
-                <button 
-                  onclick="saveInlineClient('${client.id}')" 
-                  id="btn-inline-save-${client.id}"
-                  class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold text-xs transition-all shadow-sm cursor-pointer border border-gold-600"
-                  title="Salvar alterações do contrato e dados diretamente"
-                >
-                  <span>💾</span>
-                  <span>Salvar</span>
-                </button>
-
+                <!-- Editar Cadastro -->
                 <button 
                   onclick="openEditClientModal('${client.id}')" 
-                  class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   title="Editar cadastro completo e anexar arquivos"
                 >
                   <span>✏️</span>
                   <span>Alterar</span>
                 </button>
 
+                <!-- Excluir -->
                 <button 
                   onclick="deleteClient('${client.id}', '${encodeURIComponent(client.full_name)}')" 
-                  class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  class="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   title="Excluir cliente e contrato"
                 >
                   <span>🗑️</span>
-                  <span>Excluir</span>
                 </button>
               </div>
             </div>
+
+            <!-- Contêiner de Detalhes da Ficha (Oculto no Modo Lista Rápida, Aberto sob demanda) -->
+            <div id="client-details-${client.id}" class="${_clientsViewMode === 'expanded' ? '' : 'hidden'} border-t border-slate-200">
 
             <!-- Corpo dos Dados Cadastrais do Cliente -->
             <div class="p-5 sm:p-6 space-y-4">
@@ -602,9 +756,12 @@
 
             </div>
 
-          </div>
+            </div> <!-- Fechamento de client-details-${client.id} -->
+
+          </div> <!-- Fechamento de client-box-${client.id} -->
         `;
-      }).join('');
+      }).join('') + (window._clientsPaginationBottom ? '<div class="mt-4">' + window._clientsPaginationBottom + '</div>' : '');
+      updateViewModeButtons();
     }
 
     function recalcInlineRow(id) {

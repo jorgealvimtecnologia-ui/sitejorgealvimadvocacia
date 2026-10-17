@@ -565,6 +565,23 @@
     </div>
   </header>
 
+  <!-- BARRA GUIA DA JUSTIÇA (órgãos) — logo após o cabeçalho, como no portal de notícias -->
+  <div id="guia-justica" class="ja-guiabar scroll-mt-20">
+    <style>
+      .ja-guiabar{position:relative;background:#f8f6f0;border-bottom:1px solid #e6e2d6}
+      .ja-guiabar .inner{max-width:80rem;margin:0 auto;display:flex;align-items:flex-start;gap:12px;padding:8px 16px}
+      .ja-guiabar .lbl{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;letter-spacing:.05em;color:#826200;text-transform:uppercase;white-space:nowrap;margin-top:5px}
+      .ja-guiabar .links{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:6px;padding:0}
+      .ja-guiabar .links a{flex:none;font-size:.72rem;font-weight:600;color:#44506a;background:#fff;border:1px solid #e6e2d6;padding:4px 10px;border-radius:999px;white-space:nowrap;text-decoration:none}
+      .ja-guiabar .links a:hover{background:#D4AF37;color:#201500;border-color:#D4AF37}
+      @media(max-width:640px){.ja-guiabar .lbl span{display:none}}
+    </style>
+    <div class="inner">
+      <span class="lbl">⚖️ <span>Guia da Justiça</span></span>
+      <div class="links"><a href="https://portal.stf.jus.br" target="_blank" rel="noopener noreferrer">STF</a><a href="https://www.stj.jus.br" target="_blank" rel="noopener noreferrer">STJ</a><a href="https://www.stm.jus.br" target="_blank" rel="noopener noreferrer">STM</a><a href="https://www.tse.jus.br" target="_blank" rel="noopener noreferrer">TSE</a><a href="https://www.tst.jus.br" target="_blank" rel="noopener noreferrer">TST</a><a href="https://portal.trt3.jus.br" target="_blank" rel="noopener noreferrer">TRT3</a><a href="https://portal.trf1.jus.br" target="_blank" rel="noopener noreferrer">TRF1</a><a href="https://portal.trf6.jus.br" target="_blank" rel="noopener noreferrer">TRF6</a><a href="https://www.tjmg.jus.br" target="_blank" rel="noopener noreferrer">TJMG</a><a href="https://www.tjrj.jus.br" target="_blank" rel="noopener noreferrer">TJRJ</a><a href="https://www.cnj.jus.br" target="_blank" rel="noopener noreferrer">CNJ</a><a href="https://www.mpf.mp.br" target="_blank" rel="noopener noreferrer">MPF</a><a href="https://www.mpmg.mp.br" target="_blank" rel="noopener noreferrer">MPMG</a><a href="https://www.dpu.def.br" target="_blank" rel="noopener noreferrer">DPU</a><a href="https://www.defensoria.mg.def.br" target="_blank" rel="noopener noreferrer">DPE-MG</a><a href="https://www.oabmg.org.br" target="_blank" rel="noopener noreferrer">OAB-MG</a><a href="https://www.gov.br/pf/pt-br" target="_blank" rel="noopener noreferrer">PF</a><a href="https://www.gov.br/prf/pt-br" target="_blank" rel="noopener noreferrer">PRF</a><a href="https://www.policiacivil.mg.gov.br" target="_blank" rel="noopener noreferrer">PC-MG</a><a href="https://www.policiamilitar.mg.gov.br" target="_blank" rel="noopener noreferrer">PM-MG</a><a href="https://www.bombeiros.mg.gov.br" target="_blank" rel="noopener noreferrer">CBM-MG</a><a href="https://www.eb.mil.br" target="_blank" rel="noopener noreferrer">Exército</a><a href="https://www.gov.br" target="_blank" rel="noopener noreferrer">gov.br</a><a href="https://www.gov.br/inss/pt-br" target="_blank" rel="noopener noreferrer">INSS</a><a href="https://www.gov.br/receitafederal/pt-br" target="_blank" rel="noopener noreferrer">Receita Federal</a><a href="https://www.mg.gov.br" target="_blank" rel="noopener noreferrer">Governo de MG</a><a href="https://www.detran.mg.gov.br" target="_blank" rel="noopener noreferrer">DETRAN-MG</a><a href="https://www.pjf.mg.gov.br" target="_blank" rel="noopener noreferrer">Prefeitura de JF</a></div>
+    </div>
+  </div>
+
   <!-- Nome do escritório (movido para baixo da barra de menu) -->
   <div class="bg-gradient-to-b from-white to-warm-50 border-b border-gold-200/50">
     <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col items-center text-center">
@@ -1800,304 +1817,68 @@
     </section>
 
     <!-- ================= SEÇÃO: GUIA NACIONAL DA JUSTIÇA, SEGURANÇA PÚBLICA & CIDADANIA ================= -->
-    <section id="guia-justica" class="py-16 sm:py-24 bg-gradient-to-b from-slate-900 via-navy-950 to-slate-900 text-white border-t border-gold-500/30 scroll-mt-20 relative overflow-hidden">
-      <!-- Glow decorativo de fundo -->
-      <div class="absolute -top-40 -right-40 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <!-- Estilos próprios do Guia (classe única em vez de repetir utilitários em cada cartão: página mais leve) -->
+    <!-- ============ RESUMO DO PORTAL JURÍDICO (no lugar do antigo box gigante do Guia) ============ -->
+    <section id="portal-resumo" class="py-14 sm:py-20 bg-white border-t border-slate-200 scroll-mt-20">
       <style>
-        #guia-justica .guia-grupo-tit{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:.95rem;color:#fcd34d;letter-spacing:.02em;margin:1.9rem 0 .9rem}
-        #guia-justica .guia-grupo-tit::after{content:"";flex:1;height:1px;background:linear-gradient(to right,rgba(252,211,77,.4),transparent)}
-        #guia-justica .guia-grid{display:grid;grid-template-columns:1fr;gap:.75rem}
-        @media(min-width:640px){#guia-justica .guia-grid{grid-template-columns:repeat(2,1fr)}}
-        @media(min-width:768px){#guia-justica .guia-grid{grid-template-columns:repeat(3,1fr)}}
-        @media(min-width:1024px){#guia-justica .guia-grid{grid-template-columns:repeat(4,1fr)}}
-        #guia-justica .guia-card{display:flex;flex-direction:column;justify-content:space-between;padding:.9rem;border-radius:1rem;background:rgba(30,41,59,.6);border:1px solid rgba(51,65,85,.8);transition:all .2s;text-decoration:none}
-        #guia-justica .guia-card:hover{background:rgb(30,41,59);border-color:rgba(251,191,36,.8);box-shadow:0 10px 25px -5px rgba(0,0,0,.5);transform:translateY(-2px)}
-        #guia-justica .guia-card .gc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
-        #guia-justica .guia-card .gc-tag{font-size:.65rem;font-weight:700;color:#fcd34d;font-family:ui-monospace,monospace;text-transform:uppercase;letter-spacing:.03em}
-        #guia-justica .guia-card .gc-seta{font-size:.75rem;color:#94a3b8}
-        #guia-justica .guia-card .gc-name{font-weight:700;color:#fff;font-size:.82rem;line-height:1.2}
-        #guia-justica .guia-card:hover .gc-name{color:#fcd34d}
-        #guia-justica .guia-card .gc-desc{font-size:.72rem;color:#cbd5e1;margin-top:.25rem;line-height:1.3}
-        #guia-justica .guia-card .gc-url{font-size:.66rem;color:#94a3b8;font-family:ui-monospace,monospace;margin-top:.55rem;padding-top:.4rem;border-top:1px solid rgba(51,65,85,.5)}
-        #guia-justica .guia-card.mg{border-color:rgba(251,191,36,.55);box-shadow:0 0 0 1px rgba(251,191,36,.22)}
-        #guia-justica .guia-card.mg .gc-tag{color:#fde68a}
-        #guia-justica .guia-grupo.oculto,#guia-justica .guia-card.oculto{display:none}
-        /* Caixa de busca: fundo escuro e texto claro garantidos (não depende do Tailwind compilado) */
-        #guia-justica #busca-guia-orgaos{background:rgba(15,23,42,.92);color:#fff;border:1px solid #334155;caret-color:#fcd34d}
-        #guia-justica #busca-guia-orgaos::placeholder{color:#94a3b8;opacity:1}
-        #guia-justica #busca-guia-orgaos:focus{border-color:transparent;box-shadow:0 0 0 2px #fcd34d}
-        #guia-justica #limpar-busca-guia{background:rgba(51,65,85,.7);color:#e2e8f0}
+        #portal-resumo .pr-eyebrow{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .9rem;border-radius:999px;background:rgba(184,134,11,.1);border:1px solid rgba(184,134,11,.3);color:#8a6414;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:1rem}
+        #portal-resumo .pr-grid{display:grid;grid-template-columns:1fr;gap:14px}
+        @media(min-width:640px){#portal-resumo .pr-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(min-width:1024px){#portal-resumo .pr-grid{grid-template-columns:repeat(3,1fr)}}
+        #portal-resumo .pr-card{display:block;padding:14px 16px;border:1px solid #e6e2d6;border-left:3px solid var(--c,#132B4D);border-radius:12px;background:#fff;text-decoration:none;transition:all .2s}
+        #portal-resumo .pr-card:hover{box-shadow:0 10px 24px -8px rgba(10,25,47,.18);transform:translateY(-2px)}
+        #portal-resumo .pr-card .pr-lvl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c,#132B4D)}
+        #portal-resumo .pr-card .t{font-weight:700;color:#1a2230;font-size:.92rem;line-height:1.25;margin-top:3px}
+        #portal-resumo .pr-card:hover .t{color:#B8860B}
+        #portal-resumo .pr-card .m{margin-top:7px;font-size:.72rem;color:#8a93a3;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+        #portal-resumo .pr-dot{width:3px;height:3px;border-radius:50%;background:#8a93a3;display:inline-block}
+        #portal-resumo .pr-cta{display:inline-flex;align-items:center;gap:.5rem;padding:.8rem 1.4rem;border-radius:.8rem;background:#0A192F;color:#fff;font-weight:700;font-size:.9rem;text-decoration:none;transition:all .2s}
+        #portal-resumo .pr-cta:hover{background:#132B4D}
       </style>
-
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-
-        <!-- Cabeçalho da Seção -->
-        <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
-          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-gold-400/10 border border-gold-400/30 text-gold-300 text-xs font-bold uppercase tracking-widest mb-4">
-            <span>🏛️ Portal de Cidadania &amp; Acesso aos Órgãos Oficiais</span>
-          </div>
-          <h2 class="text-2xl sm:text-4xl font-serif font-bold text-white tracking-tight mb-4">
-            Guia Nacional da Justiça, Segurança Pública &amp; Cidadania
-          </h2>
-          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Links oficiais dos principais Tribunais, Ministérios Públicos, Defensorias, forças de segurança e serviços ao cidadão — com destaque para os órgãos de Minas Gerais e de Juiz de Fora.
-          </p>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-8">
+          <div class="pr-eyebrow">📰 Portal Jurídico &middot; Notícias</div>
+          <h2 class="text-2xl sm:text-4xl font-serif font-bold text-slate-900 tracking-tight mb-3">Notícias jurídicas em linguagem simples</h2>
+          <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Um resumo das últimas do nosso portal — de fontes oficiais e revisadas pelo escritório. Os links dos órgãos oficiais ficam na barra do Guia da Justiça, no topo da página.</p>
         </div>
-
-        <!-- Barra de Busca Instantânea -->
-        <div class="max-w-2xl mx-auto mb-8">
-          <div class="relative flex items-center">
-            <span class="absolute left-4 text-slate-400 text-lg">🔍</span>
-            <input type="text" id="busca-guia-orgaos" oninput="filtrarGuiaOrgaos(this.value)"
-              placeholder="Digite o órgão ou sigla (ex.: STF, TRF6, PMMG, INSS, DETRAN...)"
-              class="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-slate-800/90 border border-slate-700 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400 focus:border-transparent transition-all shadow-inner" />
-            <button id="limpar-busca-guia" onclick="limparFiltroGuiaOrgaos()"
-              class="absolute right-3.5 text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded bg-slate-700/60 hidden">✕ Limpar</button>
-          </div>
+        <div class="pr-grid" id="pr-grid">
+          <a class="pr-card" href="/portal" style="--c:#132B4D"><div class="pr-lvl">Federal</div><div class="t">INSS retoma o pente-fino do BPC/LOAS em todo o país</div><div class="m"><span>Agência Brasil</span><span class="pr-dot"></span><span>2 h</span></div></a>
+          <a class="pr-card" href="/portal" style="--c:#B45309"><div class="pr-lvl">Local</div><div class="t">Mutirão de conciliação do TJMG atende comarca de Juiz de Fora</div><div class="m"><span>TJMG</span><span class="pr-dot"></span><span>1 h</span></div></a>
+          <a class="pr-card" href="/portal" style="--c:#132B4D"><div class="pr-lvl">Federal</div><div class="t">STJ reconhece dever do banco de devolver valor no golpe do Pix</div><div class="m"><span>STJ</span><span class="pr-dot"></span><span>4 h</span></div></a>
+          <a class="pr-card" href="/portal" style="--c:#047857"><div class="pr-lvl">Estadual</div><div class="t">MPMG notifica empresas por descontos indevidos de aposentados</div><div class="m"><span>MPMG</span><span class="pr-dot"></span><span>3 h</span></div></a>
+          <a class="pr-card" href="/portal" style="--c:#B45309"><div class="pr-lvl">Local</div><div class="t">Procon-JF alerta para golpe do falso boleto de água</div><div class="m"><span>Procon-JF</span><span class="pr-dot"></span><span>5 h</span></div></a>
+          <a class="pr-card" href="/portal" style="--c:#B8860B"><div class="pr-lvl">Municipal</div><div class="t">Prefeitura de JF divulga calendário do IPTU 2026</div><div class="m"><span>PJF</span><span class="pr-dot"></span><span>6 h</span></div></a>
         </div>
-
-        <!-- GRUPO 1: Tribunais Superiores & Conselho -->
-        <div class="guia-grupo">
-          <div class="guia-grupo-tit">⚖️ Tribunais Superiores &amp; Conselho</div>
-          <div class="guia-grid">
-            <a class="guia-card" href="https://portal.stf.jus.br" target="_blank" rel="noopener noreferrer" data-k="stf supremo tribunal federal constituicao brasilia">
-              <div><div class="gc-top"><span class="gc-tag">Supremo</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">STF — Supremo Tribunal Federal</div>
-                <div class="gc-desc">Guardião da Constituição Federal.</div></div>
-              <div class="gc-url">portal.stf.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://www.stj.jus.br" target="_blank" rel="noopener noreferrer" data-k="stj superior tribunal justica cidadania lei federal">
-              <div><div class="gc-top"><span class="gc-tag">Superior</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">STJ — Superior Tribunal de Justiça</div>
-                <div class="gc-desc">Uniformiza a lei federal (Tribunal da Cidadania).</div></div>
-              <div class="gc-url">stj.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://www.stm.jus.br" target="_blank" rel="noopener noreferrer" data-k="stm superior tribunal militar forcas armadas exercito marinha aeronautica">
-              <div><div class="gc-top"><span class="gc-tag">Militar</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">STM — Superior Tribunal Militar</div>
-                <div class="gc-desc">Justiça Militar da União.</div></div>
-              <div class="gc-url">stm.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://www.tse.jus.br" target="_blank" rel="noopener noreferrer" data-k="tse tribunal superior eleitoral titulo eleitor certidao votacao">
-              <div><div class="gc-top"><span class="gc-tag">Eleitoral</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TSE — Tribunal Superior Eleitoral</div>
-                <div class="gc-desc">Título de eleitor e certidões eleitorais.</div></div>
-              <div class="gc-url">tse.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://www.tst.jus.br" target="_blank" rel="noopener noreferrer" data-k="tst tribunal superior trabalho trabalhista clt empregado">
-              <div><div class="gc-top"><span class="gc-tag">Trabalho</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TST — Tribunal Superior do Trabalho</div>
-                <div class="gc-desc">Instância máxima da Justiça do Trabalho.</div></div>
-              <div class="gc-url">tst.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://www.cnj.jus.br" target="_blank" rel="noopener noreferrer" data-k="cnj conselho nacional justica datajud processos mandados">
-              <div><div class="gc-top"><span class="gc-tag">Conselho</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">CNJ — Conselho Nacional de Justiça</div>
-                <div class="gc-desc">Fiscaliza o Judiciário; consulta DataJud.</div></div>
-              <div class="gc-url">cnj.jus.br</div>
-            </a>
-          </div>
+        <div class="text-center mt-8">
+          <a href="/portal" class="pr-cta">Ver o portal completo &rarr;</a>
         </div>
-
-        <!-- GRUPO 2: Justiça Federal, do Trabalho & Estadual -->
-        <div class="guia-grupo">
-          <div class="guia-grupo-tit">🏛️ Justiça Federal, do Trabalho &amp; Estadual</div>
-          <div class="guia-grid">
-            <a class="guia-card mg" href="https://portal.trf6.jus.br" target="_blank" rel="noopener noreferrer" data-k="trf6 trf 6 tribunal regional federal 6 regiao minas gerais juiz de fora belo horizonte inss">
-              <div><div class="gc-top"><span class="gc-tag">Minas Gerais ⭐</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TRF-6 — Tribunal Regional Federal da 6ª Região</div>
-                <div class="gc-desc">Justiça Federal em MG (Juiz de Fora e BH) — ações contra INSS e União.</div></div>
-              <div class="gc-url">portal.trf6.jus.br</div>
-            </a>
-            <a class="guia-card mg" href="https://portal.trt3.jus.br" target="_blank" rel="noopener noreferrer" data-k="trt3 trt 3 tribunal regional trabalho 3 regiao minas gerais trabalhista">
-              <div><div class="gc-top"><span class="gc-tag">Trabalho MG ⭐</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TRT-3 — Tribunal Regional do Trabalho (3ª Região)</div>
-                <div class="gc-desc">Justiça do Trabalho em Minas Gerais.</div></div>
-              <div class="gc-url">portal.trt3.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://portal.trf1.jus.br" target="_blank" rel="noopener noreferrer" data-k="trf1 trf 1 tribunal regional federal 1 regiao df go norte centro-oeste">
-              <div><div class="gc-top"><span class="gc-tag">Federal TRF-1</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TRF-1 — Tribunal Regional Federal da 1ª Região</div>
-                <div class="gc-desc">DF e estados do Norte, Centro-Oeste e Nordeste.</div></div>
-              <div class="gc-url">portal.trf1.jus.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.tjmg.jus.br" target="_blank" rel="noopener noreferrer" data-k="tjmg tribunal justica minas gerais estadual mg juiz de fora belo horizonte">
-              <div><div class="gc-top"><span class="gc-tag">Estadual MG ⭐</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TJMG — Tribunal de Justiça de Minas Gerais</div>
-                <div class="gc-desc">Justiça Estadual de MG (Juiz de Fora, BH e comarcas).</div></div>
-              <div class="gc-url">tjmg.jus.br</div>
-            </a>
-            <a class="guia-card" href="https://www.tjrj.jus.br" target="_blank" rel="noopener noreferrer" data-k="tjrj tribunal justica rio de janeiro estadual rj">
-              <div><div class="gc-top"><span class="gc-tag">Estadual RJ</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">TJRJ — Tribunal de Justiça do Rio de Janeiro</div>
-                <div class="gc-desc">Justiça Estadual do Rio de Janeiro.</div></div>
-              <div class="gc-url">tjrj.jus.br</div>
-            </a>
-          </div>
-        </div>
-
-        <!-- GRUPO 3: Ministério Público & Defensoria -->
-        <div class="guia-grupo">
-          <div class="guia-grupo-tit">🛡️ Ministério Público, Defensoria &amp; OAB</div>
-          <div class="guia-grid">
-            <a class="guia-card" href="https://www.mpf.mp.br" target="_blank" rel="noopener noreferrer" data-k="mpf ministerio publico federal denuncia direitos">
-              <div><div class="gc-top"><span class="gc-tag">Federal</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">MPF — Ministério Público Federal</div>
-                <div class="gc-desc">Defesa dos direitos e do patrimônio da União.</div></div>
-              <div class="gc-url">mpf.mp.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.mpmg.mp.br" target="_blank" rel="noopener noreferrer" data-k="mpmg ministerio publico minas gerais denuncia promotoria">
-              <div><div class="gc-top"><span class="gc-tag">Minas Gerais</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">MPMG — Ministério Público de Minas Gerais</div>
-                <div class="gc-desc">Promotorias e defesa da sociedade em MG.</div></div>
-              <div class="gc-url">mpmg.mp.br</div>
-            </a>
-            <a class="guia-card" href="https://www.dpu.def.br" target="_blank" rel="noopener noreferrer" data-k="dpu defensoria publica uniao gratuita assistencia juridica federal">
-              <div><div class="gc-top"><span class="gc-tag">Federal</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">DPU — Defensoria Pública da União</div>
-                <div class="gc-desc">Assistência jurídica gratuita na Justiça Federal.</div></div>
-              <div class="gc-url">dpu.def.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.defensoria.mg.def.br" target="_blank" rel="noopener noreferrer" data-k="dpemg defensoria publica minas gerais gratuita assistencia juridica estadual">
-              <div><div class="gc-top"><span class="gc-tag">Minas Gerais</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">DPE-MG — Defensoria Pública de Minas Gerais</div>
-                <div class="gc-desc">Assistência jurídica gratuita em MG.</div></div>
-              <div class="gc-url">defensoria.mg.def.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.oabmg.org.br" target="_blank" rel="noopener noreferrer" data-k="oab mg ordem advogados brasil minas gerais inscricao advogado">
-              <div><div class="gc-top"><span class="gc-tag">Advocacia MG</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">OAB-MG — Ordem dos Advogados (Minas Gerais)</div>
-                <div class="gc-desc">Consulta de inscrição e serviços da advocacia em MG.</div></div>
-              <div class="gc-url">oabmg.org.br</div>
-            </a>
-          </div>
-        </div>
-
-        <!-- GRUPO 4: Segurança Pública & Forças -->
-        <div class="guia-grupo">
-          <div class="guia-grupo-tit">🚨 Segurança Pública &amp; Forças</div>
-          <div class="guia-grid">
-            <a class="guia-card" href="https://www.gov.br/pf/pt-br" target="_blank" rel="noopener noreferrer" data-k="pf policia federal passaporte naturalizacao crimes federais">
-              <div><div class="gc-top"><span class="gc-tag">Federal</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">PF — Polícia Federal</div>
-                <div class="gc-desc">Passaporte, naturalização e crimes federais.</div></div>
-              <div class="gc-url">gov.br/pf</div>
-            </a>
-            <a class="guia-card" href="https://www.gov.br/prf/pt-br" target="_blank" rel="noopener noreferrer" data-k="prf policia rodoviaria federal rodovias br transito">
-              <div><div class="gc-top"><span class="gc-tag">Rodoviária</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">PRF — Polícia Rodoviária Federal</div>
-                <div class="gc-desc">Fiscalização das rodovias federais (BRs).</div></div>
-              <div class="gc-url">gov.br/prf</div>
-            </a>
-            <a class="guia-card mg" href="https://www.policiacivil.mg.gov.br" target="_blank" rel="noopener noreferrer" data-k="pcmg policia civil minas gerais delegacia boletim ocorrencia bo investigacao">
-              <div><div class="gc-top"><span class="gc-tag">Civil MG</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">PCMG — Polícia Civil de Minas Gerais</div>
-                <div class="gc-desc">Delegacias, boletim de ocorrência e investigação.</div></div>
-              <div class="gc-url">policiacivil.mg.gov.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.policiamilitar.mg.gov.br" target="_blank" rel="noopener noreferrer" data-k="pmmg policia militar minas gerais 190 seguranca">
-              <div><div class="gc-top"><span class="gc-tag">Militar MG</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">PMMG — Polícia Militar de Minas Gerais</div>
-                <div class="gc-desc">Policiamento ostensivo em MG (emergência 190).</div></div>
-              <div class="gc-url">policiamilitar.mg.gov.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.bombeiros.mg.gov.br" target="_blank" rel="noopener noreferrer" data-k="bmmg cbmmg corpo bombeiros militar minas gerais 193 incendio resgate">
-              <div><div class="gc-top"><span class="gc-tag">Bombeiros MG</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">CBMMG — Corpo de Bombeiros Militar de MG</div>
-                <div class="gc-desc">Resgate, incêndio e vistorias (emergência 193).</div></div>
-              <div class="gc-url">bombeiros.mg.gov.br</div>
-            </a>
-            <a class="guia-card" href="https://www.eb.mil.br" target="_blank" rel="noopener noreferrer" data-k="exercito brasileiro eb forcas armadas alistamento militar">
-              <div><div class="gc-top"><span class="gc-tag">Forças Armadas</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">Exército Brasileiro</div>
-                <div class="gc-desc">Alistamento militar e serviços das Forças Armadas.</div></div>
-              <div class="gc-url">eb.mil.br</div>
-            </a>
-          </div>
-        </div>
-
-        <!-- GRUPO 5: Governo & Serviços ao Cidadão -->
-        <div class="guia-grupo">
-          <div class="guia-grupo-tit">🇧🇷 Governo &amp; Serviços ao Cidadão</div>
-          <div class="guia-grid">
-            <a class="guia-card" href="https://www.gov.br" target="_blank" rel="noopener noreferrer" data-k="govbr gov.br governo federal portal servicos login unico cidadao">
-              <div><div class="gc-top"><span class="gc-tag">Federal</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">gov.br — Portal do Governo Federal</div>
-                <div class="gc-desc">Serviços públicos federais e login único gov.br.</div></div>
-              <div class="gc-url">gov.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.mg.gov.br" target="_blank" rel="noopener noreferrer" data-k="governo estado minas gerais mg portal servicos estaduais">
-              <div><div class="gc-top"><span class="gc-tag">Estado MG</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">Governo do Estado de Minas Gerais</div>
-                <div class="gc-desc">Portal de serviços do Estado de MG.</div></div>
-              <div class="gc-url">mg.gov.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.pjf.mg.gov.br" target="_blank" rel="noopener noreferrer" data-k="prefeitura juiz de fora pjf municipal iptu servicos cidade">
-              <div><div class="gc-top"><span class="gc-tag">Juiz de Fora</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">Prefeitura de Juiz de Fora</div>
-                <div class="gc-desc">Serviços municipais de Juiz de Fora (IPTU, etc.).</div></div>
-              <div class="gc-url">pjf.mg.gov.br</div>
-            </a>
-            <a class="guia-card mg" href="https://www.detran.mg.gov.br" target="_blank" rel="noopener noreferrer" data-k="detran mg minas gerais cnh habilitacao licenciamento multas veiculo transito">
-              <div><div class="gc-top"><span class="gc-tag">Trânsito MG</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">DETRAN-MG</div>
-                <div class="gc-desc">CNH, licenciamento e multas em Minas Gerais.</div></div>
-              <div class="gc-url">detran.mg.gov.br</div>
-            </a>
-            <a class="guia-card" href="https://www.gov.br/inss/pt-br" target="_blank" rel="noopener noreferrer" data-k="inss meu inss previdencia aposentadoria beneficio auxilio">
-              <div><div class="gc-top"><span class="gc-tag">Previdência</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">INSS — Meu INSS</div>
-                <div class="gc-desc">Benefícios, aposentadoria e perícias (Meu INSS).</div></div>
-              <div class="gc-url">gov.br/inss</div>
-            </a>
-            <a class="guia-card" href="https://www.gov.br/receitafederal/pt-br" target="_blank" rel="noopener noreferrer" data-k="receita federal rfb cpf imposto renda irpf declaracao tributos restituicao">
-              <div><div class="gc-top"><span class="gc-tag">Tributos</span><span class="gc-seta">↗</span></div>
-                <div class="gc-name">Receita Federal</div>
-                <div class="gc-desc">CPF, Imposto de Renda e situação fiscal.</div></div>
-              <div class="gc-url">gov.br/receitafederal</div>
-            </a>
-          </div>
-        </div>
-
-        <!-- Mensagem de busca sem resultados -->
-        <div id="guia-sem-resultados" class="hidden text-center py-10 text-slate-400">
-          <p class="text-sm">Nenhum órgão encontrado para a sua busca.</p>
-          <button onclick="limparFiltroGuiaOrgaos()" class="mt-3 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-gold-400 text-xs font-bold transition-all border border-slate-700">Limpar busca</button>
-        </div>
-
-        <p class="text-center text-[11px] text-slate-400 mt-8 font-mono">
-          Links para os portais oficiais. O escritório não se responsabiliza por conteúdos externos.
-        </p>
       </div>
+      <script>
+        (function(){
+          function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+          function fmt(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
+          var COR={local:'#B45309',federal:'#132B4D',estadual:'#047857',municipal:'#B8860B'};
+          var LVL={local:'Local',federal:'Federal',estadual:'Estadual',municipal:'Municipal'};
+          function card(it,lvl){
+            return '<a class="pr-card" href="/portal/'+encodeURIComponent(it.slug||'')+'" style="--c:'+(COR[lvl]||'#132B4D')+'">'
+              +'<div class="pr-lvl">'+(LVL[lvl]||'')+'</div>'
+              +'<div class="t">'+esc(it.title)+'</div>'
+              +'<div class="m"><span>'+esc(it.source||'')+'</span><span class="pr-dot"></span><span>'+fmt(it.source_date||it.published_at)+'</span></div></a>';
+          }
+          fetch('/api/portal/official',{headers:{'Accept':'application/json'}})
+            .then(function(r){return r.ok?r.json():null;})
+            .then(function(d){
+              if(!d||!d.success||!d.grupos)return;
+              var ordem=['local','federal','estadual','municipal'],linhas=[],max=0;
+              ordem.forEach(function(k){max=Math.max(max,(d.grupos[k]||[]).length);});
+              if(!max)return;
+              for(var i=0;i<max;i++){ordem.forEach(function(k){var a=d.grupos[k]||[];if(a[i])linhas.push(card(a[i],k));});}
+              var g=document.getElementById('pr-grid');
+              if(g&&linhas.length)g.innerHTML=linhas.slice(0,9).join('');
+            })
+            .catch(function(){});
+        })();
+      </script>
     </section>
-
-    <!-- Script de Busca do Guia de Órgãos (leve, sem dependências) -->
-    <script>
-      function filtrarGuiaOrgaos(termo) {
-        const busca = (termo || '').toLowerCase().trim();
-        const limparBtn = document.getElementById('limpar-busca-guia');
-        if (limparBtn) limparBtn.classList.toggle('hidden', busca.length === 0);
-        let visiveis = 0;
-        document.querySelectorAll('#guia-justica .guia-card').forEach(card => {
-          const texto = (card.innerText + ' ' + (card.getAttribute('data-k') || '')).toLowerCase();
-          const ok = busca === '' || texto.includes(busca);
-          card.classList.toggle('oculto', !ok);
-          if (ok) visiveis++;
-        });
-        document.querySelectorAll('#guia-justica .guia-grupo').forEach(grupo => {
-          grupo.classList.toggle('oculto', !grupo.querySelector('.guia-card:not(.oculto)'));
-        });
-        const sem = document.getElementById('guia-sem-resultados');
-        if (sem) sem.classList.toggle('hidden', visiveis > 0);
-      }
-      function limparFiltroGuiaOrgaos() {
-        const input = document.getElementById('busca-guia-orgaos');
-        if (input) { input.value = ''; filtrarGuiaOrgaos(''); }
-      }
-    </script>
 
     <!-- ================= SEÇÃO CONTATO: AGENDAMENTO + MAPA ================= -->
     <section id="contato" class="py-14 sm:py-20 bg-warm-50 border-t border-slate-200">

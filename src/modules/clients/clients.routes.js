@@ -21,6 +21,7 @@ export const clientsRouter = express.Router();
  */
 clientsRouter.get('/api/clients', requireAuth, (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     const includeDeleted = req.query.include_deleted === 'true' || req.query.all === 'true';
     const query = includeDeleted
       ? `SELECT * FROM clients ORDER BY created_at DESC`

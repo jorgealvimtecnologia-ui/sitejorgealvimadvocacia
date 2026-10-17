@@ -1071,6 +1071,12 @@
           <span>Roadmap Vivo</span>
         </button>
 
+        <!-- Aba: Portal de Notícias (Central de Comando do robô) — só mestre -->
+        <button id="tab-btn-portal" onclick="switchTab('portal')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50 transition-all border border-emerald-300 bg-emerald-50/50 cursor-pointer" title="Central de Comando do Portal de Notícias: esteira do robô, revisão e publicação">
+          <span>📰</span>
+          <span>Portal de Notícias</span>
+        </button>
+
       </div>
     </header>
 
@@ -1658,6 +1664,30 @@
 
           <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             
+            <!-- Alternador de Visualização: Modo Lista Rápida vs Fichas Abertas -->
+            <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200" id="clients-view-mode-toggle">
+              <button 
+                type="button" 
+                onclick="setClientsViewMode('compact')" 
+                id="btn-view-mode-compact"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-white text-navy-950 shadow-xs border border-slate-200/80 cursor-pointer"
+                title="Modo Lista Rápida (Ultra-leve e veloz para milhares de contatos)"
+              >
+                <span>📋</span>
+                <span>Lista Rápida</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="setClientsViewMode('expanded')" 
+                id="btn-view-mode-expanded"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-500 hover:text-slate-800 cursor-pointer"
+                title="Modo Fichas Abertas (Exibe todos os formulários e contratos expandidos)"
+              >
+                <span>🗂️</span>
+                <span>Fichas Abertas</span>
+              </button>
+            </div>
+
             <select id="filter-client-type" onchange="filterClients()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:outline-none focus:border-gold-500">
               <option value="">Todos os Tipos (PF / PJ)</option>
               <option value="PF">👤 Pessoa Física (PF)</option>
@@ -1677,6 +1707,16 @@
             >
               <span class="text-white text-base">➕</span>
               <span>Novo Cliente & Contrato</span>
+            </button>
+
+            <button 
+              type="button"
+              onclick="openContactsImportModal()" 
+              class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all border border-slate-700 cursor-pointer"
+              title="Importar contatos do Gmail / Google Contacts ou planilhas CSV/XLS"
+            >
+              <span class="text-base">📥</span>
+              <span>Importar Contatos (Gmail / CSV / XLS)</span>
             </button>
 
           </div>
@@ -7093,6 +7133,16 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
       </section>
 
+      <!-- ================= ABA: PORTAL DE NOTÍCIAS (CENTRAL DE COMANDO DO ROBÔ) ================= -->
+      <!-- Só mestre (MASTER_ONLY). Embute a Central existente (/portal/revisar) por iframe
+           same-origin — compartilha a sessão do painel (token ja_admin_token). Preenchido
+           sob demanda por public/js/tabs/tab-portal.js (lazy-load do iframe). -->
+      <section id="tab-content-portal" class="hidden space-y-6">
+        <div id="portal-tab-container">
+          <!-- Renderizado dinamicamente por public/js/tabs/tab-portal.js -->
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -10261,6 +10311,206 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </div>
   </div>
 
+  <!-- ================= MODAL: INTEGRAÇÃO & IMPORTAÇÃO DE CONTATOS (GMAIL, CELULAR, CSV E EXCEL) ================= -->
+  <div id="modal-contacts-import" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-6 max-h-[92vh] overflow-y-auto">
+      <button onclick="closeContactsImportModal()" type="button" class="absolute right-5 top-5 text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none">&times;</button>
+      
+      <!-- Cabeçalho do Modal -->
+      <div class="flex items-start space-x-3.5 border-b border-slate-100 pb-4">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-gold-500/20 text-navy-950 flex items-center justify-center text-2xl font-bold flex-shrink-0 border border-amber-300">
+          📥
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-serif font-bold text-lg sm:text-xl text-navy-950">Integração & Importação de Contatos</h3>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-extrabold uppercase">Google People API • VCF • CSV • Excel</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Puxe contatos do Gmail/Google Contacts, arquivos VCF do celular (Android/iPhone) ou planilhas CSV/Excel.</p>
+        </div>
+      </div>
+
+      <!-- Métodos de Entrada: 2 Cards em Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Método 1: Google Contacts / Gmail Direct -->
+        <div class="p-5 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-slate-50/60 flex flex-col justify-between transition-all space-y-4">
+          <div class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <span class="text-2xl">🌐</span>
+              <h4 class="font-bold text-sm text-navy-950">Puxar do Gmail / Google Contatos</h4>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Conecte qualquer conta Google para puxar automaticamente contatos, nomes, números de celular sincronizados no smartphone Android/iPhone e e-mails.
+            </p>
+          </div>
+          <button 
+            type="button" 
+            onclick="connectGoogleContacts()" 
+            class="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-amber-400"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Conectar Gmail &amp; Puxar Contatos</span>
+          </button>
+        </div>
+
+        <!-- Método 2: Upload CSV / Excel -->
+        <div 
+          id="contacts-dropzone"
+          ondragover="handleContactsDragOver(event)"
+          ondragleave="handleContactsDragLeave(event)"
+          ondrop="handleContactsFileDrop(event)"
+          class="p-5 rounded-2xl border-2 border-dashed border-slate-300 hover:border-amber-400 bg-slate-50/60 flex flex-col justify-between transition-all space-y-4"
+        >
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-2xl">📱</span>
+                <h4 class="font-bold text-sm text-navy-950">Arquivo VCF de Celular, CSV ou Excel</h4>
+              </div>
+              <button type="button" onclick="downloadContactsModelCsv()" class="text-[10px] text-amber-700 hover:text-amber-900 underline font-semibold">Baixar Modelo CSV</button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Arraste aqui ou selecione contatos exportados do celular Android/iPhone (<span class="font-mono text-[11px]">.vcf</span>), arquivo CSV ou planilha Excel.
+            </p>
+          </div>
+          <div>
+            <label class="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer hover:border-amber-400">
+              <span>📁 Selecionar Arquivo (.vcf, .csv, .xlsx, .xls)</span>
+              <input type="file" id="contacts-file-input" accept=".vcf, .csv, .xlsx, .xls" onchange="handleContactsFileSelect(event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Configurações de Destino -->
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+        <div class="font-bold text-xs text-navy-950 flex items-center gap-1.5">
+          <span>⚙️</span>
+          <span>Opções de Gravação no Sistema:</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Destino dos Registros:</label>
+            <select id="contacts-target-destination" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:border-amber-500">
+              <option value="clients">🏢 Cadastrar como Clientes &amp; Contratos</option>
+              <option value="leads">🎯 Cadastrar como Leads (Funil de Atendimento)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Etiqueta de Origem:</label>
+            <input type="text" id="contacts-source-label" value="Google Contacts / Importação" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-amber-500" />
+          </div>
+          <div class="flex items-center pt-5">
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="contacts-skip-duplicates" checked class="rounded text-amber-600 focus:ring-amber-500" />
+              <span class="text-xs font-bold text-slate-700">Ignorar duplicados (mesmo telefone/e-mail)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de Status / Avisos em Tempo Real -->
+      <div id="contacts-import-status"></div>
+
+      <!-- Contêiner de Pré-visualização Interativa -->
+      <div id="contacts-preview-container" class="hidden space-y-4 border-t border-slate-200 pt-4">
+        
+        <!-- Cards de Estatísticas da Prévia -->
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+          <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-center">
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Detectados</div>
+            <div id="stat-preview-total" class="text-base font-extrabold text-navy-950">0</div>
+          </div>
+          <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
+            <div class="text-[10px] font-bold text-emerald-700 uppercase">Com Celular</div>
+            <div id="stat-preview-phones" class="text-base font-extrabold text-emerald-900">0</div>
+          </div>
+          <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200 text-center">
+            <div class="text-[10px] font-bold text-blue-700 uppercase">👤 PF (Física)</div>
+            <div id="stat-preview-pf" class="text-base font-extrabold text-blue-900">0</div>
+          </div>
+          <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200 text-center">
+            <div class="text-[10px] font-bold text-purple-700 uppercase">🏢 PJ (Empresa)</div>
+            <div id="stat-preview-pj" class="text-base font-extrabold text-purple-900">0</div>
+          </div>
+          <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-center">
+            <div class="text-[10px] font-bold text-amber-700 uppercase">Já no Banco</div>
+            <div id="stat-preview-duplicates" class="text-base font-extrabold text-amber-900">0</div>
+          </div>
+          <div class="p-2.5 bg-indigo-50 rounded-xl border border-indigo-200 text-center">
+            <div class="text-[10px] font-bold text-indigo-700 uppercase">Selecionados</div>
+            <div id="stat-preview-selected" class="text-base font-extrabold text-indigo-900">0</div>
+          </div>
+        </div>
+
+        <!-- Filtro Rápido e Seleção -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <label class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" id="chk-select-all-contacts" checked onchange="toggleSelectAllContacts(this.checked)" class="rounded text-amber-600 focus:ring-amber-500" />
+              <span>Selecionar Todos</span>
+            </label>
+          </div>
+          <div class="w-full sm:w-72">
+            <input 
+              type="text" 
+              id="contacts-search-preview" 
+              placeholder="🔍 Filtrar prévia por nome, telefone..." 
+              oninput="filterContactsPreview()" 
+              class="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-amber-500"
+            />
+          </div>
+        </div>
+
+        <!-- Tabela com Scroll -->
+        <div class="border border-slate-200 rounded-2xl overflow-hidden max-h-72 overflow-y-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-100 text-[10px] font-extrabold uppercase text-slate-600 sticky top-0 border-b border-slate-200">
+              <tr>
+                <th class="p-2.5 w-10 text-center">Sel.</th>
+                <th class="p-2.5">Nome / Empresa</th>
+                <th class="p-2.5">Celular / Telefone</th>
+                <th class="p-2.5">E-mail</th>
+                <th class="p-2.5">Situação</th>
+              </tr>
+            </thead>
+            <tbody id="contacts-preview-tbody" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Rodapé com Botões de Ação (Sticky para ficar sempre visível) -->
+      <div class="sticky bottom-0 bg-white/95 backdrop-blur-md flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 pb-1 border-t border-slate-200 z-20 shadow-[0_-8px_16px_rgba(0,0,0,0.04)]">
+        <button 
+          onclick="closeContactsImportModal()" 
+          type="button" 
+          class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button 
+          id="btn-confirm-import-contacts"
+          onclick="submitContactsImport()" 
+          type="button" 
+          disabled
+          class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-amber-500 via-gold-500 to-amber-600 hover:from-amber-600 text-white font-extrabold rounded-xl text-xs sm:text-sm shadow-md transition-all cursor-pointer opacity-50 cursor-not-allowed"
+        >
+          Cadastrar Contatos Selecionados
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ================= MODAL: CALCULADORA DE PRAZOS PROCESSUAIS JUDICIAIS ================= -->
   <div id="modal-deadline-calculator" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto space-y-5">
@@ -11801,8 +12051,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-hr.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-charts.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-roadmap.js?v=20260922-v1"></script>
+  <script src="/js/tabs/tab-portal.js?v=20261017-v1"></script>
   <script src="/js/tabs/tab-qa.js?v=20260924"></script>
   <script src="/js/tabs/tab-deadline-alerts.js?v=20261003-v1"></script>
+  <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD
@@ -11812,7 +12064,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/painel/painel-2.js?v=20260907-v4"></script>
 
   <!-- ================= GERENCIADOR DE JANELAS (estilo Windows) ================= -->
-  <script src="/js/painel/painel-3.js?v=20260921-v3"></script>
+  <script src="/js/painel/painel-3.js?v=20261017-v5"></script>
 
   <!-- ================= RECURSOS WINDOWS (Menu de Contexto & Bloqueio LGPD) ================= -->
   <script src="/js/core/windows-features.js?v=20260907-v4"></script>
