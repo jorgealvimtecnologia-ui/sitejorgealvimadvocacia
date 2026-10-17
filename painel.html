@@ -1071,6 +1071,12 @@
           <span>Roadmap Vivo</span>
         </button>
 
+        <!-- Aba: Portal de Notícias (Central de Comando do robô) — só mestre -->
+        <button id="tab-btn-portal" onclick="switchTab('portal')" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50 transition-all border border-emerald-300 bg-emerald-50/50 cursor-pointer" title="Central de Comando do Portal de Notícias: esteira do robô, revisão e publicação">
+          <span>📰</span>
+          <span>Portal de Notícias</span>
+        </button>
+
       </div>
     </header>
 
@@ -7093,6 +7099,16 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
       </section>
 
+      <!-- ================= ABA: PORTAL DE NOTÍCIAS (CENTRAL DE COMANDO DO ROBÔ) ================= -->
+      <!-- Só mestre (MASTER_ONLY). Embute a Central existente (/portal/revisar) por iframe
+           same-origin — compartilha a sessão do painel (token ja_admin_token). Preenchido
+           sob demanda por public/js/tabs/tab-portal.js (lazy-load do iframe). -->
+      <section id="tab-content-portal" class="hidden space-y-6">
+        <div id="portal-tab-container">
+          <!-- Renderizado dinamicamente por public/js/tabs/tab-portal.js -->
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -11801,6 +11817,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-hr.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-charts.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-roadmap.js?v=20260922-v1"></script>
+  <script src="/js/tabs/tab-portal.js?v=20261017-v1"></script>
   <script src="/js/tabs/tab-qa.js?v=20260924"></script>
   <script src="/js/tabs/tab-deadline-alerts.js?v=20261003-v1"></script>
 

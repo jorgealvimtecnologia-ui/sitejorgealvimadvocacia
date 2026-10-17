@@ -31,7 +31,8 @@
       explorer:{label:'Explorar Arquivos',emoji:'🗃️'},
       maintenance:{label:'Manutenção & Saúde',emoji:'🛠️'},
       'meta-ads':{label:'Meta Ads & Marketing',emoji:'📢'},
-      roadmap:{label:'Radar & Roadmap Legaltech',emoji:'🗺️'}
+      roadmap:{label:'Radar & Roadmap Legaltech',emoji:'🗺️'},
+      portal:{label:'Portal de Notícias',emoji:'📰'}
     };
     var TOOLS={editor:1,calc:1,kanban:1,explorer:1,maintenance:1};
     var GROUPS=[
@@ -40,7 +41,7 @@
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['colaborador','hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['roadmap','blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['roadmap','portal','blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',
@@ -49,7 +50,7 @@
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
-      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab'};
+      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab',portal:'loadPortalTab'};
 
     var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
 
@@ -1001,8 +1002,8 @@
       audit:'tab_audit', lgpd:'tab_audit', blog:'tab_blog', faq:'tab_blog', 'site-boxes':'tab_blog',
       notifications:'tab_alerts', dashboard:'tab_dashboard', kanban:'tab_kanban', editor:'tab_tools', calc:'tab_tools',
       explorer:'tab_settings', 'meta-ads':'tab_settings' };
-    // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM e Radar & Roadmap.
-    var MASTER_ONLY={maintenance:1,roadmap:1};
+    // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM, Radar & Roadmap e Portal de Notícias.
+    var MASTER_ONLY={maintenance:1,roadmap:1,portal:1};
     var ALWAYS_ALLOWED={rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){

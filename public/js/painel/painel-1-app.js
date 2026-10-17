@@ -910,6 +910,14 @@
         if (typeof window.loadRoadmapTab === 'function') {
           window.loadRoadmapTab();
         }
+      } else if (tab === 'portal') {
+        const c = document.getElementById('tab-content-portal');
+        const b = document.getElementById('tab-btn-portal');
+        if (c) c.classList.remove('hidden');
+        if (b) b.className = activeClass;
+        if (typeof window.loadPortalTab === 'function') {
+          window.loadPortalTab();
+        }
       }
 
       renderTabChart(tab);
@@ -969,7 +977,8 @@
         'maintenance': isMaster,
         'meta-ads': isMaster || perms.tab_settings === 1,
         'site-boxes': isMaster || perms.tab_blog === 1,
-        'faq': isMaster || perms.tab_blog === 1
+        'faq': isMaster || perms.tab_blog === 1,
+        'portal': isMaster
       };
 
       // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
