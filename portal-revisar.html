@@ -301,6 +301,7 @@
           +'<input data-f="cover_image" value="'+esc(it.cover_image||'')+'" placeholder="/img/blog/… (use o botão Anexar) ou cole um link">'
           +'<div style="display:flex;align-items:center;gap:10px;margin:8px 0">'
             +'<label class="btn sm" style="cursor:pointer;margin:0">📎 Anexar mídia<input type="file" accept="image/*" data-bupload style="display:none"></label>'
+            +'<button type="button" class="btn sm danger" data-bremove>🗑️ Excluir mídia</button>'
             +'<span class="bupload-st muted" style="font-size:.78rem"></span>'
           +'</div>'
           +'<img class="bcover-prev" alt="" src="'+esc(it.cover_image||'')+'" style="'+(it.cover_image?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
@@ -570,6 +571,7 @@
         +'<input data-bf="cover_image" value="'+esc(p.cover_image||'')+'" placeholder="/img/blog/… (use o botão Anexar) ou cole um link">'
         +'<div style="display:flex;align-items:center;gap:10px;margin:8px 0">'
           +'<label class="btn sm" style="cursor:pointer;margin:0">📎 Anexar mídia<input type="file" accept="image/*" data-bupload style="display:none"></label>'
+          +'<button type="button" class="btn sm danger" data-bremove>🗑️ Excluir mídia</button>'
           +'<span class="bupload-st muted" style="font-size:.78rem"></span>'
         +'</div>'
         +'<img class="bcover-prev" alt="" src="'+esc(p.cover_image||'')+'" style="'+(p.cover_image?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
@@ -625,6 +627,16 @@
         else{if(st)st.textContent=(d&&d.error)||'falha no upload';}
       })
       .catch(function(){if(st)st.textContent='falha no upload';});
+  });
+  // Excluir mídia — limpa a imagem de capa do editor aberto e esconde a prévia.
+  // (O Salvar do editor é quem grava a remoção; aqui só limpamos o campo/visual.)
+  document.getElementById('painel').addEventListener('click',function(e){
+    var btn=e.target.closest('button[data-bremove]');if(!btn)return;
+    var ed=btn.closest('.editor');if(!ed)return;
+    var covsel=btn.getAttribute('data-covsel')||'[data-bf="cover_image"],[data-f="cover_image"]';
+    Array.prototype.forEach.call(ed.querySelectorAll(covsel),function(c){c.value='';});
+    var prev=ed.querySelector('.bcover-prev');if(prev){prev.removeAttribute('src');prev.style.display='none';}
+    var st=ed.querySelector('.bupload-st');if(st)st.textContent='mídia removida (salve para confirmar)';
   });
   // Indicadores + gráfico de engajamento (visualizações/curtidas/comentários por categoria).
   function renderBlogStats(){
@@ -746,13 +758,12 @@
         +'<input data-xf="image_url" value="'+esc(a.image_url||'')+'" placeholder="/img/areas/… (use o botão Anexar) ou cole um link">'
         +'<div style="display:flex;align-items:center;gap:10px;margin:8px 0">'
           +'<label class="btn sm" style="cursor:pointer;margin:0">📎 Anexar mídia<input type="file" accept="image/*" data-bupload data-upurl="/api/admin/site/practice-areas/upload-image" data-upfield="image" data-covsel="[data-xf=&quot;image_url&quot;]" style="display:none"></label>'
+          +'<button type="button" class="btn sm danger" data-bremove data-covsel="[data-xf=&quot;image_url&quot;]">🗑️ Excluir mídia</button>'
           +'<span class="bupload-st muted" style="font-size:.78rem"></span>'
         +'</div>'
         +'<img class="bcover-prev" alt="" src="'+esc(a.image_url||'')+'" style="'+(a.image_url?'':'display:none;')+'max-height:90px;border-radius:8px;border:1px solid var(--line)">'
       +'</div>'
-      +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-xact="save" data-id="'+a.id+'">Salvar</button><button class="btn sm" data-xact="cancel" data-id="'+a.id+'">Cancelar</button>'
-      +(a.id?'<button class="btn sm danger" data-xact="del" data-id="'+a.id+'">Excluir</button>':'')
-      +'</div></div>';
+      +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-xact="save" data-id="'+a.id+'">Salvar</button><button class="btn sm" data-xact="cancel" data-id="'+a.id+'">Cancelar</button></div></div>';
   }
   function boxRow(a){
     var st=a.is_active?'<span style="color:var(--green);font-weight:700">● Publicado</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Oculto</span>';
