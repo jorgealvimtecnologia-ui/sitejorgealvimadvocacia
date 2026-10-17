@@ -163,6 +163,7 @@
     <div class="box">
       <div class="bh"><h3>✍️ Blog — Matérias &amp; Artigos</h3><button class="btn sm primary" id="blog-new" style="margin-left:auto">+ Nova matéria</button></div>
       <div class="bd">
+        <div id="blog-stats" style="margin-bottom:12px"></div>
         <div id="blog-editor-new"></div>
         <div id="blog-list"><div class="muted">Carregando…</div></div>
       </div>
@@ -577,6 +578,7 @@
       +'<div class="acts"><button class="btn sm" data-bact="edit" data-id="'+p.id+'">Editar</button>'
       +'<button class="btn sm" data-bact="toggle" data-id="'+p.id+'" data-pub="'+(p.is_published?0:1)+'">'+(p.is_published?'Despublicar':'Publicar')+'</button>'
       +'<a class="btn sm" href="/portal/'+encodeURIComponent(p.slug||'')+'" target="_blank">Ver ↗</a>'
+      +'<button class="btn sm" data-bact="share" data-id="'+p.id+'" title="Disparar para Instagram e Facebook">📣 Disparar Redes</button>'
       +'<button class="btn sm danger" data-bact="del" data-id="'+p.id+'">Excluir</button></div>'
       +'<div id="bed-'+p.id+'"></div></div>';
   }
@@ -585,7 +587,7 @@
     var box=document.getElementById('blog-list');box.innerHTML='<div class="muted">Carregando…</div>';
     api('/api/admin/blog/posts').then(function(d){
       if(!d.success)return;BLOG_CACHE=d.posts||[];
-      function render(){box.innerHTML=BLOG_CACHE.length?BLOG_CACHE.map(blogRow).join(''):'<div class="muted">Nenhuma matéria ainda.</div>';}
+      function render(){box.innerHTML=BLOG_CACHE.length?BLOG_CACHE.map(blogRow).join(''):'<div class="muted">Nenhuma matéria ainda.</div>';renderBlogStats();}
       api('/api/admin/blog/comments').then(function(c){
         CMT_COUNT={};
         if(c&&c.comments)c.comments.forEach(function(x){var s=x.post_slug||'';CMT_COUNT[s]=(CMT_COUNT[s]||0)+1;});
@@ -612,6 +614,27 @@
       })
       .catch(function(){if(st)st.textContent='falha no upload';});
   });
+  // Indicadores + gráfico de engajamento (visualizações/curtidas/comentários por categoria).
+  function renderBlogStats(){
+    var el=document.getElementById('blog-stats');if(!el)return;
+    var totV=0,totL=0,totC=0,pub=0,porCat={};
+    BLOG_CACHE.forEach(function(p){
+      var cat=p.category||'Outros',c=CMT_COUNT[p.slug]||0;
+      totV+=(p.views_count||0);totL+=(p.likes_count||0);totC+=c;if(p.is_published)pub++;
+      if(!porCat[cat])porCat[cat]={v:0,l:0,c:0};
+      porCat[cat].v+=(p.views_count||0);porCat[cat].l+=(p.likes_count||0);porCat[cat].c+=c;
+    });
+    function stile(l,n){return '<div style="flex:1;min-width:110px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px"><div style="font-size:1.2rem;font-weight:800">'+n+'</div><div style="font-size:.68rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em">'+l+'</div></div>';}
+    function bar(cor,val,max){var w=max>0?Math.round((val/max)*100):0;return '<div style="display:flex;align-items:center;gap:6px;margin:1px 0"><div style="flex:1;background:var(--surface-2);border-radius:4px;height:9px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:'+cor+'"></div></div><span style="font-size:.68rem;color:var(--ink-faint);width:38px;text-align:right">'+val+'</span></div>';}
+    var cats=Object.keys(porCat),maxV=1;cats.forEach(function(k){maxV=Math.max(maxV,porCat[k].v,porCat[k].l,porCat[k].c);});
+    var tiles='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      +stile('Artigos',BLOG_CACHE.length)+stile('Publicados',pub)+stile('👁 Visualizações',totV)+stile('❤ Curtidas',totL)+stile('💬 Comentários',totC)+'</div>';
+    var chart=cats.length?('<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px">'
+      +'<div style="font-weight:700;font-size:.8rem;margin-bottom:8px">Engajamento por categoria <span style="font-weight:600;color:var(--ink-faint)">· 👁 azul · ❤ vermelho · 💬 verde</span></div>'
+      +cats.map(function(k){var dd=porCat[k];return '<div style="margin:7px 0"><div style="font-size:.76rem;color:var(--ink-soft);margin-bottom:2px">'+esc(k)+'</div>'
+        +bar('#3B5578',dd.v,maxV)+bar('#B91C1C',dd.l,maxV)+bar('#047857',dd.c,maxV)+'</div>';}).join('')+'</div>'):'';
+    el.innerHTML=tiles+chart;
+  }
   function collectBlog(scope){var body={};Array.prototype.forEach.call(scope.querySelectorAll('[data-bf]'),function(f){body[f.getAttribute('data-bf')]=(f.type==='checkbox')?f.checked:f.value;});return body;}
   function findPost(id){return BLOG_CACHE.find(function(x){return String(x.id)===String(id);});}
   document.getElementById('blog-new').addEventListener('click',function(){var h=document.getElementById('blog-editor-new');h.innerHTML=h.innerHTML?'':blogEditor(null);});
@@ -630,7 +653,23 @@
     if(act==='toggle'){var p2=findPost(id);if(!p2)return;
       api('/api/admin/blog/posts/'+id,{method:'PUT',body:{title:p2.title,category:p2.category,content:p2.content,summary:p2.summary,tags:p2.tags,is_published:b.getAttribute('data-pub')==='1'}}).then(function(){loadBlog();});return;}
     if(act==='del'){if(!confirm('Excluir esta matéria definitivamente?'))return;api('/api/admin/blog/posts/'+id,{method:'DELETE'}).then(function(){loadBlog();});return;}
+    if(act==='share'){dispararRedes(id);return;}
   });
+
+  // Disparo para Instagram/Facebook (reaproveita /api/blog/posts/:id/share-social).
+  function dispararRedes(id,tokenMeta){
+    var msg=prompt('Mensagem da publicação para Instagram/Facebook (deixe vazio para usar o texto padrão com título, resumo e link):','');
+    if(msg===null)return; // cancelou
+    enviarRedes(id,msg,tokenMeta);
+  }
+  function enviarRedes(id,msg,tokenMeta){
+    var body={custom_message:msg};if(tokenMeta)body.token=tokenMeta;
+    api('/api/blog/posts/'+id+'/share-social',{method:'POST',body:body}).then(function(d){
+      if(d&&d.success){alert('✅ Matéria disparada para Instagram e Facebook!');loadBlog();}
+      else if(d&&d.requiresToken){var tk=prompt('Cole o Token de Acesso da Meta (Instagram/Facebook) para disparar:\n(fica salvo para os próximos disparos)','');if(!tk)return;enviarRedes(id,msg,tk);}
+      else{alert('⚠️ '+((d&&(d.error||d.message))||'Não foi possível disparar.'));}
+    }).catch(function(){alert('Falha ao disparar para as redes.');});
+  }
 
   // ===== FAQ (reaproveita /api/admin/site/faqs) =====
   var FAQ_CACHE=[];
