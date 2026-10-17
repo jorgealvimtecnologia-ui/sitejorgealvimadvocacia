@@ -10,6 +10,20 @@
 
     // ================= 2. GESTÃO DE CLIENTES & CONTRATOS =================
 
+    let clientsCurrentPage = 1;
+    const CLIENTS_PAGE_SIZE = 25;
+    let lastClientsFiltered = [];
+
+    function goToClientsPage(page) {
+      clientsCurrentPage = page;
+      renderClients(lastClientsFiltered && lastClientsFiltered.length > 0 ? lastClientsFiltered : allClients);
+      const container = document.getElementById('clients-boxes-container');
+      if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    window.goToClientsPage = goToClientsPage;
+
     async function loadClients() {
       try {
         const res = await fetch('/api/clients', { headers: getAuthHeaders() });
@@ -20,6 +34,8 @@
         const data = await res.json();
         if (data.success) {
           allClients = data.clients;
+          window.allClients = data.clients;
+          clientsCurrentPage = 1;
           renderClients(allClients);
           updateClientsStats(allClients);
         }
@@ -77,24 +93,86 @@
         return matchesQuery && matchesType && matchesStatus;
       });
 
+      clientsCurrentPage = 1;
       renderClients(filtered);
     }
 
     function renderClients(clients) {
+      lastClientsFiltered = clients || [];
       const container = document.getElementById('clients-boxes-container');
+      if (!container) return;
       
-      if (clients.length === 0) {
+      if (!clients || clients.length === 0) {
         container.innerHTML = `
           <div class="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-400 space-y-3 shadow-sm">
             <div class="text-4xl">📂</div>
-            <p class="font-bold text-slate-600">Nenhum cliente ou contrato cadastrado no momento.</p>
-            <p class="text-xs">Clique no botão <strong>➕ Novo Cliente & Contrato</strong> acima para adicionar o primeiro registro.</p>
+            <p class="font-bold text-slate-600">Nenhum cliente ou contrato encontrado.</p>
+            <p class="text-xs">Tente buscar por outro termo ou clique no botão <strong>➕ Novo Cliente & Contrato</strong> acima.</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = clients.map(client => {
+      const totalCount = clients.length;
+      const totalPages = Math.ceil(totalCount / CLIENTS_PAGE_SIZE) || 1;
+      if (clientsCurrentPage > totalPages) clientsCurrentPage = totalPages;
+      if (clientsCurrentPage < 1) clientsCurrentPage = 1;
+
+      const startIdx = (clientsCurrentPage - 1) * CLIENTS_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + CLIENTS_PAGE_SIZE, totalCount);
+      const pageItems = clients.slice(startIdx, endIdx);
+
+      const renderPaginationBar = () => {
+        if (totalPages <= 1) return '';
+        return `
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-white rounded-2xl border border-slate-200 shadow-xs mb-4">
+            <div class="text-xs text-slate-600 font-semibold flex items-center gap-2">
+              <span>Exibindo <strong>${startIdx + 1} - ${endIdx}</strong> de <strong>${totalCount}</strong> clientes</span>
+              ${totalCount >= 100 ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">⚡ Paginação Otimizada (Instantânea)</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button 
+                type="button" 
+                onclick="goToClientsPage(1)" 
+                ${clientsCurrentPage === 1 ? 'disabled class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+                title="Primeira Página"
+              >
+                ⏮
+              </button>
+              <button 
+                type="button" 
+                onclick="goToClientsPage(${clientsCurrentPage - 1})" 
+                ${clientsCurrentPage === 1 ? 'disabled class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+              >
+                ◀ Anterior
+              </button>
+              <span class="px-3.5 py-1.5 bg-amber-50 text-amber-950 border border-amber-200 rounded-xl text-xs font-extrabold">
+                Página ${clientsCurrentPage} de ${totalPages}
+              </span>
+              <button 
+                type="button" 
+                onclick="goToClientsPage(${clientsCurrentPage + 1})" 
+                ${clientsCurrentPage === totalPages ? 'disabled class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+              >
+                Próxima ▶
+              </button>
+              <button 
+                type="button" 
+                onclick="goToClientsPage(${totalPages})" 
+                ${clientsCurrentPage === totalPages ? 'disabled class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-not-allowed"' : 'class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"'}
+                title="Última Página"
+              >
+                ⏭
+              </button>
+            </div>
+          </div>
+        `;
+      };
+
+      window._clientsPaginationTop = renderPaginationBar();
+      window._clientsPaginationBottom = totalPages > 1 ? renderPaginationBar() : '';
+
+      container.innerHTML = (window._clientsPaginationTop ? window._clientsPaginationTop : '') + pageItems.map(client => {
         const isPJ = client.client_type === 'PJ';
         const typeBadge = isPJ 
           ? `<span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 font-bold text-xs border border-indigo-200">🏢 Pessoa Jurídica (Empresa)</span>`
@@ -604,7 +682,7 @@
 
           </div>
         `;
-      }).join('');
+      }).join('') + (window._clientsPaginationBottom ? '<div class="mt-4">' + window._clientsPaginationBottom + '</div>' : '');
     }
 
     function recalcInlineRow(id) {

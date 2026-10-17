@@ -23,6 +23,8 @@ lighthouse-reports/
 *.db-shm
 *.db-wal
 leads.db
+*.sqlite
+*.sqlite*
 
 # Logs
 *.log

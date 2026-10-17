@@ -126,7 +126,7 @@
         case 'exportar': return actExport(id); case 'copiar': return actCopy(id); case 'localizar': return actFind(id);
         case 'atualizar': return actRefresh(id); case 'excluir': return actDelete(id);
         case 'gerardoc': return actGerarDoc(id); case 'enviar': return actSend(id);
-        case 'importar': return openImportClientsModal();
+        case 'importar': return (typeof openContactsImportModal === 'function') ? openContactsImportModal() : openImportClientsModal();
       }
     }
     // ----- Importação em massa de clientes (CSV) -----
@@ -151,17 +151,23 @@
       'valor':'contract_value','valor contrato':'contract_value','honorarios':'contract_value','honorários':'contract_value',
       'parcelas':'installments_count','pago':'amount_paid','valor pago':'amount_paid','tipo':'client_type' };
     function openImportClientsModal(){
-      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
-      var box=document.createElement('div'); box.style.cssText='background:#fff;border-radius:14px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(2,6,23,.4)';
+      if (typeof window.openContactsImportModal === 'function') {
+        return window.openContactsImportModal();
+      }
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px';
+      var box=document.createElement('div'); box.style.cssText='background:#fff;border-radius:14px;max-width:580px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(2,6,23,.4)';
       box.innerHTML='<div style="padding:16px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">'
-        +'<div style="font-weight:800;color:#0f172a;font-size:15px">📥 Importar clientes (CSV)</div>'
+        +'<div style="font-weight:800;color:#0f172a;font-size:15px">📥 Importar Contatos (Google / CSV / Excel)</div>'
         +'<button id="imp-x" style="border:0;background:transparent;font-size:18px;cursor:pointer;color:#64748b">✕</button></div>'
         +'<div style="padding:18px;font-size:13px;color:#334155;line-height:1.6">'
-        +'<p>Selecione um arquivo <b>.csv</b> com uma linha de cabeçalho. Colunas reconhecidas: '
-        +'<span style="font-family:monospace;font-size:11px">nome, cpf, cnpj, email, telefone, cidade, uf, bairro, rua, numero, cep, profissao, valor, parcelas, pago</span>. '
-        +'Obrigatórios: <b>nome</b> e <b>telefone</b>.</p>'
-        +'<p style="margin-top:8px"><a id="imp-modelo" href="#" style="color:#b45309;font-weight:700">⬇️ Baixar modelo de planilha</a></p>'
-        +'<input id="imp-file" type="file" accept=".csv,text/csv" style="margin-top:10px;font-size:13px"/>'
+        +'<div style="margin-bottom:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px">'
+        +'<div style="font-weight:700;font-size:12.5px;color:#0f172a;margin-bottom:4px">🌐 Google Contacts / Gmail Direto</div>'
+        +'<p style="font-size:12px;color:#64748b;margin:0 0 8px 0">Puxe contatos e números de celular sincronizados de qualquer conta Gmail:</p>'
+        +'<button id="imp-google-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-weight:700;color:#1e293b;cursor:pointer">'
+        +'<span>Conectar com Google & Puxar Contatos</span></button></div>'
+        +'<p><b>Ou envie um arquivo:</b> Selecione um arquivo <b>.csv</b> ou <b>.xlsx</b> (Google Contacts, celular ou planilha). '
+        +'Colunas reconhecidas: <span style="font-family:monospace;font-size:11px">nome, telefone, celular, email, cidade, uf, profissao</span>.</p>'
+        +'<input id="imp-file" type="file" accept=".csv,text/csv,.xlsx,.xls" style="margin-top:10px;font-size:13px"/>'
         +'<div id="imp-status" style="margin-top:12px;font-size:12.5px;color:#475569"></div>'
         +'</div>'
         +'<div style="padding:14px 18px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px">'
@@ -171,6 +177,16 @@
       var parsed=[]; var fileInput=box.querySelector('#imp-file'), status=box.querySelector('#imp-status'), go=box.querySelector('#imp-go');
       function close(){ ov.remove(); }
       box.querySelector('#imp-x').onclick=close; box.querySelector('#imp-cancel').onclick=close;
+      var gBtn = box.querySelector('#imp-google-btn');
+      if (gBtn) {
+        gBtn.onclick = function() {
+          close();
+          if (typeof window.openContactsImportModal === 'function') {
+            window.openContactsImportModal();
+            setTimeout(function() { if (typeof window.connectGoogleContacts === 'function') window.connectGoogleContacts(); }, 300);
+          }
+        };
+      }
       box.querySelector('#imp-modelo').onclick=function(e){ e.preventDefault();
         var csv='nome;cpf;telefone;email;cidade;uf;valor;parcelas\nMaria Souza;111.111.111-11;(32) 99999-0001;maria@ex.com;Juiz de Fora;MG;3000;3\n';
         var b=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='modelo-clientes.csv'; a.click(); URL.revokeObjectURL(a.href); };
@@ -883,6 +899,10 @@
 
     function openModule(id){
       var meta=MODULES[id]; if(!meta||!desktop) return;
+      if(!_permsLoaded && !WM_MASTER){
+        _pendingModule = id;
+        return;
+      }
       if(!moduleAllowed(id)){ if(typeof wmToast==='function') wmToast('Você não tem permissão para acessar este módulo.'); closeAllMenus(); return; }
       var w=windows[id];
       if(!w){ w=createWindow(id,meta); windows[id]=w; order.push(id); }
@@ -994,6 +1014,20 @@
     // ---- Controle de acesso (RBAC): restringe módulos por perfil do usuário ----
     // FECHADO POR PADRÃO: até as permissões do usuário chegarem do servidor (ou se falharem), só o que é de todos abre.
     var WM_MASTER=false, WM_ALLOWED={};
+    var _permsLoaded=false, _pendingModule=null;
+    try {
+      var _cachedUser = JSON.parse(localStorage.getItem('ja_admin_user') || '{}');
+      if (_cachedUser && (_cachedUser.role === 'master' || _cachedUser.is_master)) {
+        WM_MASTER = true;
+        WM_ALLOWED = null;
+        _permsLoaded = true;
+      }
+    } catch (_) {}
+    if (window.currentUserPermissions && window.currentUserPermissions.is_master) {
+      WM_MASTER = true;
+      WM_ALLOWED = null;
+      _permsLoaded = true;
+    }
     var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', clients:'tab_clients', docs:'tab_clients',
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
@@ -1064,16 +1098,32 @@
       try{
         fetch('/api/access-control/my-permissions',{headers:(typeof getAuthHeaders==='function'?getAuthHeaders():{})})
           .then(function(r){return r.json();}).then(function(d){
+            _permsLoaded = true;
             if(!d||!d.success){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); return; }
             if(d.is_master){ WM_MASTER=true; WM_ALLOWED=null; }
             else { WM_MASTER=false; WM_ALLOWED={}; var p=d.permissions||{};
               Object.keys(MODULE_PERM).forEach(function(id){ if(p[MODULE_PERM[id]]) WM_ALLOWED[id]=1; }); }
             applyPerms();
-            if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})){
+
+            // Abre módulo pendente (do hash #clients ou clique prévio) se houver
+            var targetMod = _pendingModule;
+            _pendingModule = null;
+            if (!targetMod) {
+              var hash = (window.location.hash || '').replace('#', '').trim();
+              if (hash === 'clientes') hash = 'clients';
+              if (hash && MODULES[hash] && moduleAllowed(hash)) targetMod = hash;
+            }
+
+            if (targetMod && moduleAllowed(targetMod)) {
+              openModule(targetMod);
+            } else if(!order.some(function(id){return windows[id]&&!windows[id].minimized;})){
               var defMod = ['dashboard','calendar','clients','leads','colaborador','rockets'].filter(moduleAllowed)[0];
               if(defMod) openModule(defMod);
             }
-          }).catch(function(){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); });
+          }).catch(function(){
+            _permsLoaded = true;
+            WM_MASTER=false; WM_ALLOWED={}; applyPerms();
+          });
       }catch(e){}
     }
 
