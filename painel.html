@@ -1664,6 +1664,30 @@
 
           <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             
+            <!-- Alternador de Visualização: Modo Lista Rápida vs Fichas Abertas -->
+            <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200" id="clients-view-mode-toggle">
+              <button 
+                type="button" 
+                onclick="setClientsViewMode('compact')" 
+                id="btn-view-mode-compact"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 bg-white text-navy-950 shadow-xs border border-slate-200/80 cursor-pointer"
+                title="Modo Lista Rápida (Ultra-leve e veloz para milhares de contatos)"
+              >
+                <span>📋</span>
+                <span>Lista Rápida</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="setClientsViewMode('expanded')" 
+                id="btn-view-mode-expanded"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 text-slate-500 hover:text-slate-800 cursor-pointer"
+                title="Modo Fichas Abertas (Exibe todos os formulários e contratos expandidos)"
+              >
+                <span>🗂️</span>
+                <span>Fichas Abertas</span>
+              </button>
+            </div>
+
             <select id="filter-client-type" onchange="filterClients()" class="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:outline-none focus:border-gold-500">
               <option value="">Todos os Tipos (PF / PJ)</option>
               <option value="PF">👤 Pessoa Física (PF)</option>
