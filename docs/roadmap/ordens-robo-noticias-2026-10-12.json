@@ -95,7 +95,7 @@
       "prioridade": "P2",
       "descricao": "Reformular o painel de controle do blog (aba Blog & Moderação) para gerir TODAS as caixas de notícias do novo portal: ligar/desligar curtidas e comentários por matéria; caixa de moderação de comentários (pendente→aprovado→removido, com antispam, entra oculto por padrão); e, ao receber um comentário, CAPTAR nome + e-mail + telefone do autor e lançar automaticamente como NOVO LEAD na aba Atendimentos & Leads (origem: comentário do blog), para o escritório dar retorno. Também controlar editorias/destaque e o espaço da Vitrine Amazon (parceiro). Respeita a regra: comentário só aparece após aprovação; nada automático ao cliente. Complementa ROBO-02 (workstation) e ROBO-07 (comentários moderados).",
       "criterios": "No painel, o Dr. Jorge liga/desliga curtir e comentar por matéria; modera comentários (aprovar/ocultar/remover); cada comentário gera um lead com nome/e-mail/telefone e origem no painel de Leads; controla editorias, destaque e a vitrine; antispam ativo.",
-      "estado": "pendente (pedido em 15/10/2026, a partir da maquete do portal de notícias)"
+      "estado": "CONCLUIDO (16/10/2026): Central de Comando do Portal (/portal/revisar) reúne Esteira do robô, Blog (editar/publicar/excluir + SEO & mídia + editor visual + estatísticas + Disparar Redes), FAQs (com Publicar), Boxes da Home (publicar/excluir/novo + imagem), Moderação de comentários e Leads. Comentário aprovado vira LEAD na caixa principal (Atendimentos, tabela leads) — confirmado pelo Dr. Jorge (protocolo #JA-2026-0001). Ramo de preview claude/awesome-allen-td2uwv (PR #18); produção intacta."
     },
     {
       "ref": "ROBO-13",
@@ -111,7 +111,7 @@
       "prioridade": "P2",
       "descricao": "Os links/itens da Amazon (programa de parceiro/associado) devem aparecer em TODAS as páginas do portal de notícias, não só na página inicial: página pública de notícias (home), página de cada matéria/artigo, páginas de categoria/editoria e página de resultados de busca. Fazer como um componente ÚNICO e reutilizável (um 'slot' da Vitrine Amazon) incluído no layout base do portal, para o Dr. Jorge cadastrar os produtos num só lugar e eles aparecerem em todo o site (ligado ao controle de vitrine do painel — ROBO-12). Dentro da matéria, usar formato discreto (ex.: faixa 'Indicações do escritório' no rodapé do artigo e/ou na lateral), sem atrapalhar a leitura. Incluir o aviso de parceria exigido pela Amazon (ex.: 'Como associado, o escritório pode receber por compras qualificadas') e respeitar a sobriedade de site de advogado. Os links abrem na Amazon (tag de associado), nunca coletam dado do leitor.",
       "criterios": "A Vitrine/links da Amazon aparece em todas as páginas do portal (home, matéria, categoria e busca) a partir de um único componente/cadastro; os produtos são geridos no painel (ROBO-12); há o aviso de parceria; o formato dentro do artigo é discreto e não prejudica a leitura; nenhum dado do leitor é coletado pelos links.",
-      "estado": "pendente (pedido em 15/10/2026: links da Amazon em todas as páginas do portal)"
+      "estado": "CONCLUIDO (16/10/2026): Vitrine Amazon (tag sitejorgealvi-20) no rodapé E na lateral das páginas de leitura e na home do portal, via CSS/layout compartilhado (public/portal.css), com aviso de parceria; links abrem na Amazon, sem coletar dado do leitor."
     },
     {
       "ref": "ROBO-15",
@@ -119,7 +119,7 @@
       "prioridade": "P2",
       "descricao": "A página principal leva o leitor para páginas internas (a matéria/artigo, categoria/editoria e busca). Todas essas páginas internas devem ter os MESMOS componentes da principal, a partir de um layout-base único reutilizável do portal: (1) nosso CABEÇALHO (selo da marca, navegação, busca, tema, WhatsApp) em todas elas; (2) VITRINE/links da AMAZON (ver ROBO-14); (3) CURTIDAS e COMENTÁRIOS (ROBO-06/07) — na página da matéria os comentários são daquela matéria e entram ocultos até aprovação; (4) caixa de CADASTRO DE NEWSLETTER 'Receba seu e-mail' (ROBO-06/MKT-06). DECISÃO do Dr. Jorge (15/10/2026): na página da matéria, a vitrine/links da Amazon aparece NOS DOIS LUGARES — no rodapé do artigo E na lateral. Fazer como layout/template base para não repetir código e garantir consistência; o rodapé (OAB/MG 222.943 + aviso 'conteúdo informativo') também em todas. Respeita: comentário só aparece após aprovação; nada automático ao cliente.",
       "criterios": "Toda página do portal (home, matéria, categoria, busca) renderiza a partir de um layout-base com cabeçalho, vitrine Amazon, curtir/comentar, newsletter e rodapé; a página da matéria mostra os comentários daquela matéria (ocultos até aprovação) e o botão de curtir; nada é duplicado no código; o visual é consistente com a maquete aprovada.",
-      "estado": "pendente (pedido em 15/10/2026: páginas de leitura com os mesmos componentes da principal)"
+      "estado": "CONCLUIDO (16/10/2026): layout-base do portal (public/portal.css + páginas portal.html, portal-artigo.html, portal-todas.html) com cabeçalho, Guia da Justiça, Vitrine Amazon (rodapé + lateral), curtir/comentar moderado e newsletter; página de leitura mostra os comentários da matéria (ocultos até aprovação), curtidas reais e a Análise assinada do Dr. Jorge quando houver."
     },
     {
       "ref": "ROBO-16",
@@ -127,7 +127,79 @@
       "prioridade": "P2",
       "descricao": "Transformar a 'Guia Nacional da Justiça, Segurança Pública & Cidadania' (hoje uma grade grande de cartões na home do site) numa BARRA DE LINKS compacta (faixa horizontal com os órgãos), presente na página principal do portal de notícias E dentro das páginas de leitura. Reaproveitar a MESMA lista de órgãos/links oficiais já cadastrada na Guia do index.html (STF, STJ, STM, TSE, TST, TRT3, TRF1, TRF6, TJMG, TJRJ, CNJ, MPF, MPMG, DPU, DPE-MG, OAB-MG, PF, PRF, PC-MG, PM-MG, CBM-MG, Exército, gov.br, INSS, Receita Federal, Governo de MG, DETRAN-MG, Prefeitura de JF) — fonte única, para não manter duas listas. Componente reutilizável no layout-base (ROBO-15); abre os links em nova aba. A Guia grande da home do site segue existindo; aqui é a versão em barra para o portal.",
       "criterios": "O portal mostra a Guia da Justiça como barra de links na principal e nas páginas internas, usando a mesma lista de órgãos da Guia do site (sem duplicar cadastro); os links abrem o órgão oficial em nova aba; a barra é um componente único do layout-base.",
-      "estado": "pendente (pedido em 15/10/2026: Guia da Justiça vira barra de links no portal)"
+      "estado": "CONCLUIDO (16/10/2026): Guia da Justiça como barra de links clara no topo do portal (portal.html, portal-artigo.html, portal-todas.html) E no topo da home do site principal (index.html), logo após o cabeçalho; a seção gigante do Guia na home deu lugar ao Resumo do Portal."
+    },
+    {
+      "ref": "ROBO-17",
+      "titulo": "Newsletter real do portal: cadastro de assinantes + Boletim (compor e disparar) com descadastro",
+      "prioridade": "P2",
+      "descricao": "Captura real de assinantes (tabela portal_newsletter, deduplicada, com token de descadastro) a partir dos formulários 'Receba no seu e-mail' da home e das matérias; cada inscrição também vira lead de origem 'newsletter'. Na Central, caixa 'Boletim': compor edição (assunto + texto), salvar rascunho, enviar teste e disparar para a lista; cada e-mail sai com cabeçalho do escritório e link de descadastro (LGPD/anti-spam). Reaproveita o serviço de e-mail (src/shared/email.js).",
+      "criterios": "E-mail válido é cadastrado (sem duplicar) e some ao descadastrar; a Central dispara o boletim para os ativos quando o SMTP está configurado, e avisa com clareza quando não está.",
+      "estado": "CONCLUIDO (16/10/2026); o DISPARO real depende do SMTP configurado no cofre (.env.enc) do servidor."
+    },
+    {
+      "ref": "ROBO-18",
+      "titulo": "Comentário/Análise do Dr. Jorge (assinada) em cada matéria da esteira",
+      "prioridade": "P2",
+      "descricao": "Campo autoral opcional por matéria: a transcrição oficial segue creditando a fonte (o Dr. Jorge NÃO assina a notícia), mas o comentário dele aparece ASSINADO e em destaque na página de leitura ('Análise do Dr. Jorge Alvim · OAB/MG 222.943'). Transforma a transcrição em conteúdo de autoria do escritório.",
+      "criterios": "Ao preencher o comentário na Central, a matéria publicada exibe o box assinado; a transcrição continua creditando a fonte.",
+      "estado": "CONCLUIDO (16/10/2026)."
+    },
+    {
+      "ref": "ROBO-19",
+      "titulo": "Home do SITE principal: Resumo do Portal no lugar do box gigante do Guia + barra de órgãos no topo",
+      "prioridade": "P2",
+      "descricao": "Na home do site (index.html), a seção gigante 'Guia Nacional da Justiça' deu lugar a um RESUMO DO PORTAL (boxes pequenos com as últimas notícias oficiais, via /api/portal/official, na paleta clara do site, sem azulão) e a um botão 'Ver o portal completo'; os links dos órgãos viraram a barra 'Guia da Justiça' no topo. Só essa seção mudou; o resto da home ficou igual.",
+      "criterios": "A home mostra o resumo do portal e a barra de órgãos no topo; o box gigante do Guia saiu; o menu 'Guia da Justiça' aponta para a barra.",
+      "estado": "CONCLUIDO (16/10/2026)."
+    },
+    {
+      "ref": "ROBO-20",
+      "titulo": "Página 'Ver todas as notícias' (/portal/todas) — reaproveita TODOS os artigos do blog publicados",
+      "prioridade": "P2",
+      "descricao": "Lista completa e paginada (busca + 'carregar mais') de tudo o que já foi publicado — artigos do blog (blog_posts) e transcrições oficiais publicadas — do mais novo ao mais antigo, via /api/portal/feed. Garante que nenhum artigo já publicado fique de fora do portal (a home mostra só os mais recentes).",
+      "criterios": "A página lista todos os publicados com busca e paginação; a home do portal tem o link 'Ver todas'.",
+      "estado": "CONCLUIDO (16/10/2026). Confirmado que o portal LÊ a mesma tabela blog_posts da produção — artigos reais aparecem sozinhos no deploy, sem migração."
+    },
+    {
+      "ref": "ROBO-21",
+      "titulo": "Editor visual (tipo Word) no conteúdo do blog, com alternância para colar HTML/CSS",
+      "prioridade": "P2",
+      "descricao": "Campo de conteúdo do blog com editor visual (negrito, itálico, título, subtítulo, parágrafo, listas, link, limpar) que gera o HTML sozinho, e botão '</> HTML/CSS' para colar/editar o código direto. O Dr. Jorge não precisa saber HTML/CSS; a aparência vem do CSS do portal.",
+      "criterios": "Escrever/formatar sem tocar em código; alternar para HTML/CSS e voltar; o Salvar grava o HTML gerado.",
+      "estado": "CONCLUIDO no BLOG (16/10/2026). PENDENTE: aplicar o mesmo editor no conteúdo das matérias da esteira."
+    },
+    {
+      "ref": "ROBO-22",
+      "titulo": "SEO & Mídia por publicação: imagem de capa (upload) + palavras-chave",
+      "prioridade": "P2",
+      "descricao": "Caixa 'SEO & Mídia' no editor do blog e da esteira: imagem de capa com 'Anexar mídia' (upload real) e prévia, e palavras-chave; a capa aparece no topo da matéria e no compartilhamento. Boxes da home também ganharam 'Anexar mídia' (imagem do card).",
+      "criterios": "Anexar/colar capa e palavras-chave no blog e na esteira; boxes da home com upload de imagem; capa exibida na matéria publicada.",
+      "estado": "CONCLUIDO (16/10/2026)."
+    },
+    {
+      "ref": "ROBO-23",
+      "titulo": "Boxes da Home gerenciáveis: Publicar/Despublicar, Excluir e Novo box",
+      "prioridade": "P2",
+      "descricao": "Os boxes de 'Áreas de Atuação' (antes fixos em 6) passam a ter is_active (publicar/despublicar), exclusão e criação na Central; a home monta os boxes dinamicamente respeitando o is_active. Observação: boxes são cartões de navegação — não têm leitura/curtida (não se inventa número); métrica possível no futuro = cliques→leads.",
+      "criterios": "Publicar/despublicar reflete na home; excluir remove; '+ Novo box' cria; edição e imagem funcionam.",
+      "estado": "CONCLUIDO (16/10/2026)."
+    },
+    {
+      "ref": "ROBO-24",
+      "titulo": "Migrar para a Central o que havia na aba antiga 'Blog & Moderação' (para aposentá-la)",
+      "prioridade": "P2",
+      "descricao": "Trazer para a Central do portal: botão 'Disparar Redes' (Instagram Feed + Facebook Page, reaproveitando /api/blog/posts/:id/share-social), indicadores (Artigos/Publicados/Visualizações/Curtidas/Comentários) e gráfico de engajamento por categoria. Objetivo: desativar a aba antiga 'Blog & Moderação'.",
+      "criterios": "A Central dispara para as redes, mostra indicadores e o gráfico; nada essencial fica só na aba antiga.",
+      "estado": "CONCLUIDO (16/10/2026); o DISPARO real depende do Token da Meta configurado (Instagram/Facebook business)."
+    },
+    {
+      "ref": "ROBO-25",
+      "titulo": "Pendências do portal antes do deploy (acertos finais)",
+      "prioridade": "P2",
+      "descricao": "Pendências anotadas em 16/10/2026: (1) editor visual também no conteúdo da esteira; (2) ajustar as URLs de 'capa do dia' que não acharam manchete (INSS deu 'não encontrei'; conferir STF/STJ/MPMG/Prefeitura — alguns com 403/WAF, não dependem de nós); (3) integrar a Central como ABA do painel sob RHABAC e aposentar a aba antiga 'Blog & Moderação'; (4) deploy em produção (manual, no comando do Dr. Jorge) com SMTP (boletim) e Token da Meta (redes) no cofre; (5) opcional: copiar o banco de produção para testar com artigos reais; contador de cliques nos boxes da home.",
+      "criterios": "Itens revisados com o Dr. Jorge; o que for aprovado entra; o deploy só acontece no comando dele.",
+      "estado": "pendente (anotado em 16/10/2026)"
     }
   ]
 }
