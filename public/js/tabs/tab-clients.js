@@ -77,7 +77,7 @@
 
     async function loadClients() {
       try {
-        const res = await fetch('/api/clients', { headers: getAuthHeaders() });
+        const res = await fetch('/api/clients', { headers: getAuthHeaders(), cache: 'no-store' });
         if (res.status === 401) {
           handleLogout();
           return;
