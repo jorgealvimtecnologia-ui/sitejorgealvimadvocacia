@@ -205,6 +205,7 @@
         <label>Texto do boletim (pode usar HTML simples)</label>
         <textarea id="nl-body" rows="6" placeholder="Escreva aqui a edição do boletim…"></textarea>
         <div class="acts" style="margin-top:11px">
+          <button class="btn sm" id="nl-week">🗓️ Montar edição da semana</button>
           <button class="btn sm" id="nl-save">Salvar rascunho</button>
           <button class="btn sm" id="nl-test">Enviar teste para mim</button>
           <button class="btn sm primary" id="nl-send">Disparar para os assinantes</button>
@@ -440,6 +441,17 @@
   }
   function nlFields(){return {subject:document.getElementById('nl-subject').value.trim(),body:document.getElementById('nl-body').value.trim()};}
   function nlOut(msg){var o=document.getElementById('nl-result');o.style.display='block';o.innerHTML=msg;}
+  document.getElementById('nl-week').addEventListener('click',function(){
+    var btn=this,old=btn.textContent;btn.disabled=true;btn.textContent='Montando…';
+    api('/api/portal/admin/newsletter/compose-week').then(function(d){
+      btn.disabled=false;btn.textContent=old;
+      if(d&&d.success){
+        document.getElementById('nl-subject').value=d.subject;
+        document.getElementById('nl-body').value=d.body;
+        nlOut(d.count?('✅ Edição montada com <b>'+d.count+'</b> matéria(s) da semana. Revise o texto e, se quiser, salve o rascunho e dispare.'):'⚠️ Nenhuma matéria publicada nos últimos 7 dias — publique antes de disparar.');
+      } else { nlOut((d&&d.error)||'Não foi possível montar a edição.'); }
+    }).catch(function(){btn.disabled=false;btn.textContent=old;nlOut('Falha ao montar a edição da semana.');});
+  });
   document.getElementById('nl-save').addEventListener('click',function(){
     var f=nlFields();if(!f.subject||!f.body){nlOut('Preencha assunto e texto.');return;}
     api('/api/portal/admin/newsletter/campaigns',{method:'POST',body:f}).then(function(d){

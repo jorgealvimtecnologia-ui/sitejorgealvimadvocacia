@@ -297,6 +297,26 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.ok(!admin.body.some(a => a.id === id), 'box excluído some da lista admin');
   });
 
+  it('boletim: "Montar edição da semana" devolve rascunho com as matérias recentes', async () => {
+    const now = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO portal_items (fase, tipo, source, external_id, slug, title, summary, category, published_at, created_at, updated_at)
+       VALUES ('4_publicado','oficial','Agência Brasil (EBC)','teste-semana-1','materia-da-semana','Matéria da semana','Resumo da semana','federal',?,?,?)`
+    ).run(now, now, now);
+    const res = await request(app).get('/api/portal/admin/newsletter/compose-week').set('Authorization', `Bearer ${token}`);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(res.body.count >= 1, 'deve contar ao menos a matéria recém-publicada');
+    assert.match(res.body.subject, /Boletim da semana/);
+    assert.match(res.body.body, /Matéria da semana/);
+    assert.match(res.body.body, /\/portal\/materia-da-semana/);
+  });
+
+  it('boletim compose-week exige mestre (401 sem token)', async () => {
+    const res = await request(app).get('/api/portal/admin/newsletter/compose-week');
+    assert.equal(res.status, 401);
+  });
+
   it('curtir/comentar em slug inexistente devolve 404', async () => {
     const c = await request(app).post('/api/portal/posts/nao-existe-zzz/comment').send({ texto: 'x' });
     assert.equal(c.status, 404);

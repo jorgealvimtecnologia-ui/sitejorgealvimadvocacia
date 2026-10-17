@@ -551,7 +551,10 @@ portalRouter.get('/api/portal/admin/newsletter', requireMaster, (req, res) => {
 
 // ---- BOLETIM (campanhas de newsletter) — compor e disparar, só o mestre. ----
 function stripTags(s) { return String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
+function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function baseUrl(req) { return `${req.protocol}://${req.get('host')}`; }
+// Domínio público usado nos LINKS dos e-mails (o leitor abre no site, não no localhost).
+const PUBLIC_ORIGIN = (process.env.PUBLIC_SITE_URL || 'https://jorgealvimadvocacia.com.br').replace(/\/+$/, '');
 // Monta o HTML do e-mail: cabeçalho do escritório + corpo + rodapé com descadastro.
 function montarEmail(bodyHtml, unsubUrl) {
   return '<div style="font-family:system-ui,Arial,sans-serif;max-width:620px;margin:0 auto;color:#0A192F">'
@@ -563,6 +566,47 @@ function montarEmail(bodyHtml, unsubUrl) {
     + 'Você recebe este boletim porque se inscreveu no portal. '
     + '<a href="' + unsubUrl + '" style="color:#B8860B">Descadastrar</a>.</div></div>';
 }
+
+// Monta a "Edição da Semana": junta as matérias PUBLICADAS nos últimos 7 dias
+// (blog + transcrições oficiais) e devolve um rascunho (assunto + corpo HTML
+// com título, resumo e link de cada uma) para o Dr. Jorge revisar e disparar.
+portalRouter.get('/api/portal/admin/newsletter/compose-week', requireMaster, (req, res) => {
+  try {
+    const dias = Math.min(Math.max(parseInt(req.query.dias, 10) || 7, 1), 60);
+    const desde = new Date(Date.now() - dias * 24 * 3600 * 1000).toISOString();
+    const blog = db.prepare(
+      `SELECT slug, title, summary, COALESCE(published_at, created_at) AS quando, 'Blog' AS origem
+         FROM blog_posts WHERE is_published = 1 AND COALESCE(published_at, created_at) >= ?`
+    ).all(desde);
+    const ofi = db.prepare(
+      `SELECT slug, title, summary, COALESCE(published_at, created_at) AS quando, source AS origem
+         FROM portal_items WHERE fase = '4_publicado' AND COALESCE(published_at, created_at) >= ?`
+    ).all(desde);
+    const itens = blog.concat(ofi).sort((a, b) => new Date(b.quando) - new Date(a.quando)).slice(0, 8);
+
+    const d = new Date();
+    const ddata = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+    const subject = 'Jornal Alvim · Boletim da semana (' + ddata + ')';
+
+    let body = '<p>Olá! Veja as notícias jurídicas desta semana, em linguagem simples:</p>';
+    if (!itens.length) {
+      body += '<p><b>(Nenhuma matéria publicada nos últimos ' + dias + ' dias.)</b> Publique matérias no portal antes de disparar o boletim.</p>';
+    } else {
+      for (const it of itens) {
+        const url = PUBLIC_ORIGIN + '/portal/' + encodeURIComponent(it.slug || '');
+        body += '<h3 style="margin:16px 0 4px">' + escHtml(it.title) + '</h3>';
+        if (it.summary) body += '<p style="margin:0 0 6px">' + escHtml(it.summary) + '</p>';
+        body += '<p style="margin:0 0 12px"><a href="' + url + '">Ler no portal &rarr;</a>'
+          + (it.origem ? ' <span style="color:#888">· ' + escHtml(it.origem) + '</span>' : '') + '</p>';
+      }
+    }
+    body += '<p>Boa leitura!<br>Dr. Jorge Alvim · OAB/MG 222.943</p>';
+    res.json({ success: true, subject, body, count: itens.length, dias });
+  } catch (err) {
+    console.error('Erro ao montar edição da semana:', err);
+    res.status(500).json({ error: 'Erro ao montar a edição da semana.' });
+  }
+});
 
 portalRouter.get('/api/portal/admin/newsletter/campaigns', requireMaster, (req, res) => {
   const campaigns = db.prepare('SELECT * FROM portal_newsletter_campaigns ORDER BY created_at DESC LIMIT 100').all();
