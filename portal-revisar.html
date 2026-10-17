@@ -493,6 +493,56 @@
 
   // ===== Blog — Matérias & Artigos (reaproveita /api/admin/blog/posts) =====
   var CATS=['Direito Civil & Bancário','Direito Previdenciário','Direito do Consumidor','Trânsito & CNH','Trabalhista','Direito de Família','Direito Militar','Informativo Geral','Direito do Marco Legal da Internet'];
+  // Editor visual (tipo Word) com alternância para colar HTML/CSS.
+  // O <textarea data-bf="content"> é a "fonte da verdade" (é o que o Salvar coleta);
+  // o div visual sincroniza nele a cada edição.
+  function rtEditor(html){
+    html = html || '';
+    return '<div class="rt-wrap" style="border:1px solid var(--line);border-radius:10px;overflow:hidden">'
+      +'<div class="rt-toolbar" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--surface-2);border-bottom:1px solid var(--line)">'
+        +'<button type="button" class="btn sm" data-cmd="bold" title="Negrito"><b>N</b></button>'
+        +'<button type="button" class="btn sm" data-cmd="italic" title="Itálico"><i>I</i></button>'
+        +'<button type="button" class="btn sm" data-cmd="formatBlock" data-val="h2">Título</button>'
+        +'<button type="button" class="btn sm" data-cmd="formatBlock" data-val="h3">Subtítulo</button>'
+        +'<button type="button" class="btn sm" data-cmd="formatBlock" data-val="p">Parágrafo</button>'
+        +'<button type="button" class="btn sm" data-cmd="insertUnorderedList">• Lista</button>'
+        +'<button type="button" class="btn sm" data-cmd="insertOrderedList">1. Lista</button>'
+        +'<button type="button" class="btn sm" data-cmd="createLink">🔗 Link</button>'
+        +'<button type="button" class="btn sm" data-cmd="removeFormat" title="Limpar formatação">Limpar</button>'
+        +'<span style="flex:1"></span>'
+        +'<button type="button" class="btn sm" data-rtmode="toggle">&lt;/&gt; HTML/CSS</button>'
+      +'</div>'
+      +'<div class="rt-editor" contenteditable="true" style="min-height:160px;padding:12px 14px;background:var(--surface);color:var(--ink);font-size:.92rem;line-height:1.5;outline:none">'+html+'</div>'
+      +'<textarea data-bf="content" class="rt-source" style="display:none;width:100%;min-height:220px;border:0;border-top:1px solid var(--line);padding:12px 14px;background:var(--surface-2);color:var(--ink);font-family:ui-monospace,monospace;font-size:.82rem">'+esc(html)+'</textarea>'
+      +'</div>'
+      +'<div style="font-size:.72rem;color:var(--ink-faint);margin-top:4px">Escreva normalmente e use os botões para formatar — o senhor não precisa saber código. O botão <b>&lt;/&gt; HTML/CSS</b> abre o campo para colar/editar o código direto.</div>';
+  }
+  // Barra de formatação e alternância (delegação no painel, serve para qualquer editor aberto).
+  (function(){
+    var painel=document.getElementById('painel');
+    // Mantém a seleção ao clicar nos botões (não deixa o editor perder o foco).
+    painel.addEventListener('mousedown',function(e){ if(e.target.closest('.rt-toolbar button')) e.preventDefault(); });
+    painel.addEventListener('click',function(e){
+      var b=e.target.closest('.rt-toolbar [data-cmd]');
+      if(b){
+        var wrap=b.closest('.rt-wrap'),ed=wrap.querySelector('.rt-editor'),src=wrap.querySelector('.rt-source');
+        var cmd=b.getAttribute('data-cmd'),val=b.getAttribute('data-val')||null;
+        if(cmd==='formatBlock'&&val){val='<'+val+'>';}
+        if(cmd==='createLink'){val=prompt('Endereço do link (https://…):','https://');if(!val)return;}
+        ed.focus();try{document.execCommand(cmd,false,val);}catch(_){}
+        src.value=ed.innerHTML;return;
+      }
+      var t=e.target.closest('.rt-toolbar [data-rtmode]');
+      if(t){
+        var w=t.closest('.rt-wrap'), e2=w.querySelector('.rt-editor'),s2=w.querySelector('.rt-source');
+        if(s2.style.display!=='none'){ e2.innerHTML=s2.value; s2.style.display='none'; e2.style.display=''; t.innerHTML='&lt;/&gt; HTML/CSS'; }
+        else { s2.value=e2.innerHTML; s2.style.display=''; e2.style.display='none'; t.innerHTML='👁 Visual'; }
+      }
+    });
+    // Enquanto digita no modo visual, espelha no código (fonte da verdade do Salvar).
+    painel.addEventListener('input',function(e){ var ed=e.target.closest('.rt-editor'); if(ed){ var src=ed.closest('.rt-wrap').querySelector('.rt-source'); if(src) src.value=ed.innerHTML; } });
+  })();
+
   function blogEditor(p){
     p=p||{id:'',title:'',category:'',summary:'',content:'',cover_image:'',tags:'',is_published:1};
     var opts=CATS.map(function(c){return '<option'+(p.category===c?' selected':'')+'>'+esc(c)+'</option>';}).join('');
@@ -500,7 +550,7 @@
       +'<label>Título</label><input data-bf="title" value="'+esc(p.title)+'">'
       +'<label>Categoria</label><select data-bf="category" style="width:100%;font-family:inherit;font-size:.9rem;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)"><option value="">— escolher —</option>'+opts+'</select>'
       +'<label>Resumo (aparece nos cards e na busca do Google)</label><input data-bf="summary" value="'+esc(p.summary||'')+'">'
-      +'<label>Conteúdo (HTML)</label><textarea data-bf="content">'+esc(p.content||'')+'</textarea>'
+      +'<label>Conteúdo</label>'+rtEditor(p.content||'')
       +'<div style="border:1px dashed var(--line);border-radius:10px;padding:11px 12px;margin-top:11px">'
         +'<div style="font-weight:700;font-size:.78rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🔎 SEO &amp; Mídia</div>'
         +'<label>Imagem de capa — aparece no card e no compartilhamento</label>'
