@@ -536,14 +536,16 @@ clientPortalRouter.post('/api/client-portal/auth/google', loginRateLimit, async 
     }
 
     const token = createClientSession(client);
+    const isPreRegistered = (client.registration_status === 'pendente' || client.registration_status === 'pre_cadastrado' || (!client.cpf && !client.cnpj));
 
     return res.json({
       success: true,
-      message: isNewClient 
-        ? 'Cadastro realizado com sucesso via Google! Bem-vindo(a) ao seu Portal.'
-        : 'Login efetuado com sucesso via Google!',
+      message: isPreRegistered
+        ? 'Cliente pré-cadastrado - clique aqui para concluir seu cadastro'
+        : (isNewClient ? 'Cadastro realizado com sucesso via Google! Bem-vindo(a) ao seu Portal.' : 'Login efetuado com sucesso via Google!'),
       token,
       is_new_client: isNewClient,
+      is_pre_registered: !!isPreRegistered,
       client: {
         id: client.id,
         full_name: client.full_name,
@@ -551,6 +553,8 @@ clientPortalRouter.post('/api/client-portal/auth/google', loginRateLimit, async 
         phone: client.phone,
         client_type: client.client_type,
         cpf: client.cpf,
+        cnpj: client.cnpj,
+        registration_status: client.registration_status,
         avatar_url: googleUser.picture || client.avatar_url || ''
       }
     });
@@ -571,7 +575,7 @@ clientPortalRouter.get('/api/client-portal/me', requireClientAuth, (req, res) =>
         filiation_father, filiation_mother, nationality, marital_status, profession,
         rep_name, rep_cpf, rep_rg, rep_street, rep_number, rep_neighborhood, rep_city, rep_state, rep_cep, rep_complement,
         contract_value, installments_count, installment_value, due_date, amount_paid, balance_due, invoice_number, contract_status,
-        email_notifications, created_at, updated_at
+        email_notifications, registration_status, created_at, updated_at
       FROM clients WHERE id = ?
     `).get(clientId);
 
@@ -586,13 +590,16 @@ clientPortalRouter.get('/api/client-portal/me', requireClientAuth, (req, res) =>
         contract_status: 'ATIVO',
         contract_value: 5000.0,
         amount_paid: 2000.0,
-        balance_due: 3000.0
+        balance_due: 3000.0,
+        registration_status: 'concluido'
       };
     }
 
     if (!client) {
       return res.status(404).json({ error: 'Cliente não encontrado.' });
     }
+
+    client.is_pre_registered = (client.registration_status === 'pendente' || client.registration_status === 'pre_cadastrado' || (!client.cpf && !client.cnpj));
 
     // Processos Judiciais e Andamentos
     let lawsuits = db.prepare(`
@@ -645,6 +652,8 @@ clientPortalRouter.put('/api/client-portal/profile', requireClientAuth, (req, re
     const clientId = req.client.clientId;
     const {
       full_name,
+      cpf,
+      cnpj,
       rg,
       phone,
       email,
@@ -677,11 +686,27 @@ clientPortalRouter.put('/api/client-portal/profile', requireClientAuth, (req, re
       return res.status(400).json({ error: 'Nome, E-mail e Telefone são obrigatórios.' });
     }
 
+    const existing = db.prepare('SELECT id, cpf, cnpj, registration_status FROM clients WHERE id = ?').get(clientId);
+    let finalCpf = existing?.cpf;
+    if (cpf && (!finalCpf || finalCpf.trim() === '')) {
+      finalCpf = cpf.trim();
+    }
+    let finalCnpj = existing?.cnpj;
+    if (cnpj && (!finalCnpj || finalCnpj.trim() === '')) {
+      finalCnpj = cnpj.trim();
+    }
+    let finalRegStatus = existing?.registration_status;
+    if (!finalRegStatus || finalRegStatus === 'pendente' || finalRegStatus === 'pre_cadastrado') {
+      finalRegStatus = 'concluido';
+    }
+
     const now = new Date().toISOString();
 
     db.prepare(`
       UPDATE clients SET
         full_name = ?,
+        cpf = COALESCE(?, cpf),
+        cnpj = COALESCE(?, cnpj),
         rg = COALESCE(?, rg),
         phone = ?,
         email = ?,
@@ -707,11 +732,14 @@ clientPortalRouter.put('/api/client-portal/profile', requireClientAuth, (req, re
         rep_state = ?,
         rep_cep = ?,
         rep_complement = ?,
+        registration_status = ?,
         email_notifications = COALESCE(?, email_notifications),
         updated_at = ?
       WHERE id = ?
     `).run(
       full_name.trim(),
+      finalCpf || null,
+      finalCnpj || null,
       rg || null,
       phone.trim(),
       email.trim().toLowerCase(),
@@ -737,6 +765,7 @@ clientPortalRouter.put('/api/client-portal/profile', requireClientAuth, (req, re
       rep_state || null,
       rep_cep || null,
       rep_complement || null,
+      finalRegStatus,
       email_notifications !== undefined ? (email_notifications ? 1 : 0) : 1,
       now,
       clientId
