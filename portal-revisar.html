@@ -179,8 +179,8 @@
 
     <!-- BOXES DA HOME -->
     <div class="box">
-      <div class="bh"><h3>🏠 Boxes da Home (Áreas de Atuação)</h3></div>
-      <div class="bd"><div id="boxes-list"><div class="muted">Carregando…</div></div></div>
+      <div class="bh"><h3>🏠 Boxes da Home (Áreas de Atuação)</h3><button class="btn sm primary" id="boxes-new" type="button">+ Novo box</button></div>
+      <div class="bd"><div id="boxes-editor-new"></div><div id="boxes-list"><div class="muted">Carregando…</div></div></div>
     </div>
 
     <!-- MODERAÇÃO -->
@@ -702,9 +702,12 @@
       +'<div class="acts" style="margin-top:11px"><button class="btn sm primary" data-xact="save" data-id="'+a.id+'">Salvar</button><button class="btn sm" data-xact="cancel" data-id="'+a.id+'">Cancelar</button></div></div>';
   }
   function boxRow(a){
+    var st=a.is_active?'<span style="color:var(--green);font-weight:700">● Publicado</span>':'<span style="color:var(--ink-faint);font-weight:700">○ Oculto</span>';
     return '<div class="item" data-id="'+a.id+'"><h4>'+esc(a.title||'(sem título)')+'</h4>'
-      +'<div class="src">'+(a.badge?('<b>'+esc(a.badge)+'</b> · '):'')+esc((a.description||'').slice(0,90))+'</div>'
-      +'<div class="acts"><button class="btn sm" data-xact="edit" data-id="'+a.id+'">Editar</button></div>'
+      +'<div class="src">'+(a.badge?('<b>'+esc(a.badge)+'</b> · '):'')+st+' · '+esc((a.description||'').slice(0,80))+'</div>'
+      +'<div class="acts"><button class="btn sm" data-xact="edit" data-id="'+a.id+'">Editar</button>'
+      +'<button class="btn sm '+(a.is_active?'':'pub')+'" data-xact="toggle" data-id="'+a.id+'">'+(a.is_active?'Despublicar':'Publicar')+'</button>'
+      +'<button class="btn sm danger" data-xact="del" data-id="'+a.id+'">Excluir</button></div>'
       +'<div id="xed-'+a.id+'"></div></div>';
   }
   function loadBoxes(){
@@ -721,6 +724,16 @@
     if(act==='cancel'){document.getElementById('xed-'+id).innerHTML='';return;}
     if(act==='save'){var h2=document.getElementById('xed-'+id),body=collectBox(h2);if(!body.title||!body.description){alert('Título e descrição são obrigatórios.');return;}
       api('/api/admin/site/practice-areas/'+id,{method:'PUT',body:body}).then(function(){loadBoxes();});return;}
+    if(act==='toggle'){var a2=findBox(id);if(!a2)return;
+      api('/api/admin/site/practice-areas/'+id,{method:'PUT',body:{title:a2.title,description:a2.description,items:a2.items||[],image_url:a2.image_url,badge:a2.badge,action_label:a2.action_label,action_link:a2.action_link,is_active:a2.is_active?0:1}}).then(function(){loadBoxes();});return;}
+    if(act==='del'){if(!confirm('Excluir este box da home definitivamente?'))return;api('/api/admin/site/practice-areas/'+id,{method:'DELETE'}).then(function(){loadBoxes();});return;}
+  });
+  // + Novo box da home
+  document.getElementById('boxes-new').addEventListener('click',function(){var h=document.getElementById('boxes-editor-new');h.innerHTML=h.innerHTML?'':boxEditor({});});
+  document.getElementById('boxes-editor-new').addEventListener('click',function(e){var b=e.target.closest('[data-xact]');if(!b)return;var act=b.getAttribute('data-xact');
+    if(act==='cancel'){this.innerHTML='';return;}
+    if(act==='save'){var body=collectBox(this);if(!body.title||!body.description){alert('Título e descrição são obrigatórios.');return;}
+      api('/api/admin/site/practice-areas',{method:'POST',body:body}).then(function(){document.getElementById('boxes-editor-new').innerHTML='';loadBoxes();});return;}
   });
 
   // início: mostra a Central direto. O acesso é controlado pela RHABAC do painel

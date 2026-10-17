@@ -24,9 +24,12 @@ db.exec(`
     badge TEXT DEFAULT NULL,
     action_label TEXT DEFAULT 'Anexar Notificação / Consultar',
     action_link TEXT DEFAULT '#contato',
+    is_active INTEGER NOT NULL DEFAULT 1,
     updated_at TEXT NOT NULL
   );
 `);
+// Migração defensiva: bancos antigos ganham a coluna de publicação.
+try { db.exec('ALTER TABLE site_practice_areas ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1'); } catch (e) { /* já existe */ }
 
 // Seeder Inicial Idempotente dos 6 Boxes Oficiais do Escritório
 const countAreas = db.prepare(`SELECT COUNT(*) as total FROM site_practice_areas`).get().total;
@@ -162,7 +165,7 @@ if (countAreas === 0) {
 // 1. GET /api/site/practice-areas (Público - Usado pela Home)
 siteContentRouter.get('/api/site/practice-areas', (req, res) => {
   try {
-    const areas = db.prepare(`SELECT * FROM site_practice_areas ORDER BY box_order ASC`).all();
+    const areas = db.prepare(`SELECT * FROM site_practice_areas WHERE is_active = 1 ORDER BY box_order ASC`).all();
     const formatted = areas.map(a => {
       let items = [];
       try {
@@ -208,18 +211,20 @@ siteContentRouter.get('/api/admin/site/practice-areas', requireAuth, (req, res) 
 siteContentRouter.put('/api/admin/site/practice-areas/:id', requireAuth, (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, items, image_url, badge, action_label, action_link } = req.body;
+    const { title, description, items, image_url, badge, action_label, action_link, is_active } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({ error: 'Título e descrição são obrigatórios.' });
     }
 
+    const atual = db.prepare('SELECT is_active FROM site_practice_areas WHERE id = ?').get(id);
+    const ativo = (is_active === undefined || is_active === null) ? (atual ? atual.is_active : 1) : (is_active ? 1 : 0);
     const itemsJson = Array.isArray(items) ? JSON.stringify(items) : (typeof items === 'string' ? JSON.stringify(items.split('\n').map(s => s.trim()).filter(Boolean)) : '[]');
     const now = new Date().toISOString();
 
     db.prepare(`
-      UPDATE site_practice_areas 
-      SET title = ?, description = ?, items_json = ?, image_url = ?, badge = ?, action_label = ?, action_link = ?, updated_at = ?
+      UPDATE site_practice_areas
+      SET title = ?, description = ?, items_json = ?, image_url = ?, badge = ?, action_label = ?, action_link = ?, is_active = ?, updated_at = ?
       WHERE id = ?
     `).run(
       title.trim(),
@@ -229,6 +234,7 @@ siteContentRouter.put('/api/admin/site/practice-areas/:id', requireAuth, (req, r
       badge ? badge.trim() : null,
       (action_label || 'Consultar').trim(),
       (action_link || '#contato').trim(),
+      ativo,
       now,
       id
     );
@@ -245,6 +251,47 @@ siteContentRouter.put('/api/admin/site/practice-areas/:id', requireAuth, (req, r
   } catch (err) {
     console.error('Erro ao atualizar box do site:', err);
     res.status(500).json({ error: 'Erro ao atualizar box do site: ' + err.message });
+  }
+});
+
+// 3b. POST /api/admin/site/practice-areas (Admin - Criar um novo box da home)
+siteContentRouter.post('/api/admin/site/practice-areas', requireAuth, (req, res) => {
+  try {
+    const { title, description, items, image_url, badge, action_label, action_link } = req.body;
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Título e descrição são obrigatórios.' });
+    }
+    const itemsJson = Array.isArray(items) ? JSON.stringify(items) : (typeof items === 'string' ? JSON.stringify(items.split('\n').map(s => s.trim()).filter(Boolean)) : '[]');
+    const now = new Date().toISOString();
+    const nextOrder = (db.prepare('SELECT MAX(box_order) AS m FROM site_practice_areas').get().m || 0) + 1;
+    const info = db.prepare(`
+      INSERT INTO site_practice_areas (box_order, title, description, items_json, image_url, badge, action_label, action_link, is_active, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+    `).run(
+      nextOrder, title.trim(), description.trim(), itemsJson,
+      (image_url || '').trim(), badge ? badge.trim() : null,
+      (action_label || 'Consultar').trim(), (action_link || '#contato').trim(), now
+    );
+    logAudit(req, { event_type: 'CRIACAO', event_name: 'CRIAR_BOX_SITE', module: 'SITE_CONTENT', resource_id: info.lastInsertRowid, description: `Novo box da home: "${title}".` });
+    res.json({ success: true, id: info.lastInsertRowid, message: 'Novo box criado.' });
+  } catch (err) {
+    console.error('Erro ao criar box do site:', err);
+    res.status(500).json({ error: 'Erro ao criar box do site: ' + err.message });
+  }
+});
+
+// 3c. DELETE /api/admin/site/practice-areas/:id (Admin - Excluir um box da home)
+siteContentRouter.delete('/api/admin/site/practice-areas/:id', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const box = db.prepare('SELECT title FROM site_practice_areas WHERE id = ?').get(id);
+    if (!box) return res.status(404).json({ error: 'Box não encontrado.' });
+    db.prepare('DELETE FROM site_practice_areas WHERE id = ?').run(id);
+    logAudit(req, { event_type: 'EXCLUSAO', event_name: 'EXCLUIR_BOX_SITE', module: 'SITE_CONTENT', resource_id: id, description: `Box da home excluído: "${box.title}".` });
+    res.json({ success: true, message: 'Box excluído.' });
+  } catch (err) {
+    console.error('Erro ao excluir box do site:', err);
+    res.status(500).json({ error: 'Erro ao excluir box do site: ' + err.message });
   }
 });
 

@@ -272,6 +272,31 @@ describe('Portal — caixas de controle (admin, só mestre)', () => {
     assert.match(lead.area, /Portal/);
   });
 
+  it('boxes da home: criar, publicar/despublicar e excluir (home só mostra publicados)', async () => {
+    // Criar
+    const create = await request(app).post('/api/admin/site/practice-areas')
+      .set('Authorization', `Bearer ${token}`).send({ title: 'Box de Teste', description: 'Desc', items: ['a', 'b'] });
+    assert.equal(create.status, 200);
+    const id = create.body.id;
+    assert.ok(id, 'deve devolver id do box criado');
+
+    // Aparece na home (público) enquanto ativo
+    let pub = await request(app).get('/api/site/practice-areas');
+    assert.ok(pub.body.some(a => a.id === id), 'box ativo aparece na home');
+
+    // Despublicar → some da home
+    await request(app).put(`/api/admin/site/practice-areas/${id}`)
+      .set('Authorization', `Bearer ${token}`).send({ title: 'Box de Teste', description: 'Desc', items: ['a'], is_active: 0 });
+    pub = await request(app).get('/api/site/practice-areas');
+    assert.ok(!pub.body.some(a => a.id === id), 'box oculto não aparece na home');
+
+    // Excluir
+    const del = await request(app).delete(`/api/admin/site/practice-areas/${id}`).set('Authorization', `Bearer ${token}`);
+    assert.equal(del.status, 200);
+    const admin = await request(app).get('/api/admin/site/practice-areas').set('Authorization', `Bearer ${token}`);
+    assert.ok(!admin.body.some(a => a.id === id), 'box excluído some da lista admin');
+  });
+
   it('curtir/comentar em slug inexistente devolve 404', async () => {
     const c = await request(app).post('/api/portal/posts/nao-existe-zzz/comment').send({ texto: 'x' });
     assert.equal(c.status, 404);
