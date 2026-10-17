@@ -6,7 +6,7 @@
 import { describe, it, after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import { parseRss, parseCapa } from '../src/modules/portal/portal.collector.js';
+import { parseRss, parseCapa, extrairCorpo } from '../src/modules/portal/portal.collector.js';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -359,5 +359,31 @@ describe('Robô — leitor de RSS', () => {
     const items = parseCapa(html, 'https://www.agenciaminas.mg.gov.br/');
     assert.equal(items.length, 1, 'só a manchete real deve passar');
     assert.match(items[0].title, /amplia atendimento a aposentados/);
+  });
+
+  it('extrairCorpo pega os parágrafos da matéria e ignora menus/legendas/scripts', () => {
+    const html =
+        '<header><a href="/">Início</a></header>'
+      + '<script>var x=1;</script>'
+      + '<article>'
+      + '<p>Menu</p>'  // curto: ignorado
+      + '<p>O Tribunal de Justiça de Minas Gerais informou nesta sexta-feira que o novo plantão judiciário já está em funcionamento.</p>'
+      + '<p>Foto: divulgação / Imprensa TJMG</p>'  // crédito: ignorado
+      + '<p>Segundo a corte, o atendimento passa a funcionar das 8h às 18h, de segunda a sexta-feira, para casos urgentes.</p>'
+      + '</article>'
+      + '<footer><p>Todos os direitos reservados ao tribunal estadual de Minas.</p></footer>';
+    const { resumo, corpoHtml } = extrairCorpo(html);
+    assert.match(resumo, /Tribunal de Justiça de Minas Gerais/);
+    assert.match(corpoHtml, /<p>O Tribunal de Justiça/);
+    assert.match(corpoHtml, /das 8h às 18h/);
+    assert.ok(!/divulga/i.test(corpoHtml), 'crédito de foto não entra no corpo');
+    assert.ok(!/var x=1/.test(corpoHtml), 'script não entra no corpo');
+    assert.equal(corpoHtml.match(/<p>/g).length, 2, 'só os dois parágrafos reais');
+  });
+
+  it('extrairCorpo devolve vazio quando não há corpo de texto (fica só o título)', () => {
+    const { resumo, corpoHtml } = extrairCorpo('<div><a href="/x">ir</a><p>curto</p></div>');
+    assert.equal(resumo, '');
+    assert.equal(corpoHtml, '');
   });
 });

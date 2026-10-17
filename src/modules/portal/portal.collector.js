@@ -96,6 +96,37 @@ export function parseCapa(html, baseUrl) {
   return items;
 }
 
+// Abre a PÁGINA da matéria e extrai o CORPO (parágrafos de texto), ignorando
+// menus, rodapés, scripts, legendas de foto e créditos. Sem inventar: se não
+// achar parágrafos de texto, devolve vazio (a matéria fica só com o título para
+// o Dr. Jorge revisar). Usado para fontes oficiais (transcrição de fonte pública);
+// o valor editorial continua sendo o Comentário do Dr. Jorge.
+export function extrairCorpo(html) {
+  const limpo = String(html || '')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(script|style|noscript|svg|form|nav|header|footer|aside)[\s>][\s\S]*?<\/\1>/gi, ' ');
+  // Prefere a região semântica do artigo, quando marcada.
+  const reg = limpo.match(/<article[\s>][\s\S]*?<\/article>/i)
+    || limpo.match(/<main[\s>][\s\S]*?<\/main>/i);
+  const escopo = reg ? reg[0] : limpo;
+  const paras = [];
+  const re = /<p\b[^>]*>([\s\S]*?)<\/p>/gi;
+  let m;
+  while ((m = re.exec(escopo))) {
+    const t = decodeEntities(m[1]);               // vira texto puro (tags removidas)
+    if (!t || t.length < 40) continue;            // ignora parágrafos curtos/ruído
+    if (NAO_MANCHETE.test(t) || CREDITO_FOTO.test(t)) continue; // legenda/crédito/rótulo
+    paras.push(t);
+    if (paras.length >= 40) break;
+  }
+  if (!paras.length) return { resumo: '', corpoHtml: '' };
+  const resumo = paras[0].slice(0, 300);
+  const corpoHtml = paras
+    .map(p => '<p>' + p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>')
+    .join('\n');
+  return { resumo, corpoHtml };
+}
+
 // Cabeçalhos de navegador comum: muitos sites de órgãos (STF, prefeituras)
 // devolvem 403 para "robôs". Identificando-se como um browser, a leitura das
 // páginas públicas costuma ser liberada. (Alguns sites com WAF/Cloudflare
@@ -182,6 +213,26 @@ export async function coletar(db, opts = {}) {
     }
     if (!nova) { resumo.puladas++; resumo.detalhes.push(`${fonte.name}: nada novo (todas as recentes já passaram pela esteira)`); continue; }
 
+    // Abre a matéria escolhida e traz o CORPO (não só o título). No modo CAPA o
+    // description vem vazio (só a manchete da home), então aqui seguimos o link
+    // e extraímos os parágrafos. Se falhar ou não achar corpo, mantém o que tem
+    // (título + resumo do feed) — nunca inventa.
+    let exResumo = (nova.description || '').slice(0, 600);
+    let exCorpo = (nova.description || '').slice(0, 4000);
+    if (nova.link && (fonte.modo === 'capa' || !exCorpo)) {
+      try {
+        const got = extrairCorpo(await fetchText(nova.link));
+        if (got.corpoHtml) {
+          exCorpo = got.corpoHtml.slice(0, 8000);
+          if (!exResumo) exResumo = got.resumo;
+        } else {
+          resumo.detalhes.push(`${fonte.name}: abri a matéria mas não achei o corpo (fica só o título para revisão)`);
+        }
+      } catch (e) {
+        resumo.fonte_erros.push(`${fonte.name} (corpo): ${e.message}`);
+      }
+    }
+
     // A esteira ACUMULA: cada captação adiciona uma notícia nova por fonte (sem
     // repetir, graças ao dedupe acima), até o teto da fila (FILA_MAX). Assim o
     // Dr. Jorge enche a Triagem mais rápido captando várias vezes.
@@ -194,9 +245,9 @@ export async function coletar(db, opts = {}) {
       (nova.views == null ? null : nova.views),
       externalId,
       (nova.title || '').slice(0, 300),
-      (nova.description || '').slice(0, 600),
+      exResumo.slice(0, 600),
       fonte.nivel || null,
-      (nova.description || '').slice(0, 4000),
+      exCorpo.slice(0, 8000),
       now, now
     );
     resumo.inseridas++;
