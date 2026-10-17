@@ -115,6 +115,9 @@ nav.mainnav a.lnk:hover{color:var(--ink);background:var(--tint)}
 .thumb::before{content:"";position:absolute;inset:0;background:radial-gradient(130% 120% at 12% 0%, color-mix(in srgb,var(--thumb,#2f57a8) 26%, var(--surface)), var(--surface) 72%)}
 .thumb .scala{position:absolute;right:12px;bottom:8px;width:42px;height:42px;opacity:.5;color:var(--thumb,#2f57a8);z-index:1}
 .thumb .ed{position:absolute;left:12px;top:12px;z-index:1}
+.thumb img.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:block}
+.thumb.has-img::before{opacity:0}
+.thumb.has-img .scala{display:none}
 
 /* Destaque do blog */
 .feat{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-columns:1.1fr 1fr;margin-bottom:22px}
