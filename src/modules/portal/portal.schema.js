@@ -149,11 +149,11 @@ export function ensurePortalSchema(db) {
     // Jorge pode ajustar qualquer link pelo ✎ na Central, se o órgão mudar.
     const seed = [
       ['agencia_brasil', 'Agência Brasil (EBC)', 'federal', 'rss', 'rss', 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', 1],
-      ['stf', 'STF — Notícias', 'federal', 'rss', 'rss', 'https://portal.stf.jus.br/', 0],
-      ['stj', 'STJ — Notícias', 'federal', 'rss', 'rss', 'https://www.stj.jus.br/', 0],
+      ['stf', 'STF — Notícias', 'federal', 'rss', 'capa', 'https://portal.stf.jus.br/noticias/', 0],
+      ['stj', 'STJ — Notícias', 'federal', 'rss', 'capa', 'https://www.stj.jus.br/sites/portalp/Paginas/Comunicacao/Noticias.aspx', 0],
       ['inss', 'gov.br / INSS', 'federal', 'rss', 'capa', 'https://www.gov.br/inss/pt-br/noticias', 0],
       ['gov_mg', 'Governo de Minas Gerais', 'estadual', 'rss', 'capa', 'https://www.agenciaminas.mg.gov.br/', 0],
-      ['mpmg', 'MPMG — Notícias', 'estadual', 'rss', 'rss', 'https://www.mpmg.mp.br/', 0],
+      ['mpmg', 'MPMG — Notícias', 'estadual', 'rss', 'capa', 'https://www.mpmg.mp.br/portal/menu/comunicacao/noticias/', 0],
       ['tjmg', 'TJMG — Notícias', 'estadual', 'rss', 'capa', 'https://www.tjmg.jus.br/portal-tjmg/noticias/', 0],
       ['pjf', 'Prefeitura de Juiz de Fora', 'municipal', 'rss', 'capa', 'https://www.pjf.mg.gov.br/noticias/', 0]
     ];
@@ -167,7 +167,10 @@ export function ensurePortalSchema(db) {
     ['inss', 'https://www.gov.br/inss/pt-br/noticias', 'https://www.gov.br/inss/pt-br'],
     ['gov_mg', 'https://www.agenciaminas.mg.gov.br/', 'https://www.mg.gov.br/'],
     ['tjmg', 'https://www.tjmg.jus.br/portal-tjmg/noticias/', 'https://www.tjmg.jus.br/'],
-    ['pjf', 'https://www.pjf.mg.gov.br/noticias/', 'https://www.pjf.mg.gov.br/']
+    ['pjf', 'https://www.pjf.mg.gov.br/noticias/', 'https://www.pjf.mg.gov.br/'],
+    ['stf', 'https://portal.stf.jus.br/noticias/', 'https://portal.stf.jus.br/'],
+    ['stj', 'https://www.stj.jus.br/sites/portalp/Paginas/Comunicacao/Noticias.aspx', 'https://www.stj.jus.br/'],
+    ['mpmg', 'https://www.mpmg.mp.br/portal/menu/comunicacao/noticias/', 'https://www.mpmg.mp.br/']
   ];
   const updCapa = db.prepare("UPDATE portal_sources SET modo='capa', url=? WHERE skey=? AND url=?");
   for (const [skey, novaUrl, antigaUrl] of capaDefaults) updCapa.run(novaUrl, skey, antigaUrl);

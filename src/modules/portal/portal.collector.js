@@ -182,10 +182,9 @@ export async function coletar(db, opts = {}) {
     }
     if (!nova) { resumo.puladas++; resumo.detalhes.push(`${fonte.name}: nada novo (todas as recentes já passaram pela esteira)`); continue; }
 
-    // 1 pendente por fonte: remove a triagem antiga ainda não revisada desta fonte.
-    const antiga = db.prepare("SELECT id FROM portal_items WHERE source = ? AND fase='1_triagem'").get(fonte.name);
-    if (antiga) { db.prepare("UPDATE portal_items SET fase='descartada', updated_at=? WHERE id=?").run(nowISO(), antiga.id); resumo.substituidas++; }
-
+    // A esteira ACUMULA: cada captação adiciona uma notícia nova por fonte (sem
+    // repetir, graças ao dedupe acima), até o teto da fila (FILA_MAX). Assim o
+    // Dr. Jorge enche a Triagem mais rápido captando várias vezes.
     const now = nowISO();
     db.prepare(
       `INSERT INTO portal_items (fase, tipo, source, source_url, source_date, fonte_autor, source_views, external_id, title, summary, category, raw_text, created_at, updated_at)

@@ -476,9 +476,10 @@
     btn.disabled=true;btn.textContent='Coletando…';out.style.display='block';out.innerHTML='Buscando nas fontes ativas… (pode levar alguns segundos)';
     api('/api/portal/admin/collect',{method:'POST'}).then(function(d){
       if(d&&d.success){var r=d.resumo;
-        out.innerHTML='✅ Coleta concluída: <b>'+r.inseridas+'</b> nova(s) · '+r.substituidas+' atualizada(s) · '+r.puladas+' repetida(s)'
+        out.innerHTML='✅ Coleta concluída: <b>'+r.inseridas+'</b> nova(s) · '+r.puladas+' repetida(s)'
           +(r.expiradas?(' · '+r.expiradas+' vencida(s) descartada(s)'):'')
           +(r.pausado?' · <span style="color:var(--c-golpe);font-weight:700">FILA CHEIA — robô pausou</span>':'')
+          +((r.detalhes&&r.detalhes.length)?('<br><span style="color:var(--ink-faint)">Por fonte: '+r.detalhes.map(esc).join(' · ')+'</span>'):'')
           +((r.fonte_erros&&r.fonte_erros.length)?('<br><span style="color:var(--mun)">Avisos: '+r.fonte_erros.map(esc).join('; ')+'</span>'):'');
         // vai para a Triagem para o Dr. Jorge ver o que foi captado
         curFase='1_triagem';
