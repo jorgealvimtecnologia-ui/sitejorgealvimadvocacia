@@ -96,11 +96,23 @@ export function parseCapa(html, baseUrl) {
   return items;
 }
 
+// Cabeçalhos de navegador comum: muitos sites de órgãos (STF, prefeituras)
+// devolvem 403 para "robôs". Identificando-se como um browser, a leitura das
+// páginas públicas costuma ser liberada. (Alguns sites com WAF/Cloudflare
+// ainda podem recusar — aí o robô só avisa e segue, sem inventar nada.)
 async function fetchText(url, timeoutMs = 20000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const r = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'JornalAlvimBot/1.0 (+portal de notícias)' } });
+    const r = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/rss+xml;q=0.8,*/*;q=0.7',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+      }
+    });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return await r.text();
   } finally {
@@ -161,12 +173,14 @@ export async function coletar(db, opts = {}) {
       if (vb !== va) return vb - va;
       return dateVal(b.pubDate) - dateVal(a.pubDate);
     });
-    const nova = ordenadas[0];
-    const externalId = fonte.skey + '|' + (nova.link || nova.title);
-
-    // Dedupe: já existe em qualquer fase? então pula.
-    const existe = db.prepare('SELECT id FROM portal_items WHERE external_id = ?').get(externalId);
-    if (existe) { resumo.puladas++; resumo.detalhes.push(`${fonte.name}: já estava na esteira`); continue; }
+    // Pega a PRIMEIRA notícia ainda não vista (pula as já captadas ou descartadas
+    // e traz a próxima) — assim, ao descartar uma, a recaptura traz outra.
+    let nova = null, externalId = null;
+    for (const cand of ordenadas) {
+      const eid = fonte.skey + '|' + (cand.link || cand.title);
+      if (!db.prepare('SELECT id FROM portal_items WHERE external_id = ?').get(eid)) { nova = cand; externalId = eid; break; }
+    }
+    if (!nova) { resumo.puladas++; resumo.detalhes.push(`${fonte.name}: nada novo (todas as recentes já passaram pela esteira)`); continue; }
 
     // 1 pendente por fonte: remove a triagem antiga ainda não revisada desta fonte.
     const antiga = db.prepare("SELECT id FROM portal_items WHERE source = ? AND fase='1_triagem'").get(fonte.name);

@@ -198,6 +198,12 @@
         }
         document.getElementById('art-lead').textContent=p.summary||'';
         var corpo=p.content||'';
+        // Evita duplicação: em transcrições oficiais o resumo e o conteúdo vêm do
+        // mesmo texto da fonte. Se o corpo começar igual ao resumo, remove o trecho repetido.
+        if(ehOficial){
+          var s=(p.summary||'').trim(),c=corpo.trim();
+          if(s&&c.indexOf(s)===0)corpo=c.slice(s.length).trim();
+        }
         if(p.comentario&&String(p.comentario).trim()){
           var cmt=String(p.comentario).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
           corpo='<aside style="margin:0 0 20px;padding:16px 18px;border:1px solid var(--gold);border-left:4px solid var(--gold);background:var(--surface-2);border-radius:10px">'
