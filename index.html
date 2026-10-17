@@ -569,14 +569,11 @@
   <div id="guia-justica" class="ja-guiabar scroll-mt-20">
     <style>
       .ja-guiabar{position:relative;background:#f8f6f0;border-bottom:1px solid #e6e2d6}
-      .ja-guiabar .inner{max-width:80rem;margin:0 auto;display:flex;align-items:center;gap:12px;padding:8px 16px}
-      .ja-guiabar .lbl{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;letter-spacing:.05em;color:#B8860B;text-transform:uppercase;white-space:nowrap}
-      .ja-guiabar .links{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding:0 30px 3px 0}
-      .ja-guiabar .links::-webkit-scrollbar{height:5px}
-      .ja-guiabar .links::-webkit-scrollbar-thumb{background:rgba(15,23,42,.2);border-radius:3px}
+      .ja-guiabar .inner{max-width:80rem;margin:0 auto;display:flex;align-items:flex-start;gap:12px;padding:8px 16px}
+      .ja-guiabar .lbl{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;letter-spacing:.05em;color:#B8860B;text-transform:uppercase;white-space:nowrap;margin-top:5px}
+      .ja-guiabar .links{flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:0}
       .ja-guiabar .links a{flex:none;font-size:.72rem;font-weight:600;color:#44506a;background:#fff;border:1px solid #e6e2d6;padding:4px 10px;border-radius:999px;white-space:nowrap;text-decoration:none}
       .ja-guiabar .links a:hover{background:#D4AF37;color:#201500;border-color:#D4AF37}
-      .ja-guiabar .inner::after{content:"";position:absolute;top:0;bottom:0;right:0;width:36px;background:linear-gradient(to right,transparent,#f8f6f0);pointer-events:none}
       @media(max-width:640px){.ja-guiabar .lbl span{display:none}}
     </style>
     <div class="inner">
