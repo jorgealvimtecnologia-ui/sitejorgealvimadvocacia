@@ -104,7 +104,7 @@ export function parseCapa(html, baseUrl) {
 export function extrairCorpo(html) {
   const limpo = String(html || '')
     .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style|noscript|svg|form|nav|header|footer|aside)[\s>][\s\S]*?<\/\1>/gi, ' ');
+    .replace(/<(script|style|noscript|svg|form|nav|header|footer|aside|figure|figcaption)[\s>][\s\S]*?<\/\1>/gi, ' ');
   // Prefere a região semântica do artigo, quando marcada.
   const reg = limpo.match(/<article[\s>][\s\S]*?<\/article>/i)
     || limpo.match(/<main[\s>][\s\S]*?<\/main>/i);
@@ -191,10 +191,17 @@ export async function coletar(db, opts = {}) {
     } else {
       // Modo RSS: últimas notícias do feed, filtradas pelos termos ativos.
       const itens = parseRss(xml).filter(i => i.title && i.link);
-      casam = termos.length
-        ? itens.filter(i => { const hay = norm(i.title + ' ' + i.description); return termos.some(t => hay.includes(t)); })
-        : itens;
-      if (!casam.length) { resumo.detalhes.push(`${fonte.name}: nada novo que case com os termos`); continue; }
+      if (!itens.length) {
+        // A URL marcada como RSS não é um feed (veio HTML, ex.: página inicial).
+        // Em vez de ficar muda, tenta raspar como capa — sem inventar.
+        casam = parseCapa(xml, fonte.url);
+        if (!casam.length) { resumo.detalhes.push(`${fonte.name}: a URL não é um feed RSS e não achei manchetes (confira o endereço do feed)`); continue; }
+      } else {
+        casam = termos.length
+          ? itens.filter(i => { const hay = norm(i.title + ' ' + i.description); return termos.some(t => hay.includes(t)); })
+          : itens;
+        if (!casam.length) { resumo.detalhes.push(`${fonte.name}: nada novo que case com os termos`); continue; }
+      }
     }
 
     // 1 por fonte por ciclo: escolhe por MAIOR nº de visualizações (quando a
@@ -225,11 +232,13 @@ export async function coletar(db, opts = {}) {
         if (got.corpoHtml) {
           exCorpo = got.corpoHtml.slice(0, 8000);
           if (!exResumo) exResumo = got.resumo;
-        } else {
-          resumo.detalhes.push(`${fonte.name}: abri a matéria mas não achei o corpo (fica só o título para revisão)`);
+        } else if (!exCorpo) {
+          // Abriu a página mas não achou texto em formato padrão: fica só o
+          // título e o AVISO aparece para o Dr. Jorge (ele cola/escreve o texto).
+          resumo.fonte_erros.push(`${fonte.name}: importei o título, mas a página não entregou o texto — abra a fonte e cole o conteúdo`);
         }
       } catch (e) {
-        resumo.fonte_erros.push(`${fonte.name} (corpo): ${e.message}`);
+        resumo.fonte_erros.push(`${fonte.name} (abrir matéria): ${e.message} — fica só o título`);
       }
     }
 
