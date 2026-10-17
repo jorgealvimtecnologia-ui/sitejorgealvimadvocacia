@@ -72,7 +72,7 @@ nav.mainnav a.lnk:hover{color:var(--ink);background:var(--tint)}
 /* Guia da Justiça — barra de links clara (aparece em todas as páginas do portal) */
 .guiabar{position:relative;background:var(--surface-2);border-bottom:1px solid var(--line)}
 .guiabar .inner{display:flex;align-items:flex-start;gap:12px;padding-block:8px}
-.guiabar .gb-lbl{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:var(--gold);text-transform:uppercase;white-space:nowrap;margin-top:5px}
+.guiabar .gb-lbl{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.04em;color:#826200;text-transform:uppercase;white-space:nowrap;margin-top:5px}
 .guiabar .gb-lbl svg{width:14px;height:14px}
 .guiabar .gb-links{flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:0}
 .guiabar .gb-links a{flex:none;font-size:.72rem;font-weight:600;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
