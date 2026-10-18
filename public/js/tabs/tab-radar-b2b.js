@@ -328,6 +328,8 @@
       if (currentFilterCategory !== 'todos') q.set('category', currentFilterCategory);
       if (currentFilterNeighborhood !== 'todos') q.set('neighborhood', currentFilterNeighborhood);
       if (currentFilterAssigned !== 'todos') q.set('assigned_to', currentFilterAssigned);
+      if (currentFilterCity && currentFilterCity !== 'todos') q.set('city', currentFilterCity);
+      if (currentFilterState && currentFilterState !== 'todos') q.set('state', currentFilterState);
       if (currentSearchQuery) q.set('search', currentSearchQuery);
       q.set('view', currentView);
       q.set('limit', '500');
@@ -401,12 +403,13 @@
     });
 
     // Empty states para colunas vazias
+    const cityLabel = (currentFilterCity && currentFilterCity !== 'todos') ? ` (${escapeHtml(currentFilterCity)})` : '';
     Object.keys(columns).forEach(st => {
       const col = columns[st];
       if (col && col.children.length === 0) {
         col.innerHTML = `
           <div class="p-6 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-2xl bg-white/50">
-            Nenhuma empresa nesta etapa
+            Nenhuma empresa nesta etapa${cityLabel}
           </div>
         `;
       }
@@ -563,10 +566,21 @@
     tbody.innerHTML = '';
 
     if (prospects.length === 0) {
+      const cityDesc = (currentFilterCity && currentFilterCity !== 'todos') 
+        ? `${escapeHtml(currentFilterCity)} - ${escapeHtml(currentFilterState || '')}`
+        : 'esta pesquisa';
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="py-12 text-center text-slate-400 text-sm">
-            Nenhuma empresa encontrada com os filtros selecionados.
+          <td colspan="8" class="py-12 text-center text-slate-500 text-xs">
+            <div class="max-w-md mx-auto space-y-2">
+              <div class="text-3xl">🏢</div>
+              <p class="font-bold text-slate-800 text-sm">Nenhuma empresa encontrada para ${cityDesc}.</p>
+              <p class="text-slate-500 leading-relaxed">
+                Esta cidade ainda não possui empresas cadastradas no seu banco local.<br>
+                Para mapear empresas em tempo real no Google Maps, clique em 
+                <button type="button" onclick="openGooglePlacesSearchModal()" class="text-indigo-600 hover:underline font-bold cursor-pointer">"Varredura Google Places"</button> no topo.
+              </p>
+            </div>
           </td>
         </tr>
       `;
@@ -696,12 +710,16 @@
     const selCat = document.getElementById('b2b-filter-category');
     const selNb = document.getElementById('b2b-filter-neighborhood');
     const selAssigned = document.getElementById('b2b-filter-assigned');
+    const selCity = document.getElementById('b2b-filter-city');
+    const selState = document.getElementById('b2b-filter-state');
     const inputSearch = document.getElementById('b2b-search-input');
 
     if (selStatus) currentFilterStatus = selStatus.value;
     if (selCat) currentFilterCategory = selCat.value;
     if (selNb) currentFilterNeighborhood = selNb.value;
     if (selAssigned) currentFilterAssigned = selAssigned.value;
+    if (selCity) currentFilterCity = selCity.value;
+    if (selState) currentFilterState = selState.value;
     if (inputSearch) currentSearchQuery = inputSearch.value.trim();
 
     fetchProspects();

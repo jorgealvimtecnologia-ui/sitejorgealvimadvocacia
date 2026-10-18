@@ -319,11 +319,11 @@ radarB2bRouter.get('/api/radar-b2b/prospects', requireAuth, (req, res) => {
       params.push(neighborhood);
     }
     if (city && city !== 'todos') {
-      sql += ` AND city = ?`;
+      sql += ` AND LOWER(city) = LOWER(?)`;
       params.push(city);
     }
     if (state && state !== 'todos') {
-      sql += ` AND state = ?`;
+      sql += ` AND LOWER(state) = LOWER(?)`;
       params.push(state);
     }
     if (assigned_to && assigned_to !== 'todos') {
@@ -1061,9 +1061,11 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         textQuery: qContext || `empresas e comercios em ${city} ${state}`,
         languageCode: 'pt-BR',
         regionCode: 'BR',
-        pageSize: 20,
-        locationRestriction: { rectangle: jfBounds }
+        pageSize: 20
       };
+      if (city && city.toLowerCase().includes('juiz de fora')) {
+        bodyPayload.locationRestriction = { rectangle: jfBounds };
+      }
       if (includedType) bodyPayload.includedType = includedType;
 
       const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
@@ -1152,6 +1154,12 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
     // -------------------------------------------------------------
     // CENÁRIO B: Sem Chave Google (Busca inteligente na Base Local Ampliada)
     // -------------------------------------------------------------
+    if (city && !city.toLowerCase().includes('juiz de fora')) {
+      return res.status(400).json({
+        error: `A base local offline contém 7.880 empresas exclusivamente de Juiz de Fora - MG. Para varrer novas cidades ao vivo no Google Maps (como ${city} - ${state}), informe sua Chave de API do Google Places no campo correspondente (ou configure GOOGLE_MAPS_API_KEY no servidor).`
+      });
+    }
+
     const localFile = resolveLocalCompaniesCsv();
     if (!localFile) {
       return res.status(400).json({
