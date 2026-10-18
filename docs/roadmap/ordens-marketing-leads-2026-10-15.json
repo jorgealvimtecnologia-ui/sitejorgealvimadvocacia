@@ -64,6 +64,14 @@
       "descricao": "Tratamento de dados dos clientes: parser resiliente para importação de CSV/VCF/Google Contacts, detecção de e-mails reais, fusão inteligente de nomes compostos, classificação automática de Pessoa Jurídica (PJ) e modo compacto no painel para consulta ultra-rápida de centenas de registros sem lentidão.",
       "criterios": "Importação sem duplicidades; identificação de PJ automática; navegação fluida de 800+ contatos no painel com Modo Lista Rápida.",
       "estado": "CONCLUIDO (17/10/2026): Parser aprimorado, scripts de reclassificação PJ executados, cache de clientes desabilitado para dados frescos e Modo Lista Rápida ativo no painel."
+    },
+    {
+      "ref": "MKT-08",
+      "titulo": "Radar / Prospecção B2B: Google Empresas, CRM Kanban e Exportação Meta/Brevo",
+      "prioridade": "P1",
+      "descricao": "Módulo autônomo de inteligência de mercado e prospecção empresarial (PJ) focado em Juiz de Fora. Consome a Google Places API (New v1), integra 1.040 empresas locais já mapeadas, gerencia o relacionamento em CRM visual estilo Kanban (6 etapas), permite promoção para Cliente PJ oficial em 1 clique e exporta públicos formatados para Meta Ads Manager e Brevo.",
+      "criterios": "Tabela radar_b2b_prospects isolada com índices; funil Kanban visual com links para WhatsApp; conversão instantânea para tabela clients; filtros por nicho/bairro; busca ao vivo Google Places; exportação para Meta Ads e Brevo; 100% de testes passando.",
+      "estado": "CONCLUIDO (18/10/2026): Criados src/modules/radar-b2b/radar-b2b.routes.js e public/js/tabs/tab-radar-b2b.js, 1.040 empresas locais importadas no banco, integração Kanban e exportações para Meta Ads e Brevo ativas no painel e implantadas em produção."
     }
   ]
 }
