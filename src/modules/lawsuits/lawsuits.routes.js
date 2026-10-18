@@ -56,7 +56,7 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
 
     if (clientId) {
       lawsuits = db.prepare(`
-        SELECT l.*, c.full_name as client_name, c.phone as client_phone
+        SELECT l.*, c.full_name as client_name, c.phone as client_phone, COALESCE(c.cpf, c.cnpj, '') as client_document
         FROM lawsuits l
         JOIN clients c ON c.id = l.client_id
         WHERE l.client_id = ? ${includeDeleted ? '' : 'AND l.deleted_at IS NULL'}
@@ -64,7 +64,7 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
       `).all(clientId);
     } else {
       lawsuits = db.prepare(`
-        SELECT l.*, c.full_name as client_name, c.phone as client_phone
+        SELECT l.*, c.full_name as client_name, c.phone as client_phone, COALESCE(c.cpf, c.cnpj, '') as client_document
         FROM lawsuits l
         JOIN clients c ON c.id = l.client_id
         ${includeDeleted ? '' : 'WHERE l.deleted_at IS NULL'}
@@ -87,17 +87,36 @@ lawsuitsRouter.get('/api/lawsuits', requireAuth, (req, res) => {
       partyStmt = db.prepare(`SELECT id, name, document, polo, tipo, is_client, advogados
                               FROM lawsuit_parties WHERE lawsuit_id = ? ORDER BY is_client DESC, id ASC`);
     } catch { partyStmt = null; }
-    const partiesDe = (id) => {
-      if (!partyStmt) return [];
-      try {
-        return partyStmt.all(id).map(p => ({ ...p, advogados: (() => { try { return JSON.parse(p.advogados || '[]'); } catch { return []; } })() }));
-      } catch { return []; }
+    const partiesDe = (law) => {
+      let list = [];
+      if (partyStmt) {
+        try {
+          list = partyStmt.all(law.id).map(p => ({ ...p, advogados: (() => { try { return JSON.parse(p.advogados || '[]'); } catch { return []; } })() }));
+        } catch { list = []; }
+      }
+      if (list.length > 0) return list;
+
+      // Fallback PROC-03: se a tabela de partes ainda não possui registros para este processo,
+      // exibe ao menos o cliente vinculado como parte identificada do polo ativo/cliente.
+      if (law.client_name) {
+        return [{
+          id: 'cli-' + law.id,
+          name: law.client_name,
+          document: law.client_document || '',
+          polo: 'Cliente Vinculado',
+          tipo: 'Cliente',
+          is_client: 1,
+          is_fallback: 1,
+          advogados: []
+        }];
+      }
+      return [];
     };
 
     const result = lawsuits.map(law => ({
       ...law,
       movements: movementStmt.all(law.id),
-      parties: partiesDe(law.id),
+      parties: partiesDe(law),
       audiencias: (() => { try { return JSON.parse(law.audiencias || '[]'); } catch { return []; } })(),
     }));
 
