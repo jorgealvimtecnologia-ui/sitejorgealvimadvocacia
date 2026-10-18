@@ -203,11 +203,33 @@ contactsRouter.post('/api/contacts/import-batch', requireAuth, (req, res) => {
         const effectiveName = name || `Contato ${formattedPhone}`;
 
         // Verificação de duplicidade se skipDuplicates estiver ativo
-        if (skipDuplicates && formattedPhone) {
-          const existsCli = checkClientPhone.get(formattedPhone);
-          const existsLead = checkLeadPhone.get(formattedPhone);
-          if (existsCli || existsLead) {
-            skipped++;
+        if (skipDuplicates) {
+          if (formattedPhone) {
+            const existsCli = checkClientPhone.get(formattedPhone);
+            const existsLead = checkLeadPhone.get(formattedPhone);
+            if (existsCli || existsLead) {
+              skipped++;
+              return;
+            }
+          }
+          if (email && email.includes('@')) {
+            const existsEmail = db.prepare(`SELECT id FROM clients WHERE deleted_at IS NULL AND LOWER(TRIM(email)) = ? LIMIT 1`).get(email);
+            if (existsEmail) {
+              skipped++;
+              return;
+            }
+          }
+        }
+
+        // Se o contato possui e-mail e não possui telefone, tenta enriquecer com segurança cliente existente de nome idêntico e único
+        if (target === 'clients' && email && email.includes('@') && (!formattedPhone || formattedPhone === 'Sem Telefone') && name && name.length >= 4) {
+          const matchingByName = db.prepare(`
+            SELECT id, full_name, email FROM clients 
+            WHERE deleted_at IS NULL AND LOWER(TRIM(full_name)) = LOWER(TRIM(?))
+          `).all(name);
+          if (matchingByName.length === 1 && (!matchingByName[0].email || matchingByName[0].email.trim() === '')) {
+            db.prepare(`UPDATE clients SET email = ?, updated_at = ? WHERE id = ?`).run(email, now, matchingByName[0].id);
+            imported++;
             return;
           }
         }
@@ -224,7 +246,7 @@ contactsRouter.post('/api/contacts/import-batch', requireAuth, (req, res) => {
             leadId,
             now,
             effectiveName,
-            formattedPhone || 'Sem Telefone',
+            formattedPhone || '',
             c.area || 'Geral / Contato Importado',
             noteText || `Contato importado via ${sourceTag}`,
             email || null,
@@ -257,7 +279,7 @@ contactsRouter.post('/api/contacts/import-batch', requireAuth, (req, res) => {
             (c.cep || '').toString().trim(),
             noteInfo || null,
             email || '',
-            formattedPhone || 'Sem Telefone',
+            formattedPhone || '',
             sourceTag || '',
             'brasileiro(a)',
             'solteiro(a)',

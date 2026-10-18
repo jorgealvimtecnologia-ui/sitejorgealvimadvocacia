@@ -470,27 +470,40 @@
     const rawHeaders = matrix[0].map(h => String(h || '').trim().toLowerCase());
     
     // Procura colunas típicas
+    let firstNameIdx = -1, middleNameIdx = -1, lastNameIdx = -1;
     let nameIdx = -1, phoneIdx = -1, emailIdx = -1, cityIdx = -1, orgIdx = -1, notesIdx = -1;
 
     rawHeaders.forEach((h, idx) => {
-      // Nome
-      if (nameIdx === -1 && (h === 'name' || h === 'nome' || h === 'given name' || h.includes('nome') || h.includes('contato') || h.includes('cliente'))) {
+      // Nome composto do Google
+      if (firstNameIdx === -1 && (h === 'first name' || h === 'primeiro nome')) firstNameIdx = idx;
+      if (middleNameIdx === -1 && (h === 'middle name' || h === 'nome do meio')) middleNameIdx = idx;
+      if (lastNameIdx === -1 && (h === 'last name' || h === 'sobrenome' || h === 'ultimo nome')) lastNameIdx = idx;
+
+      // Nome completo único
+      if (nameIdx === -1 && (h === 'name' || h === 'nome' || h === 'given name' || h === 'full name' || h === 'nome completo' || h === 'razao social')) {
         nameIdx = idx;
       }
-      // Telefone / Celular
-      if (phoneIdx === -1 && (h.includes('phone 1 - value') || h.includes('mobile') || h.includes('telefone') || h.includes('celular') || h.includes('fone') || h.includes('whatsapp') || h === 'tel')) {
-        phoneIdx = idx;
+
+      // Telefone / Celular (evita colunas de tipo/label)
+      if (phoneIdx === -1 && !h.includes('type') && !h.includes('label') && !h.includes('rotulo')) {
+        if (h.includes('phone') || h.includes('mobile') || h.includes('telefone') || h.includes('celular') || h.includes('fone') || h.includes('whatsapp') || h === 'tel') {
+          phoneIdx = idx;
+        }
       }
-      // E-mail
-      if (emailIdx === -1 && (h.includes('e-mail') || h.includes('email') || h === 'mail')) {
-        emailIdx = idx;
+
+      // E-mail (procura especificamente colunas de valor e evita label/type)
+      if (emailIdx === -1) {
+        if (h.includes('e-mail 1 - value') || h.includes('email 1 - value') || h === 'email' || h === 'e-mail' || (h.includes('email') && !h.includes('label') && !h.includes('type') && !h.includes('rotulo'))) {
+          emailIdx = idx;
+        }
       }
+
       // Cidade
       if (cityIdx === -1 && (h.includes('address 1 - formatted') || h.includes('cidade') || h.includes('municipio') || h.includes('city'))) {
         cityIdx = idx;
       }
       // Organização / Empresa
-      if (orgIdx === -1 && (h.includes('organization') || h.includes('empresa') || h.includes('tipo') || h.includes('cargo'))) {
+      if (orgIdx === -1 && !h.includes('type') && (h.includes('organization') || h.includes('empresa') || h.includes('tipo') || h.includes('cargo'))) {
         orgIdx = idx;
       }
       // Notas / Observações
@@ -499,26 +512,63 @@
       }
     });
 
-    // Se não achou por nome exato, pega índice 0 para nome e índice 1 para telefone
-    if (nameIdx === -1 && matrix[0].length >= 1) nameIdx = 0;
-    if (phoneIdx === -1 && matrix[0].length >= 2) phoneIdx = 1;
+    // Fallback de detecção de email se ainda não achou: verifica se alguma coluna tem arroba '@' nas primeiras linhas
+    if (emailIdx === -1) {
+      for (let c = 0; c < matrix[0].length; c++) {
+        let hasAt = 0;
+        for (let r = 1; r < Math.min(matrix.length, 10); r++) {
+          if (String(matrix[r][c] || '').includes('@')) hasAt++;
+        }
+        if (hasAt >= 2) {
+          emailIdx = c;
+          break;
+        }
+      }
+    }
 
     const contacts = [];
     for (let i = 1; i < matrix.length; i++) {
       const row = matrix[i];
       if (!row || !row.length) continue;
 
-      const name = nameIdx !== -1 ? String(row[nameIdx] || '').trim() : '';
-      const rawPhone = phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : '';
-      const email = emailIdx !== -1 ? String(row[emailIdx] || '').trim().toLowerCase() : '';
+      let name = '';
+      if (firstNameIdx !== -1) {
+        const parts = [
+          row[firstNameIdx],
+          middleNameIdx !== -1 ? row[middleNameIdx] : '',
+          lastNameIdx !== -1 ? row[lastNameIdx] : ''
+        ].map(p => String(p || '').trim()).filter(Boolean);
+        name = parts.join(' ').trim();
+      }
+      if (!name && nameIdx !== -1) {
+        name = String(row[nameIdx] || '').trim();
+      }
+
+      // Telefone seguro (valida se tem ao menos 6 dígitos numéricos)
+      let phone = '';
+      if (phoneIdx !== -1) {
+        const rawPhone = String(row[phoneIdx] || '').trim();
+        const digits = rawPhone.replace(/\D/g, '');
+        if (digits.length >= 6) {
+          phone = formatPhone(rawPhone);
+        }
+      }
+
+      // E-mail limpo e validado
+      let email = '';
+      if (emailIdx !== -1) {
+        const rawEmail = String(row[emailIdx] || '').replace(/['"]/g, '').trim().toLowerCase();
+        if (rawEmail.includes('@') && rawEmail.includes('.')) {
+          email = rawEmail;
+        }
+      }
+
       const city = cityIdx !== -1 ? String(row[cityIdx] || '').trim() : '';
       const org = orgIdx !== -1 ? String(row[orgIdx] || '').trim() : '';
       const notes = notesIdx !== -1 ? String(row[notesIdx] || '').trim() : '';
 
-      const phone = formatPhone(rawPhone);
-
-      if (name || phone) {
-        const cName = name || `Contato ${phone}`;
+      if (name || phone || email) {
+        const cName = name || (phone ? `Contato ${phone}` : (email ? email.split('@')[0] : 'Contato'));
         contacts.push({
           name: cName,
           phone: phone,
