@@ -1327,7 +1327,7 @@ radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
 
     const prospects = db.prepare(sql).all(...params);
 
-    const headers = ['COMPANY', 'FIRSTNAME', 'SMS', 'PHONE', 'CITY', 'WEBSITE', 'CATEGORY', 'STATUS'];
+    const headers = ['EMAIL', 'COMPANY', 'FIRSTNAME', 'SMS', 'PHONE', 'CITY', 'WEBSITE', 'CATEGORY', 'STATUS'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
@@ -1342,8 +1342,9 @@ radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
       const safeCity = (p.city || 'Juiz de Fora').replace(/[",\n\r]/g, ' ').trim();
       const safeWebsite = (p.website || '').replace(/[",\n\r]/g, ' ').trim();
       const safeCategory = (p.primary_type_display || p.primary_type || 'Comércio').replace(/[",\n\r]/g, ' ').trim();
+      const safeEmail = (p.email || '').replace(/[",\n\r]/g, '').trim();
 
-      rows.push(`"${safeCompany}","${safeCompany}","${e164}","${e164}","${safeCity}","${safeWebsite}","${safeCategory}","${p.status}"`);
+      rows.push(`"${safeEmail}","${safeCompany}","${safeCompany}","${e164}","${e164}","${safeCity}","${safeWebsite}","${safeCategory}","${p.status}"`);
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
