@@ -1335,6 +1335,43 @@
             <button onclick="markAllNotificationsRead()" class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100">Marcar todas como lidas</button>
           </div>
         </div>
+
+        <!-- CARD: CHIP DEDICADO & WHATSAPP EVOLUTION API -->
+        <div class="bg-gradient-to-br from-slate-900 via-navy-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg border border-emerald-500/30 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-lg">📲</span>
+                <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">Motor de Mensageria Automática</span>
+              </div>
+              <h3 class="text-lg sm:text-xl font-serif font-bold text-white tracking-tight">Chip Dedicado & WhatsApp Evolution API</h3>
+              <p id="wa-status-detail" class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                O código do sistema está 100% preparado e aguarda a compra e ativação do chip dedicado na operadora.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <div id="wa-status-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span> Aguardando Ativação do Chip
+              </div>
+              <button 
+                type="button" 
+                onclick="openWhatsAppConnectModal()" 
+                class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition-all border border-emerald-400/40 cursor-pointer active:scale-95"
+                title="Conectar WhatsApp lendo o QR Code com a câmera do celular">
+                <span>📷</span>
+                <span>Conectar WhatsApp (QR Code)</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="testWhatsAppSend()" 
+                class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all cursor-pointer">
+                <span>🧪</span>
+                <span>Testar Disparo</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div id="deadline-alerts-card"></div>
         <div id="notif-list" class="space-y-2">Carregando…</div>
       </section>
@@ -12145,6 +12182,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-qa.js?v=20260924"></script>
   <script src="/js/tabs/tab-deadline-alerts.js?v=20261003-v1"></script>
   <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>
+  <script src="/js/tabs/tab-whatsapp.js?v=20261018-v1"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD

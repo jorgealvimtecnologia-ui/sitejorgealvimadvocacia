@@ -72,6 +72,7 @@ import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { bookingRouter, startBookingReminders } from './src/modules/booking/booking.routes.js';
 import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
+import { whatsappRouter } from './src/modules/whatsapp/whatsapp.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 import { serveStoredFiles } from './src/middleware/stored-files.js';
 import { modernImages } from './src/middleware/modern-images.js';
@@ -248,6 +249,7 @@ app.use(recaptchaRouter);
 app.use(bookingRouter);
 app.use(indicatorsRouter);
 app.use(radarRouter);
+app.use(whatsappRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
