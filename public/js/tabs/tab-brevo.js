@@ -110,17 +110,41 @@
             <span class="font-bold text-white">${b.name}</span>
             <span class="text-slate-400 ml-2">(${b.count} contatos: do ${b.startIndex}º ao ${b.endIndex}º)</span>
           </div>
-          <a 
-            href="${b.downloadUrl}" 
-            download 
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 font-bold border border-teal-500/30 transition-all cursor-pointer">
+          <button 
+            type="button" 
+            onclick="downloadBrevoBatch(${b.batchId})" 
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 font-bold border border-teal-500/30 transition-all cursor-pointer active:scale-95">
             <span>📥</span>
             <span>Baixar CSV</span>
-          </a>
+          </button>
         </div>
       `).join('');
     } catch (err) {
       console.warn('[BREVO BATCHES] Erro ao carregar lotes:', err);
+    }
+  }
+
+  async function downloadBrevoBatch(batchId) {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/brevo/export-batch/${batchId}?token=${encodeURIComponent(token)}`, {
+        headers: getHeaders(),
+        credentials: 'same-origin'
+      });
+      if (!res.ok) {
+        throw new Error(`Erro HTTP ${res.status} ao gerar CSV`);
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Brevo_Lote_${batchId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Falha ao baixar CSV do lote: ' + err.message);
     }
   }
 
@@ -314,6 +338,7 @@
   window.closeBrevoConfigModal = closeBrevoConfigModal;
   window.saveBrevoConfigForm = saveBrevoConfigForm;
   window.testBrevoEmail = testBrevoEmail;
+  window.downloadBrevoBatch = downloadBrevoBatch;
 
   document.addEventListener('DOMContentLoaded', () => {
     fetchBrevoConfig();
