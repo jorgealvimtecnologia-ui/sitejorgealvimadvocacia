@@ -667,7 +667,8 @@
         (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
         (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
         (tab === 'notifications' && p.tab_alerts === 1) ||
-        (tab === 'meta-ads' && p.tab_settings === 1)
+        (tab === 'meta-ads' && p.tab_settings === 1) ||
+        (tab === 'radar-b2b' && p.tab_leads === 1)
         
       );
     }
@@ -986,7 +987,8 @@
         'meta-ads': isMaster || perms.tab_settings === 1,
         'site-boxes': isMaster || perms.tab_blog === 1,
         'faq': isMaster || perms.tab_blog === 1,
-        'portal': isMaster
+        'portal': isMaster,
+        'radar-b2b': isMaster || perms.tab_leads === 1
       };
 
       // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
