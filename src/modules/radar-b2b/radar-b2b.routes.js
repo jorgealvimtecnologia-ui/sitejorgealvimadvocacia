@@ -157,6 +157,21 @@ function extractNeighborhood(address) {
   return 'Juiz de Fora';
 }
 
+function resolveLocalCompaniesCsv() {
+  const candidates = [
+    path.join(process.cwd(), 'storage', 'data', 'empresas_juiz_de_fora_ampliado_20260315_114940.csv'),
+    path.join(process.cwd(), 'storage', 'data', 'empresas_deduplicadas.csv'),
+    '/var/www/advocacia/storage/data/empresas_juiz_de_fora_ampliado_20260315_114940.csv',
+    '/var/www/advocacia/storage/data/empresas_deduplicadas.csv',
+    '/home/jorgealvim/Documents/programação/crm-leads/empresas_juiz_de_fora_ampliado_20260315_114940.csv',
+    '/home/jorgealvim/Documents/programação/crm-leads/empresas_deduplicadas.csv'
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
 function parseCSVLine(line) {
   const result = [];
   let cur = '';
@@ -890,21 +905,9 @@ radarB2bRouter.post('/api/radar-b2b/campaigns/send-batch', requireAuth, async (r
  */
 radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => {
   try {
-    const defaultPaths = [
-      '/home/jorgealvim/Documents/programação/crm-leads/empresas_deduplicadas.csv',
-      '/home/jorgealvim/Documents/programação/crm-leads/empresas_juiz_de_fora_ampliado_20260315_114940.csv'
-    ];
-
-    let targetPath = null;
-    for (const p of defaultPaths) {
-      if (fs.existsSync(p)) {
-        targetPath = p;
-        break;
-      }
-    }
-
+    const targetPath = resolveLocalCompaniesCsv();
     if (!targetPath) {
-      return res.status(404).json({ error: 'Nenhum arquivo CSV de empresas encontrado na pasta crm-leads.' });
+      return res.status(404).json({ error: 'Nenhum arquivo CSV de empresas encontrado (storage/data ou crm-leads).' });
     }
 
     const content = fs.readFileSync(targetPath, 'utf8');
@@ -1149,10 +1152,10 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
     // -------------------------------------------------------------
     // CENÁRIO B: Sem Chave Google (Busca inteligente na Base Local Ampliada)
     // -------------------------------------------------------------
-    const localFile = '/home/jorgealvim/Documents/programação/crm-leads/empresas_juiz_de_fora_ampliado_20260315_114940.csv';
-    if (!fs.existsSync(localFile)) {
+    const localFile = resolveLocalCompaniesCsv();
+    if (!localFile) {
       return res.status(400).json({
-        error: 'Chave de API do Google não configurada e base local não encontrada.'
+        error: 'Chave de API do Google não configurada e base local não encontrada (storage/data ou crm-leads).'
       });
     }
 
