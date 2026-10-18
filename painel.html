@@ -7558,9 +7558,36 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Estado (UF)</label>
                 <select 
                   id="b2b-filter-state" 
-                  onchange="handleStateChange(this.value)"
+                  onchange="window.handleStateChange(this.value)"
                   class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                  <option value="MG">MG - Minas Gerais</option>
+                  <option value="todos">Todos os Estados</option>
+                  <option value="MG" selected>MG - Minas Gerais</option>
+                  <option value="SP">SP - São Paulo</option>
+                  <option value="RJ">RJ - Rio de Janeiro</option>
+                  <option value="ES">ES - Espírito Santo</option>
+                  <option value="PR">PR - Paraná</option>
+                  <option value="SC">SC - Santa Catarina</option>
+                  <option value="RS">RS - Rio Grande do Sul</option>
+                  <option value="BA">BA - Bahia</option>
+                  <option value="GO">GO - Goiás</option>
+                  <option value="DF">DF - Distrito Federal</option>
+                  <option value="PE">PE - Pernambuco</option>
+                  <option value="CE">CE - Ceará</option>
+                  <option value="PA">PA - Pará</option>
+                  <option value="MT">MT - Mato Grosso</option>
+                  <option value="MS">MS - Mato Grosso do Sul</option>
+                  <option value="MA">MA - Maranhão</option>
+                  <option value="PB">PB - Paraíba</option>
+                  <option value="RN">RN - Rio Grande do Norte</option>
+                  <option value="AL">AL - Alagoas</option>
+                  <option value="PI">PI - Piauí</option>
+                  <option value="AM">AM - Amazonas</option>
+                  <option value="SE">SE - Sergipe</option>
+                  <option value="RO">RO - Rondônia</option>
+                  <option value="TO">TO - Tocantins</option>
+                  <option value="AC">AC - Acre</option>
+                  <option value="AP">AP - Amapá</option>
+                  <option value="RR">RR - Roraima</option>
                 </select>
               </div>
 
@@ -7569,9 +7596,17 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Cidade</label>
                 <select 
                   id="b2b-filter-city" 
-                  onchange="handleB2bFilterChange()"
+                  onchange="window.handleB2bFilterChange()"
                   class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                  <option value="Juiz de Fora">Juiz de Fora</option>
+                  <option value="todos">Todas as Cidades</option>
+                  <option value="Juiz de Fora" selected>Juiz de Fora</option>
+                  <option value="Belo Horizonte">Belo Horizonte</option>
+                  <option value="Uberlândia">Uberlândia</option>
+                  <option value="Contagem">Contagem</option>
+                  <option value="Betim">Betim</option>
+                  <option value="Montes Claros">Montes Claros</option>
+                  <option value="São Paulo">São Paulo</option>
+                  <option value="Rio de Janeiro">Rio de Janeiro</option>
                 </select>
               </div>
 
@@ -7718,6 +7753,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                   <th class="py-3 px-3">Bairro</th>
                   <th class="py-3 px-3">Categoria</th>
                   <th class="py-3 px-3">Telefone</th>
+                  <th class="py-3 px-3">E-mail Corporativo</th>
                   <th class="py-3 px-3">Avaliação</th>
                   <th class="py-3 px-3">Status Kanban</th>
                   <th class="py-3 px-3 text-right">Ação</th>
@@ -7731,6 +7767,21 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
         <!-- SEÇÃO CAMPANHAS WHATSAPP & DISPAROS -->
         <div id="b2b-campaigns-section" class="hidden space-y-6">
+          <!-- Banner de navegação / Retorno ao Radar B2B -->
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+            <div class="flex items-center gap-3">
+              <button 
+                type="button" 
+                onclick="window.switchB2bSubTab('crm')" 
+                class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all">
+                <span>←</span>
+                <span>Voltar para o Radar B2B (Kanban)</span>
+              </button>
+              <span class="text-xs text-slate-500 font-medium">Você está na área de criação e disparo de campanhas WhatsApp personalizadas.</span>
+            </div>
+            <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">Campanhas & Disparos</span>
+          </div>
+
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Coluna 1 e 2: Criador de Campanha -->
             <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-5">
@@ -7882,7 +7933,17 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <p id="lead-history-subtitle" class="text-xs text-slate-500">Registre anotações, atendente responsável e movimentações</p>
           </div>
         </div>
-        <button type="button" onclick="window.closeLeadHistoryModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1 cursor-pointer">✕</button>
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="window.closeLeadHistoryModal()" 
+            class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all border border-slate-200 shadow-2xs"
+            title="Voltar para a tela do Radar B2B">
+            <span>←</span>
+            <span>Voltar ao Radar B2B</span>
+          </button>
+          <button type="button" onclick="window.closeLeadHistoryModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1 cursor-pointer">✕</button>
+        </div>
       </div>
 
       <!-- Informações do Prospect e Ações Rápidas -->
@@ -7959,12 +8020,21 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <textarea id="modal-lead-notes" rows="3" placeholder="Detalhes da conversa, acordos feitos, documentos pendentes..." class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white leading-relaxed"></textarea>
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" onclick="window.closeLeadHistoryModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold cursor-pointer">Cancelar</button>
-          <button type="button" onclick="window.saveLeadHistory()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md cursor-pointer flex items-center gap-1.5">
-            <span>💾</span>
-            <span>Salvar Movimentação</span>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <button 
+            type="button" 
+            onclick="window.closeLeadHistoryModal()" 
+            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer flex items-center gap-1.5 transition-all">
+            <span>←</span>
+            <span>Voltar ao Radar B2B</span>
           </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="window.closeLeadHistoryModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs cursor-pointer">Cancelar</button>
+            <button type="button" onclick="window.saveLeadHistory()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5 transition-all">
+              <span>💾</span>
+              <span>Salvar Movimentação</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -7994,18 +8064,59 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
 
       <div class="space-y-4 text-xs">
         <!-- Filtro Geográfico Avançado -->
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Estado (UF)</label>
-            <select id="b2b-search-state" onchange="window.handleSearchModalStateChange(this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
-              <option value="MG">MG - Minas Gerais</option>
+            <select id="b2b-search-state" onchange="window.handleSearchModalStateChange(this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700 cursor-pointer">
+              <option value="MG" selected>MG - Minas Gerais</option>
+              <option value="SP">SP - São Paulo</option>
+              <option value="RJ">RJ - Rio de Janeiro</option>
+              <option value="ES">ES - Espírito Santo</option>
+              <option value="PR">PR - Paraná</option>
+              <option value="SC">SC - Santa Catarina</option>
+              <option value="RS">RS - Rio Grande do Sul</option>
+              <option value="BA">BA - Bahia</option>
+              <option value="GO">GO - Goiás</option>
+              <option value="DF">DF - Distrito Federal</option>
+              <option value="PE">PE - Pernambuco</option>
+              <option value="CE">CE - Ceará</option>
+              <option value="PA">PA - Pará</option>
+              <option value="MT">MT - Mato Grosso</option>
+              <option value="MS">MS - Mato Grosso do Sul</option>
+              <option value="MA">MA - Maranhão</option>
+              <option value="PB">PB - Paraíba</option>
+              <option value="RN">RN - Rio Grande do Norte</option>
+              <option value="AL">AL - Alagoas</option>
+              <option value="PI">PI - Piauí</option>
+              <option value="AM">AM - Amazonas</option>
+              <option value="SE">SE - Sergipe</option>
+              <option value="RO">RO - Rondônia</option>
+              <option value="TO">TO - Tocantins</option>
+              <option value="AC">AC - Acre</option>
+              <option value="AP">AP - Amapá</option>
+              <option value="RR">RR - Roraima</option>
             </select>
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Cidade</label>
-            <select id="b2b-search-city" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
-              <option value="Juiz de Fora">Juiz de Fora</option>
-            </select>
+            <input 
+              type="text" 
+              id="b2b-search-city" 
+              list="b2b-search-cities-list"
+              value="Juiz de Fora" 
+              placeholder="Digite ou escolha a cidade"
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700 focus:bg-white focus:outline-none focus:border-indigo-500"
+            />
+            <datalist id="b2b-search-cities-list">
+              <option value="Juiz de Fora">
+              <option value="Belo Horizonte">
+              <option value="Uberlândia">
+              <option value="Contagem">
+              <option value="Betim">
+              <option value="Montes Claros">
+              <option value="São Paulo">
+              <option value="Rio de Janeiro">
+            </datalist>
           </div>
         </div>
 
@@ -8021,7 +8132,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700"
                 onblur="window.handleSearchCepLookup(this.value)"
               />
-              <button type="button" onclick="window.handleSearchCepLookup(document.getElementById('b2b-search-cep')?.value)" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs" title="Consultar CEP">
+              <button type="button" onclick="window.handleSearchCepLookup(document.getElementById('b2b-search-cep')?.value)" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer" title="Consultar CEP">
                 🔍
               </button>
             </div>
@@ -8046,6 +8157,19 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-semibold"
           />
           <p class="text-[11px] text-slate-400 mt-1">💡 Deixe em branco para buscar qualquer empresa da localidade ou preencha para nicho específico.</p>
+        </div>
+
+        <!-- Quantidade de Empresas por Busca -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Quantidade de Empresas a Importar / Carregar</label>
+          <select id="b2b-search-limit" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700 cursor-pointer">
+            <option value="100">100 empresas por lote</option>
+            <option value="250">250 empresas por lote</option>
+            <option value="500" selected>500 empresas por lote (Recomendado)</option>
+            <option value="1000">1.000 empresas por lote</option>
+            <option value="todas">Todas as empresas encontradas (sem limite)</option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">⚡ Empresas já existentes no banco são preservadas e não geram duplicatas.</p>
         </div>
 
         <div>
@@ -12990,7 +13114,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>
   <script src="/js/tabs/tab-whatsapp.js?v=20261018-v1"></script>
   <script src="/js/tabs/tab-brevo.js?v=20261018-v3"></script>
-  <script src="/js/tabs/tab-radar-b2b.js?v=20261018-v1"></script>
+  <script src="/js/tabs/tab-radar-b2b.js?v=20261018-v3"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD

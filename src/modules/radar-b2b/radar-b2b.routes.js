@@ -1040,7 +1040,7 @@ radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => 
  */
 radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res) => {
   try {
-    const { query, neighborhood, city = 'Juiz de Fora', state = 'MG', includedType, apiKey: userKey } = req.body;
+    const { query, neighborhood, city = 'Juiz de Fora', state = 'MG', includedType, apiKey: userKey, limit } = req.body;
     const apiKey = userKey || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_PLACES_API_KEY;
 
     const searchTerm = (query || '').trim();
@@ -1174,6 +1174,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
     const idxTipos = header.indexOf('tipos');
     const idxMaps = header.indexOf('google_maps_url');
 
+    const maxLimit = limit === 'todas' ? 999999 : (parseInt(limit, 10) || 500);
     let inserted = 0;
     let matched = 0;
     const insertStmt = db.prepare(`
@@ -1184,7 +1185,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         status, is_office_client, office_client_id, created_at, updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, ?,
-        'Juiz de Fora', 'MG', ?, ?, 'OPERATIONAL',
+        ?, ?, ?, ?, 'OPERATIONAL',
         ?, ?, ?, ?,
         'novo', ?, ?, ?, ?
       )
@@ -1226,12 +1227,14 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         const clientCheck = checkOfficeClientMatch(phone, '', name);
 
         const resRun = insertStmt.run(
-          placeId, name, phone, website, address, nb, rating, rev,
+          placeId, name, phone, website, address, nb,
+          city, state,
+          rating, rev,
           pType, pTypeDesc, types, maps,
           clientCheck.isClient ? 1 : 0, clientCheck.clientId || null, now, now
         );
         if (resRun.changes > 0) inserted++;
-        if (inserted >= 60) break; // Lote de até 60 novas empresas por busca
+        if (inserted >= maxLimit) break;
       }
       db.exec('COMMIT;');
     } catch (e) {
@@ -1243,15 +1246,16 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
       event_type: 'CONSULTA',
       event_name: 'B2B_LOCAL_SEARCH',
       module: 'radar-b2b',
-      description: `Busca na base local (${searchTerm || 'todas'} / ${nbTerm || 'geral'}): ${inserted} novos inseridos`
+      description: `Busca na base local (${searchTerm || 'todas'} / ${nbTerm || 'geral'}): ${inserted} novos inseridos de ${matched} encontrados`
     });
 
     return res.json({
       success: true,
       mode: 'base_local_ampliada',
+      found: matched,
       matched,
       inserted,
-      message: `Busca concluída com sucesso! ${inserted} novas empresas foram adicionadas ao funil (base local de Juiz de Fora sem consumir créditos de API).`
+      message: `Busca concluída com sucesso! ${matched} empresas encontradas e ${inserted} novos registros adicionados ao funil.`
     });
   } catch (error) {
     console.error('[ERRO] radar-b2b buscar-google:', error);

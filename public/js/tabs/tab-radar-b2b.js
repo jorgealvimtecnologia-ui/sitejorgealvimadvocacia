@@ -94,13 +94,14 @@
         credentials: 'same-origin'
       });
       if (!res.ok) return;
-      const states = await res.json();
+      const data = await res.json();
+      const states = Array.isArray(data) ? data : (data.states || []);
       
       const filterState = document.getElementById('b2b-filter-state');
       const searchState = document.getElementById('b2b-search-state');
 
       if (filterState && states && states.length > 0) {
-        filterState.innerHTML = states.map(s => 
+        filterState.innerHTML = '<option value="todos">Todos os Estados</option>' + states.map(s => 
           `<option value="${s.sigla}" ${s.sigla === 'MG' ? 'selected' : ''}>${s.sigla} - ${s.nome}</option>`
         ).join('');
       }
@@ -124,17 +125,27 @@
     const filterCity = document.getElementById('b2b-filter-city');
     if (!filterCity) return;
 
+    if (uf === 'todos') {
+      filterCity.innerHTML = '<option value="todos" selected>Todas as Cidades</option>';
+      currentFilterCity = 'todos';
+      if (reload) fetchProspects();
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/radar-b2b/locations/cities?state=${encodeURIComponent(uf)}`, {
+      const res = await fetch(`/api/radar-b2b/locations/cities?uf=${encodeURIComponent(uf)}`, {
         headers: getHeaders(),
         credentials: 'same-origin'
       });
       if (res.ok) {
-        const cities = await res.json();
-        filterCity.innerHTML = cities.map(c => 
-          `<option value="${c.nome}" ${c.nome === 'Juiz de Fora' ? 'selected' : ''}>${c.nome}</option>`
-        ).join('');
-        currentFilterCity = filterCity.value || 'Juiz de Fora';
+        const data = await res.json();
+        const cities = Array.isArray(data) ? data : (data.cities || []);
+        const optionsHtml = '<option value="todos">Todas as Cidades</option>' + cities.map(c => {
+          const cName = typeof c === 'string' ? c : (c.nome || '');
+          return `<option value="${escapeHtml(cName)}" ${cName === 'Juiz de Fora' ? 'selected' : ''}>${escapeHtml(cName)}</option>`;
+        }).join('');
+        filterCity.innerHTML = optionsHtml;
+        currentFilterCity = filterCity.value || 'todos';
       }
     } catch (e) {
       console.warn('[RADAR B2B] Erro ao carregar cidades:', e);
@@ -147,19 +158,27 @@
 
   // Manipula mudança de estado no modal de busca
   window.handleSearchModalStateChange = async function (uf) {
-    const searchCity = document.getElementById('b2b-search-city');
-    if (!searchCity) return;
+    const listEl = document.getElementById('b2b-search-cities-list');
+    const inputCity = document.getElementById('b2b-search-city');
 
     try {
-      const res = await fetch(`/api/radar-b2b/locations/cities?state=${encodeURIComponent(uf)}`, {
+      const res = await fetch(`/api/radar-b2b/locations/cities?uf=${encodeURIComponent(uf)}`, {
         headers: getHeaders(),
         credentials: 'same-origin'
       });
       if (res.ok) {
-        const cities = await res.json();
-        searchCity.innerHTML = cities.map(c => 
-          `<option value="${c.nome}" ${c.nome === 'Juiz de Fora' ? 'selected' : ''}>${c.nome}</option>`
-        ).join('');
+        const data = await res.json();
+        const cities = Array.isArray(data) ? data : (data.cities || []);
+        if (listEl) {
+          listEl.innerHTML = cities.map(c => {
+            const cName = typeof c === 'string' ? c : (c.nome || '');
+            return `<option value="${escapeHtml(cName)}">`;
+          }).join('');
+        }
+        if (inputCity && cities.length > 0) {
+          const first = typeof cities[0] === 'string' ? cities[0] : (cities[0].nome || '');
+          inputCity.value = uf === 'MG' ? 'Juiz de Fora' : first;
+        }
       }
     } catch (e) {
       console.warn('[RADAR B2B] Erro ao carregar cidades no modal:', e);
@@ -495,11 +514,16 @@
         ` : '<span class="text-[11px] text-slate-400 italic">Sem telefone cadastrado</span>'}
 
         ${p.email ? `
-          <div class="flex items-center gap-1 text-[11px] text-slate-600 truncate">
-            <span>✉️</span>
-            <a href="mailto:${escapeHtml(p.email)}" class="hover:text-indigo-600 underline truncate">${escapeHtml(p.email)}</a>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-700 truncate" title="${escapeHtml(p.email)}">
+            <span class="text-indigo-600 font-bold">✉️</span>
+            <a href="mailto:${escapeHtml(p.email)}" class="hover:text-indigo-600 font-semibold underline truncate">${escapeHtml(p.email)}</a>
           </div>
-        ` : ''}
+        ` : `
+          <div class="flex items-center justify-between gap-1 text-[11px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+            <span class="truncate">✉️ E-mail: não cadastrado</span>
+            <button type="button" onclick="window.openLeadHistoryModal(${p.id})" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline shrink-0 cursor-pointer">+ Inserir</button>
+          </div>
+        `}
 
         ${p.address ? `
           <p class="text-[11px] text-slate-400 line-clamp-1" title="${escapeHtml(p.address)}">
@@ -541,7 +565,7 @@
     if (prospects.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="py-12 text-center text-slate-400 text-sm">
+          <td colspan="8" class="py-12 text-center text-slate-400 text-sm">
             Nenhuma empresa encontrada com os filtros selecionados.
           </td>
         </tr>
@@ -586,7 +610,19 @@
               ` : ''}
             </div>
           ` : '<span class="text-slate-400 italic">--</span>'}
-          ${p.email ? `<div class="text-[10px] text-slate-500 truncate">${escapeHtml(p.email)}</div>` : ''}
+        </td>
+        <td class="py-3 px-3">
+          ${p.email ? `
+            <a href="mailto:${escapeHtml(p.email)}" class="text-indigo-600 font-semibold hover:underline flex items-center gap-1 truncate max-w-[180px]" title="${escapeHtml(p.email)}">
+              <span>✉️</span>
+              <span class="truncate">${escapeHtml(p.email)}</span>
+            </a>
+          ` : `
+            <span class="text-slate-400 italic text-[11px] flex items-center gap-1">
+              <span>Não informado</span>
+              <button type="button" onclick="window.openLeadHistoryModal(${p.id})" class="text-indigo-600 hover:underline font-bold text-[10px] ml-1 cursor-pointer">+ Inserir</button>
+            </span>
+          `}
         </td>
         <td class="py-3 px-3 text-amber-600 font-bold">
           ${p.rating ? `⭐ ${Number(p.rating).toFixed(1)}` : '--'}
@@ -747,7 +783,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600">
           <div><span class="font-bold text-slate-500">Telefone:</span> ${escapeHtml(p.phone || '--')}</div>
           <div><span class="font-bold text-slate-500">WhatsApp:</span> ${escapeHtml(p.whatsapp || p.phone || '--')}</div>
-          <div><span class="font-bold text-slate-500">E-mail:</span> ${escapeHtml(p.email || '--')}</div>
+          <div><span class="font-bold text-slate-500">E-mail:</span> ${p.email ? `<strong class="text-indigo-700 font-semibold">${escapeHtml(p.email)}</strong>` : '<span class="text-amber-600 font-medium italic">Não cadastrado (insira abaixo)</span>'}</div>
           <div><span class="font-bold text-slate-500">Bairro:</span> ${escapeHtml(p.neighborhood || '--')}</div>
         </div>
       `;
@@ -1110,6 +1146,7 @@
     const city = document.getElementById('b2b-search-city')?.value || 'Juiz de Fora';
     const neighborhood = document.getElementById('b2b-search-neighborhood-input')?.value?.trim() || '';
     const cep = document.getElementById('b2b-search-cep')?.value?.trim() || '';
+    const limit = document.getElementById('b2b-search-limit')?.value || '500';
     const apiKey = document.getElementById('b2b-search-apikey')?.value?.trim() || '';
 
     const btn = document.getElementById('btn-executar-busca-google');
@@ -1122,12 +1159,13 @@
       const res = await fetch('/api/radar-b2b/buscar-google', {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ query, neighborhood, state, city, cep, apiKey })
+        body: JSON.stringify({ query, neighborhood, state, city, cep, apiKey, limit })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Falha na busca');
 
-      toast(`✅ Varredura concluída! Retornadas ${data.found} empresas. ${data.inserted} novos registros adicionados ao Radar.`, 'success');
+      const totalFound = data.found !== undefined ? data.found : (data.matched || data.inserted || 0);
+      toast(`✅ Varredura concluída! ${totalFound} empresas localizadas e ${data.inserted} novos registros adicionados ao Radar B2B.`, 'success');
       closeGooglePlacesSearchModal();
       await fetchStats();
       await fetchProspects();
