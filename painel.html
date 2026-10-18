@@ -1372,6 +1372,55 @@
           </div>
         </div>
 
+        <!-- CARD: BREVO E-MAIL MARKETING & NEWSLETTERS -->
+        <div class="bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg border border-teal-500/30 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="p-2 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 text-lg">📧</span>
+                <span class="text-xs font-extrabold uppercase tracking-widest text-teal-400 bg-teal-500/10 px-2.5 py-0.5 rounded-full border border-teal-500/20">E-mail Marketing &amp; Newsletters</span>
+              </div>
+              <h3 class="text-lg sm:text-xl font-serif font-bold text-white tracking-tight">Brevo (Disparos em Massa &amp; Newsletters)</h3>
+              <p id="brevo-status-detail" class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                Carregando dados da integração com o Brevo…
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <div id="brevo-status-badge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span> Aguardando Chave de API
+              </div>
+              <button 
+                type="button" 
+                onclick="openBrevoConfigModal()" 
+                class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md transition-all border border-teal-400/40 cursor-pointer active:scale-95"
+                title="Configurar credenciais e remetente do Brevo">
+                <span>⚙️</span>
+                <span>Configurar Brevo</span>
+              </button>
+              <button 
+                type="button" 
+                onclick="testBrevoEmail()" 
+                class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all cursor-pointer">
+                <span>🧪</span>
+                <span>Testar E-mail</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lotes de 300 contatos/dia prontos para exportação Brevo -->
+          <div class="pt-3 border-t border-teal-500/20 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-teal-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🗓️</span> Lotes Diários de 300 Contatos (Plano Gratuito)
+              </span>
+              <span class="text-[11px] text-slate-400">Divididos por dia útil para envio seguro</span>
+            </div>
+            <div id="brevo-batches-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-700 text-xs text-slate-400">Carregando lotes...</div>
+            </div>
+          </div>
+        </div>
+
         <div id="deadline-alerts-card"></div>
         <div id="notif-list" class="space-y-2">Carregando…</div>
       </section>
@@ -12183,6 +12232,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-deadline-alerts.js?v=20261003-v1"></script>
   <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>
   <script src="/js/tabs/tab-whatsapp.js?v=20261018-v1"></script>
+  <script src="/js/tabs/tab-brevo.js?v=20261018-v1"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD
