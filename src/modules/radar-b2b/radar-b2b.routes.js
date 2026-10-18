@@ -147,14 +147,25 @@ function formatPhoneBR(raw) {
   return raw.trim();
 }
 
-function extractNeighborhood(address) {
+function extractNeighborhood(address, city = '') {
   if (!address) return 'Centro';
-  // Exemplo: "Av. Barão do Rio Branco, 3896 - Bom Pastor, Juiz de Fora - MG, 36025-020"
+  // Exemplo: "R. Benvindo de Paula, 527 - Jardim Primavera, Lima Duarte - MG, 36140-000"
+  const mUniversal = address.match(/-\s*([^,]+),\s*([^,-]+)\s*-\s*[A-Z]{2}/i);
+  if (mUniversal && mUniversal[1]) return mUniversal[1].trim();
+
+  if (city) {
+    const escapedCity = city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const mCity1 = address.match(new RegExp(`-\\s*([^,]+),\\s*${escapedCity}`, 'i'));
+    if (mCity1 && mCity1[1]) return mCity1[1].trim();
+    const mCity2 = address.match(new RegExp(`,\\s*([^,-]+)\\s*-\\s*${escapedCity}`, 'i'));
+    if (mCity2 && mCity2[1]) return mCity2[1].trim();
+  }
+
   const m = address.match(/-\s*([^,]+),\s*Juiz de Fora/i);
   if (m && m[1]) return m[1].trim();
   const m2 = address.match(/,\s*([^,-]+)\s*-\s*Juiz de Fora/i);
   if (m2 && m2[1]) return m2[1].trim();
-  return 'Juiz de Fora';
+  return 'Centro';
 }
 
 function resolveLocalCompaniesCsv() {
@@ -1068,23 +1079,46 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
       }
       if (includedType) bodyPayload.includedType = includedType;
 
-      const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': apiKey,
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.types,places.primaryType,places.primaryTypeDisplayName,places.googleMapsUri,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount'
-        },
-        body: JSON.stringify(bodyPayload)
-      });
+      const allPlaces = [];
+      let pageToken = undefined;
+      const targetMaxPages = limit === '20' ? 1 : 3;
 
-      if (!response.ok) {
-        const errText = await response.text();
-        return res.status(response.status).json({ error: `Google Places API retornou erro: ${errText}` });
+      for (let page = 0; page < targetMaxPages; page++) {
+        const bodyPayload = {
+          textQuery: qContext || `empresas e comercios em ${city} ${state}`,
+          languageCode: 'pt-BR',
+          regionCode: 'BR',
+          pageSize: 20
+        };
+        if (pageToken) bodyPayload.pageToken = pageToken;
+        if (city && city.toLowerCase().includes('juiz de fora')) {
+          bodyPayload.locationRestriction = { rectangle: jfBounds };
+        }
+        if (includedType) bodyPayload.includedType = includedType;
+
+        const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.types,places.primaryType,places.primaryTypeDisplayName,places.googleMapsUri,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,nextPageToken'
+          },
+          body: JSON.stringify(bodyPayload)
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          if (allPlaces.length > 0) break;
+          return res.status(response.status).json({ error: `Google Places API retornou erro: ${errText}` });
+        }
+
+        const data = await response.json();
+        const places = data.places || [];
+        allPlaces.push(...places);
+        pageToken = data.nextPageToken;
+        if (!pageToken || places.length === 0) break;
       }
 
-      const data = await response.json();
-      const places = data.places || [];
       let inserted = 0;
 
       const insertStmt = db.prepare(`
@@ -1103,10 +1137,10 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
 
       db.exec('BEGIN TRANSACTION;');
       try {
-        for (const p of places) {
+        for (const p of allPlaces) {
           const name = p.displayName?.text || 'Sem nome';
           const address = p.formattedAddress || '';
-          const nb = extractNeighborhood(address) || nbTerm || 'Centro';
+          const nb = extractNeighborhood(address, city) || nbTerm || 'Centro';
           const phone = formatPhoneBR(p.nationalPhoneNumber || '');
           const website = p.websiteUri || '';
           const rating = p.rating || null;
@@ -1145,9 +1179,9 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
       return res.json({
         success: true,
         mode: 'google_api_live',
-        found: places.length,
+        found: allPlaces.length,
         inserted,
-        message: `Varredura Google Places concluída! ${inserted} novas empresas adicionadas ao funil.`
+        message: `Varredura Google Places concluída! ${allPlaces.length} empresas encontradas e ${inserted} novas adicionadas ao funil.`
       });
     }
 
