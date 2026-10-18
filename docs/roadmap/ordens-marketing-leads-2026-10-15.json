@@ -72,6 +72,14 @@
       "descricao": "Módulo autônomo de inteligência de mercado e prospecção empresarial (PJ) focado em Juiz de Fora. Consome a Google Places API (New v1), integra 1.040 empresas locais já mapeadas, gerencia o relacionamento em CRM visual estilo Kanban (6 etapas), permite promoção para Cliente PJ oficial em 1 clique e exporta públicos formatados para Meta Ads Manager e Brevo.",
       "criterios": "Tabela radar_b2b_prospects isolada com índices; funil Kanban visual com links para WhatsApp; conversão instantânea para tabela clients; filtros por nicho/bairro; busca ao vivo Google Places; exportação para Meta Ads e Brevo; 100% de testes passando.",
       "estado": "CONCLUIDO (18/10/2026): Criados src/modules/radar-b2b/radar-b2b.routes.js e public/js/tabs/tab-radar-b2b.js, 1.040 empresas locais importadas no banco, integração Kanban e exportações para Meta Ads e Brevo ativas no painel e implantadas em produção."
+    },
+    {
+      "ref": "MKT-09",
+      "titulo": "Robô Enriquecedor Web (Crawler) e Consulta de CNPJ/Sócios para o Radar B2B",
+      "prioridade": "P1",
+      "descricao": "1. Robô Enriquecedor Web (Crawler) em segundo plano: visita os websites das empresas prospectadas no Radar B2B, acessa as páginas '/contato', '/fale-conosco', '/quem-somos' e rodapé, e extrai via regex e parsing HTML: e-mails corporativos (contato@..., etc.), links e perfis de redes sociais (Instagram, Facebook, LinkedIn) e o CNPJ divulgado no rodapé (obrigatório pelo Decreto 7.962/2013).\n2. Consulta de CNPJ, CNAE e Quadro de Sócios (QSA) via APIs públicas gratuitas (BrasilAPI / ReceitaWS): a partir do CNPJ encontrado ou do nome comercial/telefone, consulta dados oficiais da Receita Federal para trazer Situação Cadastral, CNAE detalhado, Capital Social e nomes dos Sócios/Administradores (QSA), permitindo abordagem jurídica altamente qualificada diretamente com os tomadores de decisão.",
+      "criterios": "Worker assíncrono com rate-limiting e timeouts de segurança; preenchimento automático das colunas de e-mail, redes sociais, CNPJ e sócios na tabela radar_b2b_prospects; enriquecimento manual em 1 clique por card e em lote configurável; sem impacto no desempenho do servidor.",
+      "estado": "pendente (anotado em 18/10/2026 a pedido do Dr. Jorge para próximos trabalhos)"
     }
   ]
 }

@@ -347,6 +347,13 @@ Atualizado em 05/10/2026. **38 ordens abertas**: 8 do P0 (o que sobrou), 13 do P
   - *Estado:* pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)
   - *Situação:* Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.
   - *Pronto quando:* Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado).
+- **AUD-43 — Robô Enriquecedor Web (Crawler) e Consulta de CNPJ/Sócios para o Radar B2B**
+  - *Estado:* pendente (anotado em 18/10/2026 a pedido do Dr. Jorge para próximos trabalhos)
+  - *Situação:* A extração do Google Places traz Nome, Telefone/WhatsApp, Endereço e Website, mas não traz e-mail, redes sociais nem CNPJ/Sócios na resposta padrão da API.
+  - *Pronto quando:* 
+    1. Robô Enriquecedor Web (Crawler) assíncrono em segundo plano: visita os websites das empresas prospectadas no Radar B2B, acessa rodapé e páginas de contato (`/contato`, `/fale-conosco`, `/quem-somos`), e extrai via regex e parsing HTML: e-mails corporativos (`contato@...`, etc.), links e perfis de redes sociais (Instagram, Facebook, LinkedIn) e o CNPJ do rodapé (Decreto 7.962/2013);
+    2. Consulta de CNPJ, CNAE e Quadro de Sócios (QSA) via APIs públicas gratuitas (BrasilAPI / ReceitaWS): a partir do CNPJ encontrado ou do nome comercial/telefone, consulta dados oficiais da Receita Federal trazendo Situação Cadastral, CNAE detalhado, Capital Social e nomes dos Sócios/Administradores (QSA), viabilizando abordagem consultiva direta aos tomadores de decisão;
+    3. Atualização automática dos campos na tabela `radar_b2b_prospects` e sincronização direta para campanhas segmentadas no Brevo e WhatsApp.
 
 ### P2 — Normal (17)
 
