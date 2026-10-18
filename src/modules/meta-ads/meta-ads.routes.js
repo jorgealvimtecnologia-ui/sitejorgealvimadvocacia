@@ -872,3 +872,131 @@ metaAdsRouter.delete('/api/meta-ads/posts/:id', requireAuth, (req, res) => {
     res.status(500).json({ error: 'Erro ao excluir material: ' + err.message });
   }
 });
+
+// ------------------------------------------------------------------------------
+// 7. PÚBLICOS PERSONALIZADOS (META CUSTOM AUDIENCES) & EXPORTAÇÃO
+// ------------------------------------------------------------------------------
+
+function normalizePhoneE164(raw) {
+  if (!raw) return '';
+  const digits = String(raw).replace(/\D/g, '');
+  if (digits.length < 8) return '';
+  if (digits.startsWith('55') && digits.length >= 12) return '+' + digits;
+  if (digits.length === 10 || digits.length === 11) return '+55' + digits;
+  if (digits.length >= 12) return '+' + digits;
+  return '+55' + digits;
+}
+
+function parseClientName(fullName) {
+  if (!fullName) return { fn: '', ln: '' };
+  const parts = fullName.trim().split(/\s+/);
+  const fn = parts[0] || '';
+  const ln = parts.slice(1).join(' ') || '';
+  return { fn, ln };
+}
+
+function csvCellEscape(val) {
+  if (val === null || val === undefined) return '';
+  const str = String(val).trim();
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+metaAdsRouter.get('/api/meta-ads/audience/stats', requireAuth, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT id, full_name, email, phone, city, state 
+      FROM clients 
+      WHERE deleted_at IS NULL
+    `).all();
+
+    let validPhones = 0;
+    let validEmails = 0;
+    let withBoth = 0;
+    let totalEligible = 0;
+
+    for (const r of rows) {
+      const p = (r.phone || '').replace(/\D/g, '');
+      const hasPhone = p.length >= 8;
+      const e = (r.email || '').trim().toLowerCase();
+      const hasEmail = e.includes('@') && e.includes('.');
+      if (hasPhone) validPhones++;
+      if (hasEmail) validEmails++;
+      if (hasPhone && hasEmail) withBoth++;
+      if (hasPhone || hasEmail) totalEligible++;
+    }
+
+    res.json({
+      success: true,
+      totalClients: rows.length,
+      validPhones,
+      validEmails,
+      withBoth,
+      totalEligible
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Erro ao obter estatísticas de público: ' + err.message });
+  }
+});
+
+metaAdsRouter.get('/api/meta-ads/audience/export-csv', requireAuth, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT id, full_name, email, phone, city, state 
+      FROM clients 
+      WHERE deleted_at IS NULL
+      ORDER BY id ASC
+    `).all();
+
+    const csvLines = ['email,phone,fn,ln,ct,st,country'];
+    let exportedCount = 0;
+
+    for (const r of rows) {
+      const pDigits = (r.phone || '').replace(/\D/g, '');
+      const hasPhone = pDigits.length >= 8;
+      const email = (r.email || '').trim().toLowerCase();
+      const hasEmail = email.includes('@') && email.includes('.');
+
+      if (!hasPhone && !hasEmail) {
+        continue;
+      }
+
+      const phone = hasPhone ? normalizePhoneE164(r.phone) : '';
+      const { fn, ln } = parseClientName(r.full_name);
+      const ct = (r.city || '').trim();
+      const st = (r.state || '').trim();
+      const country = 'BR';
+
+      csvLines.push([
+        csvCellEscape(hasEmail ? email : ''),
+        csvCellEscape(phone),
+        csvCellEscape(fn),
+        csvCellEscape(ln),
+        csvCellEscape(ct),
+        csvCellEscape(st),
+        csvCellEscape(country)
+      ].join(','));
+
+      exportedCount++;
+    }
+
+    logAudit(req, {
+      event_type: 'EXPORTACAO',
+      event_name: 'META_AUDIENCE_CSV_EXPORTED',
+      module: 'META_ADS',
+      description: `Exportada base de público para Meta Ads com ${exportedCount} contatos elegíveis.`
+    });
+
+    const csvContent = '\uFEFF' + csvLines.join('\r\n');
+    const filename = `publico_meta_ads_jorgealvim_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvContent);
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Erro ao gerar CSV do público: ' + err.message });
+  }
+});
+

@@ -1719,6 +1719,16 @@
               <span>Importar Contatos (Gmail / CSV / XLS)</span>
             </button>
 
+            <button 
+              type="button"
+              onclick="downloadMetaAudienceCSV()" 
+              class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all border border-blue-600 cursor-pointer"
+              title="Exportar base consolidada de contatos formatada para o Gerenciador de Anúncios do Instagram e Facebook (Meta Ads)"
+            >
+              <span class="text-base">🎯</span>
+              <span>Exportar p/ Meta Ads (Instagram / Face)</span>
+            </button>
+
           </div>
 
         </div>
@@ -6412,6 +6422,86 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 🟡 Homologação
               </div>
               <span id="meta-api-status-detail" class="text-[10px] text-slate-400 mt-1 block truncate">Modo seguro ativo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEÇÃO: GESTÃO DE PÚBLICOS PERSONALIZADOS & CRUZAÇÃO DE DADOS (INSTAGRAM & FACEBOOK) -->
+        <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-indigo-500/30 space-y-5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-lg">🎯</span>
+                <span class="text-xs font-extrabold uppercase tracking-widest text-indigo-300 bg-indigo-500/10 px-3 py-0.5 rounded-full border border-indigo-500/20">Públicos Personalizados (Custom Audiences)</span>
+              </div>
+              <h3 class="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">Cruzamento de Contatos com Instagram & Facebook</h3>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+                Alcance seus <strong>pré-clientes e contatos</strong> diretamente no feed e stories do Instagram e Facebook. O algoritmo da Meta localiza os perfis dessas pessoas através do telefone e do e-mail de cadastro, com total privacidade e sem riscos de banimento de WhatsApp.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <button 
+                type="button" 
+                onclick="downloadMetaAudienceCSV()" 
+                class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition-all border border-emerald-400/40 cursor-pointer active:scale-95">
+                <span>⬇️</span>
+                <span>Baixar CSV Oficial Meta Ads</span>
+              </button>
+              <a 
+                href="https://adsmanager.facebook.com/adsmanager/audiences?act=705653348893835" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all border border-blue-400/40 cursor-pointer active:scale-95"
+                title="Abrir Gerenciador de Públicos na Meta">
+                <span>🚀</span>
+                <span>Subir no Gerenciador Meta</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Métricas do Público -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-indigo-800/40">
+            <div class="bg-black/30 rounded-2xl p-3 border border-indigo-500/20">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 block mb-0.5">Total de Contatos</span>
+              <div id="meta-aud-total-clients" class="text-lg font-extrabold text-white font-mono">...</div>
+              <span class="text-[10px] text-slate-400 block mt-0.5">Base no SQLite</span>
+            </div>
+            <div class="bg-black/30 rounded-2xl p-3 border border-indigo-500/20">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block mb-0.5">Com WhatsApp / Fone</span>
+              <div id="meta-aud-phones" class="text-lg font-extrabold text-emerald-400 font-mono">...</div>
+              <span class="text-[10px] text-slate-400 block mt-0.5">Formatados com DDI (+55)</span>
+            </div>
+            <div class="bg-black/30 rounded-2xl p-3 border border-indigo-500/20">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-sky-300 block mb-0.5">Com E-mail Válido</span>
+              <div id="meta-aud-emails" class="text-lg font-extrabold text-sky-400 font-mono">...</div>
+              <span class="text-[10px] text-slate-400 block mt-0.5">Para login Instagram/Meta</span>
+            </div>
+            <div class="bg-black/30 rounded-2xl p-3 border border-indigo-500/20">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-0.5">Aptos p/ Anúncio</span>
+              <div id="meta-aud-eligible" class="text-lg font-extrabold text-amber-400 font-mono">...</div>
+              <span class="text-[10px] text-slate-400 block mt-0.5">Público alcançável</span>
+            </div>
+          </div>
+
+          <!-- Instruções Rápidas (3 Passos) -->
+          <div class="bg-indigo-950/60 rounded-2xl p-4 border border-indigo-500/20 text-xs text-slate-300 space-y-2">
+            <div class="font-bold text-white text-xs flex items-center gap-1.5">
+              <span>💡</span>
+              <span>Como usar esta lista no Gerenciador de Anúncios da Meta:</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-[11px]">
+              <div class="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
+                <span class="font-bold text-indigo-300">1. Baixe a Lista:</span>
+                <p>Clique em <em>"Baixar CSV Oficial Meta Ads"</em> acima. O arquivo já vem preparado com país, nomes separados e telefones normalizados.</p>
+              </div>
+              <div class="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
+                <span class="font-bold text-indigo-300">2. Crie o Público:</span>
+                <p>No Gerenciador Meta, clique em <strong>Criar Público &gt; Público Personalizado &gt; Lista de Clientes</strong>.</p>
+              </div>
+              <div class="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
+                <span class="font-bold text-indigo-300">3. Arraste e Anuncie:</span>
+                <p>Faça o upload do CSV. A Meta mapeia os perfis em até 1 hora para você direcionar seus posts com seu saldo disponível.</p>
+              </div>
             </div>
           </div>
         </div>
