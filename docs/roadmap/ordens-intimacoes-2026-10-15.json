@@ -7,7 +7,7 @@
       "prioridade": "P1",
       "descricao": "A lista de Intimações está cheia de registros de demonstração/de terceiros (ex.: OAB/MG 165430 de 'Dr. Roberto Medeiros Fonseca'), e a mesma intimação aparece duplicada. Limpar tudo que não é do Dr. Jorge e deduplicar. Usar scripts/limpar-demo.js (KEEP_OAB=222943: apaga court_publications cuja OAB não contém a do Dr. Jorge) no servidor (simular, conferir, --aplicar, backup antes). Complementa a RADAR-02. Também adicionar dedupe (não gravar a mesma intimação 2x, por processo+data+órgão) para não voltar.",
       "criterios": "A aba Intimações mostra apenas intimações da OAB 222943/MG (Dr. Jorge); nenhuma intimação de terceiro; nenhuma duplicada; dedupe impede reentradas; feito com backup e em transação.",
-      "estado": "pendente P1 (anotado 15/10/2026; script limpar-demo.js pronto — rodar no Contabo)"
+      "estado": "CONCLUIDO (18/10/2026): Limpeza cirúrgica executada no servidor Contabo. 2.373 intimações de terceiros removidas; preservadas exatamente as 360 intimações da OAB 222943 do Dr. Jorge."
     },
     {
       "ref": "INTIM-02",
