@@ -32,12 +32,13 @@
       maintenance:{label:'Manutenção & Saúde',emoji:'🛠️'},
       'meta-ads':{label:'Meta Ads & Marketing',emoji:'📢'},
       roadmap:{label:'Radar & Roadmap Legaltech',emoji:'🗺️'},
-      portal:{label:'Portal de Notícias',emoji:'📰'}
+      portal:{label:'Portal de Notícias',emoji:'📰'},
+      'radar-b2b':{label:'Radar / Prospecção B2B (Google)',emoji:'🏢'}
     };
     var TOOLS={editor:1,calc:1,kanban:1,explorer:1,maintenance:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
-      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','clients','rockets']},
+      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','radar-b2b','clients','rockets']},
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['colaborador','hr','offices','drive','users']},
@@ -50,7 +51,7 @@
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
-      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab',portal:'loadPortalTab'};
+      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab',portal:'loadPortalTab','radar-b2b':'loadRadarB2bTab'};
 
     var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
 
@@ -1028,7 +1029,7 @@
       WM_ALLOWED = null;
       _permsLoaded = true;
     }
-    var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', clients:'tab_clients', docs:'tab_clients',
+    var MODULE_PERM={ leads:'tab_leads','pre-clients':'tab_leads', 'radar-b2b':'tab_leads', clients:'tab_clients', docs:'tab_clients',
       lawsuits:'tab_lawsuits','admin-requests':'tab_lawsuits', judicial:'tab_radar', offices:'tab_offices',
       drive:'tab_drive', calendar:'tab_calendar', publications:'tab_publications', hr:'tab_hr',
       colaborador:'tab_colaborador',

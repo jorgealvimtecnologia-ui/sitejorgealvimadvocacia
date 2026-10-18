@@ -156,12 +156,12 @@ export function checkRbacStatic(root = ROOT_DIR) {
   // 3c) Aba criada/excluída => o RBAC precisa acompanhar (matriz, menu, servidor)
   if (wm !== null) {
     const mBlock = wm.slice(wm.indexOf('var MODULES'));
-    const modules = new Set([...mBlock.slice(0, mBlock.indexOf('\n    };') > 0 ? mBlock.indexOf('\n    };') : 6000).matchAll(/(?:^|[\s,{])'?([a-z][a-z-]*)'?\s*:\s*\{\s*label:/g)].map((x) => x[1]));
+    const modules = new Set([...mBlock.slice(0, mBlock.indexOf('\n    };') > 0 ? mBlock.indexOf('\n    };') : 6000).matchAll(/(?:^|[\s,{])'?([a-z][a-z0-9-]*)'?\s*:\s*\{\s*label:/g)].map((x) => x[1]));
     const objKeys = (name) => {
       const i = wm.indexOf(`var ${name}=`);
       if (i < 0) return null;
       const body = wm.slice(i, wm.indexOf('};', i));
-      return [...body.matchAll(/'?([a-z][a-z-]*)'?\s*:\s*(?:'tab_\w+'|1)/g)].map((x) => x[1]);
+      return [...body.matchAll(/'?([a-z][a-z0-9-]*)'?\s*:\s*(?:'tab_\w+'|1)/g)].map((x) => x[1]);
     };
     const perm = objKeys('MODULE_PERM'), always = objKeys('ALWAYS_ALLOWED'), masterOnly = objKeys('MASTER_ONLY');
     if (modules.size < 20 || !perm || !always || !masterOnly) {
@@ -171,7 +171,7 @@ export function checkRbacStatic(root = ROOT_DIR) {
       for (const id of modules) if (!classified.has(id)) violations.push(`${TAG} ABA NOVA SEM REGRA DE ACESSO: "${id}" existe em MODULES (painel-3.js) mas não está em MODULE_PERM, ALWAYS_ALLOWED nem MASTER_ONLY. Atualize o RBAC: coluna na matriz (tab-users.js + painel.html), src/shared/permissions.js, regras da API (rbac-rules.js) e painel-1-app.js.`);
       for (const id of classified) if (!modules.has(id)) violations.push(`${TAG} ABA EXCLUÍDA AINDA NO RBAC: "${id}" está em MODULE_PERM/ALWAYS_ALLOWED/MASTER_ONLY mas não existe mais em MODULES. Remova do RBAC (e a coluna da matriz, se ela só servia a essa aba).`);
       const html = read('painel.html') || '';
-      for (const id of new Set([...html.matchAll(/id="tab-content-([a-z-]+)"/g)].map((x) => x[1]))) if (!modules.has(id)) violations.push(`${TAG} painel.html tem a aba "tab-content-${id}" que não está em MODULES (painel-3.js): ela ficaria fora do RBAC.`);
+      for (const id of new Set([...html.matchAll(/id="tab-content-([a-z0-9-]+)"/g)].map((x) => x[1]))) if (!modules.has(id)) violations.push(`${TAG} painel.html tem a aba "tab-content-${id}" que não está em MODULES (painel-3.js): ela ficaria fora do RBAC.`);
 
       // chaves de permissão: as usadas existem, e cada uma tem switch e coluna na matriz
       const permFile = path.join(root, 'src/shared/permissions.js');
