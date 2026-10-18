@@ -106,6 +106,7 @@ export const RULES = [
   [/^\/api\/admin\/whatsapp(\/|$)/, tab('tab_settings')],
   [/^\/api\/whatsapp(\/|$)/, tab('tab_settings')],
   [/^\/api\/brevo(\/|$)/, tab('tab_settings')],
+  [/^\/api\/radar-b2b(\/|$)/, tab('tab_leads')],
   [/^\/api\/admin\/(pre-clients|visits)(\/|$)/, tab('tab_leads')],      // aba "Tráfego & Acessos"
 
   // ---- Demais rotas do painel: qualquer operador logado ----

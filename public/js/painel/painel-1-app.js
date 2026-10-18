@@ -763,7 +763,7 @@
       // Esconde todas as abas e volta todos os botões ao estado inativo (as ativas são marcadas abaixo).
       ['leads', 'clients', 'lawsuits', 'calendar', 'publications', 'docs', 'finance', 'nfse', 'blog', 'audit', 'pre-clients',
         'judicial', 'offices', 'drive', 'hr', 'users', 'rockets', 'dashboard', 'esign', 'lgpd', 'notifications',
-        'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq'].forEach(function (t) {
+        'admin-requests', 'maintenance', 'meta-ads', 'site-boxes', 'faq', 'roadmap', 'portal', 'radar-b2b'].forEach(function (t) {
         const c = document.getElementById('tab-content-' + t);
         const b = document.getElementById('tab-btn-' + t);
         if (c) c.classList.add('hidden');
@@ -917,6 +917,14 @@
         if (b) b.className = activeClass;
         if (typeof window.loadPortalTab === 'function') {
           window.loadPortalTab();
+        }
+      } else if (tab === 'radar-b2b') {
+        const c = document.getElementById('tab-content-radar-b2b');
+        const b = document.getElementById('tab-btn-radar-b2b');
+        if (c) c.classList.remove('hidden');
+        if (b) b.className = activeClass;
+        if (typeof window.loadRadarB2bTab === 'function') {
+          window.loadRadarB2bTab();
         }
       }
 
