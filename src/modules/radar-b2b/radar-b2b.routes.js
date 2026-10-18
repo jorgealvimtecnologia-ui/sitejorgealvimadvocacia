@@ -65,7 +65,27 @@ db.exec(`
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+`);
 
+// Migração retroativa segura para instâncias existentes
+const colsToAdd = [
+  ['whatsapp', 'TEXT'],
+  ['email', 'TEXT'],
+  ['assigned_to', 'TEXT'],
+  ['tags', 'TEXT'],
+  ['is_office_client', 'INTEGER DEFAULT 0'],
+  ['office_client_id', 'TEXT'],
+  ['opt_out', 'INTEGER DEFAULT 0'],
+  ['disposition', 'TEXT'],
+  ['cep', 'TEXT']
+];
+for (const [col, def] of colsToAdd) {
+  try {
+    db.exec(`ALTER TABLE radar_b2b_prospects ADD COLUMN ${col} ${def};`);
+  } catch (_) {}
+}
+
+db.exec(`
   CREATE INDEX IF NOT EXISTS idx_radar_b2b_status ON radar_b2b_prospects(status);
   CREATE INDEX IF NOT EXISTS idx_radar_b2b_primary_type ON radar_b2b_prospects(primary_type);
   CREATE INDEX IF NOT EXISTS idx_radar_b2b_neighborhood ON radar_b2b_prospects(neighborhood);
@@ -103,27 +123,6 @@ db.exec(`
     updated_at TEXT NOT NULL
   );
 `);
-
-// Migração retroativa segura para instâncias existentes
-function ensureRadarColumns() {
-  const cols = [
-    ['whatsapp', 'TEXT'],
-    ['email', 'TEXT'],
-    ['assigned_to', 'TEXT'],
-    ['tags', 'TEXT'],
-    ['is_office_client', 'INTEGER DEFAULT 0'],
-    ['office_client_id', 'TEXT'],
-    ['opt_out', 'INTEGER DEFAULT 0'],
-    ['disposition', 'TEXT'],
-    ['cep', 'TEXT']
-  ];
-  for (const [col, def] of cols) {
-    try {
-      db.exec(`ALTER TABLE radar_b2b_prospects ADD COLUMN ${col} ${def};`);
-    } catch (_) {}
-  }
-}
-ensureRadarColumns();
 
 // ------------------------------------------------------------------------------
 // HELPERS & UTILITÁRIOS
