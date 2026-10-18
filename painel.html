@@ -7595,81 +7595,81 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
       </section>
 
-      <!-- Modal: Varredura Google Places ao Vivo -->
-      <div id="modal-google-places-search" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
-        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div class="flex items-center gap-2">
-              <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600 text-lg">🔍</span>
-              <div>
-                <h3 class="font-bold text-base text-slate-900">Varredura no Google Places (JF)</h3>
-                <p class="text-xs text-slate-500">Localiza empresas em tempo real cadastradas no Google Meu Negócio</p>
-              </div>
-            </div>
-            <button type="button" onclick="closeGooglePlacesSearchModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1">✕</button>
+    </main>
+  </div>
+
+  <!-- Modal: Varredura Google Places ao Vivo (Posicionado no body) -->
+  <div id="modal-google-places-search" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600 text-lg">🔍</span>
+          <div>
+            <h3 class="font-bold text-base text-slate-900">Varredura no Google Places (JF)</h3>
+            <p class="text-xs text-slate-500">Localiza empresas em tempo real cadastradas no Google Meu Negócio</p>
           </div>
+        </div>
+        <button type="button" onclick="closeGooglePlacesSearchModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1">✕</button>
+      </div>
 
-          <div class="space-y-4 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Palavra-chave / Nicho de Empresas</label>
-              <input 
-                type="text" 
-                id="b2b-search-keyword" 
-                placeholder="Ex: contabilidade, clínica médica, construtora, distribuidora" 
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-semibold"
-              />
-              <p class="text-[11px] text-slate-400 mt-1">Dica: busque nichos estratégicos como "escritório de contabilidade" ou "clínica odontológica".</p>
-            </div>
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Palavra-chave / Nicho de Empresas</label>
+          <input 
+            type="text" 
+            id="b2b-search-keyword" 
+            placeholder="Ex: contabilidade, clínica médica, construtora, distribuidora" 
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-semibold"
+          />
+          <p class="text-[11px] text-slate-400 mt-1">Dica: busque nichos estratégicos como "escritório de contabilidade" ou "clínica odontológica".</p>
+        </div>
 
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Bairro em Juiz de Fora (Opcional)</label>
-              <select id="b2b-search-neighborhood" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
-                <option value="">Toda Juiz de Fora (Geral)</option>
-                <option value="Centro">Centro</option>
-                <option value="Sao Mateus">São Mateus</option>
-                <option value="Cascatinha">Cascatinha</option>
-                <option value="Santa Helena">Santa Helena</option>
-                <option value="Bom Pastor">Bom Pastor</option>
-                <option value="Alto dos Passos">Alto dos Passos</option>
-                <option value="Granbery">Granbery</option>
-                <option value="Sao Pedro">São Pedro</option>
-                <option value="Benfica">Benfica</option>
-                <option value="Industrial">Industrial</option>
-                <option value="Teixeiras">Teixeiras</option>
-              </select>
-            </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Bairro em Juiz de Fora (Opcional)</label>
+          <select id="b2b-search-neighborhood" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
+            <option value="">Toda Juiz de Fora (Geral)</option>
+            <option value="Centro">Centro</option>
+            <option value="Sao Mateus">São Mateus</option>
+            <option value="Cascatinha">Cascatinha</option>
+            <option value="Santa Helena">Santa Helena</option>
+            <option value="Bom Pastor">Bom Pastor</option>
+            <option value="Alto dos Passos">Alto dos Passos</option>
+            <option value="Granbery">Granbery</option>
+            <option value="Sao Pedro">São Pedro</option>
+            <option value="Benfica">Benfica</option>
+            <option value="Industrial">Industrial</option>
+            <option value="Teixeiras">Teixeiras</option>
+          </select>
+        </div>
 
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Chave de API do Google Places (Opcional)</label>
-              <input 
-                type="password" 
-                id="b2b-search-apikey" 
-                placeholder="Deixe em branco se já configurada no servidor (GOOGLE_MAPS_API_KEY)" 
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-mono text-[11px]"
-              />
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-            <button 
-              type="button" 
-              onclick="closeGooglePlacesSearchModal()" 
-              class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
-              Cancelar
-            </button>
-            <button 
-              type="button" 
-              id="btn-executar-busca-google"
-              onclick="executarBuscaGooglePlaces()" 
-              class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5">
-              <span>🔍</span>
-              <span>Iniciar Varredura</span>
-            </button>
-          </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Chave de API do Google Places (Opcional)</label>
+          <input 
+            type="password" 
+            id="b2b-search-apikey" 
+            placeholder="Deixe em branco se já configurada no servidor (GOOGLE_MAPS_API_KEY)" 
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-mono text-[11px]"
+          />
         </div>
       </div>
 
-    </main>
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+        <button 
+          type="button" 
+          onclick="closeGooglePlacesSearchModal()" 
+          class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          id="btn-executar-busca-google"
+          onclick="executarBuscaGooglePlaces()" 
+          class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5">
+          <span>🔍</span>
+          <span>Iniciar Varredura</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ================= MODAL DE EDIÇÃO DE FAQ (CONTEÚDO & COMPLIANCE) ================= -->

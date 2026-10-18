@@ -506,12 +506,22 @@
   // Abrir modal de varredura Google Places
   window.openGooglePlacesSearchModal = function () {
     const m = document.getElementById('modal-google-places-search');
-    if (m) m.classList.remove('hidden');
+    if (m) {
+      if (m.parentNode !== document.body) {
+        document.body.appendChild(m);
+      }
+      m.classList.remove('hidden');
+      m.style.display = 'flex';
+      setTimeout(() => document.getElementById('b2b-search-keyword')?.focus(), 100);
+    }
   };
 
   window.closeGooglePlacesSearchModal = function () {
     const m = document.getElementById('modal-google-places-search');
-    if (m) m.classList.add('hidden');
+    if (m) {
+      m.classList.add('hidden');
+      m.style.display = 'none';
+    }
   };
 
   // Disparar busca ao vivo no Google Places
