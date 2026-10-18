@@ -11,13 +11,34 @@
   let brevoConfigCache = null;
 
   function getAuthToken() {
-    return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+    if (typeof getToken === 'function') {
+      const t = getToken();
+      if (t) return t;
+    }
+    return (
+      localStorage.getItem('ja_admin_token') ||
+      localStorage.getItem('ja_token') ||
+      localStorage.getItem('advocacia_token') ||
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('token') ||
+      ''
+    );
+  }
+
+  function getHeaders(extra = {}) {
+    const token = getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...extra
+    };
   }
 
   async function fetchBrevoConfig() {
     try {
       const res = await fetch('/api/brevo/config', {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        headers: getHeaders(),
+        credentials: 'same-origin'
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -72,7 +93,8 @@
 
     try {
       const res = await fetch('/api/brevo/batches', {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        headers: getHeaders(),
+        credentials: 'same-origin'
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -154,10 +176,8 @@
 
       const res = await fetch('/api/brevo/config', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        },
+        headers: getHeaders(),
+        credentials: 'same-origin',
         body: JSON.stringify(payload)
       });
 
@@ -182,10 +202,8 @@
     try {
       const res = await fetch('/api/brevo/test', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        },
+        headers: getHeaders(),
+        credentials: 'same-origin',
         body: JSON.stringify({ target_email: targetEmail.trim() })
       });
 
