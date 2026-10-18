@@ -3,21 +3,21 @@
   "metas_lighthouse": {
     "desempenho": 85,
     "acessibilidade": 95,
-    "boas_praticas": 85,
+    "boas_praticas": 90,
     "seo": 90
   },
   "pages": {
     "/": {
-      "total_gz_kb": 88,
-      "medido_em_kb": 83
+      "total_gz_kb": 90,
+      "medido_em_kb": 84.8
     },
     "/painel": {
-      "total_gz_kb": 447,
-      "medido_em_kb": 425.5
+      "total_gz_kb": 476,
+      "medido_em_kb": 452.7
     },
     "/cliente": {
-      "total_gz_kb": 56,
-      "medido_em_kb": 53.1
+      "total_gz_kb": 58,
+      "medido_em_kb": 54.6
     },
     "/colaborador": {
       "total_gz_kb": 49,
@@ -29,7 +29,7 @@
     },
     "/amazon": {
       "total_gz_kb": 30,
-      "medido_em_kb": 28.3
+      "medido_em_kb": 28.4
     },
     "/agendar": {
       "total_gz_kb": 9,
