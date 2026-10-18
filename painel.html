@@ -7434,145 +7434,279 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </div>
         </div>
 
-        <!-- Barra de Ferramentas: Filtros, Pesquisa e Alternador Kanban / Tabela -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <div class="flex flex-wrap items-center gap-2.5 flex-1">
-            <!-- Alternador de Visão -->
-            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button 
-                type="button" 
-                id="b2b-btn-view-kanban"
-                onclick="setB2bView('kanban')" 
-                class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-navy-950 shadow-xs border border-slate-200 cursor-pointer">
-                📋 Kanban
-              </button>
-              <button 
-                type="button" 
-                id="b2b-btn-view-table"
-                onclick="setB2bView('table')" 
-                class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer">
-                📑 Tabela
-              </button>
-            </div>
-
-            <!-- Busca por Texto -->
-            <div class="relative min-w-[220px] sm:min-w-[260px] flex-1 max-w-sm">
-              <input 
-                type="text" 
-                id="b2b-search-input" 
-                oninput="handleB2bFilterChange()" 
-                placeholder="Buscar por nome, telefone ou rua..." 
-                class="w-full text-xs font-semibold px-3 py-2 pl-8 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 transition-all"
-              />
-              <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
-            </div>
-
-            <!-- Filtro por Categoria / Nicho -->
-            <select 
-              id="b2b-filter-category" 
-              onchange="handleB2bFilterChange()"
-              class="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
-              <option value="todos">Todas as Categorias</option>
-            </select>
-
-            <!-- Filtro por Bairro -->
-            <select 
-              id="b2b-filter-neighborhood" 
-              onchange="handleB2bFilterChange()"
-              class="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
-              <option value="todos">Todos os Bairros</option>
-            </select>
-
-            <!-- Filtro por Status -->
-            <select 
-              id="b2b-filter-status" 
-              onchange="handleB2bFilterChange()"
-              class="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
-              <option value="todos">Todos os Status</option>
-              <option value="novo">📥 Novo</option>
-              <option value="contatado">📞 Contatado</option>
-              <option value="sem_resposta">⏳ Sem Resposta</option>
-              <option value="negociando">🤝 Em Negociação</option>
-              <option value="convertido">🏆 Convertido</option>
-              <option value="descartado">🚫 Descartado</option>
-            </select>
+        <!-- Sub-Navegação: CRM / Funil vs. Campanhas WhatsApp -->
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              id="b2b-tab-btn-crm" 
+              onclick="switchB2bSubTab('crm')" 
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-900 text-white shadow-xs cursor-pointer">
+              🗂️ CRM & Funil de Leads (Kanban / Tabela)
+            </button>
+            <button 
+              type="button" 
+              id="b2b-tab-btn-campaigns" 
+              onclick="switchB2bSubTab('campaigns')" 
+              class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+              📢 Campanhas & Disparos WhatsApp
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button 
+              type="button" 
+              onclick="syncClientsB2b()" 
+              class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs border border-amber-300 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Cruza a base do radar com a base de clientes do escritório para sinalizar quem já tem contrato">
+              <span>⭐</span>
+              <span>Cruzar com Clientes</span>
+            </button>
           </div>
         </div>
 
-        <!-- QUADRO KANBAN (6 Colunas) -->
-        <div id="b2b-kanban-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 transition-opacity">
-          <!-- Coluna 1: Novos Leads -->
-          <div class="flex flex-col rounded-2xl bg-slate-50 border border-slate-200/80 p-3 space-y-3 min-h-[500px]">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Novos Leads</h4>
+        <!-- SEÇÃO CRM / FUNIL -->
+        <div id="b2b-crm-section" class="space-y-6">
+          <!-- 6 Cards de Estatísticas Rápidas -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Empresas</span>
+              <div class="flex items-baseline justify-between mt-1.5">
+                <span id="b2b-stat-total" class="text-xl font-black text-slate-900">0</span>
+                <span class="text-[10px] text-indigo-600 font-semibold">🏢 Base</span>
               </div>
-              <span id="b2b-count-novo" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800">0</span>
             </div>
-            <div id="b2b-col-novo" class="space-y-2.5 overflow-y-auto max-h-[72vh] pr-1"></div>
+            <div class="p-3.5 rounded-2xl bg-white border border-blue-100 shadow-xs flex flex-col justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Novos Leads</span>
+              <div class="flex items-baseline justify-between mt-1.5">
+                <span id="b2b-stat-novos" class="text-xl font-black text-blue-900">0</span>
+                <span class="text-[10px] text-blue-600 font-semibold">📥 Aguardando</span>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-xs flex flex-col justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600">Contatados</span>
+              <div class="flex items-baseline justify-between mt-1.5">
+                <span id="b2b-stat-contatados" class="text-xl font-black text-purple-900">0</span>
+                <span class="text-[10px] text-purple-600 font-semibold">📞 Em Contato</span>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white border border-amber-100 shadow-xs flex flex-col justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600">Em Negociação</span>
+              <div class="flex items-baseline justify-between mt-1.5">
+                <span id="b2b-stat-negociando" class="text-xl font-black text-amber-900">0</span>
+                <span class="text-[10px] text-amber-600 font-semibold">🤝 Proposta</span>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-xs flex flex-col justify-between bg-gradient-to-br from-emerald-50/40 to-white">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Clientes Ativos</span>
+              <div class="flex items-baseline justify-between mt-1.5">
+                <span id="b2b-stat-convertidos" class="text-xl font-black text-emerald-800">0</span>
+                <span class="text-[10px] text-emerald-600 font-bold">🏆 Fechados</span>
+              </div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white border border-rose-100 shadow-xs flex flex-col justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600">Não Perturbar</span>
+              <div class="flex items-baseline justify-between mt-1.5">
+                <span id="b2b-stat-optout" class="text-xl font-black text-rose-900">0</span>
+                <span class="text-[10px] text-rose-600 font-semibold">🚫 Opt-Out</span>
+              </div>
+            </div>
           </div>
 
-          <!-- Coluna 2: Contatados -->
-          <div class="flex flex-col rounded-2xl bg-purple-50/50 border border-purple-200/60 p-3 space-y-3 min-h-[500px]">
-            <div class="flex items-center justify-between pb-2 border-b border-purple-200/60">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                <h4 class="font-bold text-xs uppercase tracking-wider text-purple-900">Contatados</h4>
+          <!-- Barra de Ferramentas & Filtros Avançados (Geografia, Ramo e Status) -->
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <!-- Alternador de Visão Kanban / Tabela -->
+              <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button 
+                  type="button" 
+                  id="b2b-btn-view-kanban"
+                  onclick="setB2bView('kanban')" 
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-navy-950 shadow-xs border border-slate-200 cursor-pointer">
+                  📋 Kanban Completo
+                </button>
+                <button 
+                  type="button" 
+                  id="b2b-btn-view-table"
+                  onclick="setB2bView('table')" 
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer">
+                  📑 Visão Tabela
+                </button>
               </div>
-              <span id="b2b-count-contatado" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-800">0</span>
+
+              <!-- Busca por Texto -->
+              <div class="relative min-w-[240px] sm:min-w-[280px] flex-1 max-w-md">
+                <input 
+                  type="text" 
+                  id="b2b-search-input" 
+                  oninput="handleB2bFilterChange()" 
+                  placeholder="Buscar por nome, telefone, email ou rua..." 
+                  class="w-full text-xs font-semibold px-3 py-2 pl-8 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 transition-all"
+                />
+                <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
+              </div>
+
+              <!-- Contador de Itens Filtrados -->
+              <span id="b2b-filtered-count-badge" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl">
+                Exibindo: <strong class="text-slate-800" id="b2b-filtered-count">0</strong> empresas
+              </span>
             </div>
-            <div id="b2b-col-contatado" class="space-y-2.5 overflow-y-auto max-h-[72vh] pr-1"></div>
+
+            <!-- Filtros Geográficos e Operacionais em Linha -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 pt-2 border-t border-slate-100 text-xs">
+              <!-- Estado UF -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Estado (UF)</label>
+                <select 
+                  id="b2b-filter-state" 
+                  onchange="handleStateChange(this.value)"
+                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="MG">MG - Minas Gerais</option>
+                </select>
+              </div>
+
+              <!-- Cidade -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Cidade</label>
+                <select 
+                  id="b2b-filter-city" 
+                  onchange="handleB2bFilterChange()"
+                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="Juiz de Fora">Juiz de Fora</option>
+                </select>
+              </div>
+
+              <!-- Bairro -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Bairro</label>
+                <select 
+                  id="b2b-filter-neighborhood" 
+                  onchange="handleB2bFilterChange()"
+                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="todos">Todos os Bairros</option>
+                </select>
+              </div>
+
+              <!-- Categoria / Nicho -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Categoria / Ramo</label>
+                <select 
+                  id="b2b-filter-category" 
+                  onchange="handleB2bFilterChange()"
+                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="todos">Todas as Categorias</option>
+                </select>
+              </div>
+
+              <!-- Status Kanban -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Status Kanban</label>
+                <select 
+                  id="b2b-filter-status" 
+                  onchange="handleB2bFilterChange()"
+                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="todos">Todos os Status</option>
+                  <option value="novo">📥 Novos Leads</option>
+                  <option value="contatado">📞 Contatados</option>
+                  <option value="sem_resposta">⏳ Sem Resposta</option>
+                  <option value="negociando">🤝 Em Negociação</option>
+                  <option value="convertido">🏆 Convertidos</option>
+                  <option value="descartado">🚫 Descartados</option>
+                </select>
+              </div>
+
+              <!-- Atendente Responsável -->
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Atendente</label>
+                <select 
+                  id="b2b-filter-assigned" 
+                  onchange="handleB2bFilterChange()"
+                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="todos">Todos os Atendentes</option>
+                  <option value="Dr. Jorge Alvim">Dr. Jorge Alvim</option>
+                  <option value="Keila">Keila</option>
+                  <option value="Secretaria">Secretaria</option>
+                  <option value="sem_atendente">Sem Atendente</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <!-- Coluna 3: Sem Resposta -->
-          <div class="flex flex-col rounded-2xl bg-amber-50/40 border border-amber-200/60 p-3 space-y-3 min-h-[500px]">
-            <div class="flex items-center justify-between pb-2 border-b border-amber-200/60">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                <h4 class="font-bold text-xs uppercase tracking-wider text-amber-900">Sem Resposta</h4>
+          <!-- QUADRO KANBAN HORIZONTAL COM TODAS AS 6 FASES VISÍVEIS -->
+          <div class="overflow-x-auto w-full pb-4 scrollbar-thin">
+            <div id="b2b-kanban-board" class="flex gap-4 min-w-max items-start transition-opacity">
+              <!-- Coluna 1: Novos Leads -->
+              <div class="w-72 sm:w-80 flex-shrink-0 flex flex-col rounded-2xl bg-slate-50 border border-slate-200/90 p-3.5 space-y-3 min-h-[520px]">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Novos Leads</h4>
+                  </div>
+                  <span id="b2b-count-novo" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-800">0</span>
+                </div>
+                <div id="b2b-col-novo" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1"></div>
               </div>
-              <span id="b2b-count-sem_resposta" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">0</span>
-            </div>
-            <div id="b2b-col-sem_resposta" class="space-y-2.5 overflow-y-auto max-h-[72vh] pr-1"></div>
-          </div>
 
-          <!-- Coluna 4: Em Negociação -->
-          <div class="flex flex-col rounded-2xl bg-orange-50/40 border border-orange-200/60 p-3 space-y-3 min-h-[500px]">
-            <div class="flex items-center justify-between pb-2 border-b border-orange-200/60">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
-                <h4 class="font-bold text-xs uppercase tracking-wider text-orange-900">Em Negociação</h4>
+              <!-- Coluna 2: Contatados -->
+              <div class="w-72 sm:w-80 flex-shrink-0 flex flex-col rounded-2xl bg-purple-50/50 border border-purple-200/80 p-3.5 space-y-3 min-h-[520px]">
+                <div class="flex items-center justify-between pb-2 border-b border-purple-200">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-purple-900">Contatados</h4>
+                  </div>
+                  <span id="b2b-count-contatado" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-purple-100 text-purple-800">0</span>
+                </div>
+                <div id="b2b-col-contatado" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1"></div>
               </div>
-              <span id="b2b-count-negociando" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-orange-100 text-orange-800">0</span>
-            </div>
-            <div id="b2b-col-negociando" class="space-y-2.5 overflow-y-auto max-h-[72vh] pr-1"></div>
-          </div>
 
-          <!-- Coluna 5: Convertidos -->
-          <div class="flex flex-col rounded-2xl bg-emerald-50/40 border border-emerald-200/60 p-3 space-y-3 min-h-[500px]">
-            <div class="flex items-center justify-between pb-2 border-b border-emerald-200/60">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-900">Clientes Ativos</h4>
+              <!-- Coluna 3: Sem Resposta -->
+              <div class="w-72 sm:w-80 flex-shrink-0 flex flex-col rounded-2xl bg-amber-50/50 border border-amber-200/80 p-3.5 space-y-3 min-h-[520px]">
+                <div class="flex items-center justify-between pb-2 border-b border-amber-200">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-amber-900">Sem Resposta</h4>
+                  </div>
+                  <span id="b2b-count-sem_resposta" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">0</span>
+                </div>
+                <div id="b2b-col-sem_resposta" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1"></div>
               </div>
-              <span id="b2b-count-convertido" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800">0</span>
-            </div>
-            <div id="b2b-col-convertido" class="space-y-2.5 overflow-y-auto max-h-[72vh] pr-1"></div>
-          </div>
 
-          <!-- Coluna 6: Descartados -->
-          <div class="flex flex-col rounded-2xl bg-slate-50 border border-slate-200/70 p-3 space-y-3 min-h-[500px]">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-                <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Descartados</h4>
+              <!-- Coluna 4: Em Negociação -->
+              <div class="w-72 sm:w-80 flex-shrink-0 flex flex-col rounded-2xl bg-orange-50/50 border border-orange-200/80 p-3.5 space-y-3 min-h-[520px]">
+                <div class="flex items-center justify-between pb-2 border-b border-orange-200">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse"></span>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-orange-900">Em Negociação</h4>
+                  </div>
+                  <span id="b2b-count-negociando" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-orange-100 text-orange-800">0</span>
+                </div>
+                <div id="b2b-col-negociando" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1"></div>
               </div>
-              <span id="b2b-count-descartado" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-slate-200 text-slate-700">0</span>
+
+              <!-- Coluna 5: Convertidos / Clientes -->
+              <div class="w-72 sm:w-80 flex-shrink-0 flex flex-col rounded-2xl bg-emerald-50/50 border border-emerald-200/80 p-3.5 space-y-3 min-h-[520px]">
+                <div class="flex items-center justify-between pb-2 border-b border-emerald-200">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-900">Clientes Ativos</h4>
+                  </div>
+                  <span id="b2b-count-convertido" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800">0</span>
+                </div>
+                <div id="b2b-col-convertido" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1"></div>
+              </div>
+
+              <!-- Coluna 6: Descartados / Arquivados (Preservados no banco!) -->
+              <div class="w-72 sm:w-80 flex-shrink-0 flex flex-col rounded-2xl bg-slate-50 border border-slate-200/80 p-3.5 space-y-3 min-h-[520px]">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500">Descartados / Arquivados</h4>
+                  </div>
+                  <span id="b2b-count-descartado" class="px-2 py-0.5 rounded-full text-[11px] font-black bg-slate-200 text-slate-700">0</span>
+                </div>
+                <div id="b2b-col-descartado" class="space-y-3 overflow-y-auto max-h-[70vh] pr-1"></div>
+              </div>
             </div>
-            <div id="b2b-col-descartado" class="space-y-2.5 overflow-y-auto max-h-[72vh] pr-1"></div>
           </div>
-        </div>
 
         <!-- VISÃO TABELA (Opcional, ativada pelo botão Tabela) -->
         <div id="b2b-table-container" class="hidden bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -7593,53 +7727,325 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </table>
           </div>
         </div>
+        </div>
+
+        <!-- SEÇÃO CAMPANHAS WHATSAPP & DISPAROS -->
+        <div id="b2b-campaigns-section" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Coluna 1 e 2: Criador de Campanha -->
+            <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-5">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600 text-lg">💬</span>
+                  <div>
+                    <h4 class="font-bold text-base text-slate-900">Nova Campanha de Mensagens WhatsApp</h4>
+                    <p class="text-xs text-slate-500">Envie abordagens personalizadas e assessoria jurídica empresarial para a sua base</p>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">B2B Prospecção</span>
+              </div>
+
+              <div class="space-y-4 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Nome da Campanha *</label>
+                  <input 
+                    type="text" 
+                    id="b2b-camp-name" 
+                    placeholder="Ex: Apresentação Assessoria Tributária & Trabalhista - Centro" 
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-semibold"
+                  />
+                </div>
+
+                <!-- Variáveis Dinâmicas -->
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Tags / Variáveis Dinâmicas de Personalização</label>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="window.insertCampVariable('{empresa}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-all cursor-pointer">
+                      + {empresa}
+                    </button>
+                    <button type="button" onclick="window.insertCampVariable('{bairro}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-all cursor-pointer">
+                      + {bairro}
+                    </button>
+                    <button type="button" onclick="window.insertCampVariable('{categoria}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-all cursor-pointer">
+                      + {categoria}
+                    </button>
+                    <button type="button" onclick="window.insertCampVariable('{cidade}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-all cursor-pointer">
+                      + {cidade}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Texto da Mensagem *</label>
+                  <textarea 
+                    id="b2b-camp-message" 
+                    rows="6" 
+                    placeholder="Olá! Tudo bem? Falo com o responsável pela {empresa}?&#10;Aqui é do escritório Dr. Jorge Alvim Advocacia (OAB/MG 222.943), situado em {cidade}.&#10;Estamos entrando em contato para apresentar nossa assessoria jurídica preventiva especializada no ramo de {categoria} aqui no bairro {bairro}..."
+                    class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-medium leading-relaxed"></textarea>
+                </div>
+
+                <!-- Filtros do Público Alvo da Campanha -->
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <h5 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">🎯 Segmentação do Público-Alvo</h5>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Etapa Kanban</label>
+                      <select id="b2b-camp-target-status" onchange="window.updateCampTargetEstimate()" class="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white">
+                        <option value="novo">Apenas Novos Leads</option>
+                        <option value="sem_resposta">Apenas Sem Resposta (Follow-up)</option>
+                        <option value="todos">Todos os Leads Ativos</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Bairro Específico</label>
+                      <select id="b2b-camp-target-neighborhood" onchange="window.updateCampTargetEstimate()" class="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white">
+                        <option value="">Todos os Bairros</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Ramo / Categoria</label>
+                      <select id="b2b-camp-target-category" onchange="window.updateCampTargetEstimate()" class="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white">
+                        <option value="">Todas as Categorias</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Regras de Compliance e Proteção -->
+                  <div class="space-y-1.5 pt-2 border-t border-slate-200 text-[11px]">
+                    <div class="flex items-center gap-2 text-rose-700 font-semibold">
+                      <span>🛡️</span>
+                      <span>Exclusão Automática: contatos com Opt-Out ("Não quer ser incomodado") são bloqueados.</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-amber-800 font-semibold">
+                      <span>⭐</span>
+                      <span>Exclusão Automática: empresas que já são Clientes do Escritório não recebem cold-approach.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                  <div class="text-[11px] text-slate-500 font-medium">
+                    ⚡ Estimativa de destinatários: <strong id="b2b-camp-target-count" class="text-indigo-700 font-bold">0</strong> contatos
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      type="button" 
+                      onclick="window.saveB2bCampaign()" 
+                      class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+                      💾 Salvar Campanha
+                    </button>
+                    <button 
+                      type="button" 
+                      onclick="window.dispatchB2bCampaignBatch('evolution')" 
+                      class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+                      <span>🚀</span>
+                      <span>Disparo via Evolution API</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      onclick="window.dispatchB2bCampaignBatch('web')" 
+                      class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                      title="Gera fila de disparo manual seguro pelo WhatsApp Web">
+                      <span>💬</span>
+                      <span>Fila WhatsApp Web</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coluna 3: Campanhas Anteriores e Estatísticas -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+              <h4 class="font-bold text-sm text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                <span>📋</span>
+                <span>Histórico de Campanhas</span>
+              </h4>
+              <div id="b2b-campaigns-list" class="space-y-3 overflow-y-auto max-h-[520px]">
+                <p class="text-xs text-slate-400 text-center py-8">Nenhuma campanha criada ainda.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
     </main>
   </div>
 
-  <!-- Modal: Varredura Google Places ao Vivo (Posicionado no body) -->
+  <!-- ================= MODAL: HISTÓRICO DO LEAD & ATENDIMENTO DETALHADO ================= -->
+  <div id="modal-lead-history" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600 text-lg">📝</span>
+          <div>
+            <h3 id="lead-history-title" class="font-bold text-base text-slate-900">Histórico de Atendimento do Lead</h3>
+            <p id="lead-history-subtitle" class="text-xs text-slate-500">Registre anotações, atendente responsável e movimentações</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeLeadHistoryModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1 cursor-pointer">✕</button>
+      </div>
+
+      <!-- Informações do Prospect e Ações Rápidas -->
+      <div id="lead-history-info-card" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+        <!-- Renderizado dinamicamente -->
+      </div>
+
+      <!-- Formulário de Registro de Nova Movimentação / Atendimento -->
+      <div class="space-y-3 text-xs border-t border-slate-100 pt-3">
+        <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Nova Movimentação / Registro</h4>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Status Kanban -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Status no Funil</label>
+            <select id="modal-lead-status" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold">
+              <option value="novo">📥 Novos Leads</option>
+              <option value="contatado">📞 Contatados</option>
+              <option value="sem_resposta">⏳ Sem Resposta</option>
+              <option value="negociando">🤝 Em Negociação</option>
+              <option value="convertido">🏆 Convertidos</option>
+              <option value="descartado">🚫 Descartados (Mantido no Radar)</option>
+            </select>
+          </div>
+
+          <!-- Atendente Responsável -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Atendente Responsável</label>
+            <select id="modal-lead-assigned" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold">
+              <option value="Dr. Jorge Alvim">Dr. Jorge Alvim</option>
+              <option value="Keila">Keila</option>
+              <option value="Secretaria">Secretaria</option>
+              <option value="Equipe Comercial">Equipe Comercial</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Disposição / Ocorrência Detalhada -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ocorrência / Movimentação *</label>
+          <select id="modal-lead-disposition" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-800">
+            <option value="cliente_entrou_em_contato">📞 Cliente entrou em contato</option>
+            <option value="contato_realizado">💬 Contato telefônico / WhatsApp realizado</option>
+            <option value="cliente_agendado">📅 Cliente agendado para consulta</option>
+            <option value="aguardar_documentacao">📁 Em atendimento: aguardar documentação</option>
+            <option value="aguardar_assinatura">✍️ Em atendimento: aguardar assinatura</option>
+            <option value="enviar_retorno">✉️ Enviar retorno ao cliente</option>
+            <option value="proposta_enviada">💼 Proposta de assessoria jurídica enviada</option>
+            <option value="cadastrado">✅ Cadastrado no sistema</option>
+            <option value="cliente_reclamou">⚠️ Cliente reclamou de ser contatado</option>
+            <option value="nao_incomodar">🚫 Não quer ser incomodado (Bloquear/Opt-Out)</option>
+          </select>
+        </div>
+
+        <!-- Tags / Marcações e Email / WhatsApp -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Tags / Marcações</label>
+            <input type="text" id="modal-lead-tags" placeholder="Ex: urgente, tributário, PJ" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">E-mail</label>
+            <input type="email" id="modal-lead-email" placeholder="contato@empresa.com" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">WhatsApp / Tel</label>
+            <input type="text" id="modal-lead-phone" placeholder="(32) 99999-9999" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white" />
+          </div>
+        </div>
+
+        <!-- Anotação / Histórico -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Anotações do Atendente</label>
+          <textarea id="modal-lead-notes" rows="3" placeholder="Detalhes da conversa, acordos feitos, documentos pendentes..." class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white leading-relaxed"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="window.closeLeadHistoryModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold cursor-pointer">Cancelar</button>
+          <button type="button" onclick="window.saveLeadHistory()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md cursor-pointer flex items-center gap-1.5">
+            <span>💾</span>
+            <span>Salvar Movimentação</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Linha do Tempo / Timeline de Histórico -->
+      <div class="space-y-3 border-t border-slate-100 pt-3">
+        <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Histórico de Interações (Linha do Tempo)</h4>
+        <div id="lead-timeline-container" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+          <p class="text-xs text-slate-400 italic">Carregando histórico...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Varredura Google Places ao Vivo & Busca por Localização (Posicionado no body) -->
   <div id="modal-google-places-search" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto" style="z-index: 999999 !important;">
     <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center gap-2">
           <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600 text-lg">🔍</span>
           <div>
-            <h3 class="font-bold text-base text-slate-900">Varredura no Google Places (JF)</h3>
-            <p class="text-xs text-slate-500">Localiza empresas em tempo real cadastradas no Google Meu Negócio</p>
+            <h3 class="font-bold text-base text-slate-900">Varredura no Google Places & Base Local</h3>
+            <p class="text-xs text-slate-500">Mapeamento de empresas por Estado, Cidade, CEP, Bairro e Nicho</p>
           </div>
         </div>
-        <button type="button" onclick="closeGooglePlacesSearchModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1">✕</button>
+        <button type="button" onclick="window.closeGooglePlacesSearchModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl p-1 cursor-pointer">✕</button>
       </div>
 
       <div class="space-y-4 text-xs">
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">Palavra-chave / Nicho de Empresas</label>
-          <input 
-            type="text" 
-            id="b2b-search-keyword" 
-            placeholder="Ex: contabilidade, clínica médica, construtora, distribuidora" 
-            class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-semibold"
-          />
-          <p class="text-[11px] text-slate-400 mt-1">Dica: busque nichos estratégicos como "escritório de contabilidade" ou "clínica odontológica".</p>
+        <!-- Filtro Geográfico Avançado -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Estado (UF)</label>
+            <select id="b2b-search-state" onchange="window.handleSearchModalStateChange(this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
+              <option value="MG">MG - Minas Gerais</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cidade</label>
+            <select id="b2b-search-city" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
+              <option value="Juiz de Fora">Juiz de Fora</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">CEP (Opcional - busca automática)</label>
+            <div class="flex items-center gap-1.5">
+              <input 
+                type="text" 
+                id="b2b-search-cep" 
+                maxlength="9"
+                placeholder="Ex: 36010-001" 
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700"
+                onblur="window.handleSearchCepLookup(this.value)"
+              />
+              <button type="button" onclick="window.handleSearchCepLookup(document.getElementById('b2b-search-cep')?.value)" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs" title="Consultar CEP">
+                🔍
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Bairro / Região (Opcional)</label>
+            <input 
+              type="text" 
+              id="b2b-search-neighborhood-input" 
+              placeholder="Ex: Centro, Cascatinha, São Mateus..." 
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700"
+            />
+          </div>
         </div>
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Bairro em Juiz de Fora (Opcional)</label>
-          <select id="b2b-search-neighborhood" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
-            <option value="">Toda Juiz de Fora (Geral)</option>
-            <option value="Centro">Centro</option>
-            <option value="Sao Mateus">São Mateus</option>
-            <option value="Cascatinha">Cascatinha</option>
-            <option value="Santa Helena">Santa Helena</option>
-            <option value="Bom Pastor">Bom Pastor</option>
-            <option value="Alto dos Passos">Alto dos Passos</option>
-            <option value="Granbery">Granbery</option>
-            <option value="Sao Pedro">São Pedro</option>
-            <option value="Benfica">Benfica</option>
-            <option value="Industrial">Industrial</option>
-            <option value="Teixeiras">Teixeiras</option>
-          </select>
+          <label class="block font-bold text-slate-700 mb-1">Palavra-chave / Ramo de Atividade (Opcional)</label>
+          <input 
+            type="text" 
+            id="b2b-search-keyword" 
+            placeholder="Ex: contabilidade, clínica médica, construtora (ou deixe em branco)" 
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-semibold"
+          />
+          <p class="text-[11px] text-slate-400 mt-1">💡 Deixe em branco para buscar qualquer empresa da localidade ou preencha para nicho específico.</p>
         </div>
 
         <div>
@@ -7647,23 +8053,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           <input 
             type="password" 
             id="b2b-search-apikey" 
-            placeholder="Deixe em branco se já configurada no servidor (GOOGLE_MAPS_API_KEY)" 
+            placeholder="Deixe em branco: o sistema pesquisa a base local inteligente de 7.880 empresas automaticamente" 
             class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 font-mono text-[11px]"
           />
+          <p class="text-[11px] text-slate-400 mt-1">Se não preencher chave, a busca é realizada instantaneamente na base local de empresas extraídas.</p>
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
         <button 
           type="button" 
-          onclick="closeGooglePlacesSearchModal()" 
+          onclick="window.closeGooglePlacesSearchModal()" 
           class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
           Cancelar
         </button>
         <button 
           type="button" 
           id="btn-executar-busca-google"
-          onclick="executarBuscaGooglePlaces()" 
+          onclick="window.executarBuscaGooglePlaces()" 
           class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5">
           <span>🔍</span>
           <span>Iniciar Varredura</span>

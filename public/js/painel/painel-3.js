@@ -38,11 +38,11 @@
     var TOOLS={editor:1,calc:1,kanban:1,explorer:1,maintenance:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
-      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','radar-b2b','clients','rockets']},
+      {label:'Clientes & Atendimento',emoji:'👥',items:['leads','clients','rockets']},
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
       {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['colaborador','hr','offices','drive','users']},
-      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['roadmap','portal','blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
+      {label:'Conteúdo & Compliance',emoji:'🛡️',items:['radar-b2b','roadmap','portal','blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
     ];
     var LOADERS={leads:'loadLeads',clients:'loadClients',lawsuits:'loadLawsuits',calendar:'initCalendarTab',

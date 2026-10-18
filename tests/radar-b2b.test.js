@@ -140,4 +140,88 @@ describe('▶ MÓDULO RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS & CRM KANBAN)', 
     assert.ok(res.headers['content-type'].includes('text/csv'));
     assert.ok(res.text.includes('COMPANY,FIRSTNAME,SMS,PHONE,CITY,WEBSITE,CATEGORY,STATUS'));
   });
+
+  it('8. GET /api/radar-b2b/locations/states e cities -> retorna estados e cidades do Brasil', async () => {
+    const resStates = await request(app)
+      .get('/api/radar-b2b/locations/states')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(resStates.status, 200);
+    assert.ok(Array.isArray(resStates.body.states));
+    assert.ok(resStates.body.states.some(s => s.sigla === 'MG'));
+
+    const resCities = await request(app)
+      .get('/api/radar-b2b/locations/cities?uf=MG')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(resCities.status, 200);
+    assert.ok(Array.isArray(resCities.body.cities));
+    assert.ok(resCities.body.cities.includes('Juiz de Fora'));
+  });
+
+  it('9. POST & GET /api/radar-b2b/prospects/:id/history -> registra e consulta linha do tempo do lead', async () => {
+    const listRes = await request(app)
+      .get('/api/radar-b2b/prospects?limit=1')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    const prospect = listRes.body.prospects[0];
+    assert.ok(prospect);
+
+    const postHist = await request(app)
+      .post(`/api/radar-b2b/prospects/${prospect.id}/history`)
+      .set('Authorization', `Bearer ${masterToken}`)
+      .send({
+        disposition: 'cliente_entrou_em_contato',
+        notes: 'Lead ligou para tirar dúvidas sobre direito empresarial e tributário',
+        operator_name: 'Dr. Jorge Alvim',
+        status: 'contatado'
+      });
+
+    assert.equal(postHist.status, 200);
+    assert.equal(postHist.body.success, true);
+
+    const getHist = await request(app)
+      .get(`/api/radar-b2b/prospects/${prospect.id}/history`)
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(getHist.status, 200);
+    assert.ok(Array.isArray(getHist.body.history));
+    assert.ok(getHist.body.history.length > 0);
+    assert.equal(getHist.body.history[0].disposition, 'cliente_entrou_em_contato');
+  });
+
+  it('10. POST /api/radar-b2b/sync-clients -> cruza com tabela clients do escritório', async () => {
+    const res = await request(app)
+      .post('/api/radar-b2b/sync-clients')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(typeof res.body.totalChecked === 'number');
+  });
+
+  it('11. POST & GET /api/radar-b2b/campaigns -> cria e lista campanhas de WhatsApp', async () => {
+    const createRes = await request(app)
+      .post('/api/radar-b2b/campaigns')
+      .set('Authorization', `Bearer ${masterToken}`)
+      .send({
+        name: 'Campanha Jurídica B2B Q4',
+        message_template: 'Olá {empresa}! Vimos sua atuação em {bairro} e gostaríamos de apresentar nossa consultoria jurídica.',
+        target_status: 'todos',
+        target_category: 'todos',
+        target_neighborhood: 'todos'
+      });
+
+    assert.equal(createRes.status, 200);
+    assert.equal(createRes.body.success, true);
+    assert.ok(createRes.body.campaignId);
+
+    const listRes = await request(app)
+      .get('/api/radar-b2b/campaigns')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(listRes.status, 200);
+    assert.ok(Array.isArray(listRes.body.campaigns));
+    assert.ok(listRes.body.campaigns.some(c => c.name === 'Campanha Jurídica B2B Q4'));
+  });
 });
