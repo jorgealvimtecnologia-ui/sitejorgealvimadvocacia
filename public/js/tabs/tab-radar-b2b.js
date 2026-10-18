@@ -114,6 +114,7 @@
 
       // Popula cidades para MG
       await handleStateChange('MG', false);
+      await handleSearchModalStateChange('MG');
     } catch (e) {
       console.warn('[RADAR B2B] Erro ao carregar estados:', e);
     }
@@ -175,7 +176,7 @@
             return `<option value="${escapeHtml(cName)}">`;
           }).join('');
         }
-        if (inputCity && cities.length > 0) {
+        if (inputCity && !inputCity.value && cities.length > 0) {
           const first = typeof cities[0] === 'string' ? cities[0] : (cities[0].nome || '');
           inputCity.value = uf === 'MG' ? 'Juiz de Fora' : first;
         }

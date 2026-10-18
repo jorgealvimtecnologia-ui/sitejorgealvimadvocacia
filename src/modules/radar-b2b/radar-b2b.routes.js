@@ -17,10 +17,21 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const mgCitiesFile = path.join(__dirname, 'cities-mg.json');
+let bundledMgCities = [];
+try {
+  if (fs.existsSync(mgCitiesFile)) {
+    bundledMgCities = JSON.parse(fs.readFileSync(mgCitiesFile, 'utf8'));
+  }
+} catch (_) {}
 
 export const radarB2bRouter = express.Router();
 
@@ -683,8 +694,9 @@ radarB2bRouter.get('/api/radar-b2b/locations/cities', requireAuth, async (req, r
     }
 
     let cities = [];
-    if (uf === 'MG') {
-      cities = ['Juiz de Fora', 'Belo Horizonte', 'Uberlândia', 'Contagem', 'Betim', 'Montes Claros', 'Uberaba', 'Governador Valadares', 'Ipatinga', 'Sete Lagoas', 'Divinópolis', 'Poços de Caldas', 'São João del-Rei', 'Barbacena', 'Muriaé', 'Ubá', 'Cataguases', 'Santos Dumont'];
+    if (uf === 'MG' && bundledMgCities.length > 0) {
+      citiesCache.set('MG', bundledMgCities);
+      return res.json({ success: true, uf: 'MG', cities: bundledMgCities });
     }
 
     try {
@@ -692,18 +704,27 @@ radarB2bRouter.get('/api/radar-b2b/locations/cities', requireAuth, async (req, r
       if (resp.ok) {
         const data = await resp.json();
         if (Array.isArray(data) && data.length > 0) {
-          cities = data.map(c => c.nome);
-          if (uf === 'MG') {
-            cities = ['Juiz de Fora', ...cities.filter(c => c !== 'Juiz de Fora')];
-          }
+          const toTitleCase = s => String(s).toLowerCase().split(' ').map(w => ['de','da','do','dos','das','e'].includes(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          cities = data.map(c => toTitleCase(c.nome || c));
+          cities.sort((a, b) => a.localeCompare('pt-BR'));
         }
       }
     } catch (_) {}
 
+    if (cities.length === 0) {
+      if (uf === 'MG') {
+        cities = ['Juiz de Fora', 'Lima Duarte', 'Bicas', 'Santos Dumont', 'Matias Barbosa', 'São João del-Rei', 'Barbacena', 'Muriaé', 'Ubá', 'Cataguases', 'Leopoldina', 'Belo Horizonte', 'Uberlândia', 'Contagem', 'Betim', 'Montes Claros'];
+      } else if (uf === 'RJ') {
+        cities = ['Rio de Janeiro', 'Niterói', 'Petrópolis', 'Teresópolis', 'Nova Friburgo', 'Duque de Caxias', 'Volta Redonda', 'Barra Mansa', 'Três Rios', 'Valença', 'Paraíba do Sul'];
+      } else if (uf === 'SP') {
+        cities = ['São Paulo', 'Campinas', 'São José dos Campos', 'Ribeirão Preto', 'Santos', 'Sorocaba', 'Guarulhos', 'Osasco', 'Santo André', 'São Bernardo do Campo'];
+      }
+    }
+
     citiesCache.set(uf, cities);
     return res.json({ success: true, uf, cities });
   } catch (error) {
-    return res.json({ success: true, uf: req.query.uf || 'MG', cities: ['Juiz de Fora', 'Belo Horizonte'] });
+    return res.json({ success: true, uf: req.query.uf || 'MG', cities: ['Juiz de Fora', 'Lima Duarte', 'Bicas', 'Santos Dumont', 'Belo Horizonte'] });
   }
 });
 
