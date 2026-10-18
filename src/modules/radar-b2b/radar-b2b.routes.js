@@ -1083,22 +1083,15 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
     // CENÁRIO A: Chave de API Google Places disponível
     // -------------------------------------------------------------
     if (apiKey) {
-      const qContext = [searchTerm, nbTerm ? `em ${nbTerm}` : '', city, state].filter(Boolean).join(' ');
+      const locationParts = [nbTerm ? `em ${nbTerm}` : '', city, state].filter(Boolean).join(' ');
+      const queryText = searchTerm 
+        ? `${searchTerm} ${locationParts}`.trim()
+        : `empresas e comércios em ${locationParts}`.trim();
+
       const jfBounds = {
         low: { latitude: -21.96, longitude: -43.65 },
         high: { latitude: -21.48, longitude: -43.03 }
       };
-
-      const bodyPayload = {
-        textQuery: qContext || `empresas e comercios em ${city} ${state}`,
-        languageCode: 'pt-BR',
-        regionCode: 'BR',
-        pageSize: 20
-      };
-      if (city && city.toLowerCase().includes('juiz de fora')) {
-        bodyPayload.locationRestriction = { rectangle: jfBounds };
-      }
-      if (includedType) bodyPayload.includedType = includedType;
 
       const allPlaces = [];
       let pageToken = undefined;
@@ -1106,7 +1099,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
 
       for (let page = 0; page < targetMaxPages; page++) {
         const bodyPayload = {
-          textQuery: qContext || `empresas e comercios em ${city} ${state}`,
+          textQuery: queryText,
           languageCode: 'pt-BR',
           regionCode: 'BR',
           pageSize: 20
@@ -1159,6 +1152,14 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
       db.exec('BEGIN TRANSACTION;');
       try {
         for (const p of allPlaces) {
+          const typesList = p.types || [];
+          const geoOnly = ['locality', 'political', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'postal_code'];
+          const nonGeoTypes = typesList.filter(t => !geoOnly.includes(t));
+          // Ignora entidade meramente geográfica (ex: o ponto do município sem telefone ou site)
+          if (nonGeoTypes.length === 0 && !p.nationalPhoneNumber && !p.websiteUri) {
+            continue;
+          }
+
           const name = p.displayName?.text || 'Sem nome';
           const address = p.formattedAddress || '';
           const nb = extractNeighborhood(address, city) || nbTerm || 'Centro';
@@ -1168,7 +1169,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
           const reviews = p.userRatingCount || 0;
           const pType = p.primaryType || '';
           const pTypeDesc = p.primaryTypeDisplayName?.text || pType;
-          const types = (p.types || []).join(', ');
+          const types = typesList.join(', ');
           const mapsUrl = p.googleMapsUri || '';
           const lat = p.location?.latitude || null;
           const lng = p.location?.longitude || null;
@@ -1194,7 +1195,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         event_type: 'CONSULTA',
         event_name: 'B2B_GOOGLE_SEARCH',
         module: 'radar-b2b',
-        description: `Varredura Google Places (${qContext}): ${inserted} novos inseridos`
+        description: `Varredura Google Places (${queryText}): ${inserted} novos inseridos`
       });
 
       return res.json({
