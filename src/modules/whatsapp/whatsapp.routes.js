@@ -94,6 +94,7 @@ whatsappRouter.get('/api/whatsapp/config', requireAuth, async (req, res) => {
 
     let connectionState = 'waiting_activation';
     let isConnected = false;
+    let activePhone = dedicatedPhone;
 
     // Tenta checar o status na Evolution API se o servidor estiver acessível
     if (apiUrl) {
@@ -106,6 +107,11 @@ whatsappRouter.get('/api/whatsapp/config', requireAuth, async (req, res) => {
           const data = await checkRes.json();
           connectionState = data.instance?.state || data.state || 'close';
           isConnected = connectionState === 'open';
+          const ownerPhone = data.instance?.owner || '';
+          if (isConnected && ownerPhone && !activePhone) {
+            activePhone = ownerPhone;
+            setWhatsAppSetting('dedicated_phone', ownerPhone);
+          }
         }
       } catch (_) {
         // Evolution API ainda não iniciada ou chip pendente
@@ -117,7 +123,7 @@ whatsappRouter.get('/api/whatsapp/config', requireAuth, async (req, res) => {
       success: true,
       apiUrl,
       instance,
-      dedicatedPhone,
+      dedicatedPhone: activePhone,
       forwardPhone,
       autoReplyEnabled,
       autoReplyText,
@@ -175,11 +181,21 @@ whatsappRouter.get('/api/whatsapp/qrcode', requireAuth, async (req, res) => {
       // 1. Tenta obter o QR Code da instância existente
       const qrRes = await fetch(`${apiUrl}/instance/connect/${instance}`, {
         headers: { 'apikey': apiKey },
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(7000)
       });
 
       if (qrRes.ok) {
         const qrData = await qrRes.json();
+        if (qrData.instance?.state === 'open') {
+          const ownerPhone = qrData.instance?.owner || '';
+          if (ownerPhone) setWhatsAppSetting('dedicated_phone', ownerPhone);
+          return res.json({
+            success: true,
+            status: 'already_connected',
+            connectedPhone: ownerPhone,
+            message: 'Chip dedicado conectado e operacional!'
+          });
+        }
         const base64 = qrData.base64 || (qrData.qrcode && qrData.qrcode.base64) || null;
         if (base64) {
           return res.json({
@@ -187,7 +203,7 @@ whatsappRouter.get('/api/whatsapp/qrcode', requireAuth, async (req, res) => {
             status: 'qrcode_ready',
             qrcode: base64,
             pairingCode: qrData.pairingCode || null,
-            message: 'Aponte a câmera do seu WhatsApp Business para o QR Code.'
+            message: 'Aponte a câmera do seu WhatsApp para o QR Code.'
           });
         }
       }

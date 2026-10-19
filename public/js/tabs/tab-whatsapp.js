@@ -69,6 +69,15 @@
     }
   }
 
+  let waPollTimer = null;
+
+  function stopWaPoll() {
+    if (waPollTimer) {
+      clearInterval(waPollTimer);
+      waPollTimer = null;
+    }
+  }
+
   async function openWhatsAppConnectModal() {
     if (!canManageSettings()) {
       toast('Acesso restrito pela RHABAC: você não possui permissão de Configurações.', 'warning');
@@ -82,9 +91,44 @@
 
     modal.classList.remove('hidden');
     await loadQRCode();
+
+    stopWaPoll();
+    waPollTimer = setInterval(async () => {
+      if (!modal || modal.classList.contains('hidden')) {
+        stopWaPoll();
+        return;
+      }
+      try {
+        const res = await fetch('/api/whatsapp/config', {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.isConnected) {
+          stopWaPoll();
+          fetchWhatsAppStatus();
+          const qrContainer = document.getElementById('wa-qrcode-container');
+          const qrStatusMsg = document.getElementById('wa-qrcode-status-msg');
+          if (qrContainer) {
+            qrContainer.innerHTML = `
+              <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs space-y-2 max-w-sm text-center">
+                <div class="text-3xl">✅</div>
+                <div class="font-bold text-sm">Chip Conectado com Sucesso!</div>
+                <p class="text-slate-600 text-[11px] leading-relaxed">
+                  Número ativo: <strong>${data.dedicatedPhone || 'Conectado'}</strong>.<br>
+                  O sistema já está pronto para enviar alertas e responder clientes automaticamente.
+                </p>
+              </div>
+            `;
+          }
+          if (qrStatusMsg) qrStatusMsg.innerText = 'Conexão ativa e sincronizada!';
+          toast('✅ WhatsApp conectado com sucesso!', 'success');
+        }
+      } catch (_) {}
+    }, 4000);
   }
 
   function closeWhatsAppConnectModal() {
+    stopWaPoll();
     const modal = document.getElementById('modal-whatsapp-connect');
     if (modal) modal.classList.add('hidden');
   }
@@ -103,27 +147,41 @@
       });
       const data = await res.json();
 
-      if (data.success && data.qrcode) {
+      if (data.status === 'already_connected') {
+        stopWaPoll();
+        fetchWhatsAppStatus();
+        qrContainer.innerHTML = `
+          <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs space-y-2 max-w-sm text-center">
+            <div class="text-3xl">✅</div>
+            <div class="font-bold text-sm">Chip Conectado e Online!</div>
+            <p class="text-slate-600 text-[11px] leading-relaxed">
+              Número ativo: <strong>${data.connectedPhone || 'Conectado'}</strong>.<br>
+              O motor de WhatsApp está operacional.
+            </p>
+          </div>
+        `;
+        if (qrStatusMsg) qrStatusMsg.innerText = data.message || 'Chip conectado!';
+      } else if (data.success && data.qrcode) {
         qrContainer.innerHTML = `
           <div class="p-3 bg-white rounded-2xl border border-slate-200 inline-block shadow-md">
             <img src="${data.qrcode}" alt="QR Code WhatsApp" class="w-64 h-64 object-contain rounded-xl" />
           </div>
         `;
         if (qrStatusMsg) {
-          qrStatusMsg.innerHTML = '📱 <strong>Aponte a câmera do seu WhatsApp Business:</strong><br>Vá em <em>Configurações &gt; Aparelhos Conectados &gt; Conectar um aparelho</em>.';
+          qrStatusMsg.innerHTML = '📱 <strong>Aponte a câmera do seu WhatsApp no celular:</strong><br>Vá em <em>Configurações (ou ⋮) &gt; Aparelhos Conectados &gt; Conectar um aparelho</em>.';
         }
       } else {
         qrContainer.innerHTML = `
           <div class="p-6 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs space-y-2 max-w-sm text-center">
             <div class="text-2xl">⏳</div>
-            <div class="font-bold">O sistema está pronto e aguardando o seu chip dedicado!</div>
+            <div class="font-bold">Gerando novo QR Code...</div>
             <p class="text-slate-600 text-[11px] leading-relaxed">
-              Quando você adquirir o chip novo na operadora e cadastrar no WhatsApp Business, basta iniciar a Evolution API e clicar em atualizar para ler o QR Code nesta tela.
+              Clique em <strong>Atualizar QR Code</strong> abaixo em alguns segundos para exibir o código de leitura.
             </p>
           </div>
         `;
         if (qrStatusMsg) {
-          qrStatusMsg.innerText = data.message || 'Aguardando inicialização da Evolution API e chip dedicado.';
+          qrStatusMsg.innerText = data.message || 'Aguardando geração do QR Code.';
         }
       }
     } catch (err) {
