@@ -3122,13 +3122,28 @@
           showUAuthAlert('Autenticado via Google com sucesso! Redirecionando...', 'success');
           if (data.authType === 'admin' || data.redirectTo === '/painel') {
             localStorage.setItem('ja_admin_token', data.token);
-            if (data.user) localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+            localStorage.setItem('ja_token', data.token);
+            if (data.user) {
+              localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+              localStorage.setItem('ja_user', JSON.stringify(data.user));
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/painel'; }, 250);
           } else if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem('jorgealvim_client_token', data.token);
             if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
+            if (data.is_pre_registered) {
+              try { sessionStorage.setItem('ja_pre_registered', '1'); } catch (e) {}
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/cliente'; }, 250);
           } else if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem('ja_employee_token', data.token);
             if (data.employee || data.user) localStorage.setItem('ja_employee_user', JSON.stringify(data.employee || data.user));
             setTimeout(() => { window.location.href = data.redirectTo || '/colaborador'; }, 250);
@@ -3173,37 +3188,49 @@
         if (res.ok && data.success) {
           showUAuthAlert('Identificado com sucesso! Redirecionando com segurança...', 'success');
           try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
-          
-          // Salva tokens de sessão de forma integrada e transparente
-          if (data.token) {
-            localStorage.setItem('ja_admin_token', data.token);
-            localStorage.setItem('ja_token', data.token);
-          }
-          if (data.employeeToken) {
-            localStorage.setItem('ja_employee_token', data.employeeToken);
-          }
-          if (data.authType === 'employee' && !data.employeeToken && data.token) {
-            localStorage.setItem('ja_employee_token', data.token);
-          }
-          if (data.adminToken) {
-            localStorage.setItem('ja_admin_token', data.adminToken);
-            localStorage.setItem('ja_token', data.adminToken);
-          }
-          if (data.user) {
-            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
-            localStorage.setItem('ja_user', JSON.stringify(data.user));
-          }
-          if (data.employee) {
-            localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
-          }
 
           if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem('jorgealvim_client_token', data.token);
             if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
             setTimeout(() => { window.location.href = data.redirectTo || '/cliente'; }, 250);
           } else if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
+            localStorage.setItem('ja_employee_token', data.employeeToken || data.token);
+            if (data.employee) {
+              localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+            }
+            if (data.adminToken) {
+              localStorage.setItem('ja_admin_token', data.adminToken);
+              localStorage.setItem('ja_token', data.adminToken);
+              if (data.user) {
+                localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+                localStorage.setItem('ja_user', JSON.stringify(data.user));
+              }
+            } else {
+              localStorage.removeItem('ja_admin_token');
+              localStorage.removeItem('ja_token');
+              localStorage.removeItem('ja_admin_user');
+              localStorage.removeItem('ja_user');
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/colaborador'; }, 250);
           } else {
+            if (data.token) {
+              localStorage.setItem('ja_admin_token', data.token);
+              localStorage.setItem('ja_token', data.token);
+            }
+            if (data.user) {
+              localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+              localStorage.setItem('ja_user', JSON.stringify(data.user));
+            }
+            if (data.employeeToken) {
+              localStorage.setItem('ja_employee_token', data.employeeToken);
+            }
+            if (data.employee) {
+              localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/painel'; }, 250);
           }
         } else {

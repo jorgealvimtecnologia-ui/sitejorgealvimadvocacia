@@ -9,7 +9,8 @@ import path from 'node:path';
 import fs from 'node:fs';
 import multer from 'multer';
 import { db } from '../../config/db.js';
-import { requireAuth, requireClientAuth, createClientSession, clientSessions, destroySession } from '../../middleware/auth.js';
+import { requireAuth, requireClientAuth, createSession, createClientSession, createEmployeeSession, clientSessions, destroySession } from '../../middleware/auth.js';
+import { isMasterEmail } from '../../config/master-emails.js';
 import { logAudit } from '../../middleware/audit.js';
 import { hashPassword, verifyPassword, isStrongHash } from '../../shared/password-crypto.js';
 import { validatePassword } from '../../shared/password-policy.js';
@@ -441,6 +442,77 @@ clientPortalRouter.post('/api/client-portal/auth/google', loginRateLimit, async 
     const googleUser = await verifyGoogleToken(credential);
     if (!googleUser) {
       return res.status(401).json({ error: 'Não foi possível validar a conta Google informada. Tente novamente.' });
+    }
+
+    const cleanEmail = String(googleUser.email || '').toLowerCase().trim();
+
+    // 0. Respeitar dispositivo RHABAC: contas mestras, operadores do painel e colaboradores
+    // que clicarem no Google pelo Portal do Cliente não devem ser cadastrados como Cliente PF.
+    let operator = null;
+    if (isMasterEmail(cleanEmail)) {
+      operator = db.prepare(`SELECT * FROM users WHERE id = 'USR-MASTER-01' OR username = 'jorgealvimtecnologia'`).get();
+    }
+    if (!operator && googleUser.sub) {
+      operator = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(googleUser.sub);
+    }
+    if (!operator && cleanEmail) {
+      operator = db.prepare(`SELECT * FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(TRIM(google_email)) = ?`).get(cleanEmail, cleanEmail);
+    }
+    if (!operator && cleanEmail) {
+      const operatorPerm = db.prepare(`
+        SELECT user_id FROM access_permissions
+        WHERE LOWER(TRIM(user_email)) = ? AND role_template != 'cliente'
+      `).get(cleanEmail);
+      if (operatorPerm) {
+        operator = db.prepare(`SELECT * FROM users WHERE id = ?`).get(operatorPerm.user_id);
+      }
+    }
+
+    if (operator && operator.role !== 'cliente') {
+      const accessRecord = db.prepare(`SELECT role_template, is_active FROM access_permissions WHERE user_id = ?`).get(operator.id);
+      if (accessRecord && accessRecord.is_active === 0 && operator.id !== 'USR-MASTER-01') {
+        return res.status(403).json({
+          error: 'Acesso Negado (RBAC): Seu perfil de operador encontra-se desativado na Matriz de Controle de Acesso.'
+        });
+      }
+      try {
+        db.prepare(`UPDATE users SET google_id = ?, google_email = ?, avatar_url = ? WHERE id = ?`)
+          .run(googleUser.sub, cleanEmail, googleUser.picture || null, operator.id);
+      } catch (e) {}
+      const adminToken = createSession(operator);
+      return res.json({
+        success: true,
+        authType: 'admin',
+        token: adminToken,
+        user: {
+          id: operator.id,
+          username: operator.username,
+          name: operator.name,
+          role: operator.role,
+          avatar_url: googleUser.picture || operator.avatar_url || ''
+        },
+        redirectTo: '/painel'
+      });
+    }
+
+    const employee = cleanEmail
+      ? db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(email)) = ? OR google_id = ?`).get(cleanEmail, googleUser.sub)
+      : null;
+    if (employee) {
+      const empToken = createEmployeeSession(employee);
+      return res.json({
+        success: true,
+        authType: 'employee',
+        token: empToken,
+        employee: {
+          id: employee.id,
+          name: employee.name,
+          cpf: employee.cpf,
+          position: employee.position,
+          department: employee.department
+        },
+        redirectTo: '/colaborador'
+      });
     }
 
     // 1. Busca se cliente já existe por google_id ou email

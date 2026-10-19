@@ -254,7 +254,8 @@ authRouter.post('/api/auth/login', loginRateLimit, (req, res) => {
         });
 
         let adminToken = null;
-        if (linkedUser) {
+        const linkedSuspended = linkedUser && db.prepare(`SELECT is_active FROM access_permissions WHERE user_id = ?`).get(linkedUser.id)?.is_active === 0;
+        if (linkedUser && !linkedSuspended) {
           try {
             adminToken = createSession(linkedUser);
           } catch (e) {}
@@ -541,7 +542,7 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
     }
 
     // 2. Checar se é COLABORADOR do RH
-    let employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(cpf)) = ? OR id = ?`).get(email, email);
+    let employee = db.prepare(`SELECT * FROM hr_employees WHERE LOWER(TRIM(email)) = ? OR google_id = ? OR LOWER(TRIM(cpf)) = ? OR id = ?`).get(email, googleUser.sub, email, email);
     if (!employee && operator) {
       employee = findEmployeeForUser(db, operator);
     }
@@ -594,7 +595,7 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
       client = db.prepare(`SELECT * FROM clients WHERE id = ?`).get(newClientId);
 
       try {
-        const msg = `🚨 *NOVO CLIENTE CADASTRADO VIA GOOGLE!*\n\n👤 *Nome:* ${client.full_name}\n📧 *E-mail:* ${client.email}\n🆔 *Código:* ${client.id}\n📍 *Origem:* Portal do Cliente / Entrada Unificada\n📅 *Data:* ${new Date().toLocaleString('pt-BR')}`;
+        const msg = `🚀 *NOVO CLIENTE CADASTRADO VIA GOOGLE!*\n\n👤 *Nome:* ${client.full_name}\n📧 *E-mail:* ${client.email}\n🆔 *Código:* ${client.id}\n📍 *Origem:* Portal do Cliente / Entrada Unificada\n📅 *Data:* ${new Date().toLocaleString('pt-BR')}`;
         sendLawyerWhatsAppNotification(msg, { clientId: client.id, email: client.email });
       } catch (errNotify) {}
     } else {
@@ -611,10 +612,12 @@ authRouter.post('/api/auth/unified-google', loginRateLimit, async (req, res) => 
     }
 
     const clientToken = createClientSession(client);
+    const isPreRegistered = (client.registration_status === 'pendente' || client.registration_status === 'pre_cadastrado' || (!client.cpf && !client.cnpj));
     return res.json({
       success: true,
       authType: 'client',
       token: clientToken,
+      is_pre_registered: !!isPreRegistered,
       client: {
         id: client.id,
         full_name: client.full_name,

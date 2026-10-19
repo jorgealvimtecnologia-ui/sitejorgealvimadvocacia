@@ -1099,7 +1099,17 @@
     function fetchPerms(){
       try{
         fetch('/api/access-control/my-permissions',{headers:(typeof getAuthHeaders==='function'?getAuthHeaders():{})})
-          .then(function(r){return r.json();}).then(function(d){
+          .then(function(r){
+            if(r.status===401||r.status===403){
+              _permsLoaded = true;
+              WM_MASTER=false; WM_ALLOWED={}; applyPerms();
+              try{localStorage.removeItem('ja_admin_token');localStorage.removeItem('ja_admin_user');localStorage.removeItem('ja_token');localStorage.removeItem('ja_user');}catch(e){}
+              if(typeof window.showLoginScreen==='function') window.showLoginScreen();
+              return null;
+            }
+            return r.json();
+          }).then(function(d){
+            if(!d) return;
             _permsLoaded = true;
             if(!d||!d.success){ WM_MASTER=false; WM_ALLOWED={}; applyPerms(); return; }
             if(d.is_master){ WM_MASTER=true; WM_ALLOWED=null; }

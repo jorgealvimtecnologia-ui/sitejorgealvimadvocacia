@@ -1445,6 +1445,30 @@
         const data = await res.json();
 
         if (res.ok && data.success && data.token) {
+          if (data.authType === 'admin' || data.redirectTo === '/painel') {
+            localStorage.setItem('ja_admin_token', data.token);
+            localStorage.setItem('ja_token', data.token);
+            if (data.user) {
+              localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+              localStorage.setItem('ja_user', JSON.stringify(data.user));
+            }
+            window.location.href = data.redirectTo || '/painel';
+            return;
+          }
+          if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
+            localStorage.setItem('ja_employee_token', data.employeeToken || data.token);
+            if (data.employee || data.user) localStorage.setItem('ja_employee_user', JSON.stringify(data.employee || data.user));
+            window.location.href = data.redirectTo || '/colaborador';
+            return;
+          }
+          localStorage.removeItem('ja_admin_token');
+          localStorage.removeItem('ja_token');
+          localStorage.removeItem('ja_admin_user');
+          localStorage.removeItem('ja_user');
           localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
           if (data.is_pre_registered) {
             sessionStorage.setItem('ja_pre_registered', '1');
@@ -1542,15 +1566,37 @@
           const form = document.getElementById('client-login-form');
           if (form) form.reset();
           if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem(CLIENT_TOKEN_KEY, data.token);
             await loadClientPortal();
           } else {
             // Mestre/equipe/colaborador que usou esta tela: guarda os tokens e vai para a área certa
-            if (data.authType === 'employee') {
+            if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
               localStorage.setItem('ja_employee_token', data.employeeToken || data.token);
+              if (data.employee) localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+              if (data.adminToken) {
+                localStorage.setItem('ja_admin_token', data.adminToken);
+                localStorage.setItem('ja_token', data.adminToken);
+                if (data.user) {
+                  localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+                  localStorage.setItem('ja_user', JSON.stringify(data.user));
+                }
+              } else {
+                localStorage.removeItem('ja_admin_token');
+                localStorage.removeItem('ja_token');
+                localStorage.removeItem('ja_admin_user');
+                localStorage.removeItem('ja_user');
+              }
             } else {
               localStorage.setItem('ja_admin_token', data.token);
               localStorage.setItem('ja_token', data.token);
+              if (data.user) {
+                localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+                localStorage.setItem('ja_user', JSON.stringify(data.user));
+              }
             }
             window.location.href = data.redirectTo || '/painel';
           }

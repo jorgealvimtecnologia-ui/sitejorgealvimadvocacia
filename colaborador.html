@@ -1064,7 +1064,12 @@
 
         // Cliente que usou esta tela por engano: vai para o portal do cliente
         if (data.authType === 'client' || data.redirectTo === '/cliente') {
+          localStorage.removeItem('ja_admin_token');
+          localStorage.removeItem('ja_token');
+          localStorage.removeItem('ja_admin_user');
+          localStorage.removeItem('ja_user');
           localStorage.setItem('jorgealvim_client_token', data.token);
+          if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
           window.location.href = '/cliente';
           return;
         }
@@ -1072,6 +1077,10 @@
         if (data.authType === 'admin' && data.redirectTo === '/painel') {
           localStorage.setItem('ja_admin_token', data.token);
           localStorage.setItem('ja_token', data.token);
+          if (data.user) {
+            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+            localStorage.setItem('ja_user', JSON.stringify(data.user));
+          }
           window.location.href = '/painel';
           return;
         }
@@ -1081,10 +1090,15 @@
         if (data.adminToken) {
           localStorage.setItem('ja_token', data.adminToken);
           localStorage.setItem('ja_admin_token', data.adminToken);
-        }
-        if (data.user) {
-          localStorage.setItem('ja_user', JSON.stringify(data.user));
-          localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+          if (data.user) {
+            localStorage.setItem('ja_user', JSON.stringify(data.user));
+            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+          }
+        } else {
+          localStorage.removeItem('ja_admin_token');
+          localStorage.removeItem('ja_token');
+          localStorage.removeItem('ja_admin_user');
+          localStorage.removeItem('ja_user');
         }
         if (data.employee) {
           localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));

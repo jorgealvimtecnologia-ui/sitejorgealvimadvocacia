@@ -647,8 +647,10 @@
     function isTabAllowedByPermissions(tab, p) {
       return (
         (tab === 'leads' && p.tab_leads === 1) ||
+        (tab === 'pre-clients' && p.tab_leads === 1) ||
         (tab === 'clients' && p.tab_clients === 1) ||
         (tab === 'lawsuits' && p.tab_lawsuits === 1) ||
+        (tab === 'admin-requests' && p.tab_lawsuits === 1) ||
         (tab === 'calendar' && p.tab_calendar === 1) ||
         (tab === 'publications' && p.tab_publications === 1) ||
         (tab === 'docs' && p.tab_clients === 1) ||
@@ -663,13 +665,13 @@
         (tab === 'drive' && p.tab_drive === 1) ||
         (tab === 'users' && p.tab_users === 1) ||
         (tab === 'hr' && p.tab_hr === 1) ||
+        (tab === 'colaborador' && p.tab_colaborador === 1) ||
         (tab === 'rockets') ||
         (['blog', 'site-boxes', 'faq'].includes(tab) && p.tab_blog === 1) ||
         (['lgpd', 'audit'].includes(tab) && p.tab_audit === 1) ||
         (tab === 'notifications' && p.tab_alerts === 1) ||
-        (tab === 'meta-ads' && p.tab_settings === 1) ||
+        (['meta-ads', 'explorer'].includes(tab) && p.tab_settings === 1) ||
         (tab === 'radar-b2b' && p.tab_leads === 1)
-        
       );
     }
 
@@ -698,12 +700,10 @@
         }
       }
 
-      if (tab === 'colaborador') {
-        window.location.href = '/colaborador';
+      // Validação de Permissão RBAC antes de abrir a aba (fechado por padrão até carregar)
+      if (!window.currentUserPermissions && tab !== 'rockets') {
         return;
       }
-
-      // Validação de Permissão RBAC antes de abrir a aba
       if (window.currentUserPermissions && !window.currentUserPermissions.is_master) {
         const p = window.currentUserPermissions.permissions || {};
         const isAllowed = isTabAllowedByPermissions(tab, p);
@@ -715,6 +715,11 @@
           }
           return;
         }
+      }
+
+      if (tab === 'colaborador') {
+        window.location.href = '/colaborador';
+        return;
       }
 
       window._currentActiveTab = tab;
@@ -941,6 +946,14 @@
         const res = await fetch('/api/access-control/my-permissions', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem('ja_admin_token');
+          localStorage.removeItem(USER_KEY);
+          window.currentUserPermissions = null;
+          showLoginScreen();
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         if (!data || !data.success) return;
@@ -970,7 +983,7 @@
         'site-boxes-top': isMaster || perms.tab_blog === 1,
         'faq-top': isMaster || perms.tab_blog === 1,
         'audit': isMaster || perms.tab_audit === 1,
-        'pre-clients': isMaster || perms.tab_clients === 1,
+        'pre-clients': isMaster || perms.tab_leads === 1,
         'judicial': isMaster || perms.tab_radar === 1,
         'offices': isMaster || perms.tab_offices === 1,
         'drive': isMaster || perms.tab_drive === 1,
@@ -987,9 +1000,15 @@
         'meta-ads': isMaster || perms.tab_settings === 1,
         'site-boxes': isMaster || perms.tab_blog === 1,
         'faq': isMaster || perms.tab_blog === 1,
+        'roadmap': isMaster,
         'portal': isMaster,
         'radar-b2b': isMaster || perms.tab_leads === 1
       };
+
+      const btnGotoColab = document.getElementById('btn-goto-colaborador');
+      if (btnGotoColab) {
+        btnGotoColab.style.display = TAB_RULES.colaborador ? '' : 'none';
+      }
 
       // 1. Oculta ou exibe botões na barra de navegação (#tabs-horizontal-bar)
       Object.keys(TAB_RULES).forEach(tabKey => {
@@ -1059,6 +1078,7 @@
     // (esconde o que a função dele não permite) e carrega SOMENTE os módulos autorizados.
     async function applyPermissionsAndLoadModules() {
       await loadAndApplyUserPermissions();
+      if (!window.currentUserPermissions) return;
       const p = window.currentUserPermissions?.permissions || {};
       const isM = window.currentUserPermissions?.is_master;
       if (isM || p.tab_leads === 1) loadLeads();
@@ -1069,6 +1089,7 @@
       if (isM || p.tab_calendar === 1) loadCalendarSummary();
       if (isM || p.tab_publications === 1) loadPublicationsStats();
       if (isM || p.tab_hr === 1) loadHrDashboard();
+      handleHashRouting();
     }
     window.applyPermissionsAndLoadModules = applyPermissionsAndLoadModules;
     window.applyPermissionsToUI = applyPermissionsToUI;
@@ -1085,6 +1106,20 @@
         const res = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) {
           const data = await res.json();
+          if (data.user && data.user.role === 'cliente') {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem(USER_KEY);
+            window.location.href = '/cliente';
+            return;
+          }
+          if (data.user && (data.user.isEmployee || data.user.role === 'colaborador' || data.user.role === 'motorista')) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem(USER_KEY);
+            window.location.href = '/colaborador';
+            return;
+          }
           showPanelScreen(data.user);
           await applyPermissionsAndLoadModules();
         } else {
@@ -1179,7 +1214,6 @@
       if (typeof window.fetchPerms === 'function') {
         window.fetchPerms();
       }
-      handleHashRouting();
     }
 
     async function handleLogin(e) {
@@ -1212,20 +1246,38 @@
           if (usernameInput) usernameInput.value = '';
           const form = document.getElementById('login-form');
           if (form) form.reset();
-          localStorage.setItem(TOKEN_KEY, data.token);
-          localStorage.setItem('ja_admin_token', data.token);
-          localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
-          if (data.employeeToken) {
-            localStorage.setItem('ja_employee_token', data.employeeToken);
+          if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem(USER_KEY);
+            if (data.token) localStorage.setItem('jorgealvim_client_token', data.token);
+            if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
+            window.location.href = '/cliente';
+            return;
+          }
+          if (data.employeeToken || (data.authType === 'employee' && data.token)) {
+            localStorage.setItem('ja_employee_token', data.employeeToken || data.token);
           }
           if (data.employee) {
             localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
           }
-          if (data.redirectTo === '/colaborador') {
+          if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
+            if (data.adminToken) {
+              localStorage.setItem(TOKEN_KEY, data.adminToken);
+              localStorage.setItem('ja_admin_token', data.adminToken);
+              if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            } else {
+              localStorage.removeItem(TOKEN_KEY);
+              localStorage.removeItem('ja_admin_token');
+              localStorage.removeItem(USER_KEY);
+            }
             window.location.href = '/colaborador';
             return;
           }
+          localStorage.setItem(TOKEN_KEY, data.token);
+          localStorage.setItem('ja_admin_token', data.token);
+          localStorage.setItem(USER_KEY, JSON.stringify(data.user));
           showPanelScreen(data.user);
           await applyPermissionsAndLoadModules();
         } else {

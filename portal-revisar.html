@@ -224,17 +224,26 @@
   function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
   function mostrarAviso(){
     var b=document.getElementById('auth-aviso');if(b)b.hidden=false;
-    ['items','blog-list','faqs','boxes','sources','terms','comments','leads','nl-campaigns'].forEach(function(id){
+    Array.prototype.forEach.call(document.querySelectorAll('#painel > .box'),function(bx){
+      if(bx.id!=='auth-aviso')bx.style.display='none';
+    });
+    ['items','blog-list','faq-list','boxes-list','sources','terms','comments','leads','nl-campaigns'].forEach(function(id){
       var el=document.getElementById(id);
       if(el&&/Carregando/.test(el.innerHTML))el.innerHTML='<div class="muted">— entre no painel para ver —</div>';
     });
   }
-  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){mostrarAviso();throw new Error('401');}return r.json();});}
+  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401||r.status===403){mostrarAviso();throw new Error(String(r.status));}return r.json();});}
 
   var FASE_LABEL={'1_triagem':'Triagem','2_pauta':'Pauta','3_redacao':'Redação','4_publicado':'Publicadas','descartada':'Descartadas'};
 
-  // Sem caixa de senha própria: usa a sessão do painel. Se não houver, só avisa.
-  function showPainel(){loadOverview();loadItems(curFase);loadBlog();loadFaqs();loadBoxes();loadSources();loadTerms();loadComments();loadLeads();loadCampaigns();}
+  // Sem caixa de senha própria: valida a sessão Master na RHABAC do painel antes de carregar os módulos.
+  function showPainel(){
+    if(!TK){mostrarAviso();return;}
+    api('/api/access-control/my-permissions').then(function(d){
+      if(!d||!d.success||!d.is_master){mostrarAviso();return;}
+      loadOverview();loadItems(curFase);loadBlog();loadFaqs();loadBoxes();loadSources();loadTerms();loadComments();loadLeads();loadCampaigns();
+    }).catch(function(){mostrarAviso();});
+  }
 
   // Controle central
   function loadOverview(){

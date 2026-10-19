@@ -34,7 +34,16 @@
     };
   }
 
+  function canManageSettings() {
+    if (!getAuthToken()) return false;
+    if (typeof window.moduleAllowed === 'function') return window.moduleAllowed('explorer');
+    const cp = window.currentUserPermissions;
+    if (!cp) return false;
+    return !!(cp.is_master || (cp.permissions && cp.permissions.tab_settings === 1));
+  }
+
   async function fetchBrevoConfig() {
+    if (!canManageSettings()) return;
     try {
       const res = await fetch('/api/brevo/config', {
         headers: getHeaders(),
@@ -88,6 +97,7 @@
   }
 
   async function fetchBrevoBatches() {
+    if (!canManageSettings()) return;
     const container = document.getElementById('brevo-batches-list');
     if (!container) return;
 
@@ -125,6 +135,10 @@
   }
 
   async function downloadBrevoBatch(batchId) {
+    if (!canManageSettings()) {
+      alert('Acesso restrito pela RHABAC: você não possui permissão de Configurações.');
+      return;
+    }
     try {
       const token = getAuthToken();
       const res = await fetch(`/api/brevo/export-batch/${batchId}?token=${encodeURIComponent(token)}`, {
@@ -149,6 +163,10 @@
   }
 
   function openBrevoConfigModal() {
+    if (!canManageSettings()) {
+      alert('Acesso restrito pela RHABAC: você não possui permissão de Configurações.');
+      return;
+    }
     let modal = document.getElementById('modal-brevo-config');
     if (!modal) {
       createBrevoModalHtml();
@@ -219,6 +237,10 @@
   }
 
   async function testBrevoEmail() {
+    if (!canManageSettings()) {
+      alert('Acesso restrito pela RHABAC: você não possui permissão de Configurações.');
+      return;
+    }
     const defaultEmail = brevoConfigCache?.settings?.reply_to_email || 'jorgealvimadv@gmail.com';
     const targetEmail = prompt('Digite o e-mail de destino para o teste do Brevo:', defaultEmail);
     if (!targetEmail) return;

@@ -44,7 +44,7 @@
     {
       "ref": "AUD-27",
       "prioridade": "P0",
-      "estado": "CONCLUIDO e publicado (deploy cecff6e (11/10/2026)): controle de acesso pelas 17 funcoes; teste por funcao valida cada uma; sem regras por nome. Equipe hoje = so o Dr. Jorge.",
+      "estado": "CONCLUIDO e publicado (19/10/2026): controle de acesso pelas 19 funcoes da RHABAC; seletores de cadastro/edicao/filtro e badges atualizados no painel; isolamento estrito de tokens e rotas em login/senha/Google/hash/Ctrl+K/portal-revisar; equipe ficticia limpa no banco local e no servidor (equipe hoje = so o Dr. Jorge).",
       "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
       "descricao": "Hoje a permissão é conferida por PESSOA (cada operador tem suas próprias chaves em access_permissions); o perfil só serve de ponto de partida, e quem recebe qual perfil é decidido por texto: nomes 'mariana'/'gabriela' viram 'dono de escritório' (acesso total, inclusive financeiro, RH e usuários) e trechos do login ('adm', 'adv') definem perfil. O escopo de dados (data_scope) é gravado mas nunca aplicado. O acesso a pastas de arquivos tem só dois portões (documentos de clientes e drive do escritório). Funções pedidas: mestre, advogado proprietário de escritório, advogado sócio, advogado de escritório, estagiário, secretaria, chefe de RH, chefe do setor financeiro, chefe de comunicação social e marketing, chefe de sistema de informação, motorista, serviços gerais, motoboy, auxiliar de RH, auxiliar do setor financeiro, auxiliar de sistema de informação e cliente. Já feito: a matriz ganhou colunas separadas (26 colunas), papel desconhecido deixa de virar Advogado, \"atendente\" é Secretária e o vínculo operador-colaborador é exato. Sobra cadastrar as 17 funções como perfis (etapa 1) e passar cada pessoa à função certa, com confirmação uma a uma, removendo as regras por nome (etapa 2).",
       "criterios": "As 17 funções existem como perfis na matriz e passam no teste por perfil (tests/rbac-per-role.test.js); cada pessoa tem exatamente uma função confirmada pelo mestre; nenhuma regra por nome próprio ou trecho de login; matriz aprovada pelo Dr. Jorge (cinco perguntas em docs/PAPEIS-E-PERMISSOES.md)."
@@ -280,7 +280,7 @@
     {
       "ref": "AUD-38",
       "prioridade": "P2",
-      "estado": "pendente: depende da AUD-27",
+      "estado": "CONCLUIDO e publicado (19/10/2026): seletores de cadastro/edicao de operador (#nu-role, #ruser-role) usam diretamente os codigos das 19 funcoes da RHABAC; apelidos fixos (mariana/gabriela) removidos do login e bloqueados por scripts/check-rbac-guard.js.",
       "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
       "descricao": "No cadastro de operadores, \"Administrador Geral\" vira o perfil Advogado (decisão antiga preservada). O login por senha ainda escolhe a conta \"mariana\" ou \"gabriela\" por pedaço do texto digitado (ainda exige a senha da pessoa).",
       "criterios": "Perfil do Administrador Geral definido pelo Dr. Jorge; login por senha só por usuário ou e-mail exatos; guardião reprova a volta dos apelidos."
@@ -296,7 +296,7 @@
     {
       "ref": "AUD-40",
       "prioridade": "P0",
-      "estado": "RESOLVIDO via API do Escavador (opcao 3 da propria ordem), em producao desde o deploy 57fe203 (11/10/2026). O Radar traz DADOS REAIS por API com token, entao o local do servidor (Contabo) NAO bloqueia mais nada (o bloqueio do ComunicaAPI/Diario a partir da Europa deixou de importar). Enriquecimento completo testado ao vivo (valor da causa, situacao, fase, partes com OAB, cliente detectado, andamentos). Mostra o motivo quando nao acha (radar honesto). RESTA SO: no servidor, apagar os andamentos inventados antigos com scripts/radar-limpar-fabricados.js (primeiro sem --aplicar, depois --aplicar; backup antes) e as intimacoes de OAB de terceiros via scripts/limpar-demo.js (RADAR-02). DataJud e opcional (o Escavador cobre).",
+      "estado": "CONCLUIDO e publicado (19/10/2026): Radar via API do Escavador traz apenas dados reais; andamentos inventados antigos e 2.733 intimacoes de OAB de terceiros removidos com scripts/limpar-equipe-ficticia.js --aplicar (restam apenas as 435 intimacoes reais da OAB 222943 do Dr. Jorge).",
       "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
       "descricao": "Em 04/10/2026 o Dr. Jorge testou o Radar em produção: nenhuma busca (número, nome, CPF/CNPJ, OAB) devolvia dado real. O Radar completava a resposta com dados INVENTADOS: um processo de enchimento para clientes encontrados, andamentos e documentos padrão, advogado padrão e um card falso \"Consulta Pública de Autos\"; e a sincronização automática chegou a gravar esses andamentos em processos reais. Já corrigido no código: o Radar só devolve dado real (DataJud, DJEN ou o cadastro do escritório), mostra as fontes consultadas e o motivo de cada falha, e a sincronização só grava andamento de fonte real. Limites reais: o DataJud público só busca por NÚMERO do processo; por nome/OAB só o Diário da Justiça (DJEN) ajuda; por CPF/CNPJ não existe fonte pública.",
       "criterios": "Publicado; node scripts/radar-diagnostico.js no servidor mostra DataJud e ComunicaAPI respondendo (chave aceita pelo CNJ); busca por número de um processo real devolve o andamento real; node scripts/radar-limpar-fabricados.js rodado (primeiro sem --aplicar) e os andamentos inventados antigos removidos; decisão do Dr. Jorge sobre buscar por nome/CPF em provedor pago (ver AUD-41)."
@@ -347,12 +347,12 @@
     {
       "titulo": "Controle de acesso por FUNÇÃO (17 funções), não por pessoa nem por nome",
       "status": "conforme",
-      "nota": "[AUD-27] proposta enviada (17 funções); aguardando as 5 respostas do Dr. Jorge"
+      "nota": "[AUD-27] Publicado em 19/10/2026: 19 funções na RHABAC, seletores do painel atualizados, isolamento completo de login/Google/hash/Ctrl+K e limpeza da equipe fictícia no banco."
     },
     {
       "titulo": "Mesclar o PR #8 na main (a produção roda o código da branch)",
-      "status": "planejado",
-      "nota": "[AUD-33] pendente: decisão do Dr. Jorge"
+      "status": "conforme",
+      "nota": "[AUD-33] PR #8 mesclado na main (3d7610a) e sincronizado."
     },
     {
       "titulo": "Feriados forenses além de 2027 e testes dedicados ao cálculo de prazo",
@@ -486,8 +486,8 @@
     },
     {
       "titulo": "Decidir o perfil do nível \"Administrador Geral\" e remover os apelidos fixos do login",
-      "status": "planejado",
-      "nota": "[AUD-38] pendente: depende da AUD-27"
+      "status": "conforme",
+      "nota": "[AUD-38] Publicado em 19/10/2026: seletores usam diretamente os códigos das 19 funções da RHABAC; apelidos fixos removidos do login e bloqueados pelo guardião."
     },
     {
       "titulo": "Inventário e guarda de TODAS as chaves e segredos (cofre do servidor + gerenciador de senhas)",
@@ -497,7 +497,7 @@
     {
       "titulo": "Radar Judicial: só dados reais, com o motivo quando não acha (e fontes que funcionem)",
       "status": "conforme",
-      "nota": "[AUD-40] SUSPENSA por decisão do Dr. Jorge em 04/10/2026. Publicado: nada mais é inventado. Causa do vazio: o servidor (Contabo, França) é bloqueado pelo Diário da Justiça (ComunicaAPI, HTTP 403); o DataJud é alcançável e só falta confirmar a chave. Caminhos avaliados: (1) ponte/VPS em Sã"
+      "nota": "[AUD-40] Publicado e limpo em 19/10/2026: Radar via Escavador traz apenas dados reais; andamentos inventados e 2.733 intimações de OAB de terceiros removidos no banco local e no servidor."
     },
     {
       "titulo": "Avaliar provedor de dados processuais para busca por nome, CPF/CNPJ e monitoramento",

@@ -9,35 +9,35 @@
   "pages": {
     "/": {
       "total_gz_kb": 90,
-      "medido_em_kb": 84.8
+      "medido_em_kb": 85.3
     },
     "/painel": {
-      "total_gz_kb": 483,
-      "medido_em_kb": 459.9
+      "total_gz_kb": 517,
+      "medido_em_kb": 492.1
     },
     "/cliente": {
       "total_gz_kb": 58,
-      "medido_em_kb": 54.6
+      "medido_em_kb": 54.9
     },
     "/colaborador": {
-      "total_gz_kb": 49,
-      "medido_em_kb": 46.6
+      "total_gz_kb": 50,
+      "medido_em_kb": 46.7
     },
     "/blog": {
-      "total_gz_kb": 37,
-      "medido_em_kb": 35.2
+      "total_gz_kb": 38,
+      "medido_em_kb": 35.3
     },
     "/amazon": {
       "total_gz_kb": 30,
       "medido_em_kb": 28.4
     },
     "/agendar": {
-      "total_gz_kb": 9,
-      "medido_em_kb": 8.5
+      "total_gz_kb": 10,
+      "medido_em_kb": 8.6
     },
     "/design-system": {
       "total_gz_kb": 9,
-      "medido_em_kb": 7.9
+      "medido_em_kb": 8
     }
   }
 }

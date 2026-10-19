@@ -28,7 +28,16 @@
     return localStorage.getItem('ja_admin_token') || localStorage.getItem('ja_token') || localStorage.getItem('token') || '';
   }
 
+  function canManageSettings() {
+    if (!getAuthToken()) return false;
+    if (typeof window.moduleAllowed === 'function') return window.moduleAllowed('explorer');
+    const cp = window.currentUserPermissions;
+    if (!cp) return false;
+    return !!(cp.is_master || (cp.permissions && cp.permissions.tab_settings === 1));
+  }
+
   async function fetchWhatsAppStatus() {
+    if (!canManageSettings()) return;
     const badgeEl = document.getElementById('wa-status-badge');
     const badgeDetail = document.getElementById('wa-status-detail');
     const dedicatedPhoneEl = document.getElementById('wa-dedicated-phone');
@@ -61,6 +70,10 @@
   }
 
   async function openWhatsAppConnectModal() {
+    if (!canManageSettings()) {
+      toast('Acesso restrito pela RHABAC: você não possui permissão de Configurações.', 'warning');
+      return;
+    }
     let modal = document.getElementById('modal-whatsapp-connect');
     if (!modal) {
       createWhatsAppModalHtml();
@@ -119,6 +132,10 @@
   }
 
   async function testWhatsAppSend() {
+    if (!canManageSettings()) {
+      toast('Acesso restrito pela RHABAC: você não possui permissão de Configurações.', 'warning');
+      return;
+    }
     const phoneInput = prompt('Informe o número de telefone para teste (com DDD):', '32998153429');
     if (!phoneInput) return;
 

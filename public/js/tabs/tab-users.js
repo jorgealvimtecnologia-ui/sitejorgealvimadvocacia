@@ -149,7 +149,7 @@
           `;
         }).join('');
 
-        // Seletor de Perfil Modelo
+        // Seletor de Perfil Modelo (todas as funções da RHABAC)
         const templateSelector = isMaster 
           ? `<span class="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-950 font-extrabold text-[11px] border border-amber-400 shadow-xs">👑 Mestre Absoluto</span>`
           : `
@@ -157,13 +157,24 @@
               onchange="applyUserTemplate('${item.user_id}', this.value)" 
               class="px-2 py-1 rounded-xl bg-slate-50 border border-slate-300 text-[11px] font-bold text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer w-full"
             >
-              <option value="advogado" ${item.role_template === 'advogado' ? 'selected' : ''}>⚖️ Advogado</option>
-              <option value="estagiario" ${item.role_template === 'estagiario' ? 'selected' : ''}>🎓 Estagiário</option>
               <option value="dono_escritorio" ${item.role_template === 'dono_escritorio' ? 'selected' : ''}>🏛️ Sócio Titular</option>
-              <option value="secretaria" ${item.role_template === 'secretaria' ? 'selected' : ''}>💼 Secretária</option>
-              <option value="gerente" ${item.role_template === 'gerente' ? 'selected' : ''}>🏢 Gerência/DP</option>
-              <option value="motorista" ${item.role_template === 'motorista' ? 'selected' : ''}>🚗 Motorista</option>
+              <option value="advogado_socio" ${item.role_template === 'advogado_socio' ? 'selected' : ''}>🤝 Advogado Sócio</option>
+              <option value="advogado" ${item.role_template === 'advogado' ? 'selected' : ''}>⚖️ Advogado(a)</option>
+              <option value="estagiario" ${item.role_template === 'estagiario' ? 'selected' : ''}>🎓 Estagiário(a)</option>
+              <option value="secretaria" ${item.role_template === 'secretaria' ? 'selected' : ''}>💼 Secretária / Atendimento</option>
+              <option value="gerente" ${item.role_template === 'gerente' ? 'selected' : ''}>🏢 Gerência / DP</option>
+              <option value="chefe_rh" ${item.role_template === 'chefe_rh' ? 'selected' : ''}>🧑‍💼 Chefe de RH</option>
+              <option value="auxiliar_rh" ${item.role_template === 'auxiliar_rh' ? 'selected' : ''}>🧑‍💼 Auxiliar de RH</option>
+              <option value="chefe_financeiro" ${item.role_template === 'chefe_financeiro' ? 'selected' : ''}>💰 Chefe Financeiro</option>
+              <option value="auxiliar_financeiro" ${item.role_template === 'auxiliar_financeiro' ? 'selected' : ''}>💰 Auxiliar Financeiro</option>
+              <option value="chefe_marketing" ${item.role_template === 'chefe_marketing' ? 'selected' : ''}>📣 Marketing & Comunicação</option>
+              <option value="chefe_ti" ${item.role_template === 'chefe_ti' ? 'selected' : ''}>🖥️ Chefe de TI</option>
+              <option value="auxiliar_ti" ${item.role_template === 'auxiliar_ti' ? 'selected' : ''}>🖥️ Auxiliar de TI</option>
+              <option value="motorista" ${item.role_template === 'motorista' ? 'selected' : ''}>🚗 Motorista / Externo</option>
+              <option value="motoboy" ${item.role_template === 'motoboy' ? 'selected' : ''}>🏍️ Motoboy / Entregas</option>
+              <option value="servicos_gerais" ${item.role_template === 'servicos_gerais' ? 'selected' : ''}>🧹 Serviços Gerais</option>
               <option value="cliente" ${item.role_template === 'cliente' ? 'selected' : ''}>👤 Cliente</option>
+              <option value="sem_perfil" ${item.role_template === 'sem_perfil' ? 'selected' : ''}>⛔ Sem Perfil Definido</option>
               <option value="custom" ${item.role_template === 'custom' ? 'selected' : ''}>⚙️ Personalizado</option>
             </select>
           `;
@@ -454,25 +465,45 @@
         return;
       }
 
+      const ROLE_BADGE_LABELS = {
+        master: '👑 Administrador Mestre',
+        dono_escritorio: '🏛️ Sócio Titular',
+        advogado_socio: '🤝 Advogado Sócio',
+        advogado: '⚖️ Advogado(a)',
+        admin: '⚖️ Advogado(a) / Operador',
+        estagiario: '🎓 Estagiário(a)',
+        secretaria: '💼 Secretária / Atendimento',
+        atendente: '💼 Atendimento / Recepção',
+        gerente: '🏢 Gerência / DP',
+        chefe_rh: '🧑‍💼 Chefe de RH',
+        auxiliar_rh: '🧑‍💼 Auxiliar de RH',
+        chefe_financeiro: '💰 Chefe Financeiro',
+        auxiliar_financeiro: '💰 Auxiliar Financeiro',
+        chefe_marketing: '📣 Marketing & Comunicação',
+        chefe_ti: '🖥️ Chefe de TI',
+        auxiliar_ti: '🖥️ Auxiliar de TI',
+        motorista: '🚗 Motorista / Externo',
+        motoboy: '🏍️ Motoboy / Entregas',
+        servicos_gerais: '🧹 Serviços Gerais',
+        cliente: '👤 Cliente',
+        sem_perfil: '⛔ Sem Perfil Definido'
+      };
+
       tbody.innerHTML = users.map(u => {
-        const isMaster = u.username === 'jorgealvimtecnologia' || u.role === 'master' || u.username === 'jorge alvim' || u.username === 'admin';
+        const isMaster = u.username === 'jorgealvimtecnologia' || u.role === 'master' || u.username === 'jorge alvim' || u.id === 'USR-MASTER-01';
         const initials = u.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         const avatarBg = isMaster ? 'bg-gold-500 text-navy-950 font-extrabold' : 'bg-slate-200 text-slate-700 font-bold';
+        const rKey = String(u.role || '').toLowerCase().trim();
+        const roleLabel = ROLE_BADGE_LABELS[rKey] || '🛡️ Operador / Advogado';
 
         const roleBadge = isMaster 
           ? `<span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-gold-100 text-gold-900 border border-gold-300 font-bold text-xs">
               <span>👑</span>
               <span>Administrador Mestre</span>
             </span>`
-          : (u.role === 'atendente' 
-            ? `<span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs">
-                <span>👤</span>
-                <span>Atendimento / Recepção</span>
-              </span>`
-            : `<span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs">
-                <span>🛡️</span>
-                <span>Operador / Advogado</span>
-              </span>`);
+          : `<span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs">
+              <span>${roleLabel}</span>
+            </span>`;
 
         const deleteButton = isMaster
           ? `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed border border-slate-200" title="O usuário mestre está protegido contra exclusão.">
