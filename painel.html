@@ -7467,7 +7467,28 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               📢 Campanhas & Disparos WhatsApp
             </button>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Pílula de Status do Robô (Feitas vs Faltam Fazer) -->
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-200 text-xs shadow-2xs">
+              <span class="font-extrabold text-violet-900 flex items-center gap-1">
+                <span>🤖</span><span>Robô:</span>
+              </span>
+              <button 
+                type="button" 
+                onclick="window.filterOnlyCompletedEnrichment()" 
+                class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold text-[11px] transition-all cursor-pointer border border-emerald-300"
+                title="Filtrar empresas que já foram completadas pelo Robô">
+                ✅ <span id="b2b-stat-robot-enriched">0</span> Feitas
+              </button>
+              <button 
+                type="button" 
+                onclick="window.filterOnlyPendingEnrichment()" 
+                class="px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-extrabold text-[11px] transition-all cursor-pointer border border-amber-300 animate-pulse"
+                title="Filtrar empresas que faltam fazer (pendentes de enriquecimento)">
+                ⏳ <span id="b2b-stat-robot-pending">0</span> Faltam Fazer
+              </button>
+            </div>
+
             <button 
               type="button" 
               onclick="syncClientsB2b()" 
@@ -7530,14 +7551,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             </div>
 
             <!-- Filtros Geográficos e Operacionais em Linha -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 pt-2 border-t border-slate-100 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-2 border-t border-slate-100 text-xs">
               <!-- Estado UF -->
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Estado (UF)</label>
                 <select 
                   id="b2b-filter-state" 
                   onchange="window.handleStateChange(this.value)"
-                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  class="w-full font-semibold px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="todos">Todos os Estados</option>
                   <option value="MG" selected>MG - Minas Gerais</option>
                   <option value="SP">SP - São Paulo</option>
@@ -7575,7 +7596,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <select 
                   id="b2b-filter-city" 
                   onchange="window.handleB2bFilterChange()"
-                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  class="w-full font-semibold px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="todos">Todas as Cidades</option>
                   <option value="Juiz de Fora" selected>Juiz de Fora</option>
                   <option value="Belo Horizonte">Belo Horizonte</option>
@@ -7594,7 +7615,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <select 
                   id="b2b-filter-neighborhood" 
                   onchange="handleB2bFilterChange()"
-                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  class="w-full font-semibold px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="todos">Todos os Bairros</option>
                 </select>
               </div>
@@ -7605,7 +7626,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <select 
                   id="b2b-filter-category" 
                   onchange="handleB2bFilterChange()"
-                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  class="w-full font-semibold px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="todos">Todas as Categorias</option>
                 </select>
               </div>
@@ -7616,7 +7637,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <select 
                   id="b2b-filter-status" 
                   onchange="handleB2bFilterChange()"
-                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  class="w-full font-semibold px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="todos">Todos os Status</option>
                   <option value="novo">📥 Novos Leads</option>
                   <option value="contatado">📞 Contatados</option>
@@ -7627,13 +7648,31 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 </select>
               </div>
 
+              <!-- Status do Robô / Enriquecimento (Faltam Fazer vs Concluídas) -->
+              <div>
+                <label class="block text-[10px] font-bold text-violet-700 uppercase mb-0.5 flex items-center gap-1">
+                  <span>⚡</span><span>Robô / Dados</span>
+                </label>
+                <select 
+                  id="b2b-filter-enrichment" 
+                  onchange="handleB2bFilterChange()"
+                  class="w-full font-bold px-2 py-1.5 rounded-xl border border-violet-300 bg-violet-50/80 text-violet-950 focus:outline-none focus:border-violet-600 cursor-pointer">
+                  <option value="todos">⚡ Todos os Cadastros</option>
+                  <option value="pendente">⏳ Faltam Fazer (Pendentes)</option>
+                  <option value="enriquecido">✅ Concluídas c/ Robô</option>
+                  <option value="com_cnpj">🏢 Com CNPJ & Sócios</option>
+                  <option value="com_email">✉️ Com E-mail</option>
+                  <option value="sem_email_cnpj">⚠️ Sem E-mail ou CNPJ</option>
+                </select>
+              </div>
+
               <!-- Atendente Responsável -->
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Atendente</label>
                 <select 
                   id="b2b-filter-assigned" 
                   onchange="handleB2bFilterChange()"
-                  class="w-full font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  class="w-full font-semibold px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
                   <option value="todos">Todos os Atendentes</option>
                   <option value="Dr. Jorge Alvim">Dr. Jorge Alvim</option>
                   <option value="Keila">Keila</option>
@@ -13230,7 +13269,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>
   <script src="/js/tabs/tab-whatsapp.js?v=20261018-v1"></script>
   <script src="/js/tabs/tab-brevo.js?v=20261018-v3"></script>
-  <script src="/js/tabs/tab-radar-b2b.js?v=20261018-v7"></script>
+  <script src="/js/tabs/tab-radar-b2b.js?v=20261018-v8"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD

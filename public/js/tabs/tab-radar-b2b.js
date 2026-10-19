@@ -28,6 +28,7 @@
   let currentFilterState = 'MG';
   let currentFilterCity = 'Juiz de Fora';
   let currentFilterAssigned = 'todos';
+  let currentFilterEnrichment = 'todos';
   let currentSearchQuery = '';
   let cachedProspects = [];
   let cachedStats = null;
@@ -298,6 +299,11 @@
     if (elConvertidos) elConvertidos.textContent = Number((data.statusCounts?.convertido || 0) + (data.officeClientCount || 0)).toLocaleString('pt-BR');
     if (elOptOut) elOptOut.textContent = Number(data.optOutCount || 0).toLocaleString('pt-BR');
 
+    const elRobotEnriched = document.getElementById('b2b-stat-robot-enriched');
+    const elRobotPending = document.getElementById('b2b-stat-robot-pending');
+    if (elRobotEnriched) elRobotEnriched.textContent = Number(data.enrichedCount || 0).toLocaleString('pt-BR');
+    if (elRobotPending) elRobotPending.textContent = Number(data.pendingCount || 0).toLocaleString('pt-BR');
+
     // Popula categorias e bairros nos selects se ainda estiverem vazios
     const selCat = document.getElementById('b2b-filter-category');
     const campCat = document.getElementById('b2b-camp-target-category');
@@ -347,6 +353,7 @@
       if (currentFilterCategory !== 'todos') q.set('category', currentFilterCategory);
       if (currentFilterNeighborhood !== 'todos') q.set('neighborhood', currentFilterNeighborhood);
       if (currentFilterAssigned !== 'todos') q.set('assigned_to', currentFilterAssigned);
+      if (currentFilterEnrichment !== 'todos') q.set('enrichment', currentFilterEnrichment);
       if (currentFilterCity && currentFilterCity !== 'todos') q.set('city', currentFilterCity);
       if (currentFilterState && currentFilterState !== 'todos') q.set('state', currentFilterState);
       if (currentSearchQuery) q.set('search', currentSearchQuery);
@@ -534,11 +541,20 @@
 
       ${badgesTop ? `<div class="flex flex-wrap items-center gap-1.5">${badgesTop}</div>` : ''}
 
-      <div class="text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
+      <div class="text-[11px] text-slate-500 flex flex-wrap items-center gap-1.5">
         <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 font-semibold text-[10px]">
           ${escapeHtml(p.primary_type_display || p.primary_type || 'Comércio')}
         </span>
         <span class="text-amber-600 font-bold text-[10px]">${stars}</span>
+        ${p.enriched_at ? `
+          <span class="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold text-[9px] flex items-center gap-0.5" title="Enriquecido pelo Robô">
+            <span>⚡</span><span>Robô OK</span>
+          </span>
+        ` : `
+          <span class="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium text-[9px]" title="Pendente de enriquecimento">
+            <span>⏳</span><span>Pendente</span>
+          </span>
+        `}
       </div>
 
       <div class="text-xs text-slate-600 space-y-1">
@@ -666,6 +682,7 @@
             <div class="flex items-center gap-1 mt-0.5">
               ${isOfficeClient ? '<span class="text-[10px] font-bold text-amber-700">⭐ Cliente Escritório</span>' : ''}
               ${p.opt_out ? '<span class="text-[10px] font-bold text-rose-700">🚫 Opt-Out</span>' : ''}
+              ${p.enriched_at ? `<span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-extrabold text-[9px]" title="Enriquecido pelo Robô">⚡ Robô OK</span>` : `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium text-[9px]">⏳ Pendente</span>`}
             </div>
           </div>
         </td>
@@ -785,6 +802,7 @@
     const selCat = document.getElementById('b2b-filter-category');
     const selNb = document.getElementById('b2b-filter-neighborhood');
     const selAssigned = document.getElementById('b2b-filter-assigned');
+    const selEnrich = document.getElementById('b2b-filter-enrichment');
     const selCity = document.getElementById('b2b-filter-city');
     const selState = document.getElementById('b2b-filter-state');
     const inputSearch = document.getElementById('b2b-search-input');
@@ -793,6 +811,7 @@
     if (selCat) currentFilterCategory = selCat.value;
     if (selNb) currentFilterNeighborhood = selNb.value;
     if (selAssigned) currentFilterAssigned = selAssigned.value;
+    if (selEnrich) currentFilterEnrichment = selEnrich.value;
     if (selCity) currentFilterCity = selCity.value;
     if (selState) currentFilterState = selState.value;
     if (inputSearch) currentSearchQuery = inputSearch.value.trim();
@@ -1380,20 +1399,40 @@
       return;
     }
 
-    // Prioriza empresas que ainda não possuem CNPJ ou Sócios ou E-mail
-    const candidates = cachedProspects.filter(p => !p.cnpj || !p.socios || !p.email);
-    const targetProspects = candidates.length > 0 ? candidates : cachedProspects;
+    // Prioriza empresas que ainda NÃO foram enriquecidas pelo robô (pendentes)
+    const pending = cachedProspects.filter(p => !p.enriched_at);
+    const incomplete = cachedProspects.filter(p => !p.cnpj || !p.socios || !p.email);
+    const candidates = pending.length > 0 ? pending : (incomplete.length > 0 ? incomplete : cachedProspects);
 
     // Limita lote a 50 por vez para garantir velocidade e estabilidade
-    const batch = targetProspects.slice(0, 50);
+    const batch = candidates.slice(0, 50);
     const ids = batch.map(p => p.id);
 
-    const desc = candidates.length > 0 
-      ? `O Robô irá buscar CNPJ, Sócios (QSA), E-mail e Redes Sociais de ${ids.length} empresas incompletas na tabela.\n\nDeseja iniciar?`
-      : `Deseja executar o Robô nas ${ids.length} empresas visíveis da tabela?`;
+    const desc = pending.length > 0 
+      ? `Foram identificadas ${pending.length} empresas pendentes nesta visualização.\n\nO Robô irá buscar CNPJ, Sócios (QSA), E-mail e Redes Sociais das próximas ${ids.length} empresas pendentes.\n\nDeseja iniciar?`
+      : `Deseja executar o Robô nas próximas ${ids.length} empresas da tabela?`;
 
     if (!confirm(desc)) return;
     executeRobotProgress(ids);
+  };
+
+  // Atalhos de Filtro: Feitas vs Faltam Fazer
+  window.filterOnlyPendingEnrichment = function () {
+    const sel = document.getElementById('b2b-filter-enrichment');
+    if (sel) {
+      sel.value = 'pendente';
+      window.handleB2bFilterChange();
+      toast('🔍 Filtrando apenas empresas PENDENTES de enriquecimento.', 'info');
+    }
+  };
+
+  window.filterOnlyCompletedEnrichment = function () {
+    const sel = document.getElementById('b2b-filter-enrichment');
+    if (sel) {
+      sel.value = 'enriquecido';
+      window.handleB2bFilterChange();
+      toast('🔍 Filtrando apenas empresas CONCLUÍDAS pelo Robô.', 'info');
+    }
   };
 
   // Ação da Barra de Busca Estilo Google (Botão ⚡ Robô ou Enter)

@@ -287,6 +287,11 @@ radarB2bRouter.get('/api/radar-b2b/stats', requireAuth, (req, res) => {
     const optOutCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE opt_out = 1`).get().c;
     const officeClientCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE is_office_client = 1`).get().c;
 
+    const enrichedCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE enriched_at IS NOT NULL AND enriched_at != ''`).get().c;
+    const pendingCount = Math.max(0, total - enrichedCount);
+    const withCnpjCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE cnpj IS NOT NULL AND cnpj != ''`).get().c;
+    const withSociosCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE socios IS NOT NULL AND socios != ''`).get().c;
+
     const topCategories = db.prepare(`
       SELECT primary_type_display, count(*) as count 
       FROM radar_b2b_prospects 
@@ -314,6 +319,10 @@ radarB2bRouter.get('/api/radar-b2b/stats', requireAuth, (req, res) => {
       withWebsite,
       optOutCount,
       officeClientCount,
+      enrichedCount,
+      pendingCount,
+      withCnpjCount,
+      withSociosCount,
       statusCounts,
       topCategories,
       topNeighborhoods
@@ -332,11 +341,25 @@ radarB2bRouter.get('/api/radar-b2b/prospects', requireAuth, (req, res) => {
   try {
     const { 
       status, category, neighborhood, city, state, assigned_to, 
-      disposition, opt_out, is_office_client, search, limit = 100, offset = 0, view = 'all' 
+      disposition, opt_out, is_office_client, enrichment, search, limit = 100, offset = 0, view = 'all' 
     } = req.query;
 
     let sql = `SELECT * FROM radar_b2b_prospects WHERE 1=1`;
     const params = [];
+
+    if (enrichment === 'pendente') {
+      sql += ` AND (enriched_at IS NULL OR enriched_at = '')`;
+    } else if (enrichment === 'enriquecido') {
+      sql += ` AND enriched_at IS NOT NULL AND enriched_at != ''`;
+    } else if (enrichment === 'com_cnpj') {
+      sql += ` AND cnpj IS NOT NULL AND cnpj != ''`;
+    } else if (enrichment === 'com_socios') {
+      sql += ` AND socios IS NOT NULL AND socios != ''`;
+    } else if (enrichment === 'com_email') {
+      sql += ` AND email IS NOT NULL AND email != ''`;
+    } else if (enrichment === 'sem_email_cnpj') {
+      sql += ` AND (email IS NULL OR email = '') AND (cnpj IS NULL OR cnpj = '')`;
+    }
 
     if (status && status !== 'todos') {
       sql += ` AND status = ?`;
