@@ -1786,19 +1786,19 @@
     }
   };
 
-  // Exportar Meta Ads (apenas dados necessários para Público Personalizado)
+  // Exportar Meta Ads (mínimo absoluto: phone, email)
   window.exportarMetaAdsB2b = function () {
     const token = getAuthToken();
     const url = `/api/radar-b2b/export/meta-ads?token=${encodeURIComponent(token)}`;
-    toast('📢 Gerando público do Meta Ads com dados estritamente necessários (Telefones, E-mails e Sócios)...', 'info');
+    toast('📢 Gerando público do Meta Ads com o mínimo necessário (phone e email)...', 'info');
     window.location.href = url;
   };
 
-  // Exportar Brevo (apenas dados necessários para campanhas de E-mail/SMS)
+  // Exportar Brevo (mínimo absoluto: EMAIL, FIRSTNAME)
   window.exportarBrevoB2b = function () {
     const token = getAuthToken();
     const url = `/api/radar-b2b/export/brevo?token=${encodeURIComponent(token)}`;
-    toast('📧 Gerando arquivo Brevo com atributos estritamente necessários (E-mails, Sócios, WhatsApp e CNPJ)...', 'info');
+    toast('📧 Gerando arquivo Brevo com o mínimo necessário (EMAIL e FIRSTNAME)...', 'info');
     window.location.href = url;
   };
 

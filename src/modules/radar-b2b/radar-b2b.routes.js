@@ -1605,15 +1605,15 @@ function extractFirstLastName(companyName = '', sociosStr = '') {
 
 /**
  * GET /api/radar-b2b/export/meta-ads
- * Gera CSV enxuto apenas com os dados necessários para Público Personalizado no Meta Ads (Facebook/Instagram)
- * Formato padrão oficial da Meta: email,phone,fn,ln,ct,st,country
- * Exporta apenas contatos aptos (com telefone ou e-mail), excluindo clientes ativos e opt-outs
+ * Gera CSV com o MÍNIMO ABSOLUTO necessário para o Meta Ads (Facebook/Instagram)
+ * Exporta estritamente: phone,email (sem entregar nomes, cidades, CNPJ nem dados empresariais)
+ * Exclui clientes ativos do escritório e opt-outs
  */
 radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => {
   try {
     const { status } = req.query;
     let sql = `
-      SELECT * FROM radar_b2b_prospects 
+      SELECT phone, email FROM radar_b2b_prospects 
       WHERE ((phone IS NOT NULL AND trim(phone) != '') OR (email IS NOT NULL AND trim(email) != ''))
         AND (opt_out = 0 OR opt_out IS NULL)
         AND (is_office_client = 0 OR is_office_client IS NULL)
@@ -1627,8 +1627,8 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
 
     const prospects = db.prepare(sql).all(...params);
 
-    // Cabeçalho canônico do Gerenciador de Anúncios da Meta
-    const headers = ['email', 'phone', 'fn', 'ln', 'ct', 'st', 'country'];
+    // Mínimo canônico estrito para Meta Ads: phone,email
+    const headers = ['phone', 'email'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
@@ -1640,16 +1640,7 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
       const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
       if (!digits && !email) continue; // Meta exige pelo menos um identificador direto
 
-      const { fn, ln } = extractFirstLastName(p.name, p.socios);
-      const safeFn = fn.replace(/[",\r\n]/g, '').toLowerCase();
-      const safeLn = ln.replace(/[",\r\n]/g, '').toLowerCase();
-
-      // Meta exige cidade e estado em minúsculo
-      const rawCity = (p.city || 'Juiz de Fora').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const rawState = (p.state || 'MG').toLowerCase().trim();
-      const country = 'br';
-
-      rows.push(`"${email}","${digits}","${safeFn}","${safeLn}","${rawCity}","${rawState}","${country}"`);
+      rows.push(`"${digits}","${email}"`);
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
@@ -1664,24 +1655,19 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
 
 /**
  * GET /api/radar-b2b/export/brevo
- * Gera CSV enxuto apenas com os dados necessários para Brevo (Sendinblue)
- * Formato canônico: EMAIL,FIRSTNAME,LASTNAME,COMPANY,SMS,PHONE,CITY,STATE,NEIGHBORHOOD,CNPJ
- * Exporta apenas contatos aptos, excluindo clientes e opt-outs
+ * Gera CSV com o MÍNIMO ABSOLUTO necessário para Brevo (Sendinblue)
+ * Exporta estritamente: EMAIL,FIRSTNAME (apenas para envio e saudação na mensagem, sem entregar CNPJ nem dados do negócio)
+ * Exclui contatos sem e-mail, clientes ativos e opt-outs
  */
 radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
   try {
-    const { status, onlyEmail } = req.query;
+    const { status } = req.query;
     let sql = `
-      SELECT * FROM radar_b2b_prospects 
-      WHERE (opt_out = 0 OR opt_out IS NULL)
+      SELECT name, socios, email FROM radar_b2b_prospects 
+      WHERE email IS NOT NULL AND trim(email) != '' AND email LIKE '%@%'
+        AND (opt_out = 0 OR opt_out IS NULL)
         AND (is_office_client = 0 OR is_office_client IS NULL)
     `;
-    if (onlyEmail === '1') {
-      sql += ` AND email IS NOT NULL AND trim(email) != '' AND email LIKE '%@%'`;
-    } else {
-      sql += ` AND ((email IS NOT NULL AND trim(email) != '') OR (phone IS NOT NULL AND trim(phone) != ''))`;
-    }
-
     const params = [];
     if (status && status !== 'todos') {
       sql += ` AND status = ?`;
@@ -1691,29 +1677,16 @@ radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
 
     const prospects = db.prepare(sql).all(...params);
 
-    // Cabeçalho direto e estritamente necessário para o Brevo
-    const headers = ['EMAIL', 'FIRSTNAME', 'LASTNAME', 'COMPANY', 'SMS', 'PHONE', 'CITY', 'STATE', 'NEIGHBORHOOD', 'CNPJ'];
+    // Mínimo canônico estrito para Brevo: EMAIL,FIRSTNAME
+    const headers = ['EMAIL', 'FIRSTNAME'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
-      let digits = cleanDigits(p.phone);
-      let e164 = '';
-      let localPhone = '';
-      if (digits) {
-        if (!digits.startsWith('55')) digits = '55' + digits;
-        e164 = '+' + digits;
-        localPhone = formatPhoneBR(digits);
-      }
-
       const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
-      const company = (p.razao_social || p.name || '').replace(/[",\r\n]/g, ' ').trim();
-      const { fn, ln } = extractFirstLastName(p.name, p.socios);
-      const city = (p.city || 'Juiz de Fora').replace(/[",\r\n]/g, ' ').trim();
-      const state = (p.state || 'MG').replace(/[",\r\n]/g, ' ').trim();
-      const neighborhood = (p.neighborhood || 'Centro').replace(/[",\r\n]/g, ' ').trim();
-      const cnpj = (p.cnpj || '').replace(/[",\r\n]/g, '').trim();
+      if (!email) continue;
 
-      rows.push(`"${email}","${fn}","${ln}","${company}","${e164}","${localPhone}","${city}","${state}","${neighborhood}","${cnpj}"`);
+      const { fn } = extractFirstLastName(p.name, p.socios);
+      rows.push(`"${email}","${fn}"`);
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
