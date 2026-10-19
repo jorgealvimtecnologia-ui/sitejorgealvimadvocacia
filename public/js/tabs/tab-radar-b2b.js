@@ -32,6 +32,7 @@
   let cachedProspects = [];
   let cachedStats = null;
   let activeProspectIdForModal = null;
+  let selectedProspectIds = new Set();
 
   function getAuthToken() {
     if (typeof getToken === 'function') {
@@ -415,6 +416,8 @@
         `;
       }
     });
+
+    updateBulkActionBar();
   }
 
   // Cria o card de uma empresa no Kanban
@@ -494,10 +497,20 @@
 
     card.innerHTML = `
       <div class="flex items-start justify-between gap-2">
-        <h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2 cursor-pointer hover:text-indigo-600 transition-colors" onclick="window.openLeadHistoryModal(${p.id})" title="${escapeHtml(p.name)}">
-          ${escapeHtml(p.name)}
-        </h4>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 whitespace-nowrap">
+        <div class="flex items-start gap-2 flex-1 min-w-0">
+          <input 
+            type="checkbox" 
+            class="b2b-card-checkbox w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0 mt-0.5" 
+            data-id="${p.id}" 
+            ${selectedProspectIds.has(p.id) ? 'checked' : ''} 
+            onchange="window.handleRowCheckboxChange(${p.id}, this.checked)" 
+            title="Selecionar empresa" 
+          />
+          <h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2 cursor-pointer hover:text-indigo-600 transition-colors" onclick="window.openLeadHistoryModal(${p.id})" title="${escapeHtml(p.name)}">
+            ${escapeHtml(p.name)}
+          </h4>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 whitespace-nowrap shrink-0">
           ${escapeHtml(p.neighborhood || 'JF')}
         </span>
       </div>
@@ -592,7 +605,7 @@
         : 'esta pesquisa';
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="py-12 text-center text-slate-500 text-xs">
+          <td colspan="9" class="py-12 text-center text-slate-500 text-xs">
             <div class="max-w-md mx-auto space-y-2">
               <div class="text-3xl">🏢</div>
               <p class="font-bold text-slate-800 text-sm">Nenhuma empresa encontrada para ${cityDesc}.</p>
@@ -605,6 +618,7 @@
           </td>
         </tr>
       `;
+      updateBulkActionBar();
       return;
     }
 
@@ -616,6 +630,16 @@
       const isOfficeClient = !!p.is_office_client || p.status === 'convertido' || !!p.converted_client_id;
 
       tr.innerHTML = `
+        <td class="py-3 px-3 text-center">
+          <input 
+            type="checkbox" 
+            class="b2b-row-checkbox w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+            data-id="${p.id}" 
+            ${selectedProspectIds.has(p.id) ? 'checked' : ''} 
+            onchange="window.handleRowCheckboxChange(${p.id}, this.checked)" 
+            title="Selecionar empresa" 
+          />
+        </td>
         <td class="py-3 px-3 font-bold text-slate-900">
           <div class="flex flex-col">
             <span class="cursor-pointer hover:text-indigo-600" onclick="window.openLeadHistoryModal(${p.id})">${escapeHtml(p.name)}</span>
@@ -695,6 +719,8 @@
 
       tbody.appendChild(tr);
     });
+
+    updateBulkActionBar();
   }
 
   // Mover etapa Kanban
@@ -1109,6 +1135,277 @@
       if (btn) {
         btn.disabled = false;
         btn.innerHTML = '⚡';
+      }
+    }
+  };
+
+  // ============================================================================
+  // SELEÇÃO EM LOTE & ROBÔ ENRIQUECEDOR AUTOMÁTICO
+  // ============================================================================
+
+  function updateBulkActionBar() {
+    const bar = document.getElementById('b2b-bulk-actions-bar');
+    const countEl = document.getElementById('b2b-selected-count');
+    const selectAllCheckbox = document.getElementById('b2b-select-all');
+
+    const totalSelected = selectedProspectIds.size;
+    if (countEl) countEl.textContent = totalSelected.toLocaleString('pt-BR');
+
+    if (totalSelected > 0) {
+      if (bar) bar.classList.remove('hidden');
+    } else {
+      if (bar) bar.classList.add('hidden');
+    }
+
+    if (selectAllCheckbox) {
+      const visibleIds = cachedProspects.map(p => p.id);
+      if (visibleIds.length > 0 && visibleIds.every(id => selectedProspectIds.has(id))) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+      } else if (visibleIds.some(id => selectedProspectIds.has(id))) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+      } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+      }
+    }
+  }
+
+  window.toggleSelectAllB2b = function (checked) {
+    if (checked) {
+      cachedProspects.forEach(p => selectedProspectIds.add(p.id));
+    } else {
+      cachedProspects.forEach(p => selectedProspectIds.delete(p.id));
+    }
+    document.querySelectorAll('.b2b-row-checkbox, .b2b-card-checkbox').forEach(cb => {
+      const id = parseInt(cb.getAttribute('data-id'), 10);
+      cb.checked = selectedProspectIds.has(id);
+    });
+    updateBulkActionBar();
+  };
+
+  window.handleRowCheckboxChange = function (id, checked) {
+    const numId = parseInt(id, 10);
+    if (checked) {
+      selectedProspectIds.add(numId);
+    } else {
+      selectedProspectIds.delete(numId);
+    }
+    document.querySelectorAll(`.b2b-row-checkbox[data-id="${numId}"], .b2b-card-checkbox[data-id="${numId}"]`).forEach(cb => {
+      cb.checked = checked;
+    });
+    updateBulkActionBar();
+  };
+
+  window.clearSelectedProspects = function () {
+    selectedProspectIds.clear();
+    document.querySelectorAll('.b2b-row-checkbox, .b2b-card-checkbox').forEach(cb => {
+      cb.checked = false;
+    });
+    const selectAllCheckbox = document.getElementById('b2b-select-all');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = false;
+    }
+    updateBulkActionBar();
+  };
+
+  window.applyBulkStatusChange = async function () {
+    const sel = document.getElementById('b2b-bulk-status-select');
+    const newStatus = sel?.value;
+    if (!newStatus) {
+      toast('Selecione uma etapa para mover as empresas.', 'warning');
+      return;
+    }
+    const ids = Array.from(selectedProspectIds);
+    if (ids.length === 0) {
+      toast('Nenhuma empresa selecionada.', 'warning');
+      return;
+    }
+
+    try {
+      toast(`Atualizando status de ${ids.length} empresas...`, 'info');
+      const res = await fetch('/api/radar-b2b/prospects/batch-status', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ ids, status: newStatus })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao atualizar');
+
+      toast(`✅ Sucesso! ${data.updated || ids.length} empresas movidas para "${newStatus}".`, 'success');
+      window.clearSelectedProspects();
+      await fetchStats();
+      await fetchProspects();
+    } catch (e) {
+      toast('Erro: ' + e.message, 'error');
+    }
+  };
+
+  // Executa o Robô Enriquecedor com modal de progresso em tempo real
+  let isRobotRunning = false;
+
+  async function executeRobotProgress(ids) {
+    if (!ids || ids.length === 0) {
+      toast('Nenhuma empresa para enriquecer.', 'warning');
+      return;
+    }
+    if (isRobotRunning) {
+      toast('O robô já está em execução.', 'warning');
+      return;
+    }
+
+    isRobotRunning = true;
+    const modal = document.getElementById('modal-robot-progress');
+    const statusEl = document.getElementById('robot-progress-status');
+    const stepEl = document.getElementById('robot-progress-step');
+    const percentEl = document.getElementById('robot-progress-percent');
+    const barEl = document.getElementById('robot-progress-bar');
+    const logEl = document.getElementById('robot-progress-log');
+    const btnClose = document.getElementById('btn-close-robot-progress');
+
+    if (modal) modal.classList.remove('hidden');
+    if (statusEl) statusEl.textContent = 'Varrendo páginas web e consultando Receita Federal...';
+    if (stepEl) stepEl.textContent = `Processando 0 de ${ids.length}...`;
+    if (percentEl) percentEl.textContent = '0%';
+    if (barEl) barEl.style.width = '0%';
+    if (logEl) logEl.innerHTML = '<p class="text-slate-400 italic">🤖 Robô iniciado. Conectando aos serviços...</p>';
+    if (btnClose) btnClose.classList.add('hidden');
+
+    let processed = 0;
+    let enrichedCount = 0;
+
+    // Processa sequencialmente garantindo logs ao vivo e respeito a limites das APIs
+    for (const id of ids) {
+      const prospect = cachedProspects.find(p => p.id === id) || { id, name: `Empresa #${id}` };
+      
+      if (stepEl) stepEl.textContent = `Processando ${processed + 1} de ${ids.length}: ${prospect.name}...`;
+
+      try {
+        const res = await fetch(`/api/radar-b2b/prospects/${id}/enrich`, {
+          method: 'POST',
+          headers: getHeaders(),
+          credentials: 'same-origin'
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          enrichedCount++;
+          const en = data.enriched || {};
+          const details = [];
+          if (en.cnpj) details.push(`CNPJ: ${en.cnpj}`);
+          if (en.socios) details.push(`Sócios: ${en.socios}`);
+          if (en.email) details.push(`E-mail: ${en.email}`);
+          if (en.instagram) details.push(`Insta: ${en.instagram}`);
+
+          const detailStr = details.length > 0 ? details.join(' | ') : 'Dados cadastrais confirmados';
+          appendRobotLog(`✅ <strong>${escapeHtml(prospect.name)}</strong>: ${escapeHtml(detailStr)}`, 'text-emerald-700');
+        } else {
+          appendRobotLog(`⚠️ <strong>${escapeHtml(prospect.name)}</strong>: ${escapeHtml(data.error || 'Nenhum dado novo encontrado')}`, 'text-amber-700');
+        }
+      } catch (err) {
+        appendRobotLog(`❌ <strong>${escapeHtml(prospect.name)}</strong>: Falha de conexão (${escapeHtml(err.message)})`, 'text-rose-600');
+      }
+
+      processed++;
+      const pct = Math.round((processed / ids.length) * 100);
+      if (percentEl) percentEl.textContent = `${pct}%`;
+      if (barEl) barEl.style.width = `${pct}%`;
+    }
+
+    if (statusEl) statusEl.textContent = '🎉 Concluído! Todas as empresas foram processadas.';
+    if (stepEl) stepEl.textContent = `${enrichedCount} de ${ids.length} empresas enriquecidas com sucesso.`;
+    if (percentEl) percentEl.textContent = '100%';
+    if (barEl) barEl.style.width = '100%';
+    appendRobotLog(`🏁 Processo finalizado com sucesso! ${enrichedCount} empresas enriquecidas.`, 'text-indigo-900 font-bold');
+
+    if (btnClose) btnClose.classList.remove('hidden');
+    isRobotRunning = false;
+    window.clearSelectedProspects();
+    await fetchStats();
+    await fetchProspects();
+  }
+
+  function appendRobotLog(html, textClass = 'text-slate-700') {
+    const logEl = document.getElementById('robot-progress-log');
+    if (!logEl) return;
+    const p = document.createElement('p');
+    p.className = `leading-relaxed ${textClass}`;
+    p.innerHTML = html;
+    logEl.appendChild(p);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  window.closeRobotProgressModal = function () {
+    const modal = document.getElementById('modal-robot-progress');
+    if (modal) modal.classList.add('hidden');
+  };
+
+  // Ação: Enriquecer selecionados
+  window.enrichSelectedProspects = function () {
+    const ids = Array.from(selectedProspectIds);
+    if (ids.length === 0) {
+      toast('Selecione pelo menos uma empresa na tabela ou Kanban.', 'warning');
+      return;
+    }
+    executeRobotProgress(ids);
+  };
+
+  // Ação 1-Click: "Completar com o Google & Receita"
+  window.completarTabelaComGoogle = function () {
+    if (selectedProspectIds.size > 0) {
+      return executeRobotProgress(Array.from(selectedProspectIds));
+    }
+
+    if (!cachedProspects || cachedProspects.length === 0) {
+      toast('Nenhuma empresa na tabela para enriquecer.', 'warning');
+      return;
+    }
+
+    // Prioriza empresas que ainda não possuem CNPJ ou Sócios ou E-mail
+    const candidates = cachedProspects.filter(p => !p.cnpj || !p.socios || !p.email);
+    const targetProspects = candidates.length > 0 ? candidates : cachedProspects;
+
+    // Limita lote a 50 por vez para garantir velocidade e estabilidade
+    const batch = targetProspects.slice(0, 50);
+    const ids = batch.map(p => p.id);
+
+    const desc = candidates.length > 0 
+      ? `O Robô irá buscar CNPJ, Sócios (QSA), E-mail e Redes Sociais de ${ids.length} empresas incompletas na tabela.\n\nDeseja iniciar?`
+      : `Deseja executar o Robô nas ${ids.length} empresas visíveis da tabela?`;
+
+    if (!confirm(desc)) return;
+    executeRobotProgress(ids);
+  };
+
+  // Ação da Barra de Busca Estilo Google (Botão ⚡ Robô ou Enter)
+  window.enrichFromSearchInput = function () {
+    const input = document.getElementById('b2b-search-input');
+    const query = (input?.value || '').trim();
+    if (!query) {
+      toast('Digite o nome ou segmento de uma empresa no campo de busca.', 'warning');
+      return;
+    }
+
+    // Procura na lista local se já existe
+    const qLower = query.toLowerCase();
+    const match = cachedProspects.find(p => 
+      (p.name && p.name.toLowerCase().includes(qLower)) ||
+      (p.cnpj && p.cnpj.includes(query)) ||
+      (p.phone && p.phone.includes(query))
+    );
+
+    if (match) {
+      toast(`Empresa "${match.name}" localizada! Abrindo atendimento...`, 'info');
+      window.openLeadHistoryModal(match.id);
+      window.enrichCurrentModalLead();
+    } else {
+      const ok = confirm(`A empresa "${query}" não foi encontrada na visualização atual.\n\nDeseja realizar a Varredura do Google Places para adicioná-la agora?`);
+      if (ok) {
+        window.openGooglePlacesSearchModal();
+        const searchInput = document.getElementById('b2b-search-query');
+        if (searchInput) searchInput.value = query;
       }
     }
   };

@@ -650,29 +650,37 @@ radarB2bRouter.post('/api/radar-b2b/prospects/:id/enrich', requireAuth, async (r
 
 /**
  * POST /api/radar-b2b/enrich-batch
- * Executa o robô enriquecedor em lote para uma cidade/estado
+ * Executa o robô enriquecedor em lote (para IDs específicos selecionados ou filtros)
  */
 radarB2bRouter.post('/api/radar-b2b/enrich-batch', requireAuth, async (req, res) => {
   try {
-    const { city, state, limit = 20, onlyMissingEmail = true } = req.body;
-    let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
-    const params = [];
+    const { ids, city, state, limit = 50, onlyMissingEmail = false } = req.body;
+    let targets = [];
 
-    if (onlyMissingEmail) {
-      sql += ` AND (email IS NULL OR email = '')`;
-    }
-    if (city && city !== 'todos') {
-      sql += ` AND LOWER(city) = LOWER(?)`;
-      params.push(city);
-    }
-    if (state && state !== 'todos') {
-      sql += ` AND LOWER(state) = LOWER(?)`;
-      params.push(state);
-    }
-    sql += ` ORDER BY id DESC LIMIT ?`;
-    params.push(Math.min(parseInt(limit, 10) || 20, 100));
+    if (Array.isArray(ids) && ids.length > 0) {
+      const placeholders = ids.map(() => '?').join(',');
+      targets = db.prepare(`SELECT id, name FROM radar_b2b_prospects WHERE id IN (${placeholders})`).all(...ids);
+    } else {
+      let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
+      const params = [];
 
-    const targets = db.prepare(sql).all(...params);
+      if (onlyMissingEmail) {
+        sql += ` AND (email IS NULL OR email = '')`;
+      }
+      if (city && city !== 'todos') {
+        sql += ` AND LOWER(city) = LOWER(?)`;
+        params.push(city);
+      }
+      if (state && state !== 'todos') {
+        sql += ` AND LOWER(state) = LOWER(?)`;
+        params.push(state);
+      }
+      sql += ` ORDER BY id DESC LIMIT ?`;
+      params.push(Math.min(parseInt(limit, 10) || 50, 200));
+
+      targets = db.prepare(sql).all(...params);
+    }
+
     const enrichedResults = [];
 
     for (const t of targets) {
@@ -680,7 +688,7 @@ radarB2bRouter.post('/api/radar-b2b/enrich-batch', requireAuth, async (req, res)
         const resSingle = await enrichSingleProspect(t.id);
         enrichedResults.push(resSingle);
       } catch (_) {}
-      await new Promise(r => setTimeout(r, 350));
+      await new Promise(r => setTimeout(r, 250));
     }
 
     return res.json({
@@ -693,6 +701,58 @@ radarB2bRouter.post('/api/radar-b2b/enrich-batch', requireAuth, async (req, res)
   } catch (error) {
     console.error('[ERRO] radar-b2b enrich batch:', error);
     return res.status(500).json({ error: 'Erro ao rodar lote de enriquecimento.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/prospects/batch-status
+ * Atualiza o status Kanban em lote para as empresas selecionadas
+ */
+radarB2bRouter.post('/api/radar-b2b/prospects/batch-status', requireAuth, (req, res) => {
+  try {
+    const { ids, status, disposition } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Nenhum prospect selecionado.' });
+    }
+    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'convertido', 'descartado'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status Kanban inválido.' });
+    }
+
+    const now = new Date().toISOString();
+    const operatorName = req.user?.name || req.user?.username || req.user?.email || 'Operador';
+    const placeholders = ids.map(() => '?').join(',');
+
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      if (status && disposition) {
+        db.prepare(`UPDATE radar_b2b_prospects SET status = ?, disposition = ?, updated_at = ? WHERE id IN (${placeholders})`).run(status, disposition, now, ...ids);
+      } else if (status) {
+        db.prepare(`UPDATE radar_b2b_prospects SET status = ?, updated_at = ? WHERE id IN (${placeholders})`).run(status, now, ...ids);
+      } else if (disposition) {
+        db.prepare(`UPDATE radar_b2b_prospects SET disposition = ?, updated_at = ? WHERE id IN (${placeholders})`).run(disposition, now, ...ids);
+      }
+
+      for (const id of ids) {
+        db.prepare(`
+          INSERT INTO radar_b2b_history (prospect_id, new_status, disposition, operator_name, notes, created_at)
+          VALUES (?, ?, ?, ?, 'Atualização em lote', ?)
+        `).run(id, status || 'novo', disposition || '', operatorName, now);
+      }
+      db.exec('COMMIT;');
+    } catch (err) {
+      db.exec('ROLLBACK;');
+      throw err;
+    }
+
+    return res.json({
+      success: true,
+      updatedCount: ids.length,
+      message: `${ids.length} empresas atualizadas com sucesso!`
+    });
+  } catch (error) {
+    console.error('[ERRO] batch status update:', error);
+    return res.status(500).json({ error: 'Erro ao atualizar empresas em lote.' });
   }
 });
 

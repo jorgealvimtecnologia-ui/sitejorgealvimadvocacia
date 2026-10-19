@@ -7353,6 +7353,14 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <div class="flex flex-wrap items-center gap-2.5">
               <button 
                 type="button" 
+                onclick="window.completarTabelaComGoogle()" 
+                class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition-all border border-violet-400/30 cursor-pointer active:scale-95"
+                title="Completar dados das empresas da tabela com o Robô Web e Receita Federal">
+                <span>⚡</span>
+                <span>Completar com o Google & Receita</span>
+              </button>
+              <button 
+                type="button" 
                 onclick="openGooglePlacesSearchModal()" 
                 class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-xs shadow-md transition-all border border-indigo-400/30 cursor-pointer active:scale-95"
                 title="Buscar novas empresas no Google Maps por bairro e categoria">
@@ -7495,16 +7503,24 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 </button>
               </div>
 
-              <!-- Busca por Texto -->
-              <div class="relative min-w-[240px] sm:min-w-[280px] flex-1 max-w-md">
+              <!-- Busca Inteligente Estilo Google (Filtro e Enriquecedor) -->
+              <div class="relative min-w-[260px] sm:min-w-[340px] flex-1 max-w-lg">
                 <input 
                   type="text" 
                   id="b2b-search-input" 
                   oninput="handleB2bFilterChange()" 
-                  placeholder="Buscar por nome, telefone, email ou rua..." 
-                  class="w-full text-xs font-semibold px-3 py-2 pl-8 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-indigo-500 transition-all"
+                  onkeydown="if(event.key==='Enter') window.enrichFromSearchInput()"
+                  placeholder="🔍 Pesquisar ou digitar empresa para enriquecer no Google..." 
+                  class="w-full text-xs font-semibold px-3 py-2 pl-8 pr-20 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 transition-all shadow-xs"
                 />
                 <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
+                <button 
+                  type="button" 
+                  onclick="window.enrichFromSearchInput()" 
+                  class="absolute right-1.5 top-1 px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-bold text-[10px] shadow-xs cursor-pointer flex items-center gap-1 transition-all"
+                  title="Executar Robô Enriquecedor no termo digitado">
+                  <span>⚡ Robô</span>
+                </button>
               </div>
 
               <!-- Contador de Itens Filtrados -->
@@ -7711,7 +7727,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-50 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                  <th class="py-3 px-3">Empresa / Razão</th>
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="b2b-select-all" onchange="window.toggleSelectAllB2b(this.checked)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="Selecionar Todos" />
+                  </th>
+                  <th class="py-3 px-3">Empresa / Razão Social</th>
                   <th class="py-3 px-3">Bairro</th>
                   <th class="py-3 px-3">Categoria</th>
                   <th class="py-3 px-3">Telefone</th>
@@ -7882,6 +7901,68 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
       </section>
 
     </main>
+  </div>
+
+  <!-- Barra Flutuante de Ações em Lote do Radar B2B (Selecionar Todos & Enriquecer) -->
+  <div id="b2b-bulk-actions-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md flex flex-wrap items-center gap-3.5 transition-all">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="text-xs font-bold"><strong id="b2b-selected-count" class="text-emerald-300 text-sm">0</strong> empresas selecionadas</span>
+    </div>
+    <div class="h-4 w-px bg-slate-700 hidden sm:block"></div>
+    <button type="button" onclick="window.enrichSelectedProspects()" class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-all cursor-pointer">
+      <span>⚡</span>
+      <span>Enriquecer c/ Robô</span>
+    </button>
+    <div class="flex items-center gap-1.5">
+      <select id="b2b-bulk-status-select" class="text-xs font-semibold bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-white cursor-pointer focus:outline-none">
+        <option value="">Mover Etapa...</option>
+        <option value="novo">📥 Novo</option>
+        <option value="contatado">📞 Contatado</option>
+        <option value="sem_resposta">⏳ Sem Resposta</option>
+        <option value="negociando">🤝 Em Negociação</option>
+        <option value="convertido">🏆 Virar Cliente</option>
+        <option value="descartado">🚫 Descartar</option>
+      </select>
+      <button type="button" onclick="window.applyBulkStatusChange()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">
+        Salvar
+      </button>
+    </div>
+    <button type="button" onclick="window.clearSelectedProspects()" class="text-slate-400 hover:text-white text-xs font-medium cursor-pointer ml-1">
+      ✕ Desmarcar
+    </button>
+  </div>
+
+  <!-- Modal de Progresso ao Vivo do Robô Enriquecedor -->
+  <div id="modal-robot-progress" class="hidden fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" style="z-index: 999999 !important;">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-xl bg-violet-50 text-violet-600 text-lg">🤖</span>
+          <div>
+            <h3 class="font-bold text-base text-slate-900">Robô Enriquecedor em Ação</h3>
+            <p class="text-xs text-slate-500" id="robot-progress-status">Varrendo páginas web e consultando Receita Federal...</p>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <div class="flex justify-between text-xs font-bold text-slate-700">
+          <span id="robot-progress-step">Processando empresas...</span>
+          <span id="robot-progress-percent">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+          <div id="robot-progress-bar" class="bg-gradient-to-r from-violet-600 to-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+      <div id="robot-progress-log" class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] font-mono text-slate-600 max-h-48 overflow-y-auto space-y-1">
+        <p class="text-slate-400 italic">Iniciando tarefas...</p>
+      </div>
+      <div class="flex justify-end pt-2">
+        <button type="button" id="btn-close-robot-progress" onclick="window.closeRobotProgressModal()" class="hidden px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer">
+          Concluir e Fechar
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ================= MODAL: HISTÓRICO DO LEAD & ATENDIMENTO DETALHADO ================= -->
