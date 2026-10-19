@@ -85,75 +85,145 @@ export async function fetchCnpjData(cnpj) {
 }
 
 /**
- * Lê uma página web e extrai e-mails, redes sociais e CNPJ
+ * Validação algorítmica matemática oficial de dígitos verificadores de CNPJ
  */
-async function scrapeUrlContent(targetUrl) {
-  try {
-    let url = targetUrl.trim();
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = `https://${url}`;
-    }
+export function isValidCnpj(cnpj) {
+  const clean = String(cnpj || '').replace(/\D/g, '');
+  if (clean.length !== 14 || /^(\d)\1+$/.test(clean)) return false;
+  let size = 12;
+  let numbers = clean.substring(0, size);
+  let digits = clean.substring(size);
+  let sum = 0;
+  let pos = size - 7;
+  for (let i = size; i >= 1; i--) {
+    sum += Number(numbers.charAt(size - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== Number(digits.charAt(0))) return false;
+  size = 13;
+  numbers = clean.substring(0, size);
+  sum = 0;
+  pos = size - 7;
+  for (let i = size; i >= 1; i--) {
+    sum += Number(numbers.charAt(size - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  return result === Number(digits.charAt(1));
+}
 
+function parseHtmlForData(html) {
+  if (!html) return { emails: [], cnpjs: [], instagram: null, facebook: null, linkedin: null };
+
+  const rawEmails = html.match(EMAIL_REGEX) || [];
+  const validEmails = rawEmails.filter(em => {
+    const lower = em.toLowerCase();
+    if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) return false;
+    return !IGNORED_EMAILS.some(ign => lower.includes(ign));
+  });
+
+  const rawCnpjs = (html.match(CNPJ_REGEX) || []).filter(isValidCnpj);
+  const igMatch = html.match(INSTAGRAM_REGEX);
+  const fbMatch = html.match(FACEBOOK_REGEX);
+  const liMatch = html.match(LINKEDIN_REGEX);
+
+  return {
+    emails: [...new Set(validEmails)],
+    cnpjs: [...new Set(rawCnpjs)],
+    instagram: igMatch ? `https://instagram.com/${igMatch[1]}` : null,
+    facebook: fbMatch ? `https://facebook.com/${fbMatch[1]}` : null,
+    linkedin: liMatch ? `https://linkedin.com/${liMatch[1]}` : null
+  };
+}
+
+async function fetchPageHtml(url) {
+  try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(4500),
       redirect: 'follow'
     });
-
     if (!res.ok) return null;
-    const html = await res.text();
-
-    // Extrai e-mails
-    const rawEmails = html.match(EMAIL_REGEX) || [];
-    const validEmails = rawEmails.filter(em => {
-      const lower = em.toLowerCase();
-      if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) return false;
-      return !IGNORED_EMAILS.some(ign => lower.includes(ign));
-    });
-
-    // Extrai CNPJ
-    const rawCnpjs = html.match(CNPJ_REGEX) || [];
-
-    // Extrai Redes Sociais
-    const igMatch = html.match(INSTAGRAM_REGEX);
-    const fbMatch = html.match(FACEBOOK_REGEX);
-    const liMatch = html.match(LINKEDIN_REGEX);
-
-    return {
-      emails: [...new Set(validEmails)],
-      cnpjs: [...new Set(rawCnpjs)],
-      instagram: igMatch ? `https://instagram.com/${igMatch[1]}` : null,
-      facebook: fbMatch ? `https://facebook.com/${fbMatch[1]}` : null,
-      linkedin: liMatch ? `https://linkedin.com/${liMatch[1]}` : null,
-      htmlLength: html.length
-    };
+    return await res.text();
   } catch (_) {
     return null;
   }
 }
 
 /**
- * Tenta descobrir o CNPJ através de busca orgânica pública (DuckDuckGo HTML)
+ * Lê uma página web e extrai e-mails, redes sociais e CNPJ (com varredura de subpáginas)
+ */
+async function scrapeUrlContent(targetUrl) {
+  try {
+    let baseUrl = targetUrl.trim();
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `https://${baseUrl}`;
+    }
+
+    let html = await fetchPageHtml(baseUrl);
+    let extracted = parseHtmlForData(html || '');
+
+    // Se não encontrou e-mail ou CNPJ, tenta subpáginas comuns de contato
+    if ((!extracted.cnpjs.length || !extracted.emails.length) && html) {
+      try {
+        const parsedBase = new URL(baseUrl);
+        const subPaths = ['/contato', '/contato/', '/fale-conosco', '/quem-somos', '/sobre', '/politica-de-privacidade'];
+        for (const p of subPaths) {
+          const subUrl = new URL(p, parsedBase.origin).toString();
+          const subHtml = await fetchPageHtml(subUrl);
+          if (subHtml) {
+            const subExtracted = parseHtmlForData(subHtml);
+            if (subExtracted.emails.length) extracted.emails.push(...subExtracted.emails);
+            if (subExtracted.cnpjs.length) extracted.cnpjs.push(...subExtracted.cnpjs);
+            if (!extracted.instagram && subExtracted.instagram) extracted.instagram = subExtracted.instagram;
+            if (!extracted.facebook && subExtracted.facebook) extracted.facebook = subExtracted.facebook;
+            if (!extracted.linkedin && subExtracted.linkedin) extracted.linkedin = subExtracted.linkedin;
+            if (extracted.cnpjs.length && extracted.emails.length) break;
+          }
+        }
+      } catch (_) {}
+    }
+
+    extracted.emails = [...new Set(extracted.emails)];
+    extracted.cnpjs = [...new Set(extracted.cnpjs)];
+    return extracted;
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Tenta descobrir o CNPJ através de busca orgânica pública
  */
 async function discoverCnpjByName(name, city, state) {
-  try {
-    const q = encodeURIComponent(`"${name}" CNPJ "${city}" ${state || ''}`);
-    const res = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      signal: AbortSignal.timeout(5000)
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    const cnpjs = text.match(CNPJ_REGEX);
-    if (cnpjs && cnpjs.length > 0) {
-      return cnpjs[0];
-    }
-  } catch (_) {}
+  const query = `"${name}" CNPJ "${city}" ${state || ''}`;
+  const searchUrls = [
+    `https://search.yahoo.com/search?p=${encodeURIComponent(query)}`,
+    `https://www.bing.com/search?q=${encodeURIComponent(query)}`
+  ];
+
+  for (const sUrl of searchUrls) {
+    try {
+      const res = await fetch(sUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+        },
+        signal: AbortSignal.timeout(3000)
+      });
+      if (res.ok) {
+        const text = await res.text();
+        const cnpjs = (text.match(CNPJ_REGEX) || []).filter(isValidCnpj);
+        if (cnpjs.length > 0) {
+          return cnpjs[0];
+        }
+      }
+    } catch (_) {}
+  }
   return null;
 }
 

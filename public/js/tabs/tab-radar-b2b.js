@@ -61,9 +61,26 @@
   function toast(msg, type = 'info') {
     if (typeof window.wmToast === 'function') {
       window.wmToast(msg);
-    } else {
-      alert(msg);
+      return;
     }
+    let t = document.getElementById('b2b-floating-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'b2b-floating-toast';
+      document.body.appendChild(t);
+    }
+    const bg = type === 'error' 
+      ? 'bg-rose-900/95 text-rose-100 border-rose-500/50' 
+      : (type === 'success' ? 'bg-emerald-900/95 text-emerald-100 border-emerald-500/50' : 'bg-slate-900/95 text-white border-indigo-500/50');
+    t.className = `fixed top-5 right-5 z-[99999999] px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold border backdrop-blur-md transition-all duration-300 pointer-events-none flex items-center gap-2 ${bg}`;
+    t.innerHTML = `<span>${msg}</span>`;
+    t.style.opacity = '1';
+    t.style.transform = 'translateY(0)';
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateY(-10px)';
+    }, 3200);
   }
 
   const DISPOSITION_LABELS = {

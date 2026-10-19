@@ -72,6 +72,7 @@
       t.textContent=msg; t.classList.add('show'); clearTimeout(t._h);
       t._h=setTimeout(function(){ t.classList.remove('show'); },2400);
     }
+    window.wmToast = wmToast;
     function winBody(id){ return windows[id]?windows[id].body:null; }
     function firstTable(b){ return b?b.querySelector('table'):null; }
     function tableRows(tbl){
