@@ -1713,6 +1713,8 @@
       btn.innerHTML = '<span>⏳</span> Buscando empresas…';
     }
 
+    const autoEnrich = document.getElementById('b2b-search-auto-enrich')?.checked ?? true;
+
     try {
       const res = await fetch('/api/radar-b2b/buscar-google', {
         method: 'POST',
@@ -1723,10 +1725,27 @@
       if (!res.ok) throw new Error(data.error || 'Falha na busca');
 
       const totalFound = data.found !== undefined ? data.found : (data.matched || data.inserted || 0);
-      toast(`✅ Varredura concluída! ${totalFound} empresas localizadas e ${data.inserted} novos registros adicionados ao Radar B2B.`, 'success');
       closeGooglePlacesSearchModal();
       await fetchStats();
       await fetchProspects();
+
+      if (data.inserted > 0 && Array.isArray(data.insertedIds) && data.insertedIds.length > 0) {
+        if (autoEnrich) {
+          toast(`✅ ${data.inserted} empresas importadas! Iniciando Robô Enriquecedor para completar os dados...`, 'info');
+          setTimeout(() => {
+            executeRobotProgress(data.insertedIds);
+          }, 350);
+        } else {
+          toast(`✅ Varredura concluída! ${totalFound} empresas localizadas e ${data.inserted} novos registros adicionados.`, 'success');
+          setTimeout(() => {
+            if (confirm(`Foram adicionadas ${data.inserted} novas empresas ao seu Radar.\n\nDeseja executar o Robô Enriquecedor agora para buscar CNPJ, Sócios e E-mail desse novo lote?`)) {
+              executeRobotProgress(data.insertedIds);
+            }
+          }, 300);
+        }
+      } else {
+        toast(`✅ Varredura concluída! ${totalFound} empresas verificadas (nenhuma nova duplicata inserida).`, 'info');
+      }
     } catch (e) {
       toast('Erro na busca: ' + e.message, 'error');
     } finally {
@@ -1754,22 +1773,32 @@
       toast(`✅ Sucesso! Inseridas ${data.inserted} novas empresas (${data.skipped} já existiam). Total ativo: ${data.totalNow}`, 'success');
       await fetchStats();
       await fetchProspects();
+
+      if (data.inserted > 0 && Array.isArray(data.insertedIds) && data.insertedIds.length > 0) {
+        setTimeout(() => {
+          if (confirm(`Foram importadas ${data.inserted} novas empresas!\n\nDeseja executar o Robô Enriquecedor agora para buscar CNPJ, Sócios (QSA) e E-mail desse novo lote?`)) {
+            executeRobotProgress(data.insertedIds);
+          }
+        }, 300);
+      }
     } catch (e) {
       toast('Erro na importação: ' + e.message, 'error');
     }
   };
 
-  // Exportar Meta Ads
+  // Exportar Meta Ads (apenas dados necessários para Público Personalizado)
   window.exportarMetaAdsB2b = function () {
     const token = getAuthToken();
     const url = `/api/radar-b2b/export/meta-ads?token=${encodeURIComponent(token)}`;
+    toast('📢 Gerando público do Meta Ads com dados estritamente necessários (Telefones, E-mails e Sócios)...', 'info');
     window.location.href = url;
   };
 
-  // Exportar Brevo
+  // Exportar Brevo (apenas dados necessários para campanhas de E-mail/SMS)
   window.exportarBrevoB2b = function () {
     const token = getAuthToken();
     const url = `/api/radar-b2b/export/brevo?token=${encodeURIComponent(token)}`;
+    toast('📧 Gerando arquivo Brevo com atributos estritamente necessários (E-mails, Sócios, WhatsApp e CNPJ)...', 'info');
     window.location.href = url;
   };
 

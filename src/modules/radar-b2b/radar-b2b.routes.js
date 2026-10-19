@@ -1183,6 +1183,7 @@ radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => 
     `);
 
     // Inserção em transação para alta performance (milhares de linhas em fração de segundo)
+    const insertedIds = [];
     db.exec('BEGIN TRANSACTION;');
     try {
       for (let i = 1; i < lines.length; i++) {
@@ -1233,8 +1234,12 @@ radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => 
           now
         );
 
-        if (resRun.changes > 0) inserted++;
-        else skipped++;
+        if (resRun.changes > 0) {
+          inserted++;
+          if (resRun.lastInsertRowid) insertedIds.push(resRun.lastInsertRowid);
+        } else {
+          skipped++;
+        }
       }
       db.exec('COMMIT;');
     } catch (err) {
@@ -1254,6 +1259,7 @@ radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => 
       success: true,
       file: path.basename(targetPath),
       inserted,
+      insertedIds,
       skipped,
       totalNow
     });
@@ -1366,6 +1372,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
       const allPlaces = Array.from(allPlacesMap.values()).slice(0, targetCount);
 
       let inserted = 0;
+      const insertedIds = [];
 
       const insertStmt = db.prepare(`
         INSERT OR IGNORE INTO radar_b2b_prospects (
@@ -1415,7 +1422,10 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
             pType, pTypeDesc, types, mapsUrl,
             lat, lng, clientCheck.isClient ? 1 : 0, clientCheck.clientId || null, now, now
           );
-          if (resRun.changes > 0) inserted++;
+          if (resRun.changes > 0) {
+            inserted++;
+            if (resRun.lastInsertRowid) insertedIds.push(resRun.lastInsertRowid);
+          }
         }
         db.exec('COMMIT;');
       } catch (err) {
@@ -1435,6 +1445,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         mode: 'google_api_live',
         found: allPlaces.length,
         inserted,
+        insertedIds,
         message: `Varredura Google Places concluída! ${allPlaces.length} empresas encontradas e ${inserted} novas adicionadas ao funil.`
       });
     }
@@ -1472,6 +1483,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
 
     const maxLimit = limit === 'todas' ? 999999 : (parseInt(limit, 10) || 500);
     let inserted = 0;
+    const insertedIds = [];
     let matched = 0;
     const insertStmt = db.prepare(`
       INSERT OR IGNORE INTO radar_b2b_prospects (
@@ -1529,7 +1541,10 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
           pType, pTypeDesc, types, maps,
           clientCheck.isClient ? 1 : 0, clientCheck.clientId || null, now, now
         );
-        if (resRun.changes > 0) inserted++;
+        if (resRun.changes > 0) {
+          inserted++;
+          if (resRun.lastInsertRowid) insertedIds.push(resRun.lastInsertRowid);
+        }
         if (inserted >= maxLimit) break;
       }
       db.exec('COMMIT;');
@@ -1551,6 +1566,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
       found: matched,
       matched,
       inserted,
+      insertedIds,
       message: `Busca concluída com sucesso! ${matched} empresas encontradas e ${inserted} novos registros adicionados ao funil.`
     });
   } catch (error) {
@@ -1560,14 +1576,48 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
 });
 
 /**
+ * Helper para extrair Primeiro e Último Nome (priorizando Sócios descobertos pelo Robô)
+ */
+function extractFirstLastName(companyName = '', sociosStr = '') {
+  let fn = '';
+  let ln = '';
+  if (sociosStr && sociosStr.trim()) {
+    // Pega o primeiro sócio (ex: "JOÃO CARLOS SILVA" ou "MARIA SANTOS")
+    const cleanSocio = sociosStr.split(/[,;\n]/)[0].replace(/[-–].*$/, '').trim();
+    const parts = cleanSocio.split(/\s+/).filter(Boolean);
+    if (parts.length > 0) {
+      fn = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+      if (parts.length > 1) {
+        ln = parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1).toLowerCase();
+      }
+    }
+  }
+  if (!fn && companyName) {
+    const cleanCompany = companyName.replace(/["',]/g, '').trim();
+    const parts = cleanCompany.split(/\s+/).filter(Boolean);
+    if (parts.length > 0) {
+      fn = parts[0];
+      if (parts.length > 1) ln = parts[parts.length - 1];
+    }
+  }
+  return { fn: fn || 'Contato', ln: ln || '' };
+}
+
+/**
  * GET /api/radar-b2b/export/meta-ads
- * Gera CSV formatado para Público Personalizado no Meta Ads (Facebook/Instagram)
- * Formato padrão aceito pela Meta: phone,fn,ct,st,country
+ * Gera CSV enxuto apenas com os dados necessários para Público Personalizado no Meta Ads (Facebook/Instagram)
+ * Formato padrão oficial da Meta: email,phone,fn,ln,ct,st,country
+ * Exporta apenas contatos aptos (com telefone ou e-mail), excluindo clientes ativos e opt-outs
  */
 radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => {
   try {
     const { status } = req.query;
-    let sql = `SELECT * FROM radar_b2b_prospects WHERE phone IS NOT NULL AND phone != ''`;
+    let sql = `
+      SELECT * FROM radar_b2b_prospects 
+      WHERE ((phone IS NOT NULL AND trim(phone) != '') OR (email IS NOT NULL AND trim(email) != ''))
+        AND (opt_out = 0 OR opt_out IS NULL)
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+    `;
     const params = [];
     if (status && status !== 'todos') {
       sql += ` AND status = ?`;
@@ -1577,27 +1627,34 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
 
     const prospects = db.prepare(sql).all(...params);
 
-    const headers = ['phone', 'fn', 'ct', 'st', 'country'];
+    // Cabeçalho canônico do Gerenciador de Anúncios da Meta
+    const headers = ['email', 'phone', 'fn', 'ln', 'ct', 'st', 'country'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
       let digits = cleanDigits(p.phone);
-      if (!digits) continue;
-      // Garante DDI 55
-      if (!digits.startsWith('55')) {
+      if (digits && !digits.startsWith('55')) {
         digits = '55' + digits;
       }
-      const safeName = (p.name || '').replace(/[",\n\r]/g, ' ').trim();
-      const city = 'juiz de fora';
-      const state = 'mg';
+
+      const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
+      if (!digits && !email) continue; // Meta exige pelo menos um identificador direto
+
+      const { fn, ln } = extractFirstLastName(p.name, p.socios);
+      const safeFn = fn.replace(/[",\r\n]/g, '').toLowerCase();
+      const safeLn = ln.replace(/[",\r\n]/g, '').toLowerCase();
+
+      // Meta exige cidade e estado em minúsculo
+      const rawCity = (p.city || 'Juiz de Fora').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const rawState = (p.state || 'MG').toLowerCase().trim();
       const country = 'br';
 
-      rows.push(`${digits},"${safeName}",${city},${state},${country}`);
+      rows.push(`"${email}","${digits}","${safeFn}","${safeLn}","${rawCity}","${rawState}","${country}"`);
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="meta_ads_publico_b2b_juiz_de_fora.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="meta_ads_publico_b2b.csv"');
     return res.send(csvContent);
   } catch (error) {
     console.error('[ERRO] radar-b2b export meta ads:', error);
@@ -1607,13 +1664,24 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
 
 /**
  * GET /api/radar-b2b/export/brevo
- * Gera CSV formatado para Brevo (Sendinblue)
- * Formato: COMPANY,FIRSTNAME,SMS,PHONE,CITY,WEBSITE,CATEGORY,STATUS
+ * Gera CSV enxuto apenas com os dados necessários para Brevo (Sendinblue)
+ * Formato canônico: EMAIL,FIRSTNAME,LASTNAME,COMPANY,SMS,PHONE,CITY,STATE,NEIGHBORHOOD,CNPJ
+ * Exporta apenas contatos aptos, excluindo clientes e opt-outs
  */
 radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
   try {
-    const { status } = req.query;
-    let sql = `SELECT * FROM radar_b2b_prospects WHERE 1=1`;
+    const { status, onlyEmail } = req.query;
+    let sql = `
+      SELECT * FROM radar_b2b_prospects 
+      WHERE (opt_out = 0 OR opt_out IS NULL)
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+    `;
+    if (onlyEmail === '1') {
+      sql += ` AND email IS NOT NULL AND trim(email) != '' AND email LIKE '%@%'`;
+    } else {
+      sql += ` AND ((email IS NOT NULL AND trim(email) != '') OR (phone IS NOT NULL AND trim(phone) != ''))`;
+    }
+
     const params = [];
     if (status && status !== 'todos') {
       sql += ` AND status = ?`;
@@ -1623,29 +1691,34 @@ radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
 
     const prospects = db.prepare(sql).all(...params);
 
-    const headers = ['EMAIL', 'COMPANY', 'FIRSTNAME', 'SMS', 'PHONE', 'CITY', 'WEBSITE', 'CATEGORY', 'STATUS'];
+    // Cabeçalho direto e estritamente necessário para o Brevo
+    const headers = ['EMAIL', 'FIRSTNAME', 'LASTNAME', 'COMPANY', 'SMS', 'PHONE', 'CITY', 'STATE', 'NEIGHBORHOOD', 'CNPJ'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
       let digits = cleanDigits(p.phone);
       let e164 = '';
+      let localPhone = '';
       if (digits) {
         if (!digits.startsWith('55')) digits = '55' + digits;
         e164 = '+' + digits;
+        localPhone = formatPhoneBR(digits);
       }
 
-      const safeCompany = (p.name || '').replace(/[",\n\r]/g, ' ').trim();
-      const safeCity = (p.city || 'Juiz de Fora').replace(/[",\n\r]/g, ' ').trim();
-      const safeWebsite = (p.website || '').replace(/[",\n\r]/g, ' ').trim();
-      const safeCategory = (p.primary_type_display || p.primary_type || 'Comércio').replace(/[",\n\r]/g, ' ').trim();
-      const safeEmail = (p.email || '').replace(/[",\n\r]/g, '').trim();
+      const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
+      const company = (p.razao_social || p.name || '').replace(/[",\r\n]/g, ' ').trim();
+      const { fn, ln } = extractFirstLastName(p.name, p.socios);
+      const city = (p.city || 'Juiz de Fora').replace(/[",\r\n]/g, ' ').trim();
+      const state = (p.state || 'MG').replace(/[",\r\n]/g, ' ').trim();
+      const neighborhood = (p.neighborhood || 'Centro').replace(/[",\r\n]/g, ' ').trim();
+      const cnpj = (p.cnpj || '').replace(/[",\r\n]/g, '').trim();
 
-      rows.push(`"${safeEmail}","${safeCompany}","${safeCompany}","${e164}","${e164}","${safeCity}","${safeWebsite}","${safeCategory}","${p.status}"`);
+      rows.push(`"${email}","${fn}","${ln}","${company}","${e164}","${localPhone}","${city}","${state}","${neighborhood}","${cnpj}"`);
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="brevo_prospeccao_b2b_juiz_de_fora.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="brevo_contatos_b2b.csv"');
     return res.send(csvContent);
   } catch (error) {
     console.error('[ERRO] radar-b2b export brevo:', error);

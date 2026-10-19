@@ -143,6 +143,41 @@ function getValidContacts() {
     console.warn('[BREVO] Falha ao ler leads:', e.message);
   }
 
+  try {
+    // 3. Prospects B2B Enriquecidos com e-mail válido (excluindo opt-outs e clientes ativos)
+    const b2bRows = db.prepare(`
+      SELECT id, name, razao_social, socios, email, phone, city, state
+      FROM radar_b2b_prospects
+      WHERE email IS NOT NULL AND trim(email) != '' AND email LIKE '%@%'
+        AND (opt_out = 0 OR opt_out IS NULL)
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+      ORDER BY id ASC
+    `).all();
+
+    for (const row of b2bRows) {
+      const emailClean = row.email.trim().toLowerCase();
+      if (!seenEmails.has(emailClean)) {
+        seenEmails.add(emailClean);
+        let contactName = row.name || 'Empresário';
+        if (row.socios) {
+          const firstSocio = row.socios.split(/[,;\n]/)[0].replace(/[-–].*$/, '').trim();
+          if (firstSocio) contactName = firstSocio;
+        }
+        contacts.push({
+          id: `b2b_${row.id}`,
+          nome: contactName,
+          email: emailClean,
+          telefone: row.phone || '',
+          cidade: row.city || 'Juiz de Fora',
+          estado: row.state || 'MG',
+          tipo: 'Radar B2B'
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('[BREVO] Falha ao ler radar_b2b_prospects:', e.message);
+  }
+
   return contacts;
 }
 
