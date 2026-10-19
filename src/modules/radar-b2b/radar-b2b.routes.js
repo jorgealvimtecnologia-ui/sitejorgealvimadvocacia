@@ -22,6 +22,7 @@ import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
+import { enrichSingleProspect, fetchCnpjData } from './radar-b2b.enricher.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,7 +89,16 @@ const colsToAdd = [
   ['office_client_id', 'TEXT'],
   ['opt_out', 'INTEGER DEFAULT 0'],
   ['disposition', 'TEXT'],
-  ['cep', 'TEXT']
+  ['cep', 'TEXT'],
+  ['cnpj', 'TEXT'],
+  ['razao_social', 'TEXT'],
+  ['socios', 'TEXT'],
+  ['capital_social', 'TEXT'],
+  ['cnae', 'TEXT'],
+  ['instagram', 'TEXT'],
+  ['facebook', 'TEXT'],
+  ['linkedin', 'TEXT'],
+  ['enriched_at', 'TEXT']
 ];
 for (const [col, def] of colsToAdd) {
   try {
@@ -398,8 +408,10 @@ radarB2bRouter.get('/api/radar-b2b/prospects', requireAuth, (req, res) => {
  */
 radarB2bRouter.put('/api/radar-b2b/prospects/:id/status', requireAuth, (req, res) => {
   try {
-    const { id } = req.params;
-    const { status, notes, priority, assigned_to, tags, disposition, opt_out, email, whatsapp } = req.body;
+    const { 
+      status, notes, priority, assigned_to, tags, disposition, opt_out, 
+      email, whatsapp, cnpj, razao_social, socios, instagram, facebook, linkedin, capital_social, cnae 
+    } = req.body;
 
     const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'convertido', 'descartado'];
     if (status && !validStatuses.includes(status)) {
@@ -423,15 +435,30 @@ radarB2bRouter.put('/api/radar-b2b/prospects/:id/status', requireAuth, (req, res
     }
     const newEmail = email !== undefined ? email : current.email;
     const newWhatsapp = whatsapp !== undefined ? whatsapp : current.whatsapp;
+    const newCnpj = cnpj !== undefined ? cnpj : current.cnpj;
+    const newRazaoSocial = razao_social !== undefined ? razao_social : current.razao_social;
+    const newSocios = socios !== undefined ? socios : current.socios;
+    const newInstagram = instagram !== undefined ? instagram : current.instagram;
+    const newFacebook = facebook !== undefined ? facebook : current.facebook;
+    const newLinkedin = linkedin !== undefined ? linkedin : current.linkedin;
+    const newCapitalSocial = capital_social !== undefined ? capital_social : current.capital_social;
+    const newCnae = cnae !== undefined ? cnae : current.cnae;
     const now = new Date().toISOString();
     const operatorName = req.user?.name || req.user?.username || req.user?.email || 'Operador';
 
     db.prepare(`
       UPDATE radar_b2b_prospects 
       SET status = ?, notes = ?, priority = ?, assigned_to = ?, tags = ?,
-          disposition = ?, opt_out = ?, email = ?, whatsapp = ?, updated_at = ?
+          disposition = ?, opt_out = ?, email = ?, whatsapp = ?,
+          cnpj = ?, razao_social = ?, socios = ?, instagram = ?, facebook = ?, linkedin = ?,
+          capital_social = ?, cnae = ?, updated_at = ?
       WHERE id = ?
-    `).run(newStatus, newNotes, newPriority, newAssignedTo, newTags, newDisposition, newOptOut, newEmail, newWhatsapp, now, id);
+    `).run(
+      newStatus, newNotes, newPriority, newAssignedTo, newTags, 
+      newDisposition, newOptOut, newEmail, newWhatsapp,
+      newCnpj, newRazaoSocial, newSocios, newInstagram, newFacebook, newLinkedin,
+      newCapitalSocial, newCnae, now, id
+    );
 
     // Grava histórico se houver alteração relevante
     if (newStatus !== current.status || newDisposition !== current.disposition || (notes && notes !== current.notes)) {
@@ -490,13 +517,16 @@ radarB2bRouter.post('/api/radar-b2b/prospects/:id/convert', requireAuth, (req, r
 
     db.prepare(`
       INSERT INTO clients (
-        id, client_type, full_name, phone, website, street,
+        id, client_type, full_name, cnpj, email, phone, social_media, website, street,
         neighborhood, city, state, google_business, created_at, updated_at
-      ) VALUES (?, 'PJ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, 'PJ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       newClientId,
-      prospect.name,
+      prospect.razao_social || prospect.name,
+      prospect.cnpj || '',
+      prospect.email || '',
       prospect.phone || '',
+      prospect.instagram || prospect.linkedin || '',
       prospect.website || '',
       prospect.address || '',
       prospect.neighborhood || 'Centro',
@@ -596,6 +626,91 @@ radarB2bRouter.post('/api/radar-b2b/prospects/:id/history', requireAuth, (req, r
   } catch (error) {
     console.error('[ERRO] radar-b2b add history:', error);
     return res.status(500).json({ error: 'Erro ao registrar histórico.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/prospects/:id/enrich
+ * Robô Enriquecedor: lê o site da empresa, acha redes sociais, e-mail e consulta Receita Federal (QSA/Sócios e CNPJ)
+ */
+radarB2bRouter.post('/api/radar-b2b/prospects/:id/enrich', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const enriched = await enrichSingleProspect(id);
+    return res.json({
+      success: true,
+      enriched,
+      message: `Empresa "${enriched.name}" enriquecida com sucesso! ${enriched.socios ? 'Sócios identificados: ' + enriched.socios : ''}`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b enrich single:', error);
+    return res.status(500).json({ error: error.message || 'Erro ao enriquecer prospect.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/enrich-batch
+ * Executa o robô enriquecedor em lote para uma cidade/estado
+ */
+radarB2bRouter.post('/api/radar-b2b/enrich-batch', requireAuth, async (req, res) => {
+  try {
+    const { city, state, limit = 20, onlyMissingEmail = true } = req.body;
+    let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
+    const params = [];
+
+    if (onlyMissingEmail) {
+      sql += ` AND (email IS NULL OR email = '')`;
+    }
+    if (city && city !== 'todos') {
+      sql += ` AND LOWER(city) = LOWER(?)`;
+      params.push(city);
+    }
+    if (state && state !== 'todos') {
+      sql += ` AND LOWER(state) = LOWER(?)`;
+      params.push(state);
+    }
+    sql += ` ORDER BY id DESC LIMIT ?`;
+    params.push(Math.min(parseInt(limit, 10) || 20, 100));
+
+    const targets = db.prepare(sql).all(...params);
+    const enrichedResults = [];
+
+    for (const t of targets) {
+      try {
+        const resSingle = await enrichSingleProspect(t.id);
+        enrichedResults.push(resSingle);
+      } catch (_) {}
+      await new Promise(r => setTimeout(r, 350));
+    }
+
+    return res.json({
+      success: true,
+      processed: targets.length,
+      enrichedCount: enrichedResults.length,
+      results: enrichedResults,
+      message: `Robô Enriquecedor finalizou! ${enrichedResults.length} empresas analisadas e atualizadas com sucesso.`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b enrich batch:', error);
+    return res.status(500).json({ error: 'Erro ao rodar lote de enriquecimento.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/consultar-cnpj/:cnpj
+ * Consulta dados oficiais na Receita Federal por CNPJ (Sócios, Razão Social, CNAE, Capital Social)
+ */
+radarB2bRouter.get('/api/radar-b2b/consultar-cnpj/:cnpj', requireAuth, async (req, res) => {
+  try {
+    const { cnpj } = req.params;
+    const data = await fetchCnpjData(cnpj);
+    if (!data) {
+      return res.status(404).json({ error: 'CNPJ não encontrado na Receita Federal ou formato inválido.' });
+    }
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b consultar cnpj:', error);
+    return res.status(500).json({ error: 'Erro ao consultar CNPJ: ' + error.message });
   }
 });
 
@@ -1093,45 +1208,79 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         high: { latitude: -21.48, longitude: -43.03 }
       };
 
-      const allPlaces = [];
-      let pageToken = undefined;
-      const targetMaxPages = limit === '20' ? 1 : 3;
+      // Define a meta de empresas solicitada pelo usuário no seletor
+      let targetCount = 60;
+      if (limit === '20') targetCount = 20;
+      else if (limit === '60') targetCount = 60;
+      else if (limit === '100') targetCount = 100;
+      else if (limit === '250') targetCount = 250;
+      else if (limit === '500') targetCount = 500;
+      else if (limit === '1000') targetCount = 1000;
+      else if (limit === 'todas') targetCount = 300;
 
-      for (let page = 0; page < targetMaxPages; page++) {
-        const bodyPayload = {
-          textQuery: queryText,
-          languageCode: 'pt-BR',
-          regionCode: 'BR',
-          pageSize: 20
-        };
-        if (pageToken) bodyPayload.pageToken = pageToken;
-        if (city && city.toLowerCase().includes('juiz de fora')) {
-          bodyPayload.locationRestriction = { rectangle: jfBounds };
-        }
-        if (includedType) bodyPayload.includedType = includedType;
-
-        const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.types,places.primaryType,places.primaryTypeDisplayName,places.googleMapsUri,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,nextPageToken'
-          },
-          body: JSON.stringify(bodyPayload)
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          if (allPlaces.length > 0) break;
-          return res.status(response.status).json({ error: `Google Places API retornou erro: ${errText}` });
-        }
-
-        const data = await response.json();
-        const places = data.places || [];
-        allPlaces.push(...places);
-        pageToken = data.nextPageToken;
-        if (!pageToken || places.length === 0) break;
+      const searchQueries = [queryText];
+      if (targetCount > 60 && !searchTerm) {
+        searchQueries.push(
+          `lojas e comércios em ${locationParts}`.trim(),
+          `serviços e escritórios em ${locationParts}`.trim(),
+          `indústrias e distribuidoras em ${locationParts}`.trim(),
+          `clínicas médicas e consultórios em ${locationParts}`.trim(),
+          `restaurantes e bares em ${locationParts}`.trim(),
+          `oficinas e autopeças em ${locationParts}`.trim(),
+          `construção civil e imobiliárias em ${locationParts}`.trim()
+        );
       }
+
+      const allPlacesMap = new Map();
+
+      for (const qText of searchQueries) {
+        if (allPlacesMap.size >= targetCount) break;
+
+        let pageToken = undefined;
+        const maxPagesForThisQuery = targetCount <= 20 ? 1 : 3;
+
+        for (let page = 0; page < maxPagesForThisQuery; page++) {
+          if (allPlacesMap.size >= targetCount) break;
+
+          const bodyPayload = {
+            textQuery: qText,
+            languageCode: 'pt-BR',
+            regionCode: 'BR',
+            pageSize: 20
+          };
+          if (pageToken) bodyPayload.pageToken = pageToken;
+          if (city && city.toLowerCase().includes('juiz de fora')) {
+            bodyPayload.locationRestriction = { rectangle: jfBounds };
+          }
+          if (includedType) bodyPayload.includedType = includedType;
+
+          const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': apiKey,
+              'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.types,places.primaryType,places.primaryTypeDisplayName,places.googleMapsUri,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,nextPageToken'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+
+          if (!response.ok) {
+            break;
+          }
+
+          const data = await response.json();
+          const places = data.places || [];
+          for (const p of places) {
+            if (p.id && !allPlacesMap.has(p.id)) {
+              allPlacesMap.set(p.id, p);
+            }
+          }
+          pageToken = data.nextPageToken;
+          if (!pageToken || places.length === 0) break;
+        }
+      }
+
+      const allPlaces = Array.from(allPlacesMap.values()).slice(0, targetCount);
 
       let inserted = 0;
 

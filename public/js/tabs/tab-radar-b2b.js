@@ -476,6 +476,13 @@
           </select>
           <button 
             type="button" 
+            onclick="window.enrichProspectFromCard(${p.id}, this)"
+            class="px-2 py-1 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 font-bold text-[11px] transition-all cursor-pointer"
+            title="Enriquecer com Robô (Sócios, CNPJ, E-mail)">
+            ⚡
+          </button>
+          <button 
+            type="button" 
             onclick="window.openLeadHistoryModal(${p.id})"
             class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition-all cursor-pointer"
             title="Abrir Histórico e Atendimento">
@@ -533,6 +540,19 @@
           <p class="text-[11px] text-slate-400 line-clamp-1" title="${escapeHtml(p.address)}">
             📍 ${escapeHtml(p.address)}
           </p>
+        ` : ''}
+
+        ${p.socios ? `
+          <div class="text-[10px] text-indigo-900 bg-indigo-50/80 px-2 py-1 rounded-lg border border-indigo-100 font-medium line-clamp-1" title="Sócios / QSA: ${escapeHtml(p.socios)}">
+            👤 Sócios: <strong>${escapeHtml(p.socios)}</strong>
+          </div>
+        ` : ''}
+
+        ${p.cnpj || p.instagram ? `
+          <div class="flex items-center justify-between text-[10px] pt-0.5">
+            ${p.cnpj ? `<span class="font-mono text-slate-500">🏢 ${escapeHtml(p.cnpj)}</span>` : '<span></span>'}
+            ${p.instagram ? `<a href="${escapeHtml(p.instagram)}" target="_blank" class="text-pink-600 hover:text-pink-700 font-semibold flex items-center gap-0.5"><span>📸</span><span>Insta</span></a>` : ''}
+          </div>
         ` : ''}
       </div>
 
@@ -600,6 +620,8 @@
           <div class="flex flex-col">
             <span class="cursor-pointer hover:text-indigo-600" onclick="window.openLeadHistoryModal(${p.id})">${escapeHtml(p.name)}</span>
             <span class="text-[10px] text-slate-400 font-normal">${escapeHtml(p.address || '')}</span>
+            ${p.socios ? `<span class="text-[10px] text-indigo-700 font-medium line-clamp-1" title="${escapeHtml(p.socios)}">👤 Sócios: ${escapeHtml(p.socios)}</span>` : ''}
+            ${p.cnpj ? `<span class="text-[10px] text-slate-500 font-mono">🏢 ${escapeHtml(p.cnpj)}</span>` : ''}
             <div class="flex items-center gap-1 mt-0.5">
               ${isOfficeClient ? '<span class="text-[10px] font-bold text-amber-700">⭐ Cliente Escritório</span>' : ''}
               ${p.opt_out ? '<span class="text-[10px] font-bold text-rose-700">🚫 Opt-Out</span>' : ''}
@@ -653,12 +675,21 @@
           </select>
         </td>
         <td class="py-3 px-3 text-right">
-          <button 
-            type="button" 
-            onclick="window.openLeadHistoryModal(${p.id})"
-            class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] shadow-2xs cursor-pointer">
-            Atendimento
-          </button>
+          <div class="flex items-center justify-end gap-1">
+            <button 
+              type="button" 
+              onclick="window.enrichProspectFromCard(${p.id}, this)"
+              class="p-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 font-bold text-[11px] cursor-pointer"
+              title="Enriquecer com Robô (Sócios, CNPJ, E-mail)">
+              ⚡
+            </button>
+            <button 
+              type="button" 
+              onclick="window.openLeadHistoryModal(${p.id})"
+              class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] shadow-2xs cursor-pointer">
+              Atendimento
+            </button>
+          </div>
         </td>
       `;
 
@@ -818,6 +849,13 @@
       const phoneInp = document.getElementById('modal-lead-phone');
       const notesInp = document.getElementById('modal-lead-notes');
 
+      const cnpjInp = document.getElementById('modal-lead-cnpj');
+      const razaoInp = document.getElementById('modal-lead-razao');
+      const sociosInp = document.getElementById('modal-lead-socios');
+      const igInp = document.getElementById('modal-lead-instagram');
+      const igLink = document.getElementById('modal-lead-instagram-link');
+      const capitalInp = document.getElementById('modal-lead-capital');
+
       if (statusSel) statusSel.value = p.status || 'novo';
       if (assignedSel) assignedSel.value = p.assigned_to || 'Dr. Jorge Alvim';
       if (dispSel && p.disposition) dispSel.value = p.disposition;
@@ -825,6 +863,20 @@
       if (emailInp) emailInp.value = p.email || '';
       if (phoneInp) phoneInp.value = p.whatsapp || p.phone || '';
       if (notesInp) notesInp.value = '';
+
+      if (cnpjInp) cnpjInp.value = p.cnpj || '';
+      if (razaoInp) razaoInp.value = p.razao_social || '';
+      if (sociosInp) sociosInp.value = p.socios || '';
+      if (igInp) igInp.value = p.instagram || '';
+      if (igLink) {
+        if (p.instagram) {
+          igLink.href = p.instagram;
+          igLink.classList.remove('hidden');
+        } else {
+          igLink.classList.add('hidden');
+        }
+      }
+      if (capitalInp) capitalInp.value = [p.capital_social, p.cnae].filter(Boolean).join(' • ') || '';
     }
 
     // Carrega histórico
@@ -896,6 +948,12 @@
     const whatsapp = document.getElementById('modal-lead-phone')?.value;
     const notes = document.getElementById('modal-lead-notes')?.value;
 
+    const cnpj = document.getElementById('modal-lead-cnpj')?.value?.trim();
+    const razao_social = document.getElementById('modal-lead-razao')?.value?.trim();
+    const socios = document.getElementById('modal-lead-socios')?.value?.trim();
+    const instagram = document.getElementById('modal-lead-instagram')?.value?.trim();
+    const capital_social = document.getElementById('modal-lead-capital')?.value?.trim();
+
     try {
       const res = await fetch(`/api/radar-b2b/prospects/${activeProspectIdForModal}/status`, {
         method: 'PUT',
@@ -907,6 +965,11 @@
           tags,
           email,
           whatsapp,
+          cnpj,
+          razao_social,
+          socios,
+          instagram,
+          capital_social,
           notes
         })
       });
@@ -924,6 +987,129 @@
       await fetchProspects();
     } catch (e) {
       toast('Erro: ' + e.message, 'error');
+    }
+  };
+
+  // Enriquecer prospect ativo no modal
+  window.enrichCurrentModalLead = async function () {
+    if (!activeProspectIdForModal) return;
+    const btn = document.getElementById('btn-modal-lead-enrich');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span><span>Varrendo Web & Receita...</span>';
+    }
+
+    try {
+      toast('🤖 Robô iniciando: lendo site e consultando Receita Federal...', 'info');
+      const res = await fetch(`/api/radar-b2b/prospects/${activeProspectIdForModal}/enrich`, {
+        method: 'POST',
+        headers: getHeaders(),
+        credentials: 'same-origin'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao enriquecer');
+
+      const enriched = data.enriched || {};
+      const cnpjInp = document.getElementById('modal-lead-cnpj');
+      const razaoInp = document.getElementById('modal-lead-razao');
+      const sociosInp = document.getElementById('modal-lead-socios');
+      const igInp = document.getElementById('modal-lead-instagram');
+      const igLink = document.getElementById('modal-lead-instagram-link');
+      const emailInp = document.getElementById('modal-lead-email');
+      const capitalInp = document.getElementById('modal-lead-capital');
+
+      if (cnpjInp && enriched.cnpj) cnpjInp.value = enriched.cnpj;
+      if (razaoInp && enriched.razao_social) razaoInp.value = enriched.razao_social;
+      if (sociosInp && enriched.socios) sociosInp.value = enriched.socios;
+      if (igInp && enriched.instagram) {
+        igInp.value = enriched.instagram;
+        if (igLink) {
+          igLink.href = enriched.instagram;
+          igLink.classList.remove('hidden');
+        }
+      }
+      if (emailInp && enriched.email) emailInp.value = enriched.email;
+      if (capitalInp && (enriched.capital_social || enriched.cnae)) {
+        capitalInp.value = [enriched.capital_social, enriched.cnae].filter(Boolean).join(' • ');
+      }
+
+      toast(`✅ Sucesso! ${enriched.socios ? 'Sócios: ' + enriched.socios : 'Dados cadastrais atualizados!'}`, 'success');
+      await fetchProspects();
+      await fetchStats();
+      await loadLeadTimeline(activeProspectIdForModal);
+    } catch (e) {
+      toast('Erro no robô: ' + e.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡</span><span>Enriquecer c/ Robô</span>';
+      }
+    }
+  };
+
+  // Consulta manual de CNPJ no modal
+  window.lookupCnpjModal = async function () {
+    const cnpjInp = document.getElementById('modal-lead-cnpj');
+    const cnpj = (cnpjInp?.value || '').replace(/\D/g, '');
+    if (!cnpj || cnpj.length !== 14) {
+      toast('Informe um CNPJ válido com 14 dígitos.', 'warning');
+      return;
+    }
+
+    try {
+      toast('Consultando Receita Federal...', 'info');
+      const res = await fetch(`/api/radar-b2b/consultar-cnpj/${cnpj}`, {
+        headers: getHeaders(),
+        credentials: 'same-origin'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro na consulta');
+      const info = data.data || {};
+
+      const razaoInp = document.getElementById('modal-lead-razao');
+      const sociosInp = document.getElementById('modal-lead-socios');
+      const emailInp = document.getElementById('modal-lead-email');
+      const capitalInp = document.getElementById('modal-lead-capital');
+
+      if (razaoInp && info.razao_social) razaoInp.value = info.razao_social;
+      if (sociosInp && info.socios) sociosInp.value = info.socios;
+      if (emailInp && info.email && !emailInp.value) emailInp.value = info.email.toLowerCase();
+      if (capitalInp && (info.capital_social || info.cnae)) {
+        capitalInp.value = [info.capital_social, info.cnae].filter(Boolean).join(' • ');
+      }
+
+      toast(`✅ Receita: ${info.razao_social} (${info.socios || 'Sem sócios listados'})`, 'success');
+    } catch (e) {
+      toast('Erro na Receita: ' + e.message, 'error');
+    }
+  };
+
+  // Enriquecer a partir do card do Kanban
+  window.enrichProspectFromCard = async function (id, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '⏳';
+    }
+    try {
+      toast('🤖 Robô buscando dados do site e Receita Federal...', 'info');
+      const res = await fetch(`/api/radar-b2b/prospects/${id}/enrich`, {
+        method: 'POST',
+        headers: getHeaders(),
+        credentials: 'same-origin'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao enriquecer');
+      const en = data.enriched || {};
+      toast(`✅ ${en.name}: ${en.socios ? 'Sócios: ' + en.socios : (en.email ? 'E-mail: ' + en.email : 'Enriquecido!')}`, 'success');
+      await fetchProspects();
+      await fetchStats();
+    } catch (e) {
+      toast('Erro: ' + e.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '⚡';
+      }
     }
   };
 
