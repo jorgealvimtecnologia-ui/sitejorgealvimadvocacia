@@ -312,7 +312,7 @@
     {
       "ref": "AUD-42",
       "prioridade": "P1",
-      "estado": "pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)",
+      "estado": "CONCLUIDO e publicado em 19/10/2026: chip dedicado (553298568028) conectado ao vivo via advocacia-whatsapp.service (gateway Baileys/Evolution-compatible em 127.0.0.1:8082); envio real testado e confirmado para 5532998153429; painel exibindo estado Conectado (Online).",
       "titulo": "WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)",
       "descricao": "Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.",
       "criterios": "Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado)."
@@ -506,8 +506,8 @@
     },
     {
       "titulo": "WhatsApp do sistema não envia: decidir o serviço de envio e religar (ou aposentar o canal)",
-      "status": "planejado",
-      "nota": "[AUD-42] pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)"
+      "status": "conforme",
+      "nota": "[AUD-42] CONCLUIDO em 19/10/2026: chip dedicado (553298568028) conectado ao vivo via advocacia-whatsapp.service; envio real testado com sucesso para 5532998153429 e status Conectado (Online) no painel."
     }
   ]
 }
