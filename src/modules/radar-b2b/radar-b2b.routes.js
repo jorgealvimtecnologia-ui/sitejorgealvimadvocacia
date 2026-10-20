@@ -762,8 +762,11 @@ radarB2bRouter.post('/api/radar-b2b/enrich-batch', requireAuth, async (req, res)
     let targets = [];
 
     if (Array.isArray(ids) && ids.length > 0) {
-      const placeholders = ids.map(() => '?').join(',');
-      targets = db.prepare(`SELECT id, name FROM radar_b2b_prospects WHERE id IN (${placeholders})`).all(...ids);
+      // Teto de segurança: no máximo 200 IDs por lote (evita travar a requisição
+      // e estourar o limite de parâmetros do SQLite em IN (...)).
+      const safeIds = ids.slice(0, 200);
+      const placeholders = safeIds.map(() => '?').join(',');
+      targets = db.prepare(`SELECT id, name FROM radar_b2b_prospects WHERE id IN (${placeholders})`).all(...safeIds);
     } else {
       let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
       const params = [];
@@ -818,6 +821,9 @@ radarB2bRouter.post('/api/radar-b2b/prospects/batch-status', requireAuth, (req, 
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'Nenhum prospect selecionado.' });
     }
+    if (!status && !disposition) {
+      return res.status(400).json({ error: 'Informe ao menos um status ou uma disposição para atualizar.' });
+    }
     const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'em_analise_chefe', 'convertido', 'descartado'];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Status Kanban inválido.' });
@@ -841,7 +847,7 @@ radarB2bRouter.post('/api/radar-b2b/prospects/batch-status', requireAuth, (req, 
         db.prepare(`
           INSERT INTO radar_b2b_history (prospect_id, new_status, disposition, operator_name, notes, created_at)
           VALUES (?, ?, ?, ?, 'Atualização em lote', ?)
-        `).run(id, status || 'novo', disposition || '', operatorName, now);
+        `).run(id, status || '', disposition || '', operatorName, now);
       }
       db.exec('COMMIT;');
     } catch (err) {
@@ -1185,6 +1191,9 @@ radarB2bRouter.post('/api/radar-b2b/campaigns/send-batch', requireAuth, async (r
           sentFailed++;
           results.push({ id: t.id, name: t.name, phone: intl, status: 'offline_api', waLink });
         }
+        // Intervalo com jitter (1,2s–3,0s) entre disparos reais para reduzir o risco
+        // de bloqueio/banimento do número pelo WhatsApp em envios em massa.
+        await new Promise(r => setTimeout(r, 1200 + Math.floor(Math.random() * 1800)));
       } else {
         results.push({ id: t.id, name: t.name, phone: intl, status: 'link_gerado', waLink });
       }
