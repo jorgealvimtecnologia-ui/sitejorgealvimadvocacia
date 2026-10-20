@@ -1296,10 +1296,18 @@ hrRouter.post('/api/hr/employee/sign-time', requireEmployeeAuth, (req, res) => {
 /**
  * 20. GET /api/hr/reports/annual-financial/employee/:id - Ficha Financeira Resumo Anual Individual (Informe de Rendimentos)
  */
-hrRouter.get('/api/hr/reports/annual-financial/employee/:id', (req, res) => {
+hrRouter.get('/api/hr/reports/annual-financial/employee/:id', requireEmployeeAuth, (req, res) => {
   try {
     const { id } = req.params;
     const year = Number(req.query.year) || 2026;
+
+    // Segurança (IDOR): o colaborador só pode acessar o PRÓPRIO relatório financeiro anual
+    // (holerites, 13º, salários). O mestre consulta qualquer colaborador.
+    const sessionEmpId = req.employee ? (req.employee.employeeId || req.employee.id) : null;
+    const isMaster = isMasterEmail(req.user?.email);
+    if (!isMaster && String(sessionEmpId) !== String(id)) {
+      return res.status(403).json({ error: 'Você só pode acessar o seu próprio relatório financeiro anual.' });
+    }
 
     const employee = db.prepare(`SELECT * FROM hr_employees WHERE id = ?`).get(id);
     if (!employee) {
