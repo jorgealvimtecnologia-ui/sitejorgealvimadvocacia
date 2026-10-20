@@ -8,12 +8,12 @@
   },
   "pages": {
     "/": {
-      "total_gz_kb": 90,
-      "medido_em_kb": 85.3
+      "total_gz_kb": 98,
+      "medido_em_kb": 92.4
     },
     "/painel": {
-      "total_gz_kb": 517,
-      "medido_em_kb": 492.1
+      "total_gz_kb": 531,
+      "medido_em_kb": 505.1
     },
     "/cliente": {
       "total_gz_kb": 58,
