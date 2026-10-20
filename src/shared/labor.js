@@ -16,14 +16,11 @@ export function calculateNoticeDays(admissionDate, dismissalDate) {
   return { notice_days: 30 + additionalDays, complete_years: completeYears };
 }
 
-// Função para cálculo progressivo simplificado de INSS
+// INSS — mantido por compatibilidade. Delega para a MESMA tabela progressiva vigente
+// (2026) usada no resto do sistema (folha, férias, 13º), para a rescisão trabalhista não
+// calcular o INSS com as faixas desatualizadas de 2024. Referência: calculateINSSProgressivo.
 export function calculateINSS(amount) {
-  if (amount <= 0) return 0;
-  if (amount <= 1412.00) return +(amount * 0.075).toFixed(2);
-  if (amount <= 2666.68) return +(1412.00 * 0.075 + (amount - 1412.00) * 0.09).toFixed(2);
-  if (amount <= 4000.03) return +(1412.00 * 0.075 + (2666.68 - 1412.00) * 0.09 + (amount - 2666.68) * 0.12).toFixed(2);
-  if (amount <= 7786.02) return +(1412.00 * 0.075 + (2666.68 - 1412.00) * 0.09 + (4000.03 - 2666.68) * 0.12 + (amount - 4000.03) * 0.14).toFixed(2);
-  return 908.85; // Teto INSS aproximado
+  return calculateINSSProgressivo(amount);
 }
 
 // 1. Simulação / Cálculo de Rescisão Trabalhista CLT
