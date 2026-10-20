@@ -1175,8 +1175,8 @@
           <div id="sync-history" class="text-xs text-slate-600 overflow-x-auto">Abrir para carregar…</div>
         </div>
 
-        <!-- Gestão de Leads v2: Caixas de Novos Leads e Novos Contratos (Onda 1) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Gestão de Leads v2: Caixas de Novos Leads, Fila de Análise do Titular e Novos Contratos -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <!-- Caixa: Novos Leads (com distribuição — só o Mestre distribui) -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
             <div class="flex items-center justify-between mb-3">
@@ -1187,6 +1187,18 @@
               <button type="button" onclick="if(window.loadLeadsBoxes) window.loadLeadsBoxes()" class="text-[11px] font-bold text-slate-500 hover:text-navy-950">↻ Atualizar</button>
             </div>
             <div id="dash-leads-list" class="space-y-2 text-sm text-slate-500">Carregando…</div>
+          </div>
+
+          <!-- Caixa: Fila de Análise do Dr. Jorge Alvim (Chefe do Escritório) -->
+          <div class="bg-white rounded-2xl border border-amber-300 shadow-sm p-4 sm:p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-serif text-base font-bold text-navy-950 flex items-center gap-2">
+                <span>⚖️</span> Fila do Dr. Jorge
+                <span id="dash-approval-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">0</span>
+              </h3>
+              <button type="button" onclick="if(window.loadLeadsBoxes) window.loadLeadsBoxes()" class="text-[11px] font-bold text-slate-500 hover:text-navy-950">↻ Atualizar</button>
+            </div>
+            <div id="dash-approval-list" class="space-y-2 text-sm text-slate-500">Carregando…</div>
           </div>
 
           <!-- Caixa: Novos Contratos (contadores clicáveis → tabela) -->
@@ -8004,24 +8016,25 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
     </main>
   </div>
 
-  <!-- Barra Flutuante de Ações em Lote do Radar B2B (Selecionar Todos & Enriquecer) -->
-  <div id="b2b-bulk-actions-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-md flex flex-wrap items-center gap-3.5 transition-all">
+  <!-- Barra Flutuante de Ações em Lote do Radar B2B (Selecionar Todos & Enriquecer) - Tema Claro -->
+  <div id="b2b-bulk-actions-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[99999] bg-white/95 text-slate-800 px-5 py-3 rounded-2xl shadow-2xl border border-slate-300 backdrop-blur-md flex flex-wrap items-center gap-3.5 transition-all">
     <div class="flex items-center gap-2">
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-      <span class="text-xs font-bold"><strong id="b2b-selected-count" class="text-emerald-300 text-sm">0</strong> empresas selecionadas</span>
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+      <span class="text-xs font-bold"><strong id="b2b-selected-count" class="text-indigo-600 text-sm">0</strong> empresas selecionadas</span>
     </div>
-    <div class="h-4 w-px bg-slate-700 hidden sm:block"></div>
+    <div class="h-4 w-px bg-slate-200 hidden sm:block"></div>
     <button type="button" onclick="window.enrichSelectedProspects()" class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition-all cursor-pointer">
       <span>⚡</span>
       <span>Enriquecer c/ Robô</span>
     </button>
     <div class="flex items-center gap-1.5">
-      <select id="b2b-bulk-status-select" class="text-xs font-semibold bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-white cursor-pointer focus:outline-none">
+      <select id="b2b-bulk-status-select" class="text-xs font-semibold bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-slate-700 cursor-pointer focus:outline-none">
         <option value="">Mover Etapa...</option>
         <option value="novo">📥 Novo</option>
         <option value="contatado">📞 Contatado</option>
         <option value="sem_resposta">⏳ Sem Resposta</option>
         <option value="negociando">🤝 Em Negociação</option>
+        <option value="em_analise_chefe">⚖️ Em Análise Dr. Jorge</option>
         <option value="convertido">🏆 Virar Cliente</option>
         <option value="descartado">🚫 Descartar</option>
       </select>
@@ -8029,7 +8042,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         Salvar
       </button>
     </div>
-    <button type="button" onclick="window.clearSelectedProspects()" class="text-slate-400 hover:text-white text-xs font-medium cursor-pointer ml-1">
+    <button type="button" onclick="window.clearSelectedProspects()" class="text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer ml-1">
       ✕ Desmarcar
     </button>
   </div>
@@ -8108,6 +8121,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
               <option value="contatado">📞 Contatados</option>
               <option value="sem_resposta">⏳ Sem Resposta</option>
               <option value="negociando">🤝 Em Negociação</option>
+              <option value="em_analise_chefe">⚖️ Em Análise Dr. Jorge</option>
               <option value="convertido">🏆 Convertidos</option>
               <option value="descartado">🚫 Descartados (Mantido no Radar)</option>
             </select>
@@ -8229,6 +8243,10 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
           </button>
           <div class="flex items-center gap-2">
             <button type="button" onclick="window.closeLeadHistoryModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs cursor-pointer">Cancelar</button>
+            <button type="button" onclick="window.submitB2bToChief()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5 transition-all" title="Submeter à análise e validação do Dr. Jorge">
+              <span>⚖️</span>
+              <span>Enviar p/ Dr. Jorge</span>
+            </button>
             <button type="button" onclick="window.saveLeadHistory()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center gap-1.5 transition-all">
               <span>💾</span>
               <span>Salvar Movimentação</span>

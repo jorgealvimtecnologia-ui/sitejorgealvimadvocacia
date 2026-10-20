@@ -71,8 +71,8 @@
       document.body.appendChild(t);
     }
     const bg = type === 'error' 
-      ? 'bg-rose-900/95 text-rose-100 border-rose-500/50' 
-      : (type === 'success' ? 'bg-emerald-900/95 text-emerald-100 border-emerald-500/50' : 'bg-slate-900/95 text-white border-indigo-500/50');
+      ? 'bg-rose-50 text-rose-800 border-rose-200 shadow-xl' 
+      : (type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-xl' : 'bg-white text-slate-800 border-slate-200 shadow-xl');
     t.className = `fixed top-5 right-5 z-[99999999] px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold border backdrop-blur-md transition-all duration-300 pointer-events-none flex items-center gap-2 ${bg}`;
     t.innerHTML = `<span>${msg}</span>`;
     t.style.opacity = '1';
@@ -515,6 +515,7 @@
             <option value="contatado" ${p.status === 'contatado' ? 'selected' : ''}>📞 Contatado</option>
             <option value="sem_resposta" ${p.status === 'sem_resposta' ? 'selected' : ''}>⏳ Sem Resposta</option>
             <option value="negociando" ${p.status === 'negociando' ? 'selected' : ''}>🤝 Em Negociação</option>
+            <option value="em_analise_chefe" ${p.status === 'em_analise_chefe' ? 'selected' : ''}>⚖️ Em Análise Dr. Jorge</option>
             <option value="convertido" ${p.status === 'convertido' ? 'selected' : ''}>🏆 Virar Cliente</option>
             <option value="descartado" ${p.status === 'descartado' ? 'selected' : ''}>🚫 Descartar</option>
           </select>
@@ -745,6 +746,7 @@
             <option value="contatado" ${p.status === 'contatado' ? 'selected' : ''}>📞 Contatado</option>
             <option value="sem_resposta" ${p.status === 'sem_resposta' ? 'selected' : ''}>⏳ Sem Resposta</option>
             <option value="negociando" ${p.status === 'negociando' ? 'selected' : ''}>🤝 Negociando</option>
+            <option value="em_analise_chefe" ${p.status === 'em_analise_chefe' ? 'selected' : ''}>⚖️ Em Análise Dr. Jorge</option>
             <option value="convertido" ${p.status === 'convertido' ? 'selected' : ''}>🏆 Convertido</option>
             <option value="descartado" ${p.status === 'descartado' ? 'selected' : ''}>🚫 Descartado</option>
           </select>
@@ -1067,6 +1069,27 @@
     } catch (e) {
       toast('Erro: ' + e.message, 'error');
     }
+  };
+
+  // Submeter lead para validação do Dr. Jorge Alvim na Visão Geral
+  window.submitB2bToChief = async function () {
+    if (!activeProspectIdForModal) return;
+    const statusSel = document.getElementById('modal-lead-status');
+    if (statusSel) statusSel.value = 'em_analise_chefe';
+
+    const dispSel = document.getElementById('modal-lead-disposition');
+    if (dispSel && (!dispSel.value || dispSel.value === 'novo')) {
+      dispSel.value = 'proposta_enviada';
+    }
+
+    const notesInp = document.getElementById('modal-lead-notes');
+    if (notesInp && !notesInp.value.trim()) {
+      notesInp.value = 'Lead enviado pelo atendente para conferência e aprovação do Dr. Jorge Alvim na Visão Geral.';
+    }
+
+    toast('⚖️ Submetendo lead para a fila do Dr. Jorge...', 'info');
+    await window.saveLeadHistory();
+    toast('🚀 Lead enviado com sucesso para a Fila do Dr. Jorge!', 'success');
   };
 
   // Enriquecer prospect ativo no modal

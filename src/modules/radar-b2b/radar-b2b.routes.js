@@ -437,7 +437,7 @@ radarB2bRouter.put('/api/radar-b2b/prospects/:id/status', requireAuth, (req, res
       email, whatsapp, cnpj, razao_social, socios, instagram, facebook, linkedin, capital_social, cnae 
     } = req.body;
 
-    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'convertido', 'descartado'];
+    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'em_analise_chefe', 'convertido', 'descartado'];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Status Kanban inválido.' });
     }
@@ -470,15 +470,46 @@ radarB2bRouter.put('/api/radar-b2b/prospects/:id/status', requireAuth, (req, res
     const now = new Date().toISOString();
     const operatorName = req.user?.name || req.user?.username || req.user?.email || 'Operador';
 
+    // Se mudou para convertido e ainda não é cliente, cria formalmente o cliente PJ
+    let convertedClientId = current.converted_client_id;
+    if (newStatus === 'convertido' && !current.converted_client_id) {
+      convertedClientId = generateNextClientFullId();
+      try {
+        db.prepare(`
+          INSERT INTO clients (
+            id, client_type, full_name, cnpj, email, phone, social_media, website, street,
+            neighborhood, city, state, google_business, created_at, updated_at
+          ) VALUES (?, 'PJ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          convertedClientId,
+          newRazaoSocial || current.name,
+          newCnpj || '',
+          newEmail || '',
+          newWhatsapp || current.phone || '',
+          newInstagram || newLinkedin || '',
+          current.website || '',
+          current.address || '',
+          current.neighborhood || 'Centro',
+          current.city || 'Juiz de Fora',
+          current.state || 'MG',
+          current.google_maps_url || '',
+          now,
+          now
+        );
+      } catch (errConv) {
+        console.warn('[RADAR B2B] Falha ao converter cliente no status:', errConv.message);
+      }
+    }
+
     db.prepare(`
       UPDATE radar_b2b_prospects 
-      SET status = ?, notes = ?, priority = ?, assigned_to = ?, tags = ?,
+      SET status = ?, converted_client_id = COALESCE(?, converted_client_id), notes = ?, priority = ?, assigned_to = ?, tags = ?,
           disposition = ?, opt_out = ?, email = ?, whatsapp = ?,
           cnpj = ?, razao_social = ?, socios = ?, instagram = ?, facebook = ?, linkedin = ?,
           capital_social = ?, cnae = ?, updated_at = ?
       WHERE id = ?
     `).run(
-      newStatus, newNotes, newPriority, newAssignedTo, newTags, 
+      newStatus, convertedClientId || null, newNotes, newPriority, newAssignedTo, newTags, 
       newDisposition, newOptOut, newEmail, newWhatsapp,
       newCnpj, newRazaoSocial, newSocios, newInstagram, newFacebook, newLinkedin,
       newCapitalSocial, newCnae, now, id
@@ -787,7 +818,7 @@ radarB2bRouter.post('/api/radar-b2b/prospects/batch-status', requireAuth, (req, 
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'Nenhum prospect selecionado.' });
     }
-    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'convertido', 'descartado'];
+    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'em_analise_chefe', 'convertido', 'descartado'];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Status Kanban inválido.' });
     }

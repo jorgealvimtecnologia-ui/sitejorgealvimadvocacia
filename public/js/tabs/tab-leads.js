@@ -73,6 +73,11 @@
             </div>`
           : `<span class="text-xs text-slate-400">Sem anexos</span>`;
 
+        const originLabel = lead.origin ? `${lead.origin}${lead.origin_detail ? ' (' + lead.origin_detail + ')' : ''}` : 'Formulário Site';
+        const originBadge = lead.origin
+          ? `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 mt-1" title="${originLabel}">📍 ${lead.origin}</span>`
+          : `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 mt-1">Formulário Site</span>`;
+
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="px-4 sm:px-6 py-3 sm:py-4 font-mono font-bold text-navy-950 text-xs whitespace-nowrap">
@@ -91,6 +96,7 @@
                   💬 WhatsApp
                 </a>
               </div>
+              ${originBadge}
             </td>
             <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs font-semibold text-slate-700">
               ${lead.area}
@@ -114,15 +120,13 @@
               ${leadStageSelectHtml(lead.id, lead.stage)}
             </td>
             <td class="px-4 sm:px-6 py-3 sm:py-4 text-right space-x-1 sm:space-x-2 whitespace-nowrap">
-              <button onclick="toggleLeadTimeline('${lead.id}')" class="p-1.5 text-slate-500 hover:text-navy-950 hover:bg-slate-100 rounded-md" title="Ver histórico do lead">
-                🕑
+              <button onclick="viewLeadDetails('${lead.id}')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-xs inline-flex items-center space-x-1" title="Abrir Ficha de Atendimento & Anotações">
+                <span>📝</span>
+                <span>Ficha & Notas</span>
               </button>
-              <button onclick="convertLeadToClient('${lead.id}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold shadow-xs inline-flex items-center space-x-1" title="Converter Atendimento em Cliente Cadastrado (Preenchimento Automático)">
+              <button onclick="convertLeadToClient('${lead.id}')" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold shadow-xs inline-flex items-center space-x-1" title="Converter Atendimento em Cliente Cadastrado (Preenchimento Automático)">
                 <span>🚀</span>
                 <span>Converter</span>
-              </button>
-              <button onclick="viewLeadDetails('${lead.id}')" class="p-1.5 text-slate-500 hover:text-navy-950 hover:bg-slate-100 rounded-md" title="Ver Mensagem">
-                👁️
               </button>
               <button onclick="deleteLead('${lead.id}')" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md" title="Excluir Registro">
                 🗑️
@@ -154,6 +158,7 @@
       ['falta_documento', '🟠 Falta documento'],
       ['falta_dados', '🟠 Falta dados'],
       ['aguardando_assinatura', '✍️ Aguardando assinatura'],
+      ['em_analise_chefe', '⚖️ Em Análise Dr. Jorge'],
       ['concluido', '🟢 Cadastro concluído'],
       ['desistiu', '⚫ Cliente desistiu'],
       ['outros', '❔ Outros']
@@ -277,18 +282,245 @@
       }
     }
 
-    function viewLeadDetails(id) {
+    function escapeLeadHtml(str) {
+      return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function viewLeadDetails(id) {
       const lead = allLeads.find(l => l.id === id);
       if (!lead) return;
-      document.getElementById('modal-title').textContent = `Protocolo #${lead.id} - ${lead.name}`;
-      document.getElementById('modal-content').textContent = `Área: ${lead.area}\nTelefone: ${lead.phone}\nData: ${new Date(lead.created_at).toLocaleString('pt-BR')}\n\nDescrição / Mensagem:\n${lead.message || 'Nenhuma mensagem escrita.'}`;
-      document.getElementById('message-modal').classList.remove('hidden');
+
+      let modal = document.getElementById('lead-attendant-sheet-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'lead-attendant-sheet-modal';
+        modal.className = 'fixed inset-0 z-[999999] bg-slate-900/40 backdrop-blur-2xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto';
+        modal.style.zIndex = '999999';
+        document.body.appendChild(modal);
+      }
+
+      const cleanPhone = (lead.phone || '').replace(/\D/g, '');
+      const waUrl = cleanPhone ? `https://wa.me/55${cleanPhone}?text=${encodeURIComponent('Olá, ' + lead.name + '! Entramos em contato do escritório Jorge Alvim Advocacia.')}` : null;
+      const originDisplay = lead.origin ? `${lead.origin}${lead.origin_detail ? ' (' + lead.origin_detail + ')' : ''}` : 'Formulário do Site (Orgânico)';
+
+      modal.innerHTML = `
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-slate-800 space-y-4 max-h-[92vh] overflow-y-auto custom-scroll">
+          
+          <!-- TOPO CLARO -->
+          <div class="flex items-start justify-between pb-3 border-b border-slate-200">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-300 font-bold text-xs">
+                  #${lead.id}
+                </span>
+                <span class="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 font-bold text-xs">
+                  📍 ${originDisplay}
+                </span>
+                ${lead.stage === 'em_analise_chefe' ? '<span class="px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 font-black text-xs">⚖️ Em Análise Dr. Jorge</span>' : ''}
+              </div>
+              <h3 class="text-lg sm:text-xl font-black text-slate-900 mt-1">${escapeLeadHtml(lead.name)}</h3>
+              <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                <span>📞 ${escapeLeadHtml(lead.phone)}</span>
+                ${waUrl ? `<a href="${waUrl}" target="_blank" class="text-emerald-600 hover:text-emerald-700 font-bold">💬 WhatsApp</a>` : ''}
+                <span>• 📅 ${new Date(lead.created_at).toLocaleString('pt-BR')}</span>
+              </div>
+            </div>
+            <button onclick="window.closeLeadAttendanceModal()" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-lg leading-none cursor-pointer">
+              &times;
+            </button>
+          </div>
+
+          <!-- MENSAGEM & ANEXOS -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1">
+            <div class="font-bold text-slate-700">Área Informada: <span class="text-indigo-900 font-bold">${escapeLeadHtml(lead.area || 'Geral')}</span></div>
+            <div class="text-slate-600 whitespace-pre-wrap">${escapeLeadHtml(lead.message || 'Nenhuma mensagem escrita no formulário.')}</div>
+            ${lead.files && lead.files.length > 0 ? `
+              <div class="pt-2 border-t border-slate-200 mt-2 flex flex-wrap gap-2">
+                ${lead.files.map(f => `<a href="${f.url}" target="_blank" download class="px-2 py-1 bg-white border border-slate-300 rounded text-slate-700 font-semibold hover:text-indigo-700 text-xs">📄 ${escapeLeadHtml(f.originalName || 'Anexo')}</a>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- QUALIFICAÇÃO & ADVOGADO RESPONSÁVEL -->
+          <div class="bg-white border border-slate-200 rounded-xl p-3 space-y-2 shadow-2xs">
+            <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wide flex items-center gap-1.5">
+              <span>⚖️</span> Qualificação & Advogado Responsável
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-0.5">Advogado Titular Responsável:</label>
+                <select id="lead-modal-lawyer" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs text-slate-800 font-semibold">
+                  <option value="Dr. Jorge Alvim (OAB/MG 222.943)" ${lead.responsible_lawyer_name?.includes('Jorge') ? 'selected' : ''}>Dr. Jorge Alvim (OAB/MG 222.943)</option>
+                  <option value="Dra. Mari Alvim (Advogada Associada)" ${lead.responsible_lawyer_name?.includes('Mari') ? 'selected' : ''}>Dra. Mari Alvim (Advogada Associada)</option>
+                  <option value="" ${!lead.responsible_lawyer_name ? 'selected' : ''}>-- Selecionar Advogado --</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-0.5">Área Específica / Objeto:</label>
+                <input type="text" id="lead-modal-area" value="${escapeLeadHtml(lead.area || '')}" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-xs text-slate-800" />
+              </div>
+            </div>
+          </div>
+
+          <!-- CAIXA DE ANOTAÇÕES DO ATENDENTE -->
+          <div class="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2 shadow-2xs">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-black text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
+                <span>📝</span> Caixa de Anotações do Atendente
+              </h4>
+              <span class="text-[10px] text-slate-400">Gravado no histórico do lead</span>
+            </div>
+            <textarea id="lead-modal-note-text" rows="2" placeholder="Digite aqui qualquer informação necessária sobre a conversa, detalhes do caso, pedidos do cliente, documentos pendentes..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:bg-white focus:border-amber-600"></textarea>
+            <div class="flex items-center justify-between">
+              <label class="text-[11px] text-slate-600 flex items-center gap-1 cursor-pointer font-medium">
+                <input type="checkbox" id="lead-modal-note-urgent" class="rounded border-slate-300 text-amber-600" />
+                <span>Marcar como Urgente</span>
+              </label>
+              <button type="button" onclick="window.saveLeadNote('${lead.id}')" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-xs cursor-pointer transition-colors flex items-center gap-1">
+                <span>💾</span> <span>Salvar Anotação</span>
+              </button>
+            </div>
+
+            <!-- TIMELINE DE ANOTAÇÕES -->
+            <div class="pt-2 border-t border-slate-100 space-y-1.5" id="lead-modal-timeline">
+              <div class="text-[11px] text-slate-400 italic">Carregando histórico…</div>
+            </div>
+          </div>
+
+          <!-- RODAPÉ DE AÇÕES E FINALIZAÇÃO -->
+          <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <button type="button" onclick="window.closeLeadAttendanceModal()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">
+              Fechar
+            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="convertLeadToClient('${lead.id}'); window.closeLeadAttendanceModal();" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs cursor-pointer shadow-2xs">
+                🏆 Converter em Cliente
+              </button>
+              <button type="button" onclick="window.submitLeadToChief('${lead.id}')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-xs cursor-pointer transition-all flex items-center gap-1">
+                <span>🚀</span> <span>Enviar p/ Análise do Dr. Jorge</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      loadLeadAttendanceTimeline(lead.id);
+    }
+
+    function closeLeadAttendanceModal() {
+      const modal = document.getElementById('lead-attendant-sheet-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function loadLeadAttendanceTimeline(id) {
+      const container = document.getElementById('lead-modal-timeline');
+      if (!container) return;
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(id) + '/events', {
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        const events = (data && data.events) || [];
+        if (!events.length) {
+          container.innerHTML = '<span class="text-xs text-slate-400">Nenhuma anotação registrada ainda.</span>';
+          return;
+        }
+        container.innerHTML = '<div class="space-y-2">' +
+          events.slice().reverse().map(ev => {
+            const when = ev.created_at ? new Date(ev.created_at).toLocaleString('pt-BR') : '';
+            const who = escapeLeadHtml(ev.performed_by || 'Sistema');
+            const isNote = ev.event_type === 'anotacao_atendente';
+            const isChief = ev.event_type === 'analise_chefe' || ev.event_type === 'aprovado_chefe';
+            const isUrgent = (ev.detail || '').includes('[URGENTE]');
+            
+            let bgClass = 'bg-slate-50 border-slate-200';
+            let badgeClass = 'text-slate-600 font-bold';
+            if (isUrgent) {
+              bgClass = 'bg-rose-50 border-rose-200';
+              badgeClass = 'text-rose-700 font-black';
+            } else if (isChief) {
+              bgClass = 'bg-amber-50 border-amber-200';
+              badgeClass = 'text-amber-900 font-black';
+            } else if (isNote) {
+              bgClass = 'bg-amber-50/40 border-amber-200/60';
+              badgeClass = 'text-amber-900 font-bold';
+            }
+
+            return `<div class="p-2.5 rounded-xl border ${bgClass} text-xs">
+              <div class="flex items-center justify-between text-[10px] pb-1 border-b border-slate-200/50 mb-1">
+                <span class="${badgeClass}">${who}</span>
+                <span class="text-slate-400">${when}</span>
+              </div>
+              <p class="text-slate-700 font-medium">${escapeLeadHtml(ev.detail || '')}</p>
+            </div>`;
+          }).join('') + '</div>';
+      } catch (err) {
+        container.innerHTML = '<span class="text-xs text-rose-500">Erro ao carregar histórico.</span>';
+      }
+    }
+
+    async function saveLeadNote(id) {
+      const txt = document.getElementById('lead-modal-note-text');
+      const urgentCheck = document.getElementById('lead-modal-note-urgent');
+      if (!txt || !txt.value.trim()) {
+        alert('Digite uma anotação antes de salvar.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(id) + '/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ text: txt.value.trim(), urgent: !!urgentCheck?.checked })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          txt.value = '';
+          if (urgentCheck) urgentCheck.checked = false;
+          loadLeadAttendanceTimeline(id);
+        } else {
+          alert(data.error || 'Erro ao salvar anotação.');
+        }
+      } catch (e) {
+        alert('Erro de conexão ao salvar anotação.');
+      }
+    }
+
+    async function submitLeadToChief(id) {
+      const lawyerSel = document.getElementById('lead-modal-lawyer');
+      const areaInp = document.getElementById('lead-modal-area');
+      const lawyerName = lawyerSel ? lawyerSel.value : '';
+      const area = areaInp ? areaInp.value : '';
+
+      try {
+        const res = await fetch('/api/leads/' + encodeURIComponent(id) + '/submit-approval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({
+            responsible_lawyer_name: lawyerName,
+            area: area,
+            notes: 'Atendimento finalizado pelo atendente e submetido para validação do Chefe do Escritório.'
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('✅ Lead finalizado e enviado com sucesso para a fila de análise do Dr. Jorge Alvim na "Visão Geral" do painel!');
+          closeLeadAttendanceModal();
+          loadLeads();
+        } else {
+          alert(data.error || 'Erro ao submeter lead.');
+        }
+      } catch (e) {
+        alert('Erro de conexão ao enviar para o Dr. Jorge.');
+      }
     }
 
     function closeModal() {
-      document.getElementById('message-modal').classList.add('hidden');
+      closeLeadAttendanceModal();
+      const legacyModal = document.getElementById('message-modal');
+      if (legacyModal) legacyModal.classList.add('hidden');
     }
-
 
   // ==========================================================================
   // EXPORTAÇÕES GLOBAIS PARA INTERFACE (ONCLICK & COMPATIBILIDADE)
@@ -302,4 +534,7 @@
   window.deleteLead = typeof deleteLead !== 'undefined' ? deleteLead : window.deleteLead;
   window.viewLeadDetails = typeof viewLeadDetails !== 'undefined' ? viewLeadDetails : window.viewLeadDetails;
   window.closeModal = typeof closeModal !== 'undefined' ? closeModal : window.closeModal;
+  window.closeLeadAttendanceModal = closeLeadAttendanceModal;
+  window.saveLeadNote = saveLeadNote;
+  window.submitLeadToChief = submitLeadToChief;
 })();
