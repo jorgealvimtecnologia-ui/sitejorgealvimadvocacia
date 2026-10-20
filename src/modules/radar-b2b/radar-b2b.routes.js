@@ -431,6 +431,7 @@ radarB2bRouter.get('/api/radar-b2b/prospects', requireAuth, (req, res) => {
  */
 radarB2bRouter.put('/api/radar-b2b/prospects/:id/status', requireAuth, (req, res) => {
   try {
+    const { id } = req.params;
     const { 
       status, notes, priority, assigned_to, tags, disposition, opt_out, 
       email, whatsapp, cnpj, razao_social, socios, instagram, facebook, linkedin, capital_social, cnae 
@@ -653,6 +654,47 @@ radarB2bRouter.post('/api/radar-b2b/prospects/:id/history', requireAuth, (req, r
 });
 
 /**
+ * GET /api/radar-b2b/pending-ids
+ * Retorna IDs reais das empresas que ainda faltam enriquecer (para nunca repetir as mesmas)
+ */
+radarB2bRouter.get('/api/radar-b2b/pending-ids', requireAuth, (req, res) => {
+  try {
+    const { city, state, limit = 50, mode = 'pendentes' } = req.query;
+    let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
+    const params = [];
+
+    if (mode === 'pendentes') {
+      sql += ` AND (enriched_at IS NULL OR enriched_at = '')`;
+    } else if (mode === 'incompletas') {
+      sql += ` AND (cnpj IS NULL OR cnpj = '' OR socios IS NULL OR socios = '' OR email IS NULL OR email = '')`;
+    }
+
+    if (city && city !== 'todos') {
+      sql += ` AND LOWER(city) = LOWER(?)`;
+      params.push(city);
+    }
+    if (state && state !== 'todos') {
+      sql += ` AND LOWER(state) = LOWER(?)`;
+      params.push(state);
+    }
+
+    sql += ` ORDER BY user_ratings_total DESC, rating DESC, id DESC LIMIT ?`;
+    params.push(Math.min(parseInt(limit, 10) || 50, 200));
+
+    const rows = db.prepare(sql).all(...params);
+    return res.json({
+      success: true,
+      ids: rows.map(r => r.id),
+      companies: rows,
+      totalFound: rows.length
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b pending-ids:', error);
+    return res.status(500).json({ error: 'Erro ao buscar pendentes de enriquecimento.' });
+  }
+});
+
+/**
  * POST /api/radar-b2b/prospects/:id/enrich
  * Robô Enriquecedor: lê o site da empresa, acha redes sociais, e-mail e consulta Receita Federal (QSA/Sócios e CNPJ)
  */
@@ -660,10 +702,18 @@ radarB2bRouter.post('/api/radar-b2b/prospects/:id/enrich', requireAuth, async (r
   try {
     const { id } = req.params;
     const enriched = await enrichSingleProspect(id);
+    let msg = `Empresa "${enriched.name}" processada.`;
+    if (enriched.hasNewData) {
+      msg = `🎉 Novos dados para "${enriched.name}" (${enriched.novosCampos.join(', ')})!`;
+    } else if (enriched.status_type === 'dados_confirmados') {
+      msg = `Dados cadastrais de "${enriched.name}" confirmados na Receita Federal.`;
+    } else {
+      msg = `Varredura concluída para "${enriched.name}". Nenhum dado público novo encontrado.`;
+    }
     return res.json({
       success: true,
       enriched,
-      message: `Empresa "${enriched.name}" enriquecida com sucesso! ${enriched.socios ? 'Sócios identificados: ' + enriched.socios : ''}`
+      message: msg
     });
   } catch (error) {
     console.error('[ERRO] radar-b2b enrich single:', error);

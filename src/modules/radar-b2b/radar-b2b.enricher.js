@@ -164,25 +164,38 @@ async function scrapeUrlContent(targetUrl) {
       baseUrl = `https://${baseUrl}`;
     }
 
-    let html = await fetchPageHtml(baseUrl);
-    let extracted = parseHtmlForData(html || '');
+    const html = await fetchPageHtml(baseUrl);
+    const extracted = parseHtmlForData(html || '');
 
-    // Se não encontrou e-mail ou CNPJ, tenta subpáginas comuns de contato
-    if ((!extracted.cnpjs.length || !extracted.emails.length) && html) {
+    // Se já encontrou CNPJ e E-mail logo na Home, não precisa vasculhar subpáginas
+    if (extracted.cnpjs.length > 0 && extracted.emails.length > 0) {
+      return extracted;
+    }
+
+    // Se tem site mas faltou e-mail ou CNPJ, varre subpáginas essenciais em paralelo
+    if (html) {
       try {
         const parsedBase = new URL(baseUrl);
-        const subPaths = ['/contato', '/contato/', '/fale-conosco', '/quem-somos', '/sobre', '/politica-de-privacidade'];
-        for (const p of subPaths) {
-          const subUrl = new URL(p, parsedBase.origin).toString();
-          const subHtml = await fetchPageHtml(subUrl);
-          if (subHtml) {
-            const subExtracted = parseHtmlForData(subHtml);
+        const subPaths = ['/contato', '/sobre', '/politica-de-privacidade'];
+        const subFetches = subPaths.map(async p => {
+          try {
+            const subUrl = new URL(p, parsedBase.origin).toString();
+            const subHtml = await fetchPageHtml(subUrl);
+            return subHtml ? parseHtmlForData(subHtml) : null;
+          } catch (_) {
+            return null;
+          }
+        });
+
+        const subResults = await Promise.allSettled(subFetches);
+        for (const res of subResults) {
+          if (res.status === 'fulfilled' && res.value) {
+            const subExtracted = res.value;
             if (subExtracted.emails.length) extracted.emails.push(...subExtracted.emails);
             if (subExtracted.cnpjs.length) extracted.cnpjs.push(...subExtracted.cnpjs);
             if (!extracted.instagram && subExtracted.instagram) extracted.instagram = subExtracted.instagram;
             if (!extracted.facebook && subExtracted.facebook) extracted.facebook = subExtracted.facebook;
             if (!extracted.linkedin && subExtracted.linkedin) extracted.linkedin = subExtracted.linkedin;
-            if (extracted.cnpjs.length && extracted.emails.length) break;
           }
         }
       } catch (_) {}
@@ -197,16 +210,38 @@ async function scrapeUrlContent(targetUrl) {
 }
 
 /**
- * Tenta descobrir o CNPJ através de busca orgânica pública
+ * Tenta descobrir o CNPJ através de busca orgânica pública (DuckDuckGo HTML prioritário + fallbacks)
  */
 async function discoverCnpjByName(name, city, state) {
-  const query = `"${name}" CNPJ "${city}" ${state || ''}`;
-  const searchUrls = [
+  if (!name) return null;
+  const cleanName = String(name).replace(/[\/\\#,+()$~%.'":*?<>{}]/g, ' ').replace(/\s+/g, ' ').trim();
+  const query = `${cleanName} CNPJ ${city || ''} ${state || ''}`.trim();
+
+  // 1ª Tentativa: DuckDuckGo HTML (rápido, sem bloqueio de snippets e com CNPJ explícito)
+  try {
+    const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+      },
+      signal: AbortSignal.timeout(3500)
+    });
+    if (res.ok) {
+      const text = await res.text();
+      const cnpjs = (text.match(CNPJ_REGEX) || []).filter(isValidCnpj);
+      if (cnpjs.length > 0) {
+        return cnpjs[0];
+      }
+    }
+  } catch (_) {}
+
+  // 2ª Tentativa: Yahoo e Bing como fallbacks
+  const fallbackUrls = [
     `https://search.yahoo.com/search?p=${encodeURIComponent(query)}`,
     `https://www.bing.com/search?q=${encodeURIComponent(query)}`
   ];
 
-  for (const sUrl of searchUrls) {
+  for (const sUrl of fallbackUrls) {
     try {
       const res = await fetch(sUrl, {
         headers: {
@@ -228,7 +263,7 @@ async function discoverCnpjByName(name, city, state) {
 }
 
 /**
- * Enriquece um prospect individualmente
+ * Enriquece um prospect individualmente com rastreamento detalhado de alterações
  */
 export async function enrichSingleProspect(prospectId) {
   const prospect = db.prepare(`SELECT * FROM radar_b2b_prospects WHERE id = ?`).get(prospectId);
@@ -236,16 +271,26 @@ export async function enrichSingleProspect(prospectId) {
     throw new Error('Prospect não encontrado.');
   }
 
-  const updates = {};
-  let foundEmail = prospect.email || '';
-  let foundCnpj = prospect.cnpj || '';
-  let foundInstagram = prospect.instagram || '';
-  let foundFacebook = prospect.facebook || '';
-  let foundLinkedin = prospect.linkedin || '';
-  let foundSocios = prospect.socios || '';
-  let foundRazaoSocial = prospect.razao_social || '';
-  let foundCapitalSocial = prospect.capital_social || '';
-  let foundCnae = prospect.cnae || '';
+  // Registra o estado anterior para identificar o que realmente mudou
+  const prevCnpj = prospect.cnpj || '';
+  const prevSocios = prospect.socios || '';
+  const prevEmail = prospect.email || '';
+  const prevRazaoSocial = prospect.razao_social || '';
+  const prevInstagram = prospect.instagram || '';
+  const prevFacebook = prospect.facebook || '';
+  const prevLinkedin = prospect.linkedin || '';
+  const prevCapital = prospect.capital_social || '';
+  const prevCnae = prospect.cnae || '';
+
+  let foundEmail = prevEmail;
+  let foundCnpj = prevCnpj;
+  let foundInstagram = prevInstagram;
+  let foundFacebook = prevFacebook;
+  let foundLinkedin = prevLinkedin;
+  let foundSocios = prevSocios;
+  let foundRazaoSocial = prevRazaoSocial;
+  let foundCapitalSocial = prevCapital;
+  let foundCnae = prevCnae;
 
   // PASSO 1: Se tem site, faz o web crawl no rodapé e páginas de contato
   if (prospect.website) {
@@ -269,7 +314,7 @@ export async function enrichSingleProspect(prospectId) {
     }
   }
 
-  // PASSO 2: Se ainda não achou CNPJ, busca pelo Nome + Cidade
+  // PASSO 2: Se ainda não achou CNPJ, busca pelo Nome + Cidade em fontes orgânicas (DuckDuckGo/Search)
   if (!foundCnpj && prospect.name) {
     const discovered = await discoverCnpjByName(prospect.name, prospect.city || '', prospect.state || '');
     if (discovered) {
@@ -288,6 +333,25 @@ export async function enrichSingleProspect(prospectId) {
       if (!foundCnae && receita.cnae) foundCnae = receita.cnae;
       if (receita.cnpj) foundCnpj = receita.cnpj;
     }
+  }
+
+  // Identifica exatamente o que foi adicionado de novo
+  const novosCampos = [];
+  if (!prevCnpj && foundCnpj) novosCampos.push('CNPJ');
+  if (!prevSocios && foundSocios) novosCampos.push('Sócios (QSA)');
+  if (!prevEmail && foundEmail) novosCampos.push('E-mail');
+  if (!prevRazaoSocial && foundRazaoSocial) novosCampos.push('Razão Social');
+  if (!prevInstagram && foundInstagram) novosCampos.push('Instagram');
+  if (!prevFacebook && foundFacebook) novosCampos.push('Facebook');
+  if (!prevLinkedin && foundLinkedin) novosCampos.push('LinkedIn');
+  if (!prevCapital && foundCapitalSocial) novosCampos.push('Capital Social');
+  if (!prevCnae && foundCnae) novosCampos.push('CNAE');
+
+  let statusType = 'sem_dados_publicos';
+  if (novosCampos.length > 0) {
+    statusType = 'novos_dados';
+  } else if (foundCnpj || foundSocios || foundEmail) {
+    statusType = 'dados_confirmados';
   }
 
   const now = new Date().toISOString();
@@ -321,6 +385,11 @@ export async function enrichSingleProspect(prospectId) {
     razao_social: foundRazaoSocial,
     instagram: foundInstagram,
     capital_social: foundCapitalSocial,
-    cnae: foundCnae
+    cnae: foundCnae,
+    status_type: statusType,
+    novosCampos,
+    hasNewData: novosCampos.length > 0,
+    alreadyHadData: !!(prevCnpj || prevSocios || prevEmail),
+    enriched_at: now
   };
 }

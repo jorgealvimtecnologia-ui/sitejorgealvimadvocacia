@@ -304,6 +304,23 @@
     if (elRobotEnriched) elRobotEnriched.textContent = Number(data.enrichedCount || 0).toLocaleString('pt-BR');
     if (elRobotPending) elRobotPending.textContent = Number(data.pendingCount || 0).toLocaleString('pt-BR');
 
+    // Atualiza Painel de Métricas do Robô Enriquecedor
+    const elKpiEnriched = document.getElementById('b2b-kpi-enriched');
+    const elKpiTotal = document.getElementById('b2b-kpi-total');
+    const elKpiPct = document.getElementById('b2b-kpi-pct');
+    const elKpiCnpj = document.getElementById('b2b-kpi-cnpj');
+    const elKpiEmail = document.getElementById('b2b-kpi-email');
+
+    const totalNum = Number(data.total || 0);
+    const enrichedNum = Number(data.enrichedCount || 0);
+    const pct = totalNum > 0 ? Math.round((enrichedNum / totalNum) * 100) : 0;
+
+    if (elKpiEnriched) elKpiEnriched.textContent = enrichedNum.toLocaleString('pt-BR');
+    if (elKpiTotal) elKpiTotal.textContent = totalNum.toLocaleString('pt-BR');
+    if (elKpiPct) elKpiPct.textContent = `${pct}%`;
+    if (elKpiCnpj) elKpiCnpj.textContent = Number(data.withCnpjCount || data.withSociosCount || 0).toLocaleString('pt-BR');
+    if (elKpiEmail) elKpiEmail.textContent = Number(data.withEmail || 0).toLocaleString('pt-BR');
+
     // Popula categorias e bairros nos selects se ainda estiverem vazios
     const selCat = document.getElementById('b2b-filter-category');
     const campCat = document.getElementById('b2b-camp-target-category');
@@ -1282,7 +1299,7 @@
   // Executa o Robô Enriquecedor com modal de progresso em tempo real
   let isRobotRunning = false;
 
-  async function executeRobotProgress(ids) {
+  async function executeRobotProgress(ids, companyMap = {}) {
     if (!ids || ids.length === 0) {
       toast('Nenhuma empresa para enriquecer.', 'warning');
       return;
@@ -1302,19 +1319,22 @@
     const btnClose = document.getElementById('btn-close-robot-progress');
 
     if (modal) modal.classList.remove('hidden');
-    if (statusEl) statusEl.textContent = 'Varrendo páginas web e consultando Receita Federal...';
+    if (statusEl) statusEl.textContent = 'Consultando fontes públicas (Google, Web e Receita Federal)...';
     if (stepEl) stepEl.textContent = `Processando 0 de ${ids.length}...`;
     if (percentEl) percentEl.textContent = '0%';
     if (barEl) barEl.style.width = '0%';
-    if (logEl) logEl.innerHTML = '<p class="text-slate-400 italic">🤖 Robô iniciado. Conectando aos serviços...</p>';
+    if (logEl) logEl.innerHTML = '<p class="text-slate-400 italic">🤖 Robô iniciado. Conectando aos serviços públicos...</p>';
     if (btnClose) btnClose.classList.add('hidden');
 
     let processed = 0;
-    let enrichedCount = 0;
+    let novosCount = 0;
+    let confirmadosCount = 0;
+    let semDadosCount = 0;
+    let falhasCount = 0;
 
-    // Processa sequencialmente garantindo logs ao vivo e respeito a limites das APIs
+    // Processa sequencialmente respeitando limites das APIs públicas
     for (const id of ids) {
-      const prospect = cachedProspects.find(p => p.id === id) || { id, name: `Empresa #${id}` };
+      const prospect = companyMap[id] || cachedProspects.find(p => p.id === id) || { id, name: `Empresa #${id}` };
       
       if (stepEl) stepEl.textContent = `Processando ${processed + 1} de ${ids.length}: ${prospect.name}...`;
 
@@ -1327,20 +1347,27 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
-          enrichedCount++;
           const en = data.enriched || {};
-          const details = [];
-          if (en.cnpj) details.push(`CNPJ: ${en.cnpj}`);
-          if (en.socios) details.push(`Sócios: ${en.socios}`);
-          if (en.email) details.push(`E-mail: ${en.email}`);
-          if (en.instagram) details.push(`Insta: ${en.instagram}`);
+          const statusType = en.status_type || (en.hasNewData ? 'novos_dados' : 'sem_dados_publicos');
 
-          const detailStr = details.length > 0 ? details.join(' | ') : 'Dados cadastrais confirmados';
-          appendRobotLog(`✅ <strong>${escapeHtml(prospect.name)}</strong>: ${escapeHtml(detailStr)}`, 'text-emerald-700');
+          if (statusType === 'novos_dados') {
+            novosCount++;
+            const labels = (en.novosCampos || []).join(', ') || 'Dados cadastrais';
+            const extra = [en.cnpj ? `CNPJ: ${en.cnpj}` : '', en.socios ? `Sócios: ${en.socios}` : '', en.email ? `E-mail: ${en.email}` : ''].filter(Boolean).join(' | ');
+            appendRobotLog(`🎉 <strong>${escapeHtml(prospect.name)}</strong>: <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-extrabold text-[10px]">NOVO</span> ${escapeHtml(labels)}${extra ? ' — ' + escapeHtml(extra) : ''}`, 'text-emerald-800');
+          } else if (statusType === 'dados_confirmados') {
+            confirmadosCount++;
+            appendRobotLog(`ℹ️ <strong>${escapeHtml(prospect.name)}</strong>: Dados confirmados na Receita Federal ${en.cnpj ? '(' + escapeHtml(en.cnpj) + ')' : ''}`, 'text-indigo-700');
+          } else {
+            semDadosCount++;
+            appendRobotLog(`⚪ <strong>${escapeHtml(prospect.name)}</strong>: Nenhum CNPJ ou dado novo localizado na web`, 'text-slate-500');
+          }
         } else {
-          appendRobotLog(`⚠️ <strong>${escapeHtml(prospect.name)}</strong>: ${escapeHtml(data.error || 'Nenhum dado novo encontrado')}`, 'text-amber-700');
+          falhasCount++;
+          appendRobotLog(`⚠️ <strong>${escapeHtml(prospect.name)}</strong>: ${escapeHtml(data.error || 'Falha ao processar')}`, 'text-amber-700');
         }
       } catch (err) {
+        falhasCount++;
         appendRobotLog(`❌ <strong>${escapeHtml(prospect.name)}</strong>: Falha de conexão (${escapeHtml(err.message)})`, 'text-rose-600');
       }
 
@@ -1350,11 +1377,11 @@
       if (barEl) barEl.style.width = `${pct}%`;
     }
 
-    if (statusEl) statusEl.textContent = '🎉 Concluído! Todas as empresas foram processadas.';
-    if (stepEl) stepEl.textContent = `${enrichedCount} de ${ids.length} empresas enriquecidas com sucesso.`;
+    if (statusEl) statusEl.textContent = '🎉 Concluído! Todas as empresas do lote foram processadas.';
+    if (stepEl) stepEl.textContent = `${novosCount} novos dados • ${confirmadosCount} confirmadas • ${semDadosCount} sem dados públicos`;
     if (percentEl) percentEl.textContent = '100%';
     if (barEl) barEl.style.width = '100%';
-    appendRobotLog(`🏁 Processo finalizado com sucesso! ${enrichedCount} empresas enriquecidas.`, 'text-indigo-900 font-bold');
+    appendRobotLog(`🏁 <strong>Lote Finalizado!</strong> ${novosCount} empresas ganharam novos dados cadastrais, ${confirmadosCount} foram confirmadas e ${semDadosCount} não possuem dados públicos disponíveis na internet.`, 'text-indigo-900 font-bold border-t border-slate-200 pt-1.5 mt-1.5');
 
     if (btnClose) btnClose.classList.remove('hidden');
     isRobotRunning = false;
@@ -1389,31 +1416,75 @@
   };
 
   // Ação 1-Click: "Completar com o Google & Receita"
-  window.completarTabelaComGoogle = function () {
+  window.completarTabelaComGoogle = async function () {
+    // 1. Se o usuário marcou empresas manualmente:
     if (selectedProspectIds.size > 0) {
-      return executeRobotProgress(Array.from(selectedProspectIds));
+      const ids = Array.from(selectedProspectIds);
+      return executeRobotProgress(ids);
     }
 
-    if (!cachedProspects || cachedProspects.length === 0) {
-      toast('Nenhuma empresa na tabela para enriquecer.', 'warning');
-      return;
+    // 2. Busca no backend a próxima leva de empresas que REALMENTE faltam enriquecer (pendentes do banco)
+    try {
+      const cityParam = currentFilterCity || 'Juiz de Fora';
+      const stateParam = currentFilterState || 'MG';
+      const q = new URLSearchParams({
+        limit: '50',
+        city: cityParam,
+        state: stateParam,
+        mode: 'pendentes'
+      });
+
+      const res = await fetch(`/api/radar-b2b/pending-ids?${q.toString()}`, {
+        headers: getHeaders(),
+        credentials: 'same-origin'
+      });
+      if (!res.ok) throw new Error('Falha ao consultar pendências no servidor');
+      const data = await res.json();
+
+      if (data.ids && data.ids.length > 0) {
+        const companyMap = {};
+        (data.companies || []).forEach(c => { companyMap[c.id] = c; });
+
+        const desc = `Foram localizadas ${data.totalFound} empresas ainda NÃO enriquecidas em ${cityParam}/${stateParam}.\n\nO Robô irá buscar CNPJ, Sócios (QSA da Receita), E-mail e Redes Sociais da próxima leva de ${data.ids.length} empresas.\n\nDeseja iniciar?`;
+        if (!confirm(desc)) return;
+        return executeRobotProgress(data.ids, companyMap);
+      }
+
+      // Se todas as pendentes da localidade já foram feitas:
+      const qInc = new URLSearchParams({
+        limit: '50',
+        city: cityParam,
+        state: stateParam,
+        mode: 'incompletas'
+      });
+      const resInc = await fetch(`/api/radar-b2b/pending-ids?${qInc.toString()}`, {
+        headers: getHeaders(),
+        credentials: 'same-origin'
+      });
+      const dataInc = await resInc.json();
+
+      if (dataInc.ids && dataInc.ids.length > 0) {
+        const companyMap = {};
+        (dataInc.companies || []).forEach(c => { companyMap[c.id] = c; });
+
+        const desc = `Todas as empresas de ${cityParam}/${stateParam} já passaram pela primeira varredura do Robô!\n\nExistem ${dataInc.totalFound} empresas que ainda não possuem CNPJ ou Sócios identificados.\n\nDeseja reconsultar uma leva de ${dataInc.ids.length} empresas para tentar novas fontes públicas?`;
+        if (!confirm(desc)) return;
+        return executeRobotProgress(dataInc.ids, companyMap);
+      }
+
+      toast('🎉 Parabéns! Todas as empresas desta localidade já foram enriquecidas e possuem dados completos.', 'success');
+    } catch (err) {
+      console.warn('[RADAR B2B] Fallback para lista local:', err);
+      // Fallback para lista local caso a requisição falhe
+      const pending = cachedProspects.filter(p => !p.enriched_at);
+      const candidates = pending.length > 0 ? pending : cachedProspects;
+      const ids = candidates.slice(0, 50).map(p => p.id);
+      if (ids.length === 0) {
+        toast('Nenhuma empresa encontrada para enriquecer.', 'warning');
+        return;
+      }
+      executeRobotProgress(ids);
     }
-
-    // Prioriza empresas que ainda NÃO foram enriquecidas pelo robô (pendentes)
-    const pending = cachedProspects.filter(p => !p.enriched_at);
-    const incomplete = cachedProspects.filter(p => !p.cnpj || !p.socios || !p.email);
-    const candidates = pending.length > 0 ? pending : (incomplete.length > 0 ? incomplete : cachedProspects);
-
-    // Limita lote a 50 por vez para garantir velocidade e estabilidade
-    const batch = candidates.slice(0, 50);
-    const ids = batch.map(p => p.id);
-
-    const desc = pending.length > 0 
-      ? `Foram identificadas ${pending.length} empresas pendentes nesta visualização.\n\nO Robô irá buscar CNPJ, Sócios (QSA), E-mail e Redes Sociais das próximas ${ids.length} empresas pendentes.\n\nDeseja iniciar?`
-      : `Deseja executar o Robô nas próximas ${ids.length} empresas da tabela?`;
-
-    if (!confirm(desc)) return;
-    executeRobotProgress(ids);
   };
 
   // Atalhos de Filtro: Feitas vs Faltam Fazer

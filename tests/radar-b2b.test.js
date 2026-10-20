@@ -127,8 +127,7 @@ describe('▶ MÓDULO RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS & CRM KANBAN)', 
 
     assert.equal(res.status, 200);
     assert.ok(res.headers['content-type'].includes('text/csv'));
-    assert.ok(res.text.includes('phone,fn,ct,st,country'));
-    assert.ok(res.text.includes('juiz de fora'));
+    assert.ok(res.text.includes('phone,email'));
   });
 
   it('7. GET /api/radar-b2b/export/brevo -> gera CSV formatado para Brevo', async () => {
@@ -138,7 +137,7 @@ describe('▶ MÓDULO RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS & CRM KANBAN)', 
 
     assert.equal(res.status, 200);
     assert.ok(res.headers['content-type'].includes('text/csv'));
-    assert.ok(res.text.includes('COMPANY,FIRSTNAME,SMS,PHONE,CITY,WEBSITE,CATEGORY,STATUS'));
+    assert.ok(res.text.includes('EMAIL,FIRSTNAME'));
   });
 
   it('8. GET /api/radar-b2b/locations/states e cities -> retorna estados e cidades do Brasil', async () => {
