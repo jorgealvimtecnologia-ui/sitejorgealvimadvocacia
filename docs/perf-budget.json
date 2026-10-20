@@ -9,7 +9,7 @@
   "pages": {
     "/": {
       "total_gz_kb": 96,
-      "medido_em_kb": 90.7
+      "medido_em_kb": 90.6
     },
     "/painel": {
       "total_gz_kb": 523,

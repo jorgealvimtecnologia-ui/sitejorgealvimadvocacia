@@ -1,19 +1,20 @@
 /**
  * ==============================================================================
- * BARRA DE PESQUISA HÍBRIDA (HERO — ABAIXO DO TÍTULO DO ESCRITÓRIO)
+ * BARRA DE PESQUISA INTERNA DO SITE (PÁGINAS DO SITE, BLOG & PORTAL DE NOTÍCIAS)
  * ==============================================================================
- * Posicionada no topo do Hero (no lugar do selo abaixo de JORGE ALVIM ADVOCACIA).
- * - Permite buscar instantaneamente nos conteúdos do site (Áreas de Atuação,
- *   Dúvidas Frequentes e Artigos do Blog) em um painel suspenso limpo;
- * - Permite pesquisar diretamente no Google com 1 clique.
+ * Posicionada abaixo do título do escritório no topo do Hero (index.html).
+ * Pesquisa exclusivamente:
+ *   1. Matérias publicadas no Blog Jurídico (/blog/:slug)
+ *   2. Matérias publicadas no Portal de Notícias (/portal/:slug)
+ *   3. Páginas e seções do site (Áreas de Atuação, Dúvidas Frequentes, etc.)
+ * Não envia o visitante para o Google externo.
  * ==============================================================================
  */
 (function () {
   'use strict';
 
-  var WA_PHONE = '5532998153429';
-  var cachedBlogPosts = null;
-  var staticIndex = null;
+  var cachedFeedItems = null;
+  var staticPagesIndex = null;
 
   function normalizeText(str) {
     return String(str || '')
@@ -32,71 +33,72 @@
       .replace(/'/g, '&#039;');
   }
 
-  function buildStaticIndex() {
-    if (staticIndex) return staticIndex;
+  function buildSitePagesIndex() {
+    if (staticPagesIndex) return staticPagesIndex;
     var items = [
       {
-        type: 'area',
-        badge: '⚖️ Área de Atuação',
+        type: 'pagina',
+        badge: '📰 Página do Site',
+        title: 'Blog Jurídico — Artigos e Orientações do Escritório',
+        summary: 'Acesse todos os artigos jurídicos publicados pelo Dr. Jorge Alvim sobre Direito Militar, Trabalhista, Previdenciário, Família e Trânsito.',
+        keywords: 'blog juridico artigos materias textos orientacoes',
+        href: '/blog'
+      },
+      {
+        type: 'pagina',
+        badge: '🗞️ Portal de Notícias',
+        title: 'Portal de Notícias Jurídicas — Jornal Alvim',
+        summary: 'Acompanhe as notícias oficiais dos tribunais (STF, STJ, STM, TST, TJMG), legislação e matérias comentadas pelo escritório.',
+        keywords: 'portal de noticias jornal alvim manchetes tribunais stf stj stm tjmg',
+        href: '/portal'
+      },
+      {
+        type: 'pagina',
+        badge: '⚖️ Página do Site',
         title: 'Direito Militar das Forças Armadas (Exército, Marinha e Aeronáutica)',
-        summary: 'Reforma militar por incapacidade ou invalidez, promoção por ressarcimento de preterição, pensão militar, adicional de habilitação, defesa em PAD, Sindicância e IPM.',
-        keywords: 'militar exercito marinha aeronautica reforma invalidez pensao sindicancia ipm pad subtenente sargento temporario transferencia reserva',
-        href: '#areas',
-        waTopic: 'Direito Militar das Forças Armadas'
+        summary: 'Reforma militar por incapacidade ou invalidez, promoção por ressarcimento de preterição, pensão militar, adicional de habilitação, PAD, Sindicância e IPM.',
+        keywords: 'militar exercito marinha aeronautica reforma invalidez pensao sindicancia ipm pad subtenente sargento temporario reserva',
+        href: '#areas'
       },
       {
-        type: 'area',
-        badge: '⚖️ Área de Atuação',
+        type: 'pagina',
+        badge: '⚖️ Página do Site',
         title: 'Direito do Trabalho & Reclamação Trabalhista (CLT)',
-        summary: 'Rescisão indireta, horas extras, adicional de insalubridade e periculosidade, reconhecimento de vínculo sem carteira assinada, FGTS, multa de 40% e assédio moral.',
+        summary: 'Rescisão indireta, horas extras, adicional de insalubridade e periculosidade, reconhecimento de vínculo, FGTS e multa de 40%.',
         keywords: 'trabalhista trabalho clt demissao justa causa rescisao indireta horas extras fgts insalubridade periculosidade carteira assinada',
-        href: '#areas',
-        waTopic: 'Direito Trabalhista'
+        href: '#areas'
       },
       {
-        type: 'area',
-        badge: '⚖️ Área de Atuação',
+        type: 'pagina',
+        badge: '⚖️ Página do Site',
         title: 'Direito Previdenciário (INSS — Aposentadorias, Auxílios e BPC/LOAS)',
-        summary: 'Aposentadoria por idade, tempo de contribuição ou especial, auxílio-doença (incapacidade temporária), aposentadoria por invalidez, BPC/LOAS e revisão de benefício negado pelo INSS.',
+        summary: 'Aposentadoria por idade, tempo de contribuição ou especial, auxílio-doença, aposentadoria por invalidez, BPC/LOAS e revisão de benefício negado.',
         keywords: 'inss previdenciario aposentadoria auxilio doenca incapacidade bpc loas pericia beneficio negado indeferido',
-        href: '#areas',
-        waTopic: 'Direito Previdenciário (INSS)'
+        href: '#areas'
       },
       {
-        type: 'area',
-        badge: '⚖️ Área de Atuação',
+        type: 'pagina',
+        badge: '⚖️ Página do Site',
         title: 'Direito de Família & Sucessões (Divórcio, Pensão, Guarda e Inventário)',
-        summary: 'Divórcio consensual em cartório ou litigioso, fixação, revisão e execução de pensão alimentícia, guarda compartilhada, regulamentação de visitas, inventário e partilha de bens.',
+        summary: 'Divórcio consensual ou litigioso, pensão alimentícia, guarda compartilhada, regulamentação de visitas, inventário e partilha de bens.',
         keywords: 'familia divorcio separacao pensao alimenticia alimentos guarda filhos inventario heranca partilha bens uniao estavel',
-        href: '#areas',
-        waTopic: 'Direito de Família e Sucessões'
+        href: '#areas'
       },
       {
-        type: 'area',
-        badge: '⚖️ Área de Atuação',
+        type: 'pagina',
+        badge: '⚖️ Página do Site',
         title: 'Direito de Trânsito (DETRAN, Suspensão/Cassação de CNH e Lei Seca)',
-        summary: 'Recursos administrativos e judiciais contra multas, defesa em processo de suspensão ou cassação da CNH, recusa ao teste do bafômetro (Lei Seca) e pontuação na carteira.',
+        summary: 'Recursos contra multas, defesa em processo de suspensão ou cassação da CNH, recusa ao bafômetro (Lei Seca) e pontuação na carteira.',
         keywords: 'transito detran multa cnh suspensa cassada bafometro lei seca recurso jari cetran pontos carteira motorista',
-        href: '#areas',
-        waTopic: 'Direito de Trânsito e CNH'
+        href: '#areas'
       },
       {
-        type: 'area',
-        badge: '⚖️ Área de Atuação',
+        type: 'pagina',
+        badge: '⚖️ Página do Site',
         title: 'Direito Civil, Consumidor & Bancário (Contratos, Indenizações e Golpes)',
-        summary: 'Ações de indenização por danos morais e materiais, negativação indevida (SPC/Serasa), golpes bancários e PIX, revisão de juros abusivos, contratos e cobranças.',
+        summary: 'Ações de indenização por danos morais e materiais, negativação indevida (SPC/Serasa), golpes bancários e PIX, revisão de contratos.',
         keywords: 'civil civel consumidor bancario golpe pix fraude emprestimo consignado spc serasa nome sujo dano moral indenizacao contrato',
-        href: '#areas',
-        waTopic: 'Direito Cível, Consumidor e Bancário'
-      },
-      {
-        type: 'service',
-        badge: '🏛️ Guia da Justiça',
-        title: 'Guia da Justiça (STF, STJ, STM, TJMG, TRT3, TRF6, INSS e Órgãos)',
-        summary: 'Acesso rápido aos portais dos tribunais e órgãos públicos diretamente na barra do Guia da Justiça.',
-        keywords: 'forum juiz de fora stf stj stm tjmg trt3 trf6 inss detran oab',
-        href: '#guia-justica',
-        waTopic: 'Consulta Jurídica'
+        href: '#areas'
       }
     ];
 
@@ -111,45 +113,66 @@
           var ans = parent ? (parent.textContent || '').replace(q, '').trim().slice(0, 220) : '';
           items.push({
             type: 'faq',
-            badge: '❓ Dúvida Frequente',
+            badge: '❓ Dúvida Frequente do Site',
             title: q,
             summary: ans || 'Confira a resposta na seção de Dúvidas Frequentes do site.',
             keywords: normalizeText(q + ' ' + ans),
-            href: '#faq',
-            waTopic: q.slice(0, 80)
+            href: '#faq'
           });
         });
       }
     } catch (_) {}
 
-    staticIndex = items;
+    staticPagesIndex = items;
     return items;
   }
 
-  async function loadBlogPostsForSearch() {
-    if (cachedBlogPosts !== null) return cachedBlogPosts;
+  async function loadBlogAndPortalFeed() {
+    if (cachedFeedItems !== null) return cachedFeedItems;
     try {
-      var res = await fetch('/api/blog/posts');
-      if (!res.ok) {
-        cachedBlogPosts = [];
+      var res = await fetch('/api/portal/feed?limit=50');
+      if (res.ok) {
+        var data = await res.json();
+        var list = Array.isArray(data.items) ? data.items : [];
+        cachedFeedItems = list.map(function (p) {
+          var isOficial = p.tipo === 'oficial';
+          return {
+            type: isOficial ? 'portal' : 'blog',
+            badge: isOficial ? ('🗞️ Portal de Notícias' + (p.source ? ' • ' + p.source : '')) : ('📰 Matéria do Blog' + (p.category ? ' • ' + p.category : '')),
+            title: p.title || 'Matéria Jurídica',
+            summary: (p.summary || p.excerpt || '').slice(0, 220),
+            keywords: normalizeText((p.title || '') + ' ' + (p.category || '') + ' ' + (p.summary || '') + ' ' + (p.source || '')),
+            href: isOficial
+              ? ('/portal/' + encodeURIComponent(p.slug || ''))
+              : ('/blog/' + encodeURIComponent(p.slug || ''))
+          };
+        });
+        return cachedFeedItems;
+      }
+    } catch (_) {}
+
+    // Fallback para /api/blog/posts caso /api/portal/feed falhe
+    try {
+      var resBlog = await fetch('/api/blog/posts');
+      if (!resBlog.ok) {
+        cachedFeedItems = [];
         return [];
       }
-      var data = await res.json();
-      var list = Array.isArray(data) ? data : (data.posts || []);
-      cachedBlogPosts = list.map(function (p) {
+      var dataBlog = await resBlog.json();
+      var posts = Array.isArray(dataBlog) ? dataBlog : (dataBlog.posts || []);
+      cachedFeedItems = posts.map(function (p) {
         return {
           type: 'blog',
-          badge: '📰 Artigo do Blog',
+          badge: '📰 Matéria do Blog' + (p.category ? ' • ' + p.category : ''),
           title: p.title || 'Artigo Jurídico',
-          summary: (p.excerpt || p.summary || '').slice(0, 200),
-          keywords: normalizeText((p.title || '') + ' ' + (p.category || '') + ' ' + (p.excerpt || '')),
-          href: p.slug ? ('/blog?slug=' + encodeURIComponent(p.slug)) : '/blog',
-          waTopic: p.title || 'Artigo do Blog'
+          summary: (p.summary || p.excerpt || '').slice(0, 220),
+          keywords: normalizeText((p.title || '') + ' ' + (p.category || '') + ' ' + (p.summary || '')),
+          href: '/blog/' + encodeURIComponent(p.slug || '')
         };
       });
-      return cachedBlogPosts;
+      return cachedFeedItems;
     } catch (_) {
-      cachedBlogPosts = [];
+      cachedFeedItems = [];
       return [];
     }
   }
@@ -157,16 +180,6 @@
   window.closeHeroSearchDropdown = function () {
     var box = document.getElementById('ja-hero-search-dropdown');
     if (box) box.style.display = 'none';
-  };
-
-  window.runHeroGoogleSearch = function () {
-    var input = document.getElementById('ja-hero-search-input');
-    var q = (input && input.value ? input.value : '').trim();
-    if (!q) {
-      if (input) input.focus();
-      return;
-    }
-    window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank', 'noopener,noreferrer');
   };
 
   window.runHeroSiteSearch = function (ev) {
@@ -182,15 +195,18 @@
       return false;
     }
 
-    if (cachedBlogPosts === null) {
-      loadBlogPostsForSearch().then(function () {
+    if (cachedFeedItems === null) {
+      loadBlogAndPortalFeed().then(function () {
         if ((input.value || '').trim()) window.runHeroSiteSearch();
       });
     }
 
     var qNorm = normalizeText(rawQuery);
     var terms = qNorm.split(/\s+/).filter(Boolean);
-    var allItems = buildStaticIndex().concat(cachedBlogPosts || []);
+    var feed = cachedFeedItems || [];
+    var pages = buildSitePagesIndex();
+    // Prioriza matérias do Blog e do Portal de Notícias antes das seções estáticas
+    var allItems = feed.concat(pages);
     var scored = [];
 
     for (var i = 0; i < allItems.length; i++) {
@@ -200,31 +216,31 @@
       var score = 0;
       for (var t = 0; t < terms.length; t++) {
         var term = terms[t];
-        if (hayTitle.indexOf(term) !== -1) score += 5;
+        if (hayTitle.indexOf(term) !== -1) score += 6;
         else if (hayFull.indexOf(term) !== -1) score += 2;
       }
-      if (score > 0) scored.push({ item: item, score: score });
+      if (score > 0) {
+        if (item.type === 'blog' || item.type === 'portal') score += 2;
+        scored.push({ item: item, score: score });
+      }
     }
 
     scored.sort(function (a, b) { return b.score - a.score; });
-    var top = scored.slice(0, 5);
-
-    var waCustom = 'https://wa.me/' + WA_PHONE + '?text=' + encodeURIComponent('Olá, Dr. Jorge Alvim! Pesquisei sobre "' + rawQuery + '" no site e gostaria de uma orientação jurídica.');
+    var top = scored.slice(0, 6);
 
     if (!top.length) {
       listEl.innerHTML = [
         '<div class="ja-hs-empty">',
-        '  <p class="ja-hs-empty-title">Nenhum artigo interno exato para <strong>"' + escapeHtml(rawQuery) + '"</strong>.</p>',
-        '  <div class="ja-hs-actions">',
-        '    <button type="button" onclick="window.runHeroGoogleSearch()" class="ja-hs-btn-google">🌐 Pesquisar "' + escapeHtml(rawQuery.slice(0, 30)) + '" no Google</button>',
-        '    <a href="' + waCustom + '" target="_blank" rel="noopener noreferrer" class="ja-hs-btn-wa">📲 Perguntar ao Dr. Jorge no WhatsApp</a>',
+        '  <p class="ja-hs-empty-title">Nenhuma matéria encontrada para <strong>"' + escapeHtml(rawQuery) + '"</strong>.</p>',
+        '  <div class="ja-hs-actions" style="justify-content:center">',
+        '    <a href="/blog" class="ja-hs-link">📰 Ver Blog Jurídico</a>',
+        '    <a href="/portal" class="ja-hs-link">🗞️ Ver Portal de Notícias</a>',
         '  </div>',
         '</div>'
       ].join('');
     } else {
       var rowsHtml = top.map(function (entry) {
         var it = entry.item;
-        var waLink = 'https://wa.me/' + WA_PHONE + '?text=' + encodeURIComponent('Olá, Dr. Jorge Alvim! Vi no site sobre "' + it.waTopic + '" e gostaria de uma orientação jurídica.');
         return [
           '<div class="ja-hs-item">',
           '  <div class="ja-hs-item-main">',
@@ -233,8 +249,7 @@
           '    <p class="ja-hs-desc">' + escapeHtml(it.summary) + '</p>',
           '  </div>',
           '  <div class="ja-hs-item-btns">',
-          '    <a href="' + escapeHtml(it.href) + '" onclick="window.closeHeroSearchDropdown()" class="ja-hs-link">Ver no site →</a>',
-          '    <a href="' + waLink + '" target="_blank" rel="noopener noreferrer" class="ja-hs-wa">📲 Tirar dúvida</a>',
+          '    <a href="' + escapeHtml(it.href) + '" onclick="window.closeHeroSearchDropdown()" class="ja-hs-link">Ler matéria →</a>',
           '  </div>',
           '</div>'
         ].join('');
@@ -242,8 +257,8 @@
 
       listEl.innerHTML = rowsHtml + [
         '<div class="ja-hs-footer">',
-        '  <button type="button" onclick="window.runHeroGoogleSearch()" class="ja-hs-btn-google">🌐 Pesquisar "' + escapeHtml(rawQuery.slice(0, 28)) + '" no Google</button>',
-        '  <a href="' + waCustom + '" target="_blank" rel="noopener noreferrer" class="ja-hs-btn-wa">📲 Falar com Dr. Jorge</a>',
+        '  <a href="/blog" class="ja-hs-link">📰 Todas as matérias do Blog</a>',
+        '  <a href="/portal" class="ja-hs-link">🗞️ Abrir Portal de Notícias</a>',
         '</div>'
       ].join('');
     }
@@ -256,6 +271,9 @@
     var input = document.getElementById('ja-hero-search-input');
     var wrapper = document.getElementById('ja-hero-search-wrap');
     if (!input || !wrapper) return;
+
+    // Pré-carrega em segundo plano as matérias do Blog e Portal de Notícias
+    loadBlogAndPortalFeed();
 
     input.addEventListener('input', function () {
       if ((input.value || '').trim().length >= 2) {
