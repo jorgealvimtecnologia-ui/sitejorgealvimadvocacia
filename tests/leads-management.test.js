@@ -182,5 +182,10 @@ describe('Gestão de Leads v2', () => {
     assert.ok(cli, 'cliente formal deve existir após aprovação do chefe');
     assert.equal(cli.registration_status, 'concluido');
   });
+
+  it('DELETE /api/leads/:id por não-mestre → 403 (bloqueado para empregados)', async () => {
+    const r = await auth(request(app).delete(`/api/leads/${leadId}`), advToken);
+    assert.equal(r.status, 403);
+  });
 });
 

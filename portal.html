@@ -111,7 +111,22 @@
           <p class="empty" id="empty" hidden>Nenhum artigo nesta área no momento.</p>
         </div>
 
-        <!-- RESUMO DO PAINEL DE NOTÍCIAS (no lugar do antigo box gigante) -->
+        <!-- 3) VÍDEOS INSTITUCIONAIS DOS TRIBUNAIS & ÓRGÃOS PÚBLICOS (8 MINI BOXES) -->
+        <div class="barline" style="margin-top:28px">
+          <span class="mini" style="background:#0284c7;color:#fff">Vídeos Oficiais</span>
+          <h2>Canais Institucionais &amp; Sessões em Vídeo</h2>
+          <span class="rule"></span>
+          <span style="font-size:.76rem;color:var(--ink-soft);font-weight:600">STF · STJ · TST · INSS · TJMG · CNJ</span>
+        </div>
+        <p style="font-size:.85rem;color:var(--ink-soft);margin:4px 0 12px;line-height:1.45">
+          Acompanhe pronunciamentos, sessões de julgamento e orientações diretamente dos canais oficiais dos tribunais e órgãos da Justiça.
+        </p>
+        <div class="portal-videos-grid" id="portal-videos-grid">
+          <!-- Carregado dinamicamente com Lite YouTube Facade -->
+          <div class="muted" style="padding:16px;text-align:center;grid-column:1/-1">Carregando vídeos oficiais…</div>
+        </div>
+
+        <!-- 4) RESUMO DO PAINEL DE NOTÍCIAS (no lugar do antigo box gigante) -->
         <div class="digest">
           <div class="dh">
             <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span>
@@ -310,6 +325,73 @@
         if(list&&linhas.length)list.innerHTML=linhas.join('');
       })
       .catch(function(){/* offline: mantém o exemplo */});
+  })();
+
+  /* ---- Carrega Vídeos Institucionais (Lite YouTube Facade) ---- */
+  (function(){
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    var grid = document.getElementById('portal-videos-grid');
+    if (!grid) return;
+
+    fetch('/api/portal/videos', { headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d || !d.success || !d.videos || !d.videos.length) {
+          grid.innerHTML = '<div class="muted" style="padding:16px;text-align:center;grid-column:1/-1">Nenhum vídeo disponível no momento.</div>';
+          return;
+        }
+        grid.innerHTML = d.videos.map(function(v){
+          var thumb = 'https://img.youtube.com/vi/' + esc(v.youtube_id) + '/hqdefault.jpg';
+          return '<article class="portal-video-card" data-yt="' + esc(v.youtube_id) + '">'
+            + '<div class="portal-video-player" role="button" tabindex="0" aria-label="Reproduzir vídeo: ' + esc(v.title) + '">'
+              + '<img class="portal-video-thumb" src="' + thumb + '" alt="' + esc(v.title) + '" loading="lazy">'
+              + '<div class="portal-video-playbtn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>'
+            + '</div>'
+            + '<div class="portal-video-info">'
+              + '<div class="portal-video-badges">'
+                + '<span class="pv-badge-src">' + esc(v.source_name || 'Oficial') + '</span>'
+                + '<span class="pv-badge-cat">' + esc(v.badge_category || 'INSTITUCIONAL') + '</span>'
+              + '</div>'
+              + '<h3 class="portal-video-title">' + esc(v.title) + '</h3>'
+              + (v.description ? '<p class="portal-video-desc">' + esc(v.description) + '</p>' : '')
+              + '<a class="portal-video-link" href="' + esc(v.youtube_url) + '" target="_blank" rel="noopener">Canal Oficial ↗</a>'
+            + '</div>'
+          + '</article>';
+        }).join('');
+
+        // Interação de Play do Lite Facade: substitui imagem por iframe seguro sob demanda
+        grid.addEventListener('click', function(e){
+          var player = e.target.closest('.portal-video-player');
+          if (!player) return;
+          var card = player.closest('.portal-video-card');
+          var ytid = card ? card.getAttribute('data-yt') : null;
+          if (!ytid) return;
+
+          // Se já tem iframe rodando, não recarrega
+          if (player.querySelector('iframe')) return;
+
+          var iframe = document.createElement('iframe');
+          iframe.className = 'portal-video-iframe';
+          iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(ytid) + '?autoplay=1&rel=0';
+          iframe.title = 'Vídeo do YouTube';
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+          iframe.allowFullscreen = true;
+
+          player.innerHTML = '';
+          player.appendChild(iframe);
+        });
+
+        // Suporte a teclado (Enter / Espaço)
+        grid.addEventListener('keydown', function(e){
+          if (e.key === 'Enter' || e.key === ' ') {
+            var player = e.target.closest('.portal-video-player');
+            if (player) { e.preventDefault(); player.click(); }
+          }
+        });
+      })
+      .catch(function(){
+        grid.innerHTML = '<div class="muted" style="padding:16px;text-align:center;grid-column:1/-1">Não foi possível carregar os vídeos no momento.</div>';
+      });
   })();
 </script>
 </body>

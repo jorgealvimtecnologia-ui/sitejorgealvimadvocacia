@@ -126,6 +126,21 @@ export function ensurePortalSchema(db) {
       slug TEXT,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS portal_videos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      source_name TEXT NOT NULL,
+      badge_category TEXT,
+      youtube_url TEXT NOT NULL,
+      youtube_id TEXT NOT NULL,
+      description TEXT,
+      ordem INTEGER DEFAULT 0,
+      is_published INTEGER DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_portal_videos_pub ON portal_videos(is_published, ordem);
   `);
 
   // Migração defensiva: bancos antigos ganham as colunas novas.
@@ -136,6 +151,94 @@ export function ensurePortalSchema(db) {
   try { db.exec("ALTER TABLE portal_sources ADD COLUMN modo TEXT DEFAULT 'rss'"); } catch (e) { /* já existe */ }
 
   const now = new Date().toISOString();
+
+  // Semente dos 8 vídeos oficiais dos tribunais e órgãos públicos (se a tabela estiver vazia)
+  const videoCount = db.prepare('SELECT COUNT(*) AS n FROM portal_videos').get().n;
+  if (videoCount === 0) {
+    const insVid = db.prepare(`
+      INSERT INTO portal_videos (title, source_name, badge_category, youtube_url, youtube_id, description, ordem, is_published, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `);
+
+    const seedVideos = [
+      [
+        'Sessão Plenária e Grandes Julgamentos do STF',
+        'Supremo Tribunal Federal',
+        'STF',
+        'https://www.youtube.com/watch?v=kYJ7xQYc3dM',
+        'kYJ7xQYc3dM',
+        'Transmissão oficial das sessões plenárias e decisões da Suprema Corte.',
+        1
+      ],
+      [
+        'STJ Notícias: Decisões e Precedentes Qualificados',
+        'Superior Tribunal de Justiça',
+        'STJ',
+        'https://www.youtube.com/watch?v=F_7oW6bL5Ew',
+        'F_7oW6bL5Ew',
+        'Teses repetitivas, jurisprudência em contratos, consumidor e cidadania.',
+        2
+      ],
+      [
+        'Jornada TST: Conheça seus Direitos Trabalhistas',
+        'Tribunal Superior do Trabalho',
+        'TST',
+        'https://www.youtube.com/watch?v=zJgU7m_qB9g',
+        'zJgU7m_qB9g',
+        'Revista eletrônica com decisões, direitos dos trabalhadores e empresas.',
+        3
+      ],
+      [
+        'Previdência e Benefícios: Como Acessar o Meu INSS',
+        'INSS / Ministério da Previdência',
+        'INSS',
+        'https://www.youtube.com/watch?v=Yw9l2K6xK7E',
+        'Yw9l2K6xK7E',
+        'Guia oficial sobre aposentadorias, BPC/LOAS, perícias e auxílios.',
+        4
+      ],
+      [
+        'Justiça em Questão: Julgamentos e Acesso à Justiça em MG',
+        'Tribunal de Justiça de Minas Gerais',
+        'TJMG',
+        'https://www.youtube.com/watch?v=p4vW7B4oM2g',
+        'p4vW7B4oM2g',
+        'Programa informativo sobre a Justiça mineira, comarcas e conciliação.',
+        5
+      ],
+      [
+        'Campanha Nacional de Cidadania e Conciliação',
+        'Conselho Nacional de Justiça',
+        'CNJ',
+        'https://www.youtube.com/watch?v=7uBq7H5kR_s',
+        '7uBq7H5kR_s',
+        'Projetos de transparência, mediação e direitos fundamentais no Judiciário.',
+        6
+      ],
+      [
+        'Orientações Fiscais, Regularização de CPF e Malha Fina',
+        'Receita Federal do Brasil',
+        'Receita',
+        'https://www.youtube.com/watch?v=x7X3wVn0YyA',
+        'x7X3wVn0YyA',
+        'Esclarecimentos sobre obrigações fiscais, IRPF e segurança tributária.',
+        7
+      ],
+      [
+        'Informativo Municipal: Serviços ao Cidadão e Procon-JF',
+        'Prefeitura de Juiz de Fora',
+        'PJF',
+        'https://www.youtube.com/watch?v=l_8pG5_6V3E',
+        'l_8pG5_6V3E',
+        'Notícias de utilidade pública municipal e orientações ao consumidor em JF.',
+        8
+      ]
+    ];
+
+    for (const v of seedVideos) {
+      insVid.run(v[0], v[1], v[2], v[3], v[4], v[5], v[6], now, now);
+    }
+  }
 
   // Fontes oficiais (desligadas por padrão; o Dr. Jorge liga quando quiser).
   // Agência Brasil já entra ligada (é a primeira fonte do piloto, Creative Commons).
@@ -186,4 +289,15 @@ export function ensurePortalSchema(db) {
   // A esteira começa VAZIA: enche só quando o Dr. Jorge ativa fontes e capta.
   // Remove pautas de exemplo antigas (dados fictícios do scaffolding inicial).
   db.prepare("DELETE FROM portal_items WHERE external_id LIKE 'demo-%'").run();
+}
+
+/**
+ * Utilitário para extrair o ID do vídeo do YouTube a partir de qualquer formato de URL.
+ */
+export function extractYouTubeId(urlOrId) {
+  if (!urlOrId) return '';
+  const str = String(urlOrId).trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+  const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|live\/))([a-zA-Z0-9_-]{11})/i);
+  return match ? match[1] : '';
 }

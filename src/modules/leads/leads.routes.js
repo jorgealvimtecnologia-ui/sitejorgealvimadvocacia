@@ -283,7 +283,8 @@ leadsRouter.patch('/api/leads/:id/status', requireAuth, (req, res) => {
   }
 });
 
-leadsRouter.delete('/api/leads/:id', requireAuth, (req, res) => {
+// Exclusão de atendimento/lead — SOMENTE MESTRE / TITULAR (empregados não podem excluir dados).
+leadsRouter.delete('/api/leads/:id', requireMaster, (req, res) => {
   try {
     const { id } = req.params;
     const lead = db.prepare(`SELECT name FROM leads WHERE id = ?`).get(id);
