@@ -287,3 +287,145 @@ footer .small{font-size:.76rem;line-height:1.6;color:var(--ink-soft)} footer a{c
 
 @media (max-width:880px){.cols{grid-template-columns:1fr}aside{position:static}.feat{grid-template-columns:1fr}.feat .thumb{min-height:170px}.prods{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:560px){.grid,.sources{grid-template-columns:1fr}.hero h1{font-size:2rem}nav.mainnav .lnk{display:none}nav.mainnav .amz{display:none}.brand .kick{font-size:.5rem;letter-spacing:.08em}.wa span{display:none}.wa{padding:9px 11px}.article .artbody{padding:18px 16px 20px}.article h1{font-size:1.55rem}}
+
+/* ============================================================================
+ * VÍDEOS INSTITUCIONAIS — 8 MINI BOXES (TEMA CLARO & LITE FACADE)
+ * ==========================================================================*/
+.portal-videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.portal-video-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.portal-video-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+  box-shadow: var(--shadow);
+}
+.portal-video-player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  cursor: pointer;
+  overflow: hidden;
+}
+.portal-video-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity .2s ease;
+}
+.portal-video-card:hover .portal-video-thumb {
+  opacity: 0.92;
+}
+.portal-video-playbtn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  background: rgba(220, 38, 38, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  transition: transform .18s ease, background .18s ease;
+  pointer-events: none;
+}
+.portal-video-playbtn svg {
+  width: 20px;
+  height: 20px;
+  fill: #ffffff;
+  margin-left: 2px;
+}
+.portal-video-player:hover .portal-video-playbtn {
+  transform: translate(-50%, -50%) scale(1.12);
+  background: #ef4444;
+}
+.portal-video-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+.portal-video-info {
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.portal-video-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+.pv-badge-src {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #0284c7;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: .04em;
+}
+.pv-badge-cat {
+  font-size: .58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--gold-soft);
+  color: var(--gold-ink);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.portal-video-title {
+  font-size: .88rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0 0 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.portal-video-desc {
+  font-size: .76rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.portal-video-link {
+  margin-top: auto;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--gold-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+.portal-video-link:hover {
+  text-decoration: underline;
+}
