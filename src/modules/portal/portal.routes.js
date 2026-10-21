@@ -15,6 +15,7 @@ import { db } from '../../config/db.js';
 import { requireMaster } from '../../middleware/auth.js';
 import { ensurePortalSchema, PORTAL_LIMITS, extractYouTubeId } from './portal.schema.js';
 import { coletar } from './portal.collector.js';
+import { coletarVideos, channelIdFromInput } from './portal.video-collector.js';
 import { sendEmail, isEmailConfigured } from '../../shared/email.js';
 import { generateNextClientId } from '../../shared/ids.js';
 
@@ -31,6 +32,15 @@ if (process.env.NODE_ENV !== 'test') {
       .catch(e => console.warn('🤖 [PORTAL ROBÔ] coleta semanal falhou:', e.message));
   }, UMA_SEMANA);
   if (timer.unref) timer.unref();
+
+  // Captação automática de VÍDEOS (RSS dos canais oficiais) — também semanal; igual ao robô
+  // de notícias, só enche a esteira como "pendente": nada vai ao ar sem o Dr. Jorge aprovar.
+  const vtimer = setInterval(() => {
+    coletarVideos(db)
+      .then(r => console.log(`🎬 [PORTAL VÍDEOS] coleta: ${r.novos} novo(s), ${r.ignorados} repetido(s), ${r.canais} canal(is)${r.erros.length ? ', ' + r.erros.length + ' erro(s)' : ''}`))
+      .catch(e => console.warn('🎬 [PORTAL VÍDEOS] coleta falhou:', e.message));
+  }, UMA_SEMANA);
+  if (vtimer.unref) vtimer.unref();
 }
 
 export const portalRouter = express.Router();
@@ -669,9 +679,9 @@ portalRouter.post('/api/portal/admin/newsletter/campaigns/:id/send', requireMast
 portalRouter.get('/api/portal/videos', (req, res) => {
   try {
     const videos = db.prepare(
-      `SELECT id, title, source_name, badge_category, youtube_url, youtube_id, description, ordem
+      `SELECT id, title, source_name, badge_category, youtube_url, youtube_id, description, video_date, ordem
          FROM portal_videos
-        WHERE is_published = 1
+        WHERE is_published = 1 AND (status IS NULL OR status = 'aprovado')
         ORDER BY ordem ASC, id ASC`
     ).all();
     res.json({ success: true, videos });
@@ -715,11 +725,12 @@ portalRouter.post('/api/portal/admin/videos', requireMaster, (req, res) => {
       return res.status(400).json({ error: 'Não foi possível extrair o ID do vídeo do YouTube. Verifique a URL informada.' });
     }
 
+    const video_date = String(b.video_date || '').trim() || null;
     const now = nowISO();
     const info = db.prepare(`
-      INSERT INTO portal_videos (title, source_name, badge_category, youtube_url, youtube_id, description, ordem, is_published, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(title, source_name || 'Órgão Oficial', badge_category, youtube_url, youtube_id, description, ordem, is_published, now, now);
+      INSERT INTO portal_videos (title, source_name, badge_category, youtube_url, youtube_id, description, video_date, ordem, is_published, status, origem, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'aprovado', 'manual', ?, ?)
+    `).run(title, source_name || 'Órgão Oficial', badge_category, youtube_url, youtube_id, description, video_date, ordem, is_published, now, now);
 
     res.json({ success: true, id: info.lastInsertRowid, youtube_id });
   } catch (err) {
@@ -753,13 +764,14 @@ portalRouter.put('/api/portal/admin/videos/:id', requireMaster, (req, res) => {
       return res.status(400).json({ error: 'ID do YouTube inválido.' });
     }
 
+    const video_date = String(b.video_date || '').trim() || null;
     const now = nowISO();
     db.prepare(`
       UPDATE portal_videos
          SET title = ?, source_name = ?, badge_category = ?, youtube_url = ?,
-             youtube_id = ?, description = ?, ordem = ?, is_published = ?, updated_at = ?
+             youtube_id = ?, description = ?, video_date = ?, ordem = ?, is_published = ?, updated_at = ?
        WHERE id = ?
-    `).run(title, source_name || 'Órgão Oficial', badge_category, youtube_url, youtube_id, description, ordem, is_published, now, id);
+    `).run(title, source_name || 'Órgão Oficial', badge_category, youtube_url, youtube_id, description, video_date, ordem, is_published, now, id);
 
     res.json({ success: true, id, youtube_id });
   } catch (err) {
@@ -796,5 +808,117 @@ portalRouter.delete('/api/portal/admin/videos/:id', requireMaster, (req, res) =>
   } catch (err) {
     console.error('Erro ao excluir vídeo:', err);
     res.status(500).json({ error: 'Erro ao excluir vídeo.' });
+  }
+});
+
+// Mestre: aprovar um vídeo pendente (captado pelo robô) → publica no portal.
+portalRouter.post('/api/portal/admin/videos/:id/approve', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const v = db.prepare('SELECT id FROM portal_videos WHERE id = ?').get(id);
+    if (!v) return res.status(404).json({ error: 'Vídeo não encontrado.' });
+    db.prepare("UPDATE portal_videos SET status = 'aprovado', is_published = 1, updated_at = ? WHERE id = ?")
+      .run(nowISO(), id);
+    res.json({ success: true, id, status: 'aprovado' });
+  } catch (err) {
+    console.error('Erro ao aprovar vídeo:', err);
+    res.status(500).json({ error: 'Erro ao aprovar vídeo.' });
+  }
+});
+
+// Mestre: descartar um vídeo pendente (não entra no portal).
+portalRouter.post('/api/portal/admin/videos/:id/discard', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const v = db.prepare('SELECT id FROM portal_videos WHERE id = ?').get(id);
+    if (!v) return res.status(404).json({ error: 'Vídeo não encontrado.' });
+    db.prepare("UPDATE portal_videos SET status = 'descartado', is_published = 0, updated_at = ? WHERE id = ?")
+      .run(nowISO(), id);
+    res.json({ success: true, id, status: 'descartado' });
+  } catch (err) {
+    console.error('Erro ao descartar vídeo:', err);
+    res.status(500).json({ error: 'Erro ao descartar vídeo.' });
+  }
+});
+
+// Mestre: captar vídeos agora (RSS dos canais oficiais) → entram como "pendente".
+portalRouter.post('/api/portal/admin/videos/collect', requireMaster, async (req, res) => {
+  try {
+    const resumo = await coletarVideos(db);
+    res.json({ success: true, ...resumo });
+  } catch (err) {
+    console.error('Erro na captação de vídeos:', err);
+    res.status(500).json({ error: 'Erro ao captar vídeos: ' + err.message });
+  }
+});
+
+// ----- Canais oficiais para a captação automática de vídeos (CRUD, só mestre) -----
+portalRouter.get('/api/portal/admin/video-channels', requireMaster, (req, res) => {
+  try {
+    const channels = db.prepare('SELECT * FROM portal_video_channels ORDER BY id ASC').all();
+    res.json({ success: true, channels });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar canais de vídeo.' });
+  }
+});
+
+portalRouter.post('/api/portal/admin/video-channels', requireMaster, (req, res) => {
+  try {
+    const b = req.body || {};
+    const org_name = String(b.org_name || '').trim();
+    const badge_category = String(b.badge_category || '').trim().toUpperCase();
+    const channel_input = String(b.channel_input || '').trim();
+    if (!org_name || !channel_input) {
+      return res.status(400).json({ error: 'Informe o nome do órgão e a URL/@handle do canal do YouTube.' });
+    }
+    const now = nowISO();
+    const info = db.prepare(`
+      INSERT INTO portal_video_channels (org_name, badge_category, channel_input, channel_id, active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 1, ?, ?)
+    `).run(org_name, badge_category || 'INSTITUCIONAL', channel_input, channelIdFromInput(channel_input), now, now);
+    res.json({ success: true, id: info.lastInsertRowid });
+  } catch (err) {
+    console.error('Erro ao cadastrar canal de vídeo:', err);
+    res.status(500).json({ error: 'Erro ao cadastrar canal.' });
+  }
+});
+
+portalRouter.put('/api/portal/admin/video-channels/:id', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const row = db.prepare('SELECT channel_input FROM portal_video_channels WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Canal não encontrado.' });
+    const b = req.body || {};
+    const org_name = String(b.org_name || '').trim();
+    const badge_category = String(b.badge_category || '').trim().toUpperCase();
+    const channel_input = String(b.channel_input || '').trim();
+    const active = b.active ? 1 : 0;
+    if (!org_name || !channel_input) {
+      return res.status(400).json({ error: 'Informe o nome do órgão e a URL/@handle do canal do YouTube.' });
+    }
+    const now = nowISO();
+    if (row.channel_input === channel_input) {
+      db.prepare('UPDATE portal_video_channels SET org_name=?, badge_category=?, channel_input=?, active=?, updated_at=? WHERE id=?')
+        .run(org_name, badge_category || 'INSTITUCIONAL', channel_input, active, now, id);
+    } else {
+      // Entrada mudou: re-resolve o channel_id na próxima captação.
+      db.prepare('UPDATE portal_video_channels SET org_name=?, badge_category=?, channel_input=?, channel_id=?, active=?, updated_at=? WHERE id=?')
+        .run(org_name, badge_category || 'INSTITUCIONAL', channel_input, channelIdFromInput(channel_input), active, now, id);
+    }
+    res.json({ success: true, id });
+  } catch (err) {
+    console.error('Erro ao atualizar canal de vídeo:', err);
+    res.status(500).json({ error: 'Erro ao atualizar canal.' });
+  }
+});
+
+portalRouter.delete('/api/portal/admin/video-channels/:id', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const info = db.prepare('DELETE FROM portal_video_channels WHERE id = ?').run(id);
+    if (info.changes === 0) return res.status(404).json({ error: 'Canal não encontrado.' });
+    res.json({ success: true, deleted: id });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir canal.' });
   }
 });

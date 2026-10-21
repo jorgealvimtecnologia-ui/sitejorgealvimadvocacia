@@ -376,6 +376,12 @@ footer .small{font-size:.76rem;line-height:1.6;color:var(--ink-soft)} footer a{c
   flex-wrap: wrap;
   margin-bottom: 5px;
 }
+.portal-video-date {
+  font-size: .68rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin: 1px 0 4px;
+}
 .pv-badge-src {
   font-size: .62rem;
   font-weight: 700;
@@ -428,4 +434,12 @@ footer .small{font-size:.76rem;line-height:1.6;color:var(--ink-soft)} footer a{c
 }
 .portal-video-link:hover {
   text-decoration: underline;
+}
+/* Estado de carregando/vazio/erro dos vídeos (e demais mensagens neutras do portal).
+   Antes não existia no portal.css — só no portal-revisar.html — então o texto do grid
+   de vídeos aparecia sem a cor suave esperada. */
+.muted {
+  color: var(--ink-faint);
+  font-size: .85rem;
+  text-align: center;
 }

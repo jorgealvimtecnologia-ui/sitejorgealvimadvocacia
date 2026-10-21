@@ -330,6 +330,7 @@
   /* ---- Carrega Vídeos Institucionais (Lite YouTube Facade) ---- */
   (function(){
     function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    function fmtVideoDate(s){ try { var d=new Date(s); if(isNaN(d.getTime())) return ''; return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return ''; } }
     var grid = document.getElementById('portal-videos-grid');
     if (!grid) return;
 
@@ -352,6 +353,7 @@
                 + '<span class="pv-badge-src">' + esc(v.source_name || 'Oficial') + '</span>'
                 + '<span class="pv-badge-cat">' + esc(v.badge_category || 'INSTITUCIONAL') + '</span>'
               + '</div>'
+              + (fmtVideoDate(v.video_date) ? '<div class="portal-video-date">📅 ' + esc(fmtVideoDate(v.video_date)) + '</div>' : '')
               + '<h3 class="portal-video-title">' + esc(v.title) + '</h3>'
               + (v.description ? '<p class="portal-video-desc">' + esc(v.description) + '</p>' : '')
               + '<a class="portal-video-link" href="' + esc(v.youtube_url) + '" target="_blank" rel="noopener">Canal Oficial ↗</a>'
