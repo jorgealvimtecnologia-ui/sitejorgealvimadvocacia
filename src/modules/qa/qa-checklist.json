@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-10T15:22:54.086Z",
-  "total": 927,
+  "generated_at": "2026-10-21T00:47:48.644Z",
+  "total": 1046,
   "items": [
     {
       "id": "QA-1F41799185",
@@ -80,14 +80,25 @@
       "order": 0
     },
     {
-      "id": "QA-74BC172DFB",
+      "id": "QA-88208DEAF2",
       "page": "Site institucional (página inicial)",
       "url": "/",
       "section": "Cabeçalho e menu",
       "kind": "Link",
-      "label": "📰 Blog Jurídico",
-      "action": "/blog",
-      "how": "Clique em “📰 Blog Jurídico”. Confira: abre /blog sem erro e com o conteúdo certo.",
+      "label": "📰 Portal de Notícias",
+      "action": "/portal",
+      "how": "Clique em “📰 Portal de Notícias”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-D454EE7B25",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "🏛️ Guia da Justiça",
+      "action": "#guia-justica",
+      "how": "Clique em “🏛️ Guia da Justiça”. Confira: a tela rola/abre a parte correta (#guia-justica).",
       "order": 0
     },
     {
@@ -179,17 +190,6 @@
       "order": 0
     },
     {
-      "id": "QA-52A3EB9648",
-      "page": "Site institucional (página inicial)",
-      "url": "/",
-      "section": "Cabeçalho e menu",
-      "kind": "Link",
-      "label": "📰 Blog & Notícias Jurídicas",
-      "action": "/blog",
-      "how": "Clique em “📰 Blog & Notícias Jurídicas”. Confira: abre /blog sem erro e com o conteúdo certo.",
-      "order": 0
-    },
-    {
       "id": "QA-24397A2D40",
       "page": "Site institucional (página inicial)",
       "url": "/",
@@ -264,6 +264,347 @@
       "label": "YouTube",
       "action": "https://www.youtube.com/@JorgeAlvimAdvocacia",
       "how": "Clique em “YouTube”. Confira: abre www.youtube.com/@JorgeAlvimAdvocacia (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-D926DA12CD",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "STF",
+      "action": "https://portal.stf.jus.br",
+      "how": "Clique em “STF”. Confira: abre portal.stf.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-05103C89BD",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "STJ",
+      "action": "https://www.stj.jus.br",
+      "how": "Clique em “STJ”. Confira: abre www.stj.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-1179E03834",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "STM",
+      "action": "https://www.stm.jus.br",
+      "how": "Clique em “STM”. Confira: abre www.stm.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-DB8A1F4A62",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TSE",
+      "action": "https://www.tse.jus.br",
+      "how": "Clique em “TSE”. Confira: abre www.tse.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-AA95AC9B0B",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TST",
+      "action": "https://www.tst.jus.br",
+      "how": "Clique em “TST”. Confira: abre www.tst.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-CE16AE3763",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TRT3",
+      "action": "https://portal.trt3.jus.br",
+      "how": "Clique em “TRT3”. Confira: abre portal.trt3.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-25EF70A7FF",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TRF1",
+      "action": "https://portal.trf1.jus.br",
+      "how": "Clique em “TRF1”. Confira: abre portal.trf1.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-DC5A666C8A",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TRF6",
+      "action": "https://portal.trf6.jus.br",
+      "how": "Clique em “TRF6”. Confira: abre portal.trf6.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-48D805D12E",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TJMG",
+      "action": "https://www.tjmg.jus.br",
+      "how": "Clique em “TJMG”. Confira: abre www.tjmg.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-0C71A8281A",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "TJRJ",
+      "action": "https://www.tjrj.jus.br",
+      "how": "Clique em “TJRJ”. Confira: abre www.tjrj.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-7F0BDF0D32",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "CNJ",
+      "action": "https://www.cnj.jus.br",
+      "how": "Clique em “CNJ”. Confira: abre www.cnj.jus.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-B3E40861F7",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "MPF",
+      "action": "https://www.mpf.mp.br",
+      "how": "Clique em “MPF”. Confira: abre www.mpf.mp.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-C62D28A6CE",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "MPMG",
+      "action": "https://www.mpmg.mp.br",
+      "how": "Clique em “MPMG”. Confira: abre www.mpmg.mp.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-D0F783B141",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "DPU",
+      "action": "https://www.dpu.def.br",
+      "how": "Clique em “DPU”. Confira: abre www.dpu.def.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-B75D36C669",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "DPE-MG",
+      "action": "https://www.defensoria.mg.def.br",
+      "how": "Clique em “DPE-MG”. Confira: abre www.defensoria.mg.def.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-820800633D",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "OAB-MG",
+      "action": "https://www.oabmg.org.br",
+      "how": "Clique em “OAB-MG”. Confira: abre www.oabmg.org.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-487EC4E747",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "PF",
+      "action": "https://www.gov.br/pf/pt-br",
+      "how": "Clique em “PF”. Confira: abre www.gov.br/pf/pt-br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-FAD44EFE47",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "PRF",
+      "action": "https://www.gov.br/prf/pt-br",
+      "how": "Clique em “PRF”. Confira: abre www.gov.br/prf/pt-br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-7CE60406DA",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "PC-MG",
+      "action": "https://www.policiacivil.mg.gov.br",
+      "how": "Clique em “PC-MG”. Confira: abre www.policiacivil.mg.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-FC8F57F727",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "PM-MG",
+      "action": "https://www.policiamilitar.mg.gov.br",
+      "how": "Clique em “PM-MG”. Confira: abre www.policiamilitar.mg.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-B5509B552C",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "CBM-MG",
+      "action": "https://www.bombeiros.mg.gov.br",
+      "how": "Clique em “CBM-MG”. Confira: abre www.bombeiros.mg.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-3C0CE82DB7",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "Exército",
+      "action": "https://www.eb.mil.br",
+      "how": "Clique em “Exército”. Confira: abre www.eb.mil.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-7E2259BB57",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "gov.br",
+      "action": "https://www.gov.br",
+      "how": "Clique em “gov.br”. Confira: abre www.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-DBF7DF3211",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "INSS",
+      "action": "https://www.gov.br/inss/pt-br",
+      "how": "Clique em “INSS”. Confira: abre www.gov.br/inss/pt-br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-3E27507740",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "Receita Federal",
+      "action": "https://www.gov.br/receitafederal/pt-br",
+      "how": "Clique em “Receita Federal”. Confira: abre www.gov.br/receitafederal/pt-br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-ED3C4388ED",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "Governo de MG",
+      "action": "https://www.mg.gov.br",
+      "how": "Clique em “Governo de MG”. Confira: abre www.mg.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-0155C28CC2",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "DETRAN-MG",
+      "action": "https://www.detran.mg.gov.br",
+      "how": "Clique em “DETRAN-MG”. Confira: abre www.detran.mg.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-1BB432DA6F",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Cabeçalho e menu",
+      "kind": "Link",
+      "label": "Prefeitura de JF",
+      "action": "https://www.pjf.mg.gov.br",
+      "how": "Clique em “Prefeitura de JF”. Confira: abre www.pjf.mg.gov.br (em nova aba) sem erro.",
+      "order": 0
+    },
+    {
+      "id": "QA-61DFA40F4D",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "inicio",
+      "kind": "Formulário",
+      "label": "formulário",
+      "action": "enviar",
+      "how": "Preencha os campos com dados de teste e envie. Confira: mensagem de sucesso, dados gravados e nenhum erro na tela.",
+      "order": 0
+    },
+    {
+      "id": "QA-42E7AE33FE",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "inicio",
+      "kind": "Botão",
+      "label": "Buscar",
+      "action": "enviar formulário",
+      "how": "Clique em “Buscar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 0
+    },
+    {
+      "id": "QA-A40C3B447B",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "inicio",
+      "kind": "Botão",
+      "label": "&times;",
+      "action": "closeHeroSearchDropdown",
+      "how": "Clique em “&times;”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 0
     },
     {
@@ -594,6 +935,83 @@
       "label": "⚡ Formulário de Consulta Express",
       "action": "#contato",
       "how": "Clique em “⚡ Formulário de Consulta Express”. Confira: a tela rola/abre a parte correta (#contato).",
+      "order": 0
+    },
+    {
+      "id": "QA-127EE7BE10",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Federal INSS retoma o pente-fino do BPC/LOAS em todo o país Agência Brasil 2 h",
+      "action": "/portal",
+      "how": "Clique em “Federal INSS retoma o pente-fino do BPC/LOAS em todo o país Agência Brasil 2 h”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-3FE0342D02",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Local Mutirão de conciliação do TJMG atende comarca de Juiz de Fora TJMG 1 h",
+      "action": "/portal",
+      "how": "Clique em “Local Mutirão de conciliação do TJMG atende comarca de Juiz de Fora TJMG 1 h”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-D8B191CEB4",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Federal STJ reconhece dever do banco de devolver valor no golpe do Pix STJ 4 h",
+      "action": "/portal",
+      "how": "Clique em “Federal STJ reconhece dever do banco de devolver valor no golpe do Pix STJ 4 h”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-EF13F78919",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Estadual MPMG notifica empresas por descontos indevidos de aposentados MPMG 3 h",
+      "action": "/portal",
+      "how": "Clique em “Estadual MPMG notifica empresas por descontos indevidos de aposentados MPMG 3 h”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-EC06E2167A",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Local Procon-JF alerta para golpe do falso boleto de água Procon-JF 5 h",
+      "action": "/portal",
+      "how": "Clique em “Local Procon-JF alerta para golpe do falso boleto de água Procon-JF 5 h”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-6F2389D71E",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Municipal Prefeitura de JF divulga calendário do IPTU 2026 PJF 6 h",
+      "action": "/portal",
+      "how": "Clique em “Municipal Prefeitura de JF divulga calendário do IPTU 2026 PJF 6 h”. Confira: abre /portal sem erro e com o conteúdo certo.",
+      "order": 0
+    },
+    {
+      "id": "QA-93B9773E76",
+      "page": "Site institucional (página inicial)",
+      "url": "/",
+      "section": "Notícias jurídicas em linguagem simples",
+      "kind": "Link",
+      "label": "Ver o portal completo &rarr;",
+      "action": "/portal",
+      "how": "Clique em “Ver o portal completo &rarr;”. Confira: abre /portal sem erro e com o conteúdo certo.",
       "order": 0
     },
     {
@@ -1884,6 +2302,17 @@
       "order": 2000
     },
     {
+      "id": "QA-11B6EE2B28",
+      "page": "Portal do Cliente",
+      "url": "/cliente",
+      "section": "Olá, Cliente!",
+      "kind": "Botão",
+      "label": "✏️ Click aqui para concluir seu cadastro",
+      "action": "openProfileCompletion",
+      "how": "Clique em “✏️ Click aqui para concluir seu cadastro”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 2000
+    },
+    {
       "id": "QA-6A2A473ED2",
       "page": "Portal do Cliente",
       "url": "/cliente",
@@ -1983,14 +2412,14 @@
       "order": 2000
     },
     {
-      "id": "QA-4472FF1A41",
+      "id": "QA-3FC37813EA",
       "page": "Portal do Cliente",
       "url": "/cliente",
       "section": "Resumo Financeiro & Honorários",
       "kind": "Botão",
-      "label": "💾 Salvar Alterações no Cadastro",
+      "label": "💾 Salvar e Concluir Cadastro",
       "action": "enviar formulário",
-      "how": "Clique em “💾 Salvar Alterações no Cadastro”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “💾 Salvar e Concluir Cadastro”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 2000
     },
     {
@@ -3061,6 +3490,17 @@
       "order": 7000
     },
     {
+      "id": "QA-227FCB060C",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Cabeçalho e menu do painel",
+      "kind": "Botão",
+      "label": "🏢 Radar B2B Google PJ",
+      "action": "switchTab",
+      "how": "Clique em “🏢 Radar B2B Google PJ”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
       "id": "QA-B8B98D596C",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -3377,6 +3817,325 @@
       "label": "🗺️ Roadmap Vivo",
       "action": "switchTab",
       "how": "Clique em “🗺️ Roadmap Vivo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-04CB22129D",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Cabeçalho e menu do painel",
+      "kind": "Botão",
+      "label": "📰 Portal de Notícias",
+      "action": "switchTab",
+      "how": "Clique em “📰 Portal de Notícias”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-44406F04C9",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "⚡ Completar com o Google & Receita",
+      "action": "completarTabelaComGoogle",
+      "how": "Clique em “⚡ Completar com o Google & Receita”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-AD19BBFBC1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "🔍 Varredura Google Places",
+      "action": "openGooglePlacesSearchModal",
+      "how": "Clique em “🔍 Varredura Google Places”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-544BF72533",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📥 Importar Base Local",
+      "action": "importarBaseLocalB2b",
+      "how": "Clique em “📥 Importar Base Local”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-EAE7B539A3",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📢 Meta Ads",
+      "action": "exportarMetaAdsB2b",
+      "how": "Clique em “📢 Meta Ads”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-237198AA0D",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📧 Brevo",
+      "action": "exportarBrevoB2b",
+      "how": "Clique em “📧 Brevo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-5ABFEFD165",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📊 CSV Geral",
+      "action": "exportarCsvCompletoB2b",
+      "how": "Clique em “📊 CSV Geral”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-4800ACF01A",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "Ver Feitas",
+      "action": "filterOnlyCompletedEnrichment",
+      "how": "Clique em “Ver Feitas”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-28C29B067B",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "Ver Sócios",
+      "action": "document.getElementById",
+      "how": "Clique em “Ver Sócios”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-90AFD61AFE",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "Ver E-mails",
+      "action": "document.getElementById",
+      "how": "Clique em “Ver E-mails”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-5C07298D80",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "🗂️ CRM & Funil de Leads (Kanban / Tabela)",
+      "action": "switchB2bSubTab",
+      "how": "Clique em “🗂️ CRM & Funil de Leads (Kanban / Tabela)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-753A07A8E0",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📢 Campanhas & Disparos WhatsApp",
+      "action": "switchB2bSubTab",
+      "how": "Clique em “📢 Campanhas & Disparos WhatsApp”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-9A87DB8302",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "✅ 0 Feitas",
+      "action": "filterOnlyCompletedEnrichment",
+      "how": "Clique em “✅ 0 Feitas”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-59D7F3EE1A",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "⏳ 0 Faltam Fazer",
+      "action": "filterOnlyPendingEnrichment",
+      "how": "Clique em “⏳ 0 Faltam Fazer”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-2813A8A9AE",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "⭐ Cruzar com Clientes",
+      "action": "syncClientsB2b",
+      "how": "Clique em “⭐ Cruzar com Clientes”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-F4CEC25790",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📋 Kanban Completo",
+      "action": "setB2bView",
+      "how": "Clique em “📋 Kanban Completo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-D9DADDFF65",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "📑 Visão Tabela",
+      "action": "setB2bView",
+      "how": "Clique em “📑 Visão Tabela”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-CEE7A22493",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "⚡ Robô",
+      "action": "enrichFromSearchInput",
+      "how": "Clique em “⚡ Robô”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-471DFF82E2",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "← Voltar para o Radar B2B (Kanban)",
+      "action": "switchB2bSubTab",
+      "how": "Clique em “← Voltar para o Radar B2B (Kanban)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-6BC6CBBB71",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "+ {empresa}",
+      "action": "insertCampVariable",
+      "how": "Clique em “+ {empresa}”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-11D3320375",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "+ {bairro}",
+      "action": "insertCampVariable",
+      "how": "Clique em “+ {bairro}”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-D594F0D1C2",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "+ {categoria}",
+      "action": "insertCampVariable",
+      "how": "Clique em “+ {categoria}”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-0230FEF961",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "+ {cidade}",
+      "action": "insertCampVariable",
+      "how": "Clique em “+ {cidade}”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-2408F0825C",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "💾 Salvar Campanha",
+      "action": "saveB2bCampaign",
+      "how": "Clique em “💾 Salvar Campanha”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-27C99C103A",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "🚀 Disparo via Evolution API",
+      "action": "dispatchB2bCampaignBatch",
+      "how": "Clique em “🚀 Disparo via Evolution API”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-AFDB0D4527",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "💬 Fila WhatsApp Web",
+      "action": "dispatchB2bCampaignBatch",
+      "how": "Clique em “💬 Fila WhatsApp Web”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-CA2CD925D1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "⚡ Enriquecer c/ Robô",
+      "action": "enrichSelectedProspects",
+      "how": "Clique em “⚡ Enriquecer c/ Robô”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-59847A116E",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "Salvar",
+      "action": "applyBulkStatusChange",
+      "how": "Clique em “Salvar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7000
+    },
+    {
+      "id": "QA-4AD5AF8CCF",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "radar-b2b",
+      "kind": "Botão",
+      "label": "✕ Desmarcar",
+      "action": "clearSelectedProspects",
+      "how": "Clique em “✕ Desmarcar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7000
     },
     {
@@ -3765,6 +4524,28 @@
       "order": 7002
     },
     {
+      "id": "QA-4B41B40758",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "📋 Lista Rápida",
+      "action": "setClientsViewMode",
+      "how": "Clique em “📋 Lista Rápida”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-8783582755",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "🗂️ Fichas Abertas",
+      "action": "setClientsViewMode",
+      "how": "Clique em “🗂️ Fichas Abertas”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
       "id": "QA-44E4F5B3C6",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -3776,14 +4557,91 @@
       "order": 7002
     },
     {
-      "id": "QA-FCC8EC682B",
+      "id": "QA-728B97A715",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Clientes",
       "kind": "Botão",
-      "label": "📄 Kit Inicial",
+      "label": "📥 Importar Contatos (Gmail / CSV / XLS)",
+      "action": "openContactsImportModal",
+      "how": "Clique em “📥 Importar Contatos (Gmail / CSV / XLS)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-F3A7E84E70",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "🎯 Exportar p/ Meta Ads (Instagram / Face)",
+      "action": "downloadMetaAudienceCSV",
+      "how": "Clique em “🎯 Exportar p/ Meta Ads (Instagram / Face)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-705E0D2578",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "⏮",
+      "action": "goToClientsPage",
+      "how": "Clique em “⏮”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-CD990B55F4",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "◀ Anterior",
+      "action": "goToClientsPage",
+      "how": "Clique em “◀ Anterior”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-74D3A611FF",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "Próxima ▶",
+      "action": "goToClientsPage",
+      "how": "Clique em “Próxima ▶”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-0E85E1CDEF",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "⏭",
+      "action": "goToClientsPage",
+      "how": "Clique em “⏭”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-AB93A88321",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "… …",
+      "action": "toggleClientDetails",
+      "how": "Clique em “… …”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7002
+    },
+    {
+      "id": "QA-EED76A24B3",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Clientes",
+      "kind": "Botão",
+      "label": "📄 Kit",
       "action": "openKitInicialModal",
-      "how": "Clique em “📄 Kit Inicial”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “📄 Kit”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7002
     },
     {
@@ -3798,25 +4656,14 @@
       "order": 7002
     },
     {
-      "id": "QA-216283DDCA",
+      "id": "QA-4E18C238EB",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Clientes",
       "kind": "Botão",
-      "label": "💰 Cobrar PIX",
+      "label": "💰 Cobrar",
       "action": "sendPixPaymentReminder",
-      "how": "Clique em “💰 Cobrar PIX”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
-      "order": 7002
-    },
-    {
-      "id": "QA-DEBFB59174",
-      "page": "Painel administrativo",
-      "url": "/painel",
-      "section": "Clientes",
-      "kind": "Botão",
-      "label": "💾 Salvar",
-      "action": "saveInlineClient",
-      "how": "Clique em “💾 Salvar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “💰 Cobrar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7002
     },
     {
@@ -3831,14 +4678,14 @@
       "order": 7002
     },
     {
-      "id": "QA-9163F65BAC",
+      "id": "QA-59921342FD",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Clientes",
       "kind": "Botão",
-      "label": "🗑️ Excluir",
+      "label": "🗑️",
       "action": "deleteClient",
-      "how": "Clique em “🗑️ Excluir”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “🗑️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7002
     },
     {
@@ -4084,6 +4931,39 @@
       "order": 7003
     },
     {
+      "id": "QA-3AF4F7D5B1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "🔄 Buscar partes no Radar",
+      "action": "atualizarProcessoRadar",
+      "how": "Clique em “🔄 Buscar partes no Radar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
+      "id": "QA-69D68D4E56",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "🔄 Buscar polo passivo no Radar",
+      "action": "atualizarProcessoRadar",
+      "how": "Clique em “🔄 Buscar polo passivo no Radar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
+      "id": "QA-C697B2B4BB",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "📅 Agendar",
+      "action": "agendarAudiencia",
+      "how": "Clique em “📅 Agendar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
       "id": "QA-4BDEA46A2B",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -4136,6 +5016,17 @@
       "label": "… …",
       "action": "openAuthorizeMovementWhatsAppModal",
       "how": "Clique em “… …”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7003
+    },
+    {
+      "id": "QA-3B77B8241A",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Processos",
+      "kind": "Botão",
+      "label": "⏰ Lançar prazo",
+      "action": "lancarPrazoDoAndamento",
+      "how": "Clique em “⏰ Lançar prazo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7003
     },
     {
@@ -5162,14 +6053,124 @@
       "order": 7009
     },
     {
-      "id": "QA-FAD680D032",
+      "id": "QA-44A455B1EB",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Página",
+      "label": "Abrir no computador",
+      "action": "abrir",
+      "how": "Abra a página/aba. Confira: carrega por completo, sem mensagem de erro e com os dados aparecendo.",
+      "order": 7010
+    },
+    {
+      "id": "QA-DE9A8DC1C1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Página",
+      "label": "Abrir no celular",
+      "action": "abrir-celular",
+      "how": "Abra no celular. Confira: nada cortado ou sobreposto, textos legíveis e botões fáceis de tocar.",
+      "order": 7010
+    },
+    {
+      "id": "QA-1BD21AD858",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Leads",
       "kind": "Botão",
-      "label": "🕑",
+      "label": "⚖️ Fila do Dr. Jorge ( 0 )",
+      "action": "filtrarPipelineLeads",
+      "how": "Clique em “⚖️ Fila do Dr. Jorge ( 0 )”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-20B05E38F7",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "🔄 Atualizar",
+      "action": "loadLeads",
+      "how": "Clique em “🔄 Atualizar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-977E6F1E54",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "🌐 Todos os Leads ( 0 )",
+      "action": "filtrarPipelineLeads",
+      "how": "Clique em “🌐 Todos os Leads ( 0 )”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-9F76A4620C",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "📥 Novos ( 0 )",
+      "action": "filtrarPipelineLeads",
+      "how": "Clique em “📥 Novos ( 0 )”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-97A2D2BC56",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "⏳ Em Atendimento ( 0 )",
+      "action": "filtrarPipelineLeads",
+      "how": "Clique em “⏳ Em Atendimento ( 0 )”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-DB43E2F750",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "🏆 Concluídos ( 0 )",
+      "action": "filtrarPipelineLeads",
+      "how": "Clique em “🏆 Concluídos ( 0 )”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-9D502277AC",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "📜 Histórico",
       "action": "toggleLeadTimeline",
-      "how": "Clique em “🕑”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "how": "Clique em “📜 Histórico”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-EB8026036B",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "📝 Ficha & Notas",
+      "action": "viewLeadDetails",
+      "how": "Clique em “📝 Ficha & Notas”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-7892C4CC34",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "⚖️",
+      "action": "submitLeadToChief",
+      "how": "Clique em “⚖️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7010
     },
     {
@@ -5184,25 +6185,69 @@
       "order": 7010
     },
     {
-      "id": "QA-0B262705FA",
+      "id": "QA-DA18AF2CFB",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Leads",
       "kind": "Botão",
-      "label": "👁️",
-      "action": "viewLeadDetails",
-      "how": "Clique em “👁️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "label": "🕒",
+      "action": "toggleLeadTimeline",
+      "how": "Clique em “🕒”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7010
     },
     {
-      "id": "QA-C628649C98",
+      "id": "QA-674332B33B",
       "page": "Painel administrativo",
       "url": "/painel",
       "section": "Leads",
       "kind": "Botão",
-      "label": "🗑️",
-      "action": "deleteLead",
-      "how": "Clique em “🗑️”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "label": "&times;",
+      "action": "closeLeadAttendanceModal",
+      "how": "Clique em “&times;”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-64F9C244EE",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "💾 Salvar Anotação",
+      "action": "saveLeadNote",
+      "how": "Clique em “💾 Salvar Anotação”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-C2CC70500D",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "Fechar",
+      "action": "closeLeadAttendanceModal",
+      "how": "Clique em “Fechar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-AD14128CBD",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "🏆 Converter em Cliente",
+      "action": "convertLeadToClient",
+      "how": "Clique em “🏆 Converter em Cliente”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7010
+    },
+    {
+      "id": "QA-485A29F990",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Leads",
+      "kind": "Botão",
+      "label": "🚀 Enviar p/ Análise do Dr. Jorge",
+      "action": "submitLeadToChief",
+      "how": "Clique em “🚀 Enviar p/ Análise do Dr. Jorge”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7010
     },
     {
@@ -6361,6 +7406,50 @@
       "order": 7018
     },
     {
+      "id": "QA-47508C3F82",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Notificações",
+      "kind": "Botão",
+      "label": "📷 Conectar WhatsApp (QR Code)",
+      "action": "openWhatsAppConnectModal",
+      "how": "Clique em “📷 Conectar WhatsApp (QR Code)”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7018
+    },
+    {
+      "id": "QA-FB8B93B187",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Notificações",
+      "kind": "Botão",
+      "label": "🧪 Testar Disparo",
+      "action": "testWhatsAppSend",
+      "how": "Clique em “🧪 Testar Disparo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7018
+    },
+    {
+      "id": "QA-FB5E9CEC29",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Notificações",
+      "kind": "Botão",
+      "label": "⚙️ Configurar Brevo",
+      "action": "openBrevoConfigModal",
+      "how": "Clique em “⚙️ Configurar Brevo”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7018
+    },
+    {
+      "id": "QA-B04461A953",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Notificações",
+      "kind": "Botão",
+      "label": "🧪 Testar E-mail",
+      "action": "testBrevoEmail",
+      "how": "Clique em “🧪 Testar E-mail”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7018
+    },
+    {
       "id": "QA-AD154FC1C2",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -6908,6 +7997,28 @@
       "label": "📱 Meta Business Suite",
       "action": "https://business.facebook.com/latest/home?business_id=670238677973768",
       "how": "Clique em “📱 Meta Business Suite”. Confira: abre business.facebook.com/latest/home?business_id=67023867797376 (em nova aba) sem erro.",
+      "order": 7024
+    },
+    {
+      "id": "QA-06811C8BF9",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Meta Ads / Redes sociais",
+      "kind": "Botão",
+      "label": "⬇️ Baixar CSV Oficial Meta Ads",
+      "action": "downloadMetaAudienceCSV",
+      "how": "Clique em “⬇️ Baixar CSV Oficial Meta Ads”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7024
+    },
+    {
+      "id": "QA-72C6B218D1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Meta Ads / Redes sociais",
+      "kind": "Link",
+      "label": "🚀 Subir no Gerenciador Meta",
+      "action": "https://adsmanager.facebook.com/adsmanager/audiences?act=705653348893835",
+      "how": "Clique em “🚀 Subir no Gerenciador Meta”. Confira: abre adsmanager.facebook.com/adsmanager/audiences?act=70565334889 (em nova aba) sem erro.",
       "order": 7024
     },
     {
@@ -7920,6 +9031,138 @@
       "label": "💾 Enviar Documento para o Drive",
       "action": "enviar formulário",
       "how": "Clique em “💾 Enviar Documento para o Drive”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-6A37184581",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal robot progress",
+      "kind": "Botão",
+      "label": "Concluir e Fechar",
+      "action": "closeRobotProgressModal",
+      "how": "Clique em “Concluir e Fechar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-3CECFBEE6B",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "← Voltar ao Radar B2B",
+      "action": "closeLeadHistoryModal",
+      "how": "Clique em “← Voltar ao Radar B2B”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-6DF0CAC7C5",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "✕",
+      "action": "closeLeadHistoryModal",
+      "how": "Clique em “✕”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-0841147016",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "⚡ Enriquecer c/ Robô",
+      "action": "enrichCurrentModalLead",
+      "how": "Clique em “⚡ Enriquecer c/ Robô”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-D3DCE5AA2C",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "🔍",
+      "action": "lookupCnpjModal",
+      "how": "Clique em “🔍”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-917CEF1257",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "Cancelar",
+      "action": "closeLeadHistoryModal",
+      "how": "Clique em “Cancelar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-11542F0459",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "⚖️ Enviar p/ Dr. Jorge",
+      "action": "submitB2bToChief",
+      "how": "Clique em “⚖️ Enviar p/ Dr. Jorge”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-68E4AFE3D5",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal lead history",
+      "kind": "Botão",
+      "label": "💾 Salvar Movimentação",
+      "action": "saveLeadHistory",
+      "how": "Clique em “💾 Salvar Movimentação”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-CB21806159",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal google places search",
+      "kind": "Botão",
+      "label": "✕",
+      "action": "closeGooglePlacesSearchModal",
+      "how": "Clique em “✕”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-F33CAC48BE",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal google places search",
+      "kind": "Botão",
+      "label": "🔍",
+      "action": "handleSearchCepLookup",
+      "how": "Clique em “🔍”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-66D1F110EA",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal google places search",
+      "kind": "Botão",
+      "label": "Cancelar",
+      "action": "closeGooglePlacesSearchModal",
+      "how": "Clique em “Cancelar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-1147ACA9BB",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal google places search",
+      "kind": "Botão",
+      "label": "🔍 Iniciar Varredura",
+      "action": "executarBuscaGooglePlaces",
+      "how": "Clique em “🔍 Iniciar Varredura”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
       "order": 7090
     },
     {
@@ -9430,6 +10673,61 @@
       "order": 7090
     },
     {
+      "id": "QA-489B5D392A",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal contacts import",
+      "kind": "Botão",
+      "label": "&times;",
+      "action": "closeContactsImportModal",
+      "how": "Clique em “&times;”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-2C02BCDC0E",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal contacts import",
+      "kind": "Botão",
+      "label": "Conectar Gmail & Puxar Contatos",
+      "action": "connectGoogleContacts",
+      "how": "Clique em “Conectar Gmail & Puxar Contatos”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-B10CBED299",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal contacts import",
+      "kind": "Botão",
+      "label": "Baixar Modelo CSV",
+      "action": "downloadContactsModelCsv",
+      "how": "Clique em “Baixar Modelo CSV”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-FF12BE0F3D",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal contacts import",
+      "kind": "Botão",
+      "label": "Cancelar",
+      "action": "closeContactsImportModal",
+      "how": "Clique em “Cancelar”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
+      "id": "QA-D06A3460F1",
+      "page": "Painel administrativo",
+      "url": "/painel",
+      "section": "Janelas: modal contacts import",
+      "kind": "Botão",
+      "label": "Cadastrar Contatos Selecionados",
+      "action": "submitContactsImport",
+      "how": "Clique em “Cadastrar Contatos Selecionados”. Confira: a ação acontece (abre, salva, filtra ou envia) sem mensagem de erro e a tela responde.",
+      "order": 7090
+    },
+    {
       "id": "QA-8EB66DBD16",
       "page": "Painel administrativo",
       "url": "/painel",
@@ -10088,6 +11386,17 @@
       "action": "abrir-celular",
       "how": "Abra no celular. Confira: nada cortado ou sobreposto, textos legíveis e botões fáceis de tocar.",
       "order": 7999
+    },
+    {
+      "id": "QA-A99BF4BB7A",
+      "page": "Laboratório de testes",
+      "url": "/teste-pratico",
+      "section": "Laboratório de Testes Práticos em Tempo Real Ambiente Local 100% Ativo",
+      "kind": "Link",
+      "label": "⚖️ CRM Unificado (Novo)",
+      "action": "/crm-unificado",
+      "how": "Clique em “⚖️ CRM Unificado (Novo)”. Confira: abre /crm-unificado sem erro e com o conteúdo certo.",
+      "order": 8000
     },
     {
       "id": "QA-A4EA9E03A4",
