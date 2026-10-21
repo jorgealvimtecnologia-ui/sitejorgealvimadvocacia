@@ -191,9 +191,25 @@
           <h3>🎥 Vídeos Institucionais (Capa do Portal)</h3>
           <div style="font-size:.76rem;color:var(--ink-soft);font-weight:500;margin-top:2px">Vídeos oficiais de tribunais e órgãos públicos exibidos em mini boxes na capa do portal.</div>
         </div>
-        <button class="btn sm primary" id="video-new" type="button" style="margin-left:auto">+ Novo Vídeo</button>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm" id="video-collect" type="button" title="Buscar vídeos novos nos canais oficiais (RSS)">🤖 Captar agora</button>
+          <button class="btn sm" id="video-channels-toggle" type="button">📡 Canais (RSS)</button>
+          <button class="btn sm primary" id="video-new" type="button">+ Novo Vídeo</button>
+        </div>
       </div>
       <div class="bd">
+        <!-- Esteira automática: canais oficiais (RSS) do YouTube -->
+        <div id="video-channels-panel" style="display:none;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;background:var(--surface-2)">
+          <div style="font-weight:700;font-size:.85rem;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">📡 Canais oficiais para captação automática</div>
+          <p style="font-size:.78rem;color:var(--ink-soft);margin:0 0 10px;line-height:1.45">O robô lê os feeds RSS destes canais do YouTube semanalmente (ou ao clicar <b>Captar agora</b>) e traz os vídeos novos como <b>pendentes</b> — nada é publicado sem a sua aprovação. Cole a URL do canal, o <b>@handle</b> ou o ID <b>UC…</b>.</p>
+          <div id="video-channels-list"><div class="muted">Carregando canais…</div></div>
+          <div style="display:grid;grid-template-columns:1fr 150px 1.2fr auto;gap:8px;margin-top:10px;align-items:end">
+            <div><label style="font-size:.72rem">Órgão / Nome</label><input id="ch-org" placeholder="Ex: Supremo Tribunal Federal"></div>
+            <div><label style="font-size:.72rem">Badge</label><input id="ch-badge" placeholder="STF"></div>
+            <div><label style="font-size:.72rem">URL / @handle / UC…</label><input id="ch-input" placeholder="https://youtube.com/@STF"></div>
+            <button class="btn sm primary" id="ch-add" type="button">+ Adicionar</button>
+          </div>
+        </div>
         <div id="video-editor-new"></div>
         <div id="video-list"><div class="muted">Carregando vídeos…</div></div>
       </div>
@@ -838,7 +854,7 @@
   }
 
   function videoEditor(v) {
-    v = v || { id: '', title: '', source_name: 'STF', badge_category: 'TRIBUNAIS', youtube_url: '', youtube_id: '', description: '', ordem: 10, is_published: 1 };
+    v = v || { id: '', title: '', source_name: 'STF', badge_category: 'TRIBUNAIS', youtube_url: '', youtube_id: '', description: '', video_date: '', ordem: 10, is_published: 1 };
     var ytid = v.youtube_id || extractYtIdClient(v.youtube_url);
     var thumb = ytid ? 'https://img.youtube.com/vi/' + ytid + '/hqdefault.jpg' : '';
 
@@ -852,6 +868,9 @@
         + '<div><label>Categoria (Badge)</label><input data-vf="badge_category" value="' + esc(v.badge_category || 'INSTITUCIONAL') + '" placeholder="Ex: TRIBUNAIS, TRABALHISTA, PREVIDENCIÁRIO..."></div>'
         + '<div><label>URL ou ID do YouTube *</label><input data-vf="youtube_url" oninput="atualizarYtPreview(this)" value="' + esc(v.youtube_url) + '" placeholder="https://www.youtube.com/watch?v=..."></div>'
         + '<div><label>Ordem</label><input data-vf="ordem" type="number" min="1" max="99" value="' + esc(v.ordem || 10) + '"></div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:220px 1fr;gap:12px;margin-top:6px">'
+        + '<div><label>Data do Vídeo</label><input data-vf="video_date" type="date" value="' + esc((v.video_date || '').slice(0, 10)) + '"></div>'
       + '</div>'
       + '<div style="margin-top:6px"><label>Descrição Resumida</label><textarea data-vf="description" rows="2" style="min-height:60px" placeholder="Breve resumo informativo sobre o tema do vídeo...">' + esc(v.description || '') + '</textarea></div>'
       + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)">'
@@ -883,10 +902,13 @@
   };
 
   function videoRow(v) {
-    var isPub = v.is_published === 1;
-    var st = isPub
-      ? '<span style="color:var(--green);font-weight:700;font-size:.75rem">● Publicado na Capa</span>'
-      : '<span style="color:var(--ink-faint);font-weight:700;font-size:.75rem">○ Rascunho / Oculto</span>';
+    var isPending = v.status === 'pendente';
+    var isPub = v.is_published === 1 && !isPending;
+    var st = isPending
+      ? '<span style="color:#b45309;font-weight:700;font-size:.75rem">⏳ Pendente — captado pelo robô</span>'
+      : (isPub
+        ? '<span style="color:var(--green);font-weight:700;font-size:.75rem">● Publicado na Capa</span>'
+        : '<span style="color:var(--ink-faint);font-weight:700;font-size:.75rem">○ Rascunho / Oculto</span>');
     var thumb = v.youtube_id ? 'https://img.youtube.com/vi/' + v.youtube_id + '/hqdefault.jpg' : '';
 
     return '<div class="item" data-id="' + v.id + '" style="display:flex;flex-direction:column;gap:8px;background:var(--surface)">'
@@ -899,6 +921,8 @@
           + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">'
             + '<span class="tp" style="background:#0284c7;color:#fff;font-size:.65rem;padding:2px 6px;border-radius:4px">' + esc(v.source_name || 'Oficial') + '</span>'
             + '<span class="tp" style="background:var(--surface-2);color:var(--ink-soft);border:1px solid var(--line);font-size:.62rem;padding:2px 6px;border-radius:4px">' + esc(v.badge_category || 'INSTITUCIONAL') + '</span>'
+            + (v.origem === 'rss' ? '<span class="tp" style="background:#ede9fe;color:#6d28d9;font-size:.6rem;padding:2px 6px;border-radius:4px">🤖 ROBÔ</span>' : '')
+            + (v.video_date ? '<span style="font-size:.68rem;color:var(--ink-faint)">📅 ' + esc(String(v.video_date).slice(0,10).split('-').reverse().join('/')) + '</span>' : '')
             + '<span style="font-size:.72rem;color:var(--ink-faint);margin-left:auto">Ordem: <b>' + (v.ordem || 10) + '</b></span>'
           + '</div>'
           + '<h4 style="margin:2px 0 4px;font-size:1rem;color:var(--ink)">' + esc(v.title) + '</h4>'
@@ -907,8 +931,11 @@
         + '</div>'
       + '</div>'
       + '<div class="acts" style="border-top:1px solid var(--line-soft);padding-top:8px;margin-top:4px">'
+        + (isPending
+            ? '<button class="btn sm pub" data-vact="approve" data-id="' + v.id + '">✅ Aprovar e Publicar</button>'
+              + '<button class="btn sm" data-vact="discard" data-id="' + v.id + '">✖ Descartar</button>'
+            : '<button class="btn sm ' + (isPub ? '' : 'pub') + '" data-vact="toggle" data-id="' + v.id + '">' + (isPub ? 'Despublicar' : 'Publicar na Capa') + '</button>')
         + '<button class="btn sm" data-vact="edit" data-id="' + v.id + '">✏️ Editar</button>'
-        + '<button class="btn sm ' + (isPub ? '' : 'pub') + '" data-vact="toggle" data-id="' + v.id + '">' + (isPub ? 'Despublicar' : 'Publicar na Capa') + '</button>'
         + '<button class="btn sm danger" data-vact="del" data-id="' + v.id + '">🗑️ Excluir</button>'
       + '</div>'
       + '<div id="ved-' + v.id + '"></div>'
@@ -1007,6 +1034,98 @@
       }).catch(function() { alert('Falha ao excluir o vídeo.'); });
       return;
     }
+    if (act === 'approve') {
+      api('/api/portal/admin/videos/' + id + '/approve', { method: 'POST' })
+        .then(function() { loadVideos(); })
+        .catch(function() { alert('Falha ao aprovar o vídeo.'); });
+      return;
+    }
+    if (act === 'discard') {
+      if (!confirm('Descartar este vídeo? Ele não entrará no portal.')) return;
+      api('/api/portal/admin/videos/' + id + '/discard', { method: 'POST' })
+        .then(function() { loadVideos(); })
+        .catch(function() { alert('Falha ao descartar o vídeo.'); });
+      return;
+    }
+  });
+
+  // ===== Esteira automática de vídeos: canais RSS + captação =====
+  var CH_CACHE = [];
+  function channelRow(c) {
+    var resolved = c.channel_id
+      ? '<span style="font-size:.66rem;color:var(--green)">✓ ' + esc(c.channel_id) + '</span>'
+      : '<span style="font-size:.66rem;color:var(--ink-faint)">a resolver na próxima captação</span>';
+    return '<div class="item" data-id="' + c.id + '" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);margin-bottom:6px">'
+      + '<div style="flex:1;min-width:0">'
+        + '<b style="font-size:.85rem">' + esc(c.org_name) + '</b> <span class="tp" style="background:var(--surface-2);border:1px solid var(--line);font-size:.6rem;padding:1px 5px;border-radius:4px">' + esc(c.badge_category || '') + '</span>'
+        + '<div style="font-size:.72rem;color:var(--ink-soft);word-break:break-all">' + esc(c.channel_input) + ' · ' + resolved + '</div>'
+      + '</div>'
+      + '<label style="display:flex;align-items:center;gap:5px;font-size:.72rem;margin:0;cursor:pointer"><input type="checkbox" data-chact="active" data-id="' + c.id + '"' + (c.active ? ' checked' : '') + '> ativo</label>'
+      + '<button class="btn sm danger" data-chact="del" data-id="' + c.id + '">🗑️</button>'
+    + '</div>';
+  }
+  function loadChannels() {
+    var box = document.getElementById('video-channels-list');
+    if (!box) return;
+    api('/api/portal/admin/video-channels').then(function(d) {
+      CH_CACHE = (d && d.channels) || [];
+      box.innerHTML = CH_CACHE.length
+        ? CH_CACHE.map(channelRow).join('')
+        : '<div class="muted">Nenhum canal cadastrado. Adicione os canais oficiais abaixo para o robô captar os vídeos.</div>';
+    }).catch(function() { box.innerHTML = '<div class="muted">Não foi possível carregar os canais.</div>'; });
+  }
+  document.getElementById('video-channels-toggle').addEventListener('click', function() {
+    var p = document.getElementById('video-channels-panel');
+    var show = p.style.display === 'none';
+    p.style.display = show ? 'block' : 'none';
+    if (show) loadChannels();
+  });
+  document.getElementById('ch-add').addEventListener('click', function() {
+    var org = document.getElementById('ch-org').value.trim();
+    var badge = document.getElementById('ch-badge').value.trim();
+    var input = document.getElementById('ch-input').value.trim();
+    if (!org || !input) { alert('Informe o órgão e a URL/@handle do canal do YouTube.'); return; }
+    api('/api/portal/admin/video-channels', { method: 'POST', body: { org_name: org, badge_category: badge, channel_input: input } }).then(function(d) {
+      if (d && d.success) {
+        document.getElementById('ch-org').value = '';
+        document.getElementById('ch-badge').value = '';
+        document.getElementById('ch-input').value = '';
+        loadChannels();
+      } else { alert((d && d.error) || 'Não foi possível cadastrar o canal.'); }
+    }).catch(function() { alert('Falha ao cadastrar o canal.'); });
+  });
+  document.getElementById('video-channels-list').addEventListener('click', function(e) {
+    var b = e.target.closest('[data-chact="del"]'); if (!b) return;
+    var id = b.getAttribute('data-id');
+    if (!confirm('Remover este canal da captação automática?')) return;
+    api('/api/portal/admin/video-channels/' + id, { method: 'DELETE' })
+      .then(loadChannels).catch(function() { alert('Falha ao remover o canal.'); });
+  });
+  document.getElementById('video-channels-list').addEventListener('change', function(e) {
+    var b = e.target.closest('[data-chact="active"]'); if (!b) return;
+    var id = b.getAttribute('data-id');
+    var c = CH_CACHE.find(function(x) { return String(x.id) === String(id); });
+    if (!c) return;
+    api('/api/portal/admin/video-channels/' + id, { method: 'PUT', body: { org_name: c.org_name, badge_category: c.badge_category, channel_input: c.channel_input, active: b.checked ? 1 : 0 } })
+      .then(loadChannels).catch(function() { alert('Falha ao atualizar o canal.'); });
+  });
+  document.getElementById('video-collect').addEventListener('click', function() {
+    var btn = this, orig = btn.textContent;
+    btn.disabled = true; btn.textContent = '⏳ Captando…';
+    api('/api/portal/admin/videos/collect', { method: 'POST' }).then(function(d) {
+      btn.disabled = false; btn.textContent = orig;
+      if (d && d.success) {
+        var msg;
+        if (!d.canais) {
+          msg = 'Nenhum canal cadastrado. Abra "📡 Canais (RSS)" e adicione os canais oficiais primeiro.';
+        } else {
+          msg = 'Captação concluída: ' + d.novos + ' novo(s) pendente(s), ' + d.ignorados + ' repetido(s), ' + d.canais + ' canal(is).';
+          if (d.erros && d.erros.length) msg += '\n\nAvisos:\n- ' + d.erros.join('\n- ');
+        }
+        alert(msg);
+        loadVideos();
+      } else { alert((d && d.error) || 'Falha na captação.'); }
+    }).catch(function() { btn.disabled = false; btn.textContent = orig; alert('Falha ao captar vídeos.'); });
   });
 
   // início: mostra a Central direto. O acesso é controlado pela RHABAC do painel

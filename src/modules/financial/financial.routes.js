@@ -138,7 +138,7 @@ financialRouter.get('/api/financial/settings', requireAuth, (req, res) => {
 
 financialRouter.post('/api/financial/settings', requireAuth, (req, res) => {
   try {
-    const { asaas_api_key, asaas_environment, office_pix_key, office_bank_info } = req.body;
+    const { asaas_api_key, asaas_environment, office_pix_key, office_bank_info, asaas_webhook_token } = req.body;
     const now = new Date().toISOString();
 
     const upsertStmt = db.prepare(`
@@ -149,6 +149,8 @@ financialRouter.post('/api/financial/settings', requireAuth, (req, res) => {
     if (asaas_environment !== undefined) upsertStmt.run('asaas_environment', asaas_environment, now);
     if (office_pix_key !== undefined) upsertStmt.run('office_pix_key', office_pix_key.trim(), now);
     if (office_bank_info !== undefined) upsertStmt.run('office_bank_info', office_bank_info.trim(), now);
+    // Token de autenticação do webhook do Asaas (mesmo valor configurado no painel do Asaas).
+    if (asaas_webhook_token !== undefined) upsertStmt.run('asaas_webhook_token', asaas_webhook_token.trim(), now);
 
     logAudit(req, {
       event_type: 'ALTERACAO',
@@ -180,6 +182,20 @@ financialRouter.post('/api/financial/asaas/test-connection', requireAuth, async 
 // 2. Webhook Oficial do Asaas (Recebe confirmações de pagamento automáticas)
 financialRouter.post('/api/webhooks/asaas', async (req, res) => {
   try {
+    // Autenticidade do webhook: o Asaas envia o header `asaas-access-token` com o token
+    // configurado no painel dele. Sem conferir, qualquer um poderia POSTar uma confirmação
+    // de pagamento forjada (externalReference INST-<id>) e dar baixa/criar receita falsa.
+    const expectedToken = db.prepare(`SELECT value FROM system_settings WHERE key = 'asaas_webhook_token'`).get()?.value;
+    if (expectedToken) {
+      const received = req.headers['asaas-access-token'] || '';
+      if (received !== expectedToken) {
+        console.warn('[ASAAS WEBHOOK] Token de autenticação inválido — requisição rejeitada.');
+        return res.status(401).json({ error: 'Webhook não autorizado.' });
+      }
+    } else {
+      console.warn('[ASAAS WEBHOOK] ⚠️ asaas_webhook_token NÃO configurado — webhook operando SEM autenticação. Configure o token em Ajustes do Financeiro e no painel do Asaas.');
+    }
+
     const eventData = req.body;
     console.log(`[ASAAS WEBHOOK] Evento recebido: ${eventData.event} - Pagamento: ${eventData.payment?.id}`);
 
@@ -221,8 +237,11 @@ financialRouter.post('/api/webhooks/asaas', async (req, res) => {
           const allInsts = db.prepare(`SELECT * FROM contract_installments WHERE client_id = ?`).all(client.id);
           const totalPaid = allInsts.filter(i => i.status === 'Pago').reduce((acc, curr) => acc + (curr.paid_amount || curr.amount), 0);
           const totalContract = client.contract_value || 0;
-          const newBalance = Math.max(0, totalContract - totalPaid);
-          const newStatus = (newBalance === 0 && totalContract > 0) ? 'Quitado' : client.contract_status;
+          // Tolerância de 1 centavo: resíduo de ponto flutuante (REAL) não deve impedir
+          // que o contrato seja marcado como Quitado quando tudo foi pago.
+          const rawBalance = totalContract - totalPaid;
+          const newBalance = rawBalance > 0.005 ? Math.round(rawBalance * 100) / 100 : 0;
+          const newStatus = (newBalance <= 0 && totalContract > 0) ? 'Quitado' : client.contract_status;
 
           db.prepare(`
             UPDATE clients SET 
@@ -694,7 +713,11 @@ financialRouter.post('/api/financial/installments/:clientId/generate', requireAu
 
     const totalVal = client.contract_value || 0;
     const count = client.installments_count || 1;
-    const instVal = count > 0 ? (totalVal / count) : 0;
+    // Arredonda cada parcela a 2 casas (centavos) e joga o resíduo na ÚLTIMA parcela,
+    // para a soma das parcelas bater exatamente com o valor do contrato (e evitar
+    // enviar valor "quebrado" como cobrança ao Asaas).
+    const baseInst = count > 0 ? Math.floor((totalVal / count) * 100) / 100 : 0;
+    const lastInst = Math.round((totalVal - baseInst * (count - 1)) * 100) / 100;
     const firstDueDateStr = client.due_date || new Date().toISOString().split('T')[0];
 
     // Remove parcelas pendentes antigas para recriar se necessário
@@ -707,12 +730,13 @@ financialRouter.post('/api/financial/installments/:clientId/generate', requireAu
       const d = new Date(baseDate);
       d.setMonth(baseDate.getMonth() + (i - 1));
       const dueDate = d.toISOString().split('T')[0];
+      const amount = (i === count) ? lastInst : baseInst;
 
       db.prepare(`
         INSERT INTO contract_installments (
           client_id, installment_number, total_installments, amount, due_date, status, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, 'Pendente', ?, ?)
-      `).run(clientId, i, count, instVal, dueDate, now, now);
+      `).run(clientId, i, count, amount, dueDate, now, now);
     }
 
     const newInsts = db.prepare(`SELECT * FROM contract_installments WHERE client_id = ? ORDER BY installment_number ASC`).all(clientId);
@@ -722,7 +746,7 @@ financialRouter.post('/api/financial/installments/:clientId/generate', requireAu
       event_name: 'GERAR_CARNE_PARCELAS',
       module: 'FINANCEIRO',
       resource_id: clientId,
-      description: `Geração de carnê com ${count} parcelas de R$ ${instVal.toFixed(2)} (Total: R$ ${(count * instVal).toFixed(2)}) para o cliente #${clientId} (${client.full_name}).`
+      description: `Geração de carnê com ${count} parcelas (~R$ ${baseInst.toFixed(2)}, última R$ ${lastInst.toFixed(2)}; Total: R$ ${totalVal.toFixed(2)}) para o cliente #${clientId} (${client.full_name}).`
     });
 
     return res.json({ success: true, message: `${count} parcelas geradas com sucesso!`, installments: newInsts });
@@ -833,6 +857,12 @@ financialRouter.post('/api/financial/installments/:id/manual-pay', requireAuth, 
       return res.status(404).json({ error: 'Parcela não encontrada.' });
     }
 
+    // Idempotência: parcela já paga não é baixada de novo (evita receita duplicada no
+    // fluxo de caixa em caso de duplo clique ou reenvio da baixa).
+    if (installment.status === 'Pago') {
+      return res.status(409).json({ error: 'Esta parcela já consta como paga. Nenhuma baixa adicional foi registrada.' });
+    }
+
     const pDate = paid_date || new Date().toISOString().split('T')[0];
     const pAmount = parseFloat(paid_amount) || installment.amount;
     const pMethod = payment_method || 'PIX';
@@ -856,8 +886,11 @@ financialRouter.post('/api/financial/installments/:id/manual-pay', requireAuth, 
       const allInsts = db.prepare(`SELECT * FROM contract_installments WHERE client_id = ?`).all(client.id);
       const totalPaid = allInsts.filter(i => i.status === 'Pago').reduce((acc, curr) => acc + (curr.paid_amount || curr.amount), 0);
       const totalContract = client.contract_value || 0;
-      const newBalance = Math.max(0, totalContract - totalPaid);
-      const newStatus = (newBalance === 0 && totalContract > 0) ? 'Quitado' : client.contract_status;
+      // Mesma tolerância de 1 centavo do webhook: resíduo de ponto flutuante não deve
+      // impedir que o contrato fique Quitado quando tudo foi pago.
+      const rawBalance = totalContract - totalPaid;
+      const newBalance = rawBalance > 0.005 ? Math.round(rawBalance * 100) / 100 : 0;
+      const newStatus = (newBalance <= 0 && totalContract > 0) ? 'Quitado' : client.contract_status;
 
       db.prepare(`
         UPDATE clients SET 
@@ -1982,8 +2015,11 @@ financialRouter.post('/api/financial/labor-termination/calculate', requireAuth, 
       return res.status(400).json({ error: 'Salário base, data de admissão e data de demissão são obrigatórios.' });
     }
 
-    const adm = new Date(admission_date);
-    const dis = new Date(dismissal_date);
+    // Interpreta as datas ao meio-dia (não meia-noite UTC) para evitar deslocamento de
+    // 1 dia por fuso horário, que afetaria os cálculos por dia (saldo de salário e os
+    // cortes do dia 15 no 13º e nas férias).
+    const adm = new Date(String(admission_date).slice(0, 10) + 'T12:00:00');
+    const dis = new Date(String(dismissal_date).slice(0, 10) + 'T12:00:00');
     if (dis < adm) {
       return res.status(400).json({ error: 'A data de demissão não pode ser anterior à data de admissão.' });
     }

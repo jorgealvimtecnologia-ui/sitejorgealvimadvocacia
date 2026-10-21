@@ -141,6 +141,19 @@ export function ensurePortalSchema(db) {
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_portal_videos_pub ON portal_videos(is_published, ordem);
+
+    -- Canais oficiais para captação automática de vídeos via RSS do YouTube.
+    CREATE TABLE IF NOT EXISTS portal_video_channels (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      org_name TEXT NOT NULL,
+      badge_category TEXT,
+      channel_input TEXT NOT NULL,   -- URL, @handle ou channel_id informado pelo mestre
+      channel_id TEXT,               -- UC... resolvido a partir do channel_input
+      active INTEGER DEFAULT 1,
+      last_sync_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   // Migração defensiva: bancos antigos ganham as colunas novas.
@@ -149,6 +162,11 @@ export function ensurePortalSchema(db) {
   try { db.exec('ALTER TABLE portal_items ADD COLUMN cover_image TEXT'); } catch (e) { /* já existe */ }
   try { db.exec('ALTER TABLE portal_items ADD COLUMN tags TEXT'); } catch (e) { /* já existe */ }
   try { db.exec("ALTER TABLE portal_sources ADD COLUMN modo TEXT DEFAULT 'rss'"); } catch (e) { /* já existe */ }
+  // Vídeos: data de publicação, esteira de aprovação, origem e canal de captação.
+  try { db.exec('ALTER TABLE portal_videos ADD COLUMN video_date TEXT'); } catch (e) { /* já existe */ }
+  try { db.exec("ALTER TABLE portal_videos ADD COLUMN status TEXT DEFAULT 'aprovado'"); } catch (e) { /* já existe */ }
+  try { db.exec('ALTER TABLE portal_videos ADD COLUMN channel_id TEXT'); } catch (e) { /* já existe */ }
+  try { db.exec("ALTER TABLE portal_videos ADD COLUMN origem TEXT DEFAULT 'manual'"); } catch (e) { /* já existe */ }
 
   const now = new Date().toISOString();
 

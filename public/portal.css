@@ -376,15 +376,27 @@ footer .small{font-size:.76rem;line-height:1.6;color:var(--ink-soft)} footer a{c
   flex-wrap: wrap;
   margin-bottom: 5px;
 }
+.portal-video-date {
+  font-size: .68rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin: 1px 0 4px;
+}
 .pv-badge-src {
   font-size: .62rem;
   font-weight: 700;
   text-transform: uppercase;
-  background: #0284c7;
+  /* #0369a1 em vez de #0284c7: texto branco pequeno passa a ter contraste 5.9:1 (WCAG AA ≥ 4.5:1). */
+  background: #0369a1;
   color: #fff;
   padding: 2px 6px;
   border-radius: 4px;
   letter-spacing: .04em;
+}
+/* Foco visível no player de vídeo acionável por teclado (WCAG 2.4.7). */
+.portal-video-player:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
 }
 .pv-badge-cat {
   font-size: .58rem;
@@ -428,4 +440,12 @@ footer .small{font-size:.76rem;line-height:1.6;color:var(--ink-soft)} footer a{c
 }
 .portal-video-link:hover {
   text-decoration: underline;
+}
+/* Estado de carregando/vazio/erro dos vídeos (e demais mensagens neutras do portal).
+   Antes não existia no portal.css — só no portal-revisar.html — então o texto do grid
+   de vídeos aparecia sem a cor suave esperada. */
+.muted {
+  color: var(--ink-faint);
+  font-size: .85rem;
+  text-align: center;
 }

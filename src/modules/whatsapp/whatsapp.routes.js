@@ -137,7 +137,7 @@ whatsappRouter.get('/api/whatsapp/config', requireAuth, async (req, res) => {
 
 whatsappRouter.post('/api/whatsapp/config', requireAuth, (req, res) => {
   try {
-    const { apiUrl, apiKey, instance, dedicatedPhone, forwardPhone, autoReplyEnabled, autoReplyText } = req.body;
+    const { apiUrl, apiKey, instance, dedicatedPhone, forwardPhone, autoReplyEnabled, autoReplyText, webhookToken } = req.body;
 
     if (apiUrl !== undefined) setWhatsAppSetting('evolution_api_url', apiUrl.trim());
     if (apiKey !== undefined && apiKey.trim()) setWhatsAppSetting('evolution_api_key', apiKey.trim());
@@ -146,6 +146,8 @@ whatsappRouter.post('/api/whatsapp/config', requireAuth, (req, res) => {
     if (forwardPhone !== undefined) setWhatsAppSetting('forward_phone', forwardPhone.trim());
     if (autoReplyEnabled !== undefined) setWhatsAppSetting('auto_reply_enabled', autoReplyEnabled ? '1' : '0');
     if (autoReplyText !== undefined) setWhatsAppSetting('auto_reply_text', autoReplyText.trim());
+    // Token de autenticação do webhook (configure o mesmo valor na Evolution API).
+    if (webhookToken !== undefined) setWhatsAppSetting('webhook_token', webhookToken.trim());
 
     logAudit(req, {
       event_type: 'CONFIGURACAO',
@@ -311,6 +313,19 @@ whatsappRouter.post('/api/whatsapp/test', requireAuth, async (req, res) => {
 // ------------------------------------------------------------------------------
 whatsappRouter.post('/api/whatsapp/webhook', async (req, res) => {
   try {
+    // Autenticidade do webhook: sem conferir, um POST forjado dispara auto-resposta para
+    // números arbitrários (abuso do número do escritório e gasto de API). Valida um token
+    // configurável; se ainda não configurado, só avisa (não quebra a integração atual).
+    const expectedToken = getWhatsAppSetting('webhook_token', '');
+    if (expectedToken) {
+      const received = (req.headers['x-webhook-token'] || req.headers['apikey'] || '').toString().trim();
+      if (received !== expectedToken) {
+        return res.status(401).json({ error: 'Webhook não autorizado.' });
+      }
+    } else {
+      console.warn('[WHATSAPP WEBHOOK] ⚠️ webhook_token não configurado — operando SEM autenticação. Configure em Ajustes do WhatsApp e na Evolution API.');
+    }
+
     const body = req.body || {};
     res.status(200).json({ received: true });
 
