@@ -146,4 +146,46 @@ describe('Gestão de Leads v2', () => {
     const cli = db.prepare(`SELECT registration_status FROM clients WHERE id = ?`).get(nid);
     assert.equal(cli.registration_status, 'concluido');
   });
+
+  it('POST /api/leads/:id/notes registra anotação de atendente na trilha de eventos', async () => {
+    const r = await auth(request(app).post(`/api/leads/${leadId}/notes`), masterToken)
+      .send({ note: 'Cliente solicitou retorno após as 14h.', urgent: true });
+    assert.equal(r.status, 201);
+    assert.equal(r.body.success, true);
+    const ev = await auth(request(app).get(`/api/leads/${leadId}/events`), masterToken);
+    const noteEv = ev.body.events.find(e => e.event_type === 'anotacao_atendente');
+    assert.ok(noteEv, 'evento de anotacao_atendente deve constar na trilha');
+    assert.match(noteEv.detail || noteEv.note, /Cliente solicitou retorno/);
+  });
+
+  it('POST /api/leads/:id/submit-approval submete lead para análise do chefe', async () => {
+    const novo = await request(app).post('/api/leads')
+      .field('name', 'Lead Para Chefe').field('phone', '32988887777').field('area', 'Tributário');
+    const nid = novo.body.clientId;
+
+    const sub = await auth(request(app).post(`/api/leads/${nid}/submit-approval`), masterToken)
+      .send({ lawyerName: 'Dr. Jorge Alvim', note: 'Caso urgente de execução fiscal' });
+    assert.equal(sub.status, 200);
+    assert.equal(sub.body.stage, 'em_analise_chefe');
+
+    // Aparece na lista de pendingApproval do dashboard-summary
+    const sum = await auth(request(app).get('/api/leads/dashboard-summary'), masterToken);
+    assert.ok(sum.body.pendingApproval.items.some(l => l.id === nid));
+
+    // Despacho e aprovação pelo Chefe do Escritório
+    const apprv = await auth(request(app).post(`/api/leads/${nid}/approve`), masterToken)
+      .send({ feedback: 'Aprovado. Iniciar petição.' });
+    assert.equal(apprv.status, 200);
+    assert.equal(apprv.body.success, true);
+
+    const cli = db.prepare(`SELECT registration_status FROM clients WHERE id = ?`).get(nid);
+    assert.ok(cli, 'cliente formal deve existir após aprovação do chefe');
+    assert.equal(cli.registration_status, 'concluido');
+  });
+
+  it('DELETE /api/leads/:id por não-mestre → 403 (bloqueado para empregados)', async () => {
+    const r = await auth(request(app).delete(`/api/leads/${leadId}`), advToken);
+    assert.equal(r.status, 403);
+  });
 });
+

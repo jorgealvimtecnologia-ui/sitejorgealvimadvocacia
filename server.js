@@ -51,6 +51,7 @@ import { financialRouter } from './src/modules/financial/financial.routes.js';
 import { generateNextClientFullId } from './src/shared/ids.js';
 import { sendLawyerWhatsAppNotification } from './src/shared/notify.js';
 import { clientsRouter } from './src/modules/clients/clients.routes.js';
+import { contactsRouter } from './src/modules/contacts/contacts.routes.js';
 import { leadsRouter } from './src/modules/leads/leads.routes.js';
 import { visitsRouter } from './src/modules/visits/visits.routes.js';
 import { juridicoRouter, seedCourtHolidays } from './src/modules/juridico/juridico.routes.js';
@@ -71,6 +72,9 @@ import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { bookingRouter, startBookingReminders } from './src/modules/booking/booking.routes.js';
 import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
+import { whatsappRouter } from './src/modules/whatsapp/whatsapp.routes.js';
+import { brevoRouter } from './src/modules/brevo/brevo.routes.js';
+import { radarB2bRouter } from './src/modules/radar-b2b/radar-b2b.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 import { serveStoredFiles } from './src/middleware/stored-files.js';
 import { modernImages } from './src/middleware/modern-images.js';
@@ -225,6 +229,7 @@ app.use(calendarRouter);
 app.use(hrRouter);
 app.use(financialRouter);
 app.use(clientsRouter);
+app.use(contactsRouter);
 app.use(leadsRouter);
 app.use(visitsRouter);
 app.use(juridicoRouter);
@@ -246,6 +251,9 @@ app.use(recaptchaRouter);
 app.use(bookingRouter);
 app.use(indicatorsRouter);
 app.use(radarRouter);
+app.use(whatsappRouter);
+app.use(brevoRouter);
+app.use(radarB2bRouter);
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console
@@ -501,6 +509,11 @@ app.get(['/assinar', '/assinar.html'], (req, res) => {
 // Laboratório de Testes Práticos e Demonstração em Tempo Real
 app.get(['/teste-pratico', '/teste-pratico.html'], (req, res) => {
   sendFreshFile(res, 'teste-pratico.html');
+});
+
+// Maquete Interativa do CRM Unificado (Inbound + Outbound)
+app.get(['/crm-unificado', '/crm-unificado.html'], (req, res) => {
+  sendFreshFile(res, 'crm-unificado.html');
 });
 
 // Demonstração Visual da Caixa de Boas-Vindas

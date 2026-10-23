@@ -51,15 +51,30 @@ export async function sendLawyerWhatsAppNotification(messageText, metadata = {})
  * @returns {Promise<{sent:boolean, reason?:string, status?:number}>}
  */
 export async function sendWhatsAppMessage(phone, messageText, { fetchImpl = fetch, env = process.env } = {}) {
-  const gateway = String(env.WHATSAPP_GATEWAY_URL || '').trim();
+  let gateway = String(env.WHATSAPP_GATEWAY_URL || '').trim();
+  let key = env.WHATSAPP_API_KEY || '';
+
+  if (!gateway) {
+    try {
+      const { db } = await import('../config/db.js');
+      const urlRow = db.prepare(`SELECT value FROM whatsapp_settings WHERE key = 'evolution_api_url'`).get();
+      const keyRow = db.prepare(`SELECT value FROM whatsapp_settings WHERE key = 'evolution_api_key'`).get();
+      const instRow = db.prepare(`SELECT value FROM whatsapp_settings WHERE key = 'instance_name'`).get();
+      if (urlRow && urlRow.value) {
+        const inst = (instRow && instRow.value) || 'jorgealvim_advocacia';
+        gateway = `${urlRow.value.replace(/\/$/, '')}/message/sendText/${inst}`;
+        key = (keyRow && keyRow.value) || key;
+      }
+    } catch (_) {}
+  }
+
   if (!gateway) return { sent: false, reason: 'not_configured' };
   if (!/^\d{12,13}$/.test(String(phone || ''))) return { sent: false, reason: 'invalid_phone' };
   try {
-    const key = env.WHATSAPP_API_KEY || '';
     const res = await fetchImpl(gateway, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Client-Token': key, apikey: key },
-      body: JSON.stringify({ phone, number: phone, message: messageText }),
+      body: JSON.stringify({ phone, number: phone, message: messageText, text: messageText }),
       signal: AbortSignal.timeout(15000),
     });
     return res.ok

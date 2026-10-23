@@ -1,6 +1,6 @@
 # 🗺️ Roadmap Estratégico & Arquitetura Unificada: Plataforma Jorge Alvim Advocacia & Legaltech
 **Advogado Titular:** Dr. Jorge Eduardo da Silva Alvim • OAB/MG 222.943  
-**Data da Última Atualização:** 3 de Outubro de 2026 • Juiz de Fora - MG  
+**Data da Última Atualização:** 18 de Outubro de 2026 • Juiz de Fora - MG  
 **Ambiente:** Servidor VPS Contabo em Produção (`161.97.71.14`) | Ambiente Local Node.js + Docker  
 **Repositório GitHub:** `jorgealvimtecnologia-ui/sitejorgealvimadvocacia`  
 **Conformidade Ética e Legal:** Provimento 205/2021 do CFOAB, Código de Ética e Disciplina, e LGPD (Lei 13.709/2018)  
@@ -14,11 +14,11 @@ Este documento consolida a **Memória Técnica Internacional (iManage, Clio, Act
 
 | Camada Arquitetural | Escopo Auditado | 🟢 Atende | 🟡 Parcial | 🔴 Não Atende | Índice de Aderência | Padrão Internacional de Referência |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **1. ⚙️ Core Jurídico** | 8 módulos | 5 | 3 | 0 | **85%** | **iManage & NetDocuments** (Matter-Centric) |
-| **2. 🤖 Inteligência Artificial** | 5 módulos | 0 | 3 | 2 | **30%** | **Harvey AI & CoCounsel** (RAG Acervo Próprio) |
-| **3. 🔗 Integrações & Conectividade** | 5 módulos | 1 | 3 | 1 | **55%** | **Clio & WhatsApp Cloud API** (Cidadã) |
-| **4. 🔒 Segurança, Compliance & SaaS** | 5 módulos | 3 | 2 | 0 | **82%** | **Actionstep & Ironclad** (Quality Gates / Liveness) |
-| **TOTAL CONSOLIDADO** | **23 Requisitos** | **9** | **11** | **3** | **64.5%** | **Auditoria de Fluxo: 90/100 (Nível Ouro)** |
+| **1. ⚙️ Core Jurídico** | 8 módulos | 6 | 2 | 0 | **90%** | **iManage & NetDocuments** (Matter-Centric) |
+| **2. 🤖 Inteligência Artificial** | 5 módulos | 1 | 3 | 1 | **45%** | **Harvey AI & CoCounsel** (RAG Acervo Próprio) |
+| **3. 🔗 Integrações & Conectividade** | 5 módulos | 3 | 2 | 0 | **78%** | **Clio & WhatsApp Cloud API** (Cidadã) |
+| **4. 🔒 Segurança, Compliance & SaaS** | 5 módulos | 4 | 1 | 0 | **88%** | **Actionstep & Ironclad** (Quality Gates / Liveness) |
+| **TOTAL CONSOLIDADO** | **23 Requisitos** | **14** | **8** | **1** | **78.2%** | **Auditoria de Fluxo: 90/100 (Nível Ouro)** |
 
 ---
 
@@ -68,6 +68,11 @@ Alinhamento aos padrões adotados pelas maiores bancas mundiais (*Global 100 / M
 - [x] Autenticação Google Identity Services (OAuth 2.0) e RBAC fail-closed.
 - [x] Módulo LGPD com Direitos do Titular (Art. 18), Mapa de Dados e Gestão de Consentimentos.
 - [x] Auditor Nativo de Fluxo Forense (`npm run audit:flow`) com Nota 90/100 (Nível Ouro).
+- [x] **Newsletter e E-mail Marketing Profissional (Brevo REST API v3):** Lotes diários de 300 contatos (custo zero permanente), sincronização de 819 contatos em 3 listas e disparo da 1ª campanha oficial com telemetria em tempo real. E-mails transacionais (senhas e avisos) com selo de entregabilidade Brevo e fallback seguro SMTP. *(Entregue em 18/10/2026)*
+- [x] **Públicos Personalizados para Meta Ads (Instagram & Facebook):** Exportação padronizada e criptografada (SHA-256) dos contatos para campanhas institucionais no Meta Ads Manager. *(Entregue em 17/10/2026)*
+- [x] **Infraestrutura WhatsApp Evolution API (Chip Dedicado):** Preparação modular para integração de WhatsApp autônomo com chip físico sem taxas de mensagens da Meta. *(Entregue em 17/10/2026)*
+- [x] **Higienização de Contatos & Modo Lista Rápida:** Parser de importação CSV/VCF resiliente, identificação de PJ e navegação fluida de 800+ contatos no painel. *(Entregue em 17/10/2026)*
+- [x] **Portal de Notícias & Central de Mídias:** Esteira editorial com robô de notícias, layout oficial integrado e publicação em redes sociais. *(Entregue em 16/10/2026)*
 - [ ] **DMS Matter-Centric com Anexo por Andamento:** Tabela `lawsuit_movement_files` para vincular petições e decisões diretamente à linha do tempo do processo. *(Q4/2026 • P1)*
 - [ ] **Leitor OCR Automático (Zero Digitação):** Extração de dados de RG/CNH via Tesseract.js para auto-preenchimento cadastral. *(Q4/2026 • P1)*
 - [ ] **WhatsApp Business Cloud API Oficial:** Disparo automatizado no WhatsApp a cada movimentação ou audiência. *(Q4/2026 • P1)*
@@ -230,6 +235,11 @@ Após o registro de uma ordem pelo Construtor, o item é automaticamente roteado
 
 | ID da Ordem | Título | Camada | Onda | Prioridade | Status | Autor |
 | :--- | :--- | :--- | :--- | :---: | :---: | :--- |
+| `MKT-06` | Newsletter do blog e campanhas em massa (Brevo API v3 com lotes de 300/dia e custo zero) | Integrações & Conectividade | Onda 3 — Produto & Captação | P1 | 🟢 Conforme | `Dr. Jorge Alvim (via Antigravity)` |
+| `MKT-07` | Meta Ads: exportação de Públicos Personalizados (Instagram e Facebook) | Integrações & Conectividade | Onda 3 — Produto & Captação | P2 | 🟢 Conforme | `Dr. Jorge Alvim (via Antigravity)` |
+| `CONT-01` | Higienização da base de contatos, importador universal e Modo Lista Rápida | Core Jurídico | Onda 1 — Confiabilidade & SRE | P1 | 🟢 Conforme | `Dr. Jorge Alvim (via Antigravity)` |
+| `MKT-05` | WhatsApp automático de atendimento (chip dedicado → Evolution API + inbox) | Integrações & Conectividade | Onda 3 — Produto & Captação | P2 | 🟡 Em Curso | `Dr. Jorge Alvim (via Antigravity)` |
+| `ORD-MURLFCK7-KIM` | Integração Google Suite: GA4, GTM, Google Ads (Conversões), Maps Embed e reCAPTCHA v3 | Integrações & Conectividade | Onda 3 — Produto & Captação | P1 | 🟢 Conforme | `Dr. Jorge Alvim (via Antigravity)` |
 | `ORD-MUESODZ8` | Teste geral do sistema e monitoração de acessos | Core Jurídico | Onda 1 — Confiabilidade & SRE | P1 | ⚪ Planejado | `jorgealvimtecnologia` |
 | `ORD-MUGAU9ST-CSP` | Integração Omnichannel: Distribuição de Artigos com IA para Google, YouTube, Instagram e Facebook | Inteligência Artificial | Onda 3 — Produto & Captação | P1 | ⚪ Planejado | `Dr. Jorge Alvim (via Antigravity)` |
 
@@ -337,6 +347,13 @@ Atualizado em 05/10/2026. **38 ordens abertas**: 8 do P0 (o que sobrou), 13 do P
   - *Estado:* pendente: decisão do Dr. Jorge (04/10/2026: o WhatsApp não está enviando mensagens; o e-mail funciona)
   - *Situação:* Em 04/10/2026 o Dr. Jorge viu que a recuperação de senha não entregava o código por WhatsApp. O sistema só envia por WhatsApp se houver um serviço de envio (WHATSAPP_GATEWAY_URL e a chave WHATSAPP_API_KEY no cofre do servidor), e hoje isso não está funcionando. Impacto: alertas de prazo por WhatsApp (AUD-04), códigos de acesso por WhatsApp e avisos de segurança por WhatsApp não chegam; os canais por e-mail e o aviso dentro do painel continuam. Já corrigido: as telas de recuperação não prometem mais WhatsApp inativo, oferecem o e-mail e o sistema só dá o código como entregue se o envio realmente aconteceu.
   - *Pronto quando:* Dr. Jorge decide: contratar/ligar um serviço de WhatsApp (API oficial ou provedor) com a chave guardada no cofre, ou manter só e-mail e painel; se ligar, `WHATSAPP_GATEWAY_URL` e `WHATSAPP_API_KEY` no cofre, teste de envio real para o número do titular, alerta de prazo de teste recebido por WhatsApp e e-mail, e o painel mostrando o estado do canal (ligado/desligado).
+- **AUD-43 — Robô Enriquecedor Web (Crawler) e Consulta de CNPJ/Sócios para o Radar B2B**
+  - *Estado:* pendente (anotado em 18/10/2026 a pedido do Dr. Jorge para próximos trabalhos)
+  - *Situação:* A extração do Google Places traz Nome, Telefone/WhatsApp, Endereço e Website, mas não traz e-mail, redes sociais nem CNPJ/Sócios na resposta padrão da API.
+  - *Pronto quando:* 
+    1. Robô Enriquecedor Web (Crawler) assíncrono em segundo plano: visita os websites das empresas prospectadas no Radar B2B, acessa rodapé e páginas de contato (`/contato`, `/fale-conosco`, `/quem-somos`), e extrai via regex e parsing HTML: e-mails corporativos (`contato@...`, etc.), links e perfis de redes sociais (Instagram, Facebook, LinkedIn) e o CNPJ do rodapé (Decreto 7.962/2013);
+    2. Consulta de CNPJ, CNAE e Quadro de Sócios (QSA) via APIs públicas gratuitas (BrasilAPI / ReceitaWS): a partir do CNPJ encontrado ou do nome comercial/telefone, consulta dados oficiais da Receita Federal trazendo Situação Cadastral, CNAE detalhado, Capital Social e nomes dos Sócios/Administradores (QSA), viabilizando abordagem consultiva direta aos tomadores de decisão;
+    3. Atualização automática dos campos na tabela `radar_b2b_prospects` e sincronização direta para campanhas segmentadas no Brevo e WhatsApp.
 
 ### P2 — Normal (17)
 

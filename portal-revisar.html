@@ -184,6 +184,21 @@
       <div class="bd"><div id="boxes-editor-new"></div><div id="boxes-list"><div class="muted">Carregando…</div></div></div>
     </div>
 
+    <!-- VÍDEOS INSTITUCIONAIS (CAPA DO PORTAL) -->
+    <div class="box" id="box-videos-admin">
+      <div class="bh">
+        <div>
+          <h3>🎥 Vídeos Institucionais (Capa do Portal)</h3>
+          <div style="font-size:.76rem;color:var(--ink-soft);font-weight:500;margin-top:2px">Vídeos oficiais de tribunais e órgãos públicos exibidos em mini boxes na capa do portal.</div>
+        </div>
+        <button class="btn sm primary" id="video-new" type="button" style="margin-left:auto">+ Novo Vídeo</button>
+      </div>
+      <div class="bd">
+        <div id="video-editor-new"></div>
+        <div id="video-list"><div class="muted">Carregando vídeos…</div></div>
+      </div>
+    </div>
+
     <!-- MODERAÇÃO -->
     <div class="box">
       <div class="bh"><h3>💬 Moderação de Comentários</h3></div>
@@ -224,17 +239,26 @@
   function fmtDate(v){if(!v)return'';var d=new Date(v);if(isNaN(d))return esc(v);return d.toLocaleDateString('pt-BR');}
   function mostrarAviso(){
     var b=document.getElementById('auth-aviso');if(b)b.hidden=false;
-    ['items','blog-list','faqs','boxes','sources','terms','comments','leads','nl-campaigns'].forEach(function(id){
+    Array.prototype.forEach.call(document.querySelectorAll('#painel > .box'),function(bx){
+      if(bx.id!=='auth-aviso')bx.style.display='none';
+    });
+    ['items','blog-list','faq-list','boxes-list','video-list','sources','terms','comments','leads','nl-campaigns'].forEach(function(id){
       var el=document.getElementById(id);
       if(el&&/Carregando/.test(el.innerHTML))el.innerHTML='<div class="muted">— entre no painel para ver —</div>';
     });
   }
-  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401){mostrarAviso();throw new Error('401');}return r.json();});}
+  function api(path,opts){opts=opts||{};opts.headers=opts.headers||{};opts.headers['Accept']='application/json';if(TK)opts.headers['Authorization']='Bearer '+TK;if(opts.body&&typeof opts.body!=='string'){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(path,opts).then(function(r){if(r.status===401||r.status===403){mostrarAviso();throw new Error(String(r.status));}return r.json();});}
 
   var FASE_LABEL={'1_triagem':'Triagem','2_pauta':'Pauta','3_redacao':'Redação','4_publicado':'Publicadas','descartada':'Descartadas'};
 
-  // Sem caixa de senha própria: usa a sessão do painel. Se não houver, só avisa.
-  function showPainel(){loadOverview();loadItems(curFase);loadBlog();loadFaqs();loadBoxes();loadSources();loadTerms();loadComments();loadLeads();loadCampaigns();}
+  // Sem caixa de senha própria: valida a sessão Master na RHABAC do painel antes de carregar os módulos.
+  function showPainel(){
+    if(!TK){mostrarAviso();return;}
+    api('/api/access-control/my-permissions').then(function(d){
+      if(!d||!d.success||!d.is_master){mostrarAviso();return;}
+      loadOverview();loadItems(curFase);loadBlog();loadFaqs();loadBoxes();loadVideos();loadSources();loadTerms();loadComments();loadLeads();loadCampaigns();
+    }).catch(function(){mostrarAviso();});
+  }
 
   // Controle central
   function loadOverview(){
@@ -798,6 +822,191 @@
     if(act==='cancel'){this.innerHTML='';return;}
     if(act==='save'){var body=collectBox(this);if(!body.title||!body.description){alert('Título e descrição são obrigatórios.');return;}
       api('/api/admin/site/practice-areas',{method:'POST',body:body}).then(function(){document.getElementById('boxes-editor-new').innerHTML='';loadBoxes();});return;}
+  });
+
+  // ===== Vídeos Institucionais da Capa (/api/portal/admin/videos) =====
+  var VIDEO_CACHE = [];
+  function extractYtIdClient(url) {
+    if (!url) return '';
+    var str = String(url).trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+    var m1 = str.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([a-zA-Z0-9_-]{11})/);
+    if (m1 && m1[1]) return m1[1];
+    var m2 = str.match(/(?:shorts\/)([a-zA-Z0-9_-]{11})/);
+    if (m2 && m2[1]) return m2[1];
+    return '';
+  }
+
+  function videoEditor(v) {
+    v = v || { id: '', title: '', source_name: 'STF', badge_category: 'TRIBUNAIS', youtube_url: '', youtube_id: '', description: '', ordem: 10, is_published: 1 };
+    var ytid = v.youtube_id || extractYtIdClient(v.youtube_url);
+    var thumb = ytid ? 'https://img.youtube.com/vi/' + ytid + '/hqdefault.jpg' : '';
+
+    return '<div class="editor open" style="border:1px solid var(--gold);background:var(--surface-2);border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">'
+      + '<div style="font-weight:700;font-size:.88rem;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">' + (v.id ? '✏️ Editar Vídeo #' + v.id : '➕ Cadastrar Novo Vídeo Institucional') + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+        + '<div><label>Título do Vídeo *</label><input data-vf="title" value="' + esc(v.title) + '" placeholder="Ex: Entenda o Julgamento no STF" required></div>'
+        + '<div><label>Órgão Oficial / Canal *</label><input data-vf="source_name" value="' + esc(v.source_name) + '" placeholder="Ex: STF, STJ, TST, INSS, TJMG, CNJ..."></div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 100px;gap:12px;margin-top:6px">'
+        + '<div><label>Categoria (Badge)</label><input data-vf="badge_category" value="' + esc(v.badge_category || 'INSTITUCIONAL') + '" placeholder="Ex: TRIBUNAIS, TRABALHISTA, PREVIDENCIÁRIO..."></div>'
+        + '<div><label>URL ou ID do YouTube *</label><input data-vf="youtube_url" oninput="atualizarYtPreview(this)" value="' + esc(v.youtube_url) + '" placeholder="https://www.youtube.com/watch?v=..."></div>'
+        + '<div><label>Ordem</label><input data-vf="ordem" type="number" min="1" max="99" value="' + esc(v.ordem || 10) + '"></div>'
+      + '</div>'
+      + '<div style="margin-top:6px"><label>Descrição Resumida</label><textarea data-vf="description" rows="2" style="min-height:60px" placeholder="Breve resumo informativo sobre o tema do vídeo...">' + esc(v.description || '') + '</textarea></div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)">'
+        + '<label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:600;font-size:.85rem;cursor:pointer"><input type="checkbox" data-vf="is_published"' + (v.is_published ? ' checked' : '') + '> <span>Publicar na capa do Portal</span></label>'
+        + '<div id="yt-prev-box" style="display:flex;align-items:center;gap:10px;' + (thumb ? '' : 'display:none;') + '">'
+          + '<span style="font-size:.75rem;color:var(--ink-soft)">Miniatura:</span>'
+          + '<img class="yt-prev-img" src="' + thumb + '" style="width:80px;height:45px;object-fit:cover;border-radius:4px;border:1px solid var(--line)">'
+        + '</div>'
+      + '</div>'
+      + '<div class="acts" style="margin-top:12px">'
+        + '<button class="btn sm primary" data-vact="save" data-id="' + (v.id || '') + '">💾 Salvar Vídeo</button>'
+        + '<button class="btn sm" data-vact="cancel" data-id="' + (v.id || '') + '">Cancelar</button>'
+      + '</div>'
+    + '</div>';
+  }
+
+  window.atualizarYtPreview = function(input) {
+    var editor = input.closest('.editor');
+    if (!editor) return;
+    var id = extractYtIdClient(input.value);
+    var box = editor.querySelector('#yt-prev-box');
+    var img = editor.querySelector('.yt-prev-img');
+    if (id && box && img) {
+      img.src = 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg';
+      box.style.display = 'flex';
+    } else if (box) {
+      box.style.display = 'none';
+    }
+  };
+
+  function videoRow(v) {
+    var isPub = v.is_published === 1;
+    var st = isPub
+      ? '<span style="color:var(--green);font-weight:700;font-size:.75rem">● Publicado na Capa</span>'
+      : '<span style="color:var(--ink-faint);font-weight:700;font-size:.75rem">○ Rascunho / Oculto</span>';
+    var thumb = v.youtube_id ? 'https://img.youtube.com/vi/' + v.youtube_id + '/hqdefault.jpg' : '';
+
+    return '<div class="item" data-id="' + v.id + '" style="display:flex;flex-direction:column;gap:8px;background:var(--surface)">'
+      + '<div style="display:flex;gap:14px;align-items:flex-start">'
+        + (thumb ? '<a href="' + esc(v.youtube_url) + '" target="_blank" rel="noopener" style="position:relative;flex-shrink:0;width:120px;height:68px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#000;display:block">'
+          + '<img src="' + thumb + '" alt="" style="width:100%;height:100%;object-fit:cover;opacity:0.9">'
+          + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="#ff0000"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.6)"/><polygon points="10,8 16,12 10,16" fill="#ffffff"/></svg></div>'
+          + '</a>' : '')
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">'
+            + '<span class="tp" style="background:#0284c7;color:#fff;font-size:.65rem;padding:2px 6px;border-radius:4px">' + esc(v.source_name || 'Oficial') + '</span>'
+            + '<span class="tp" style="background:var(--surface-2);color:var(--ink-soft);border:1px solid var(--line);font-size:.62rem;padding:2px 6px;border-radius:4px">' + esc(v.badge_category || 'INSTITUCIONAL') + '</span>'
+            + '<span style="font-size:.72rem;color:var(--ink-faint);margin-left:auto">Ordem: <b>' + (v.ordem || 10) + '</b></span>'
+          + '</div>'
+          + '<h4 style="margin:2px 0 4px;font-size:1rem;color:var(--ink)">' + esc(v.title) + '</h4>'
+          + '<div class="src">' + st + ' · <a href="' + esc(v.youtube_url) + '" target="_blank" rel="noopener" style="color:var(--gold);font-weight:600">Abrir no YouTube ↗</a></div>'
+          + (v.description ? '<p class="sm" style="margin-top:4px;font-size:.82rem;color:var(--ink-soft)">' + esc(v.description) + '</p>' : '')
+        + '</div>'
+      + '</div>'
+      + '<div class="acts" style="border-top:1px solid var(--line-soft);padding-top:8px;margin-top:4px">'
+        + '<button class="btn sm" data-vact="edit" data-id="' + v.id + '">✏️ Editar</button>'
+        + '<button class="btn sm ' + (isPub ? '' : 'pub') + '" data-vact="toggle" data-id="' + v.id + '">' + (isPub ? 'Despublicar' : 'Publicar na Capa') + '</button>'
+        + '<button class="btn sm danger" data-vact="del" data-id="' + v.id + '">🗑️ Excluir</button>'
+      + '</div>'
+      + '<div id="ved-' + v.id + '"></div>'
+    + '</div>';
+  }
+
+  function loadVideos() {
+    var box = document.getElementById('video-list');
+    if (!box) return;
+    box.innerHTML = '<div class="muted">Carregando vídeos…</div>';
+    api('/api/portal/admin/videos').then(function(d) {
+      if (!d || !d.success) return;
+      VIDEO_CACHE = d.videos || [];
+      box.innerHTML = VIDEO_CACHE.length
+        ? VIDEO_CACHE.map(videoRow).join('')
+        : '<div class="muted">Nenhum vídeo cadastrado. Clique em "+ Novo Vídeo" para adicionar.</div>';
+    }).catch(function() {
+      box.innerHTML = '<div class="muted">Não foi possível carregar os vídeos.</div>';
+    });
+  }
+
+  function collectVideo(scope) {
+    var b = {};
+    Array.prototype.forEach.call(scope.querySelectorAll('[data-vf]'), function(f) {
+      b[f.getAttribute('data-vf')] = (f.type === 'checkbox') ? (f.checked ? 1 : 0) : f.value.trim();
+    });
+    if (b.ordem !== undefined) b.ordem = parseInt(b.ordem, 10) || 10;
+    return b;
+  }
+
+  function findVideo(id) {
+    return VIDEO_CACHE.find(function(x) { return String(x.id) === String(id); });
+  }
+
+  document.getElementById('video-new').addEventListener('click', function() {
+    var h = document.getElementById('video-editor-new');
+    h.innerHTML = h.innerHTML ? '' : videoEditor(null);
+  });
+
+  document.getElementById('video-editor-new').addEventListener('click', function(e) {
+    var b = e.target.closest('[data-vact]');
+    if (!b) return;
+    var act = b.getAttribute('data-vact');
+    if (act === 'cancel') { this.innerHTML = ''; return; }
+    if (act === 'save') {
+      var body = collectVideo(this);
+      if (!body.title || !body.youtube_url) { alert('Título e Link do YouTube são obrigatórios.'); return; }
+      api('/api/portal/admin/videos', { method: 'POST', body: body }).then(function(d) {
+        if (d && d.success) {
+          document.getElementById('video-editor-new').innerHTML = '';
+          loadVideos();
+        } else {
+          alert((d && d.error) || 'Não foi possível cadastrar o vídeo.');
+        }
+      }).catch(function() { alert('Falha ao comunicar com o servidor.'); });
+    }
+  });
+
+  document.getElementById('video-list').addEventListener('click', function(e) {
+    var b = e.target.closest('[data-vact]');
+    if (!b) return;
+    var id = b.getAttribute('data-id'), act = b.getAttribute('data-vact');
+    if (act === 'edit') {
+      var h = document.getElementById('ved-' + id);
+      if (h.innerHTML) { h.innerHTML = ''; return; }
+      var v = findVideo(id);
+      if (v) h.innerHTML = videoEditor(v);
+      return;
+    }
+    if (act === 'cancel') {
+      document.getElementById('ved-' + id).innerHTML = '';
+      return;
+    }
+    if (act === 'save') {
+      var h2 = document.getElementById('ved-' + id), body = collectVideo(h2);
+      if (!body.title || !body.youtube_url) { alert('Título e Link do YouTube são obrigatórios.'); return; }
+      api('/api/portal/admin/videos/' + id, { method: 'PUT', body: body }).then(function(d) {
+        if (d && d.success) {
+          loadVideos();
+        } else {
+          alert((d && d.error) || 'Não foi possível atualizar o vídeo.');
+        }
+      }).catch(function() { alert('Falha ao atualizar o vídeo.'); });
+      return;
+    }
+    if (act === 'toggle') {
+      api('/api/portal/admin/videos/' + id + '/toggle', { method: 'PATCH' }).then(function() {
+        loadVideos();
+      }).catch(function() { alert('Falha ao alternar publicação.'); });
+      return;
+    }
+    if (act === 'del') {
+      if (!confirm('Tem certeza que deseja excluir este vídeo definitivamente?')) return;
+      api('/api/portal/admin/videos/' + id, { method: 'DELETE' }).then(function() {
+        loadVideos();
+      }).catch(function() { alert('Falha ao excluir o vídeo.'); });
+      return;
+    }
   });
 
   // início: mostra a Central direto. O acesso é controlado pela RHABAC do painel

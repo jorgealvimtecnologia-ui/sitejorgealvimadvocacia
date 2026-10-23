@@ -55,13 +55,14 @@ function leadHoneypot(req, res, next) {
 // Vocabulário único de estágios do cadastro (lead → cliente).
 const LEAD_STAGES = [
   'recebido', 'distribuido', 'em_cadastro', 'falta_documento', 'falta_dados',
-  'aguardando_assinatura', 'concluido', 'desistiu', 'outros'
+  'aguardando_assinatura', 'em_analise_chefe', 'concluido', 'desistiu', 'outros'
 ];
 
 // Mapeia o estágio do lead para o status de cadastro exibido na ficha do cliente.
 function registrationStatusFromStage(stage) {
   if (stage === 'concluido') return 'concluido';
   if (stage === 'desistiu') return 'desistiu';
+  if (stage === 'em_analise_chefe') return 'em_analise';
   return 'pendente';
 }
 
@@ -231,7 +232,8 @@ leadsRouter.get('/api/leads', requireAuth, (req, res) => {
     const stmt = db.prepare(`
       SELECT id, created_at, name, phone, area, message, files, status,
              stage, stage_note, responsible_lawyer_id, responsible_lawyer_name,
-             assigned_secretary_id, assigned_secretary_name, assigned_at, client_id
+             assigned_secretary_id, assigned_secretary_name, assigned_at, client_id,
+             origin, origin_detail
       FROM leads
       ORDER BY created_at DESC
     `);
@@ -281,7 +283,8 @@ leadsRouter.patch('/api/leads/:id/status', requireAuth, (req, res) => {
   }
 });
 
-leadsRouter.delete('/api/leads/:id', requireAuth, (req, res) => {
+// Exclusão de atendimento/lead — SOMENTE MESTRE / TITULAR (empregados não podem excluir dados).
+leadsRouter.delete('/api/leads/:id', requireMaster, (req, res) => {
   try {
     const { id } = req.params;
     const lead = db.prepare(`SELECT name FROM leads WHERE id = ?`).get(id);
@@ -323,6 +326,18 @@ leadsRouter.get('/api/leads/dashboard-summary', requireAuth, (req, res) => {
     `).all();
     const newLeadsCount = db.prepare(`SELECT COUNT(*) AS c FROM leads WHERE stage = 'recebido' OR stage IS NULL`).get().c;
 
+    // Leads aguardando análise e despacho do Chefe do Escritório (Dr. Jorge Alvim).
+    let pendingApproval = [];
+    let pendingApprovalCount = 0;
+    try {
+      pendingApproval = db.prepare(`
+        SELECT id, name, phone, area, created_at, stage, stage_note, responsible_lawyer_id, responsible_lawyer_name
+        FROM leads WHERE stage = 'em_analise_chefe'
+        ORDER BY created_at DESC LIMIT 20
+      `).all();
+      pendingApprovalCount = db.prepare(`SELECT COUNT(*) AS c FROM leads WHERE stage = 'em_analise_chefe'`).get().c;
+    } catch (_) {}
+
     // Contratos = solicitações de assinatura de contrato de honorários (esign).
     const now = new Date();
     const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -336,7 +351,12 @@ leadsRouter.get('/api/leads/dashboard-summary', requireAuth, (req, res) => {
       contracts = { day: countSince(startDay), month: countSince(startMonth), year: countSince(startYear) };
     } catch (_) { /* tabela de assinaturas ainda não criada */ }
 
-    return res.json({ success: true, newLeads: { count: newLeadsCount, items: newLeads }, contracts });
+    return res.json({ 
+      success: true, 
+      newLeads: { count: newLeadsCount, items: newLeads }, 
+      pendingApproval: { count: pendingApprovalCount, items: pendingApproval },
+      contracts 
+    });
   } catch (e) {
     console.error('[ERRO] dashboard-summary leads:', e);
     return res.status(500).json({ error: 'Erro ao montar o resumo.' });
@@ -488,5 +508,122 @@ leadsRouter.post('/api/leads/:id/complete', requireAuth, (req, res) => {
   } catch (e) {
     console.error('[ERRO] concluir cadastro lead:', e);
     return res.status(500).json({ error: 'Erro ao concluir o cadastro.' });
+  }
+});
+
+// ---- Caixa de Anotações do Atendente: registra notas cronológicas na linha do tempo.
+leadsRouter.post('/api/leads/:id/notes', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { urgent } = req.body || {};
+    const text = req.body?.text || req.body?.note;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'O texto da anotação é obrigatório.' });
+    }
+    const lead = db.prepare(`SELECT id, name FROM leads WHERE id = ?`).get(id);
+    if (!lead) return res.status(404).json({ error: 'Lead não encontrado.' });
+
+    const performer = req.user.name || req.user.username || 'Atendente';
+    const noteDetail = (urgent ? '🚨 [URGENTE] ' : '') + text.trim();
+    logLeadEvent(id, 'anotacao_atendente', noteDetail, performer);
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'NOTA_LEAD',
+      module: 'LEADS',
+      resource_id: id,
+      description: `Anotação no lead #${id} (${lead.name}): ${noteDetail.slice(0, 100)}`
+    });
+
+    return res.status(201).json({ success: true, message: 'Anotação salva com sucesso no histórico.' });
+  } catch (e) {
+    console.error('[ERRO] salvar anotação lead:', e);
+    return res.status(500).json({ error: 'Erro ao salvar a anotação.' });
+  }
+});
+
+// ---- Envio do Lead para Análise do Chefe do Escritório (Dr. Jorge Alvim).
+leadsRouter.post('/api/leads/:id/submit-approval', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { responsible_lawyer_id, responsible_lawyer_name, lawyerName, area, notes, note } = req.body || {};
+    const lead = db.prepare(`SELECT id, name, area, responsible_lawyer_id, responsible_lawyer_name FROM leads WHERE id = ?`).get(id);
+    if (!lead) return res.status(404).json({ error: 'Lead não encontrado.' });
+
+    const performer = req.user.name || req.user.username || 'Atendente';
+    const finalLawyerId = responsible_lawyer_id || lead.responsible_lawyer_id || null;
+    const finalLawyerName = responsible_lawyer_name || lawyerName || lead.responsible_lawyer_name || null;
+    const finalArea = area || lead.area || 'Geral';
+    const finalNote = notes || note || 'Enviado para análise e validação do Dr. Jorge Alvim.';
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE leads 
+      SET stage = 'em_analise_chefe',
+          status = 'Em Atendimento',
+          responsible_lawyer_id = ?,
+          responsible_lawyer_name = ?,
+          area = ?,
+          stage_note = ?
+      WHERE id = ?
+    `).run(finalLawyerId, finalLawyerName, finalArea, finalNote, id);
+
+    const detail = `Submetido para análise do Dr. Jorge Alvim (Chefe do Escritório). Advogado indicado: ${finalLawyerName || 'A definir'}.${finalNote ? ` Nota: ${finalNote}` : ''}`;
+    logLeadEvent(id, 'analise_chefe', detail, performer);
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'SUBMETER_LEAD_CHEFE',
+      module: 'LEADS',
+      resource_id: id,
+      description: `Lead #${id} (${lead.name}) enviado para análise do Dr. Jorge Alvim.`
+    });
+
+    return res.json({ success: true, stage: 'em_analise_chefe', message: 'Lead submetido para análise do Dr. Jorge com sucesso!' });
+  } catch (e) {
+    console.error('[ERRO] submeter lead para chefe:', e);
+    return res.status(500).json({ error: 'Erro ao enviar lead para análise do chefe.' });
+  }
+});
+
+// ---- Aprovação do Chefe do Escritório (Dr. Jorge): aprova, fixa honorários e/ou promove a cliente.
+leadsRouter.post('/api/leads/:id/approve', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes, convert_to_client } = req.body || {};
+    const lead = db.prepare(`SELECT * FROM leads WHERE id = ?`).get(id);
+    if (!lead) return res.status(404).json({ error: 'Lead não encontrado.' });
+
+    const performer = req.user.name || req.user.username || 'Dr. Jorge Alvim';
+    const now = new Date().toISOString();
+
+    let clientId = lead.client_id;
+    if (convert_to_client !== false) {
+      clientId = ensureClientFromLead(lead, performer);
+      try {
+        db.prepare(`UPDATE clients SET registration_status = 'concluido', updated_at = ? WHERE id = ?`).run(now, clientId);
+      } catch (_) {}
+    }
+
+    db.prepare(`
+      UPDATE leads 
+      SET stage = 'concluido',
+          status = 'Concluído',
+          stage_note = ?
+      WHERE id = ?
+    `).run(notes || 'Aprovado pelo Dr. Jorge Alvim (Chefe do Escritório).', id);
+
+    const detail = `Aprovado pelo Dr. Jorge Alvim.${notes ? ` Diretrizes: ${notes}` : ''}${clientId ? ` Promovido a Cliente ${clientId}.` : ''}`;
+    logLeadEvent(id, 'aprovado_chefe', detail, performer);
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'APROVACAO_CHEFE_LEAD',
+      module: 'LEADS',
+      resource_id: id,
+      description: `Lead #${id} (${lead.name}) aprovado pelo titular — cliente ${clientId || 'cadastrado'}.`
+    });
+
+    return res.json({ success: true, clientId, message: 'Lead aprovado com sucesso pelo Chefe do Escritório!' });
+  } catch (e) {
+    console.error('[ERRO] aprovar lead:', e);
+    return res.status(500).json({ error: 'Erro ao aprovar o lead.' });
   }
 });

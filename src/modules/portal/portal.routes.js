@@ -13,7 +13,7 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { db } from '../../config/db.js';
 import { requireMaster } from '../../middleware/auth.js';
-import { ensurePortalSchema, PORTAL_LIMITS } from './portal.schema.js';
+import { ensurePortalSchema, PORTAL_LIMITS, extractYouTubeId } from './portal.schema.js';
 import { coletar } from './portal.collector.js';
 import { sendEmail, isEmailConfigured } from '../../shared/email.js';
 import { generateNextClientId } from '../../shared/ids.js';
@@ -658,5 +658,143 @@ portalRouter.post('/api/portal/admin/newsletter/campaigns/:id/send', requireMast
   } catch (err) {
     console.error('Erro ao disparar boletim:', err);
     res.status(500).json({ error: 'Erro ao disparar o boletim.' });
+  }
+});
+
+// ============================================================================
+// VÍDEOS INSTITUCIONAIS (PORTAL & PAINEL DE CONTROLE)
+// ============================================================================
+
+// Público: lista apenas vídeos marcados como publicados
+portalRouter.get('/api/portal/videos', (req, res) => {
+  try {
+    const videos = db.prepare(
+      `SELECT id, title, source_name, badge_category, youtube_url, youtube_id, description, ordem
+         FROM portal_videos
+        WHERE is_published = 1
+        ORDER BY ordem ASC, id ASC`
+    ).all();
+    res.json({ success: true, videos });
+  } catch (err) {
+    console.error('Erro ao listar vídeos do portal:', err);
+    res.status(500).json({ error: 'Erro ao carregar vídeos do portal.' });
+  }
+});
+
+// Mestre: lista todos os vídeos (publicados e rascunhos)
+portalRouter.get('/api/portal/admin/videos', requireMaster, (req, res) => {
+  try {
+    const videos = db.prepare(
+      `SELECT * FROM portal_videos ORDER BY ordem ASC, id ASC`
+    ).all();
+    res.json({ success: true, videos });
+  } catch (err) {
+    console.error('Erro ao listar vídeos administrativos:', err);
+    res.status(500).json({ error: 'Erro ao buscar vídeos.' });
+  }
+});
+
+// Mestre: cadastrar novo vídeo
+portalRouter.post('/api/portal/admin/videos', requireMaster, (req, res) => {
+  try {
+    const b = req.body || {};
+    const title = String(b.title || '').trim();
+    const source_name = String(b.source_name || '').trim();
+    const badge_category = String(b.badge_category || 'INSTITUCIONAL').trim().toUpperCase();
+    const youtube_url = String(b.youtube_url || '').trim();
+    const description = String(b.description || '').trim();
+    const ordem = Number.isInteger(Number(b.ordem)) ? Number(b.ordem) : 10;
+    const is_published = b.is_published ? 1 : 0;
+
+    if (!title || !youtube_url) {
+      return res.status(400).json({ error: 'Título e URL do YouTube são obrigatórios.' });
+    }
+
+    const youtube_id = extractYouTubeId(youtube_url);
+    if (!youtube_id) {
+      return res.status(400).json({ error: 'Não foi possível extrair o ID do vídeo do YouTube. Verifique a URL informada.' });
+    }
+
+    const now = nowISO();
+    const info = db.prepare(`
+      INSERT INTO portal_videos (title, source_name, badge_category, youtube_url, youtube_id, description, ordem, is_published, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(title, source_name || 'Órgão Oficial', badge_category, youtube_url, youtube_id, description, ordem, is_published, now, now);
+
+    res.json({ success: true, id: info.lastInsertRowid, youtube_id });
+  } catch (err) {
+    console.error('Erro ao criar vídeo:', err);
+    res.status(500).json({ error: 'Erro ao salvar novo vídeo.' });
+  }
+});
+
+// Mestre: atualizar dados do vídeo
+portalRouter.put('/api/portal/admin/videos/:id', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const existing = db.prepare('SELECT id FROM portal_videos WHERE id = ?').get(id);
+    if (!existing) return res.status(404).json({ error: 'Vídeo não encontrado.' });
+
+    const b = req.body || {};
+    const title = String(b.title || '').trim();
+    const source_name = String(b.source_name || '').trim();
+    const badge_category = String(b.badge_category || 'INSTITUCIONAL').trim().toUpperCase();
+    const youtube_url = String(b.youtube_url || '').trim();
+    const description = String(b.description || '').trim();
+    const ordem = Number.isInteger(Number(b.ordem)) ? Number(b.ordem) : 10;
+    const is_published = b.is_published ? 1 : 0;
+
+    if (!title || !youtube_url) {
+      return res.status(400).json({ error: 'Título e URL do YouTube são obrigatórios.' });
+    }
+
+    const youtube_id = extractYouTubeId(youtube_url);
+    if (!youtube_id) {
+      return res.status(400).json({ error: 'ID do YouTube inválido.' });
+    }
+
+    const now = nowISO();
+    db.prepare(`
+      UPDATE portal_videos
+         SET title = ?, source_name = ?, badge_category = ?, youtube_url = ?,
+             youtube_id = ?, description = ?, ordem = ?, is_published = ?, updated_at = ?
+       WHERE id = ?
+    `).run(title, source_name || 'Órgão Oficial', badge_category, youtube_url, youtube_id, description, ordem, is_published, now, id);
+
+    res.json({ success: true, id, youtube_id });
+  } catch (err) {
+    console.error('Erro ao atualizar vídeo:', err);
+    res.status(500).json({ error: 'Erro ao atualizar vídeo.' });
+  }
+});
+
+// Mestre: alternar publicação (publicar / rascunho)
+portalRouter.patch('/api/portal/admin/videos/:id/toggle', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const v = db.prepare('SELECT id, is_published FROM portal_videos WHERE id = ?').get(id);
+    if (!v) return res.status(404).json({ error: 'Vídeo não encontrado.' });
+
+    const nextStatus = v.is_published === 1 ? 0 : 1;
+    db.prepare('UPDATE portal_videos SET is_published = ?, updated_at = ? WHERE id = ?')
+      .run(nextStatus, nowISO(), id);
+
+    res.json({ success: true, is_published: nextStatus });
+  } catch (err) {
+    console.error('Erro ao alternar publicação de vídeo:', err);
+    res.status(500).json({ error: 'Erro ao alterar status do vídeo.' });
+  }
+});
+
+// Mestre: excluir vídeo
+portalRouter.delete('/api/portal/admin/videos/:id', requireMaster, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const info = db.prepare('DELETE FROM portal_videos WHERE id = ?').run(id);
+    if (info.changes === 0) return res.status(404).json({ error: 'Vídeo não encontrado.' });
+    res.json({ success: true, deleted: id });
+  } catch (err) {
+    console.error('Erro ao excluir vídeo:', err);
+    res.status(500).json({ error: 'Erro ao excluir vídeo.' });
   }
 });

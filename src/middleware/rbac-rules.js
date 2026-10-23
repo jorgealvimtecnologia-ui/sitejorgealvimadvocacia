@@ -45,6 +45,8 @@ export const RULES = [
   [/^\/api\/booking\/(settings|appointments)\b/, tab('tab_calendar')],
   [/^\/api\/recaptcha\//, PUBLIC],                    // configuração pública do reCAPTCHA
   [/^\/api\/agent\/roadmap/, PUBLIC],                 // API dos agentes: tem chave própria (X-Roadmap-Agent-Key)
+  [/^\/api\/whatsapp\/webhook\b/, PUBLIC, ['POST']], // Webhook receptor de mensagens do WhatsApp (Evolution API)
+  [/^\/api\/brevo\/webhook\b/, PUBLIC, ['POST']],    // Webhook receptor de eventos do Brevo (abertura, cliques, descadastro)
 
   // ---- Portais (só o próprio titular logado) ----
   [/^\/api\/client-portal\/magic-link\b/, PANEL],   // painel gera o link de upload para o cliente
@@ -78,6 +80,7 @@ export const RULES = [
 
   // ---- Módulos do painel controlados pela matriz de permissões (mestre sempre) ----
   [/^\/api\/clients(\/|$)/, tab('tab_clients')],
+  [/^\/api\/contacts(\/|$)/, tab('tab_clients')], // Importação de contatos (Google, celular, planilhas)
   [/^\/api\/ocr(\/|$)/, tab('tab_clients')],   // OCR zero-digitação alimenta o cadastro de clientes
   [/^\/api\/leads(\/|$)/, tab('tab_leads')],
   [/^\/api\/lawsuits(\/|$)/, tab('tab_lawsuits')],
@@ -101,6 +104,9 @@ export const RULES = [
   [/^\/api\/admin\/audit-logs(\/|$)/, tab('tab_audit')],
   [/^\/api\/admin\/(blog|site)(\/|$)/, tab('tab_blog')],
   [/^\/api\/admin\/whatsapp(\/|$)/, tab('tab_settings')],
+  [/^\/api\/whatsapp(\/|$)/, tab('tab_settings')],
+  [/^\/api\/brevo(\/|$)/, tab('tab_settings')],
+  [/^\/api\/radar-b2b(\/|$)/, tab('tab_leads')],
   [/^\/api\/admin\/(pre-clients|visits)(\/|$)/, tab('tab_leads')],      // aba "Tráfego & Acessos"
 
   // ---- Demais rotas do painel: qualquer operador logado ----

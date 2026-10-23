@@ -38,8 +38,62 @@ export function isEmailConfigured() {
 export async function sendEmail({ to, subject, text, html, attachments } = {}) {
   if (!to) return { sent: false, reason: 'no_recipient' };
 
+  // 1. Tenta envio via Brevo REST API se configurado
+  try {
+    let brevoKey = process.env.BREVO_API_KEY || '';
+    let senderName = 'Dr. Jorge Alvim - Advocacia';
+    let senderEmail = 'contato@jorgealvimadvocacia.com.br';
+    let replyToEmail = 'jorgealvimadv@gmail.com';
+    let replyToName = 'Dr. Jorge Alvim';
+
+    if (!brevoKey) {
+      const { db } = await import('../config/db.js');
+      const row = db.prepare(`SELECT value FROM brevo_settings WHERE key = 'brevo_api_key'`).get();
+      if (row && row.value && row.value.trim().length > 0) {
+        brevoKey = row.value.trim();
+        const sn = db.prepare(`SELECT value FROM brevo_settings WHERE key = 'sender_name'`).get();
+        const se = db.prepare(`SELECT value FROM brevo_settings WHERE key = 'sender_email'`).get();
+        const re = db.prepare(`SELECT value FROM brevo_settings WHERE key = 'reply_to_email'`).get();
+        if (sn?.value) senderName = sn.value;
+        if (se?.value) senderEmail = se.value;
+        if (re?.value) replyToEmail = re.value;
+      }
+    }
+
+    if (brevoKey) {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'api-key': brevoKey
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: to }],
+          replyTo: { email: replyToEmail, name: replyToName },
+          subject,
+          htmlContent: html || (text ? `<p>${text}</p>` : undefined),
+          textContent: text || undefined
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.log(`[✉️  BREVO API] Enviado para ${to} (id: ${data.messageId || 'ok'})`);
+        return { sent: true, messageId: data.messageId || 'brevo-ok' };
+      } else {
+        const errJson = await response.json().catch(() => ({}));
+        console.warn(`[✉️  BREVO API] Falha HTTP ${response.status}:`, errJson.message || 'Erro');
+      }
+    }
+  } catch (brevoErr) {
+    console.warn('[✉️  BREVO API] Erro na tentativa:', brevoErr.message);
+  }
+
+  // 2. Fallback para SMTP padrão (Nodemailer)
   if (!isEmailConfigured()) {
-    console.warn('[✉️  EMAIL] SMTP não configurado — e-mail não enviado. Defina SMTP_HOST/SMTP_USER/SMTP_PASS no .env.');
+    console.warn('[✉️  EMAIL] Nem Brevo nem SMTP configurados — e-mail não enviado. Defina BREVO_API_KEY ou SMTP_HOST/USER/PASS.');
     return { sent: false, reason: 'not_configured' };
   }
 

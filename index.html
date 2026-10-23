@@ -202,6 +202,21 @@
             }
           }
         ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://jorgealvimadvocacia.com.br/#website",
+        "url": "https://jorgealvimadvocacia.com.br/",
+        "name": "Jorge Alvim Advocacia & Consultoria Jurídica",
+        "inLanguage": "pt-BR",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://jorgealvimadvocacia.com.br/?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
       }
     ]
   }
@@ -449,9 +464,9 @@
             <span>Como Funciona</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
-          <a href="/blog" class="relative px-3 py-2 rounded-lg hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200 group font-bold flex items-center space-x-1.5">
+          <a href="/portal" class="relative px-3 py-2 rounded-lg hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200 group font-bold flex items-center space-x-1.5">
             <span class="text-base leading-none">📰</span>
-            <span>Blog Jurídico</span>
+            <span>Portal de Notícias</span>
             <span class="absolute bottom-1 left-3 right-3 h-0.5 bg-gold-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full origin-left"></span>
           </a>
           <a href="#guia-justica" class="relative px-3 py-2 rounded-lg hover:text-gold-600 hover:bg-gold-50/60 transition-all duration-200 group flex items-center space-x-1 font-semibold text-emerald-800">
@@ -526,9 +541,9 @@
           <a href="#sobre" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Sobre o Dr. Jorge Alvim</a>
           <a href="#areas" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Áreas de Atuação</a>
           <a href="#como-funciona" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Como Funciona</a>
-          <a href="/blog" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors font-bold text-navy-950 flex items-center space-x-2">
+          <a href="/portal" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors font-bold text-navy-950 flex items-center space-x-2">
             <span>📰</span>
-            <span>Blog & Notícias Jurídicas</span>
+            <span>Portal de Notícias</span>
           </a>
           <a href="#faq" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Dúvidas Frequentes (FAQ)</a>
           <a href="#contato" class="mobile-nav-link hover:text-gold-600 py-2 border-b border-slate-100 transition-colors">Contato & Envio de Documentos</a>
@@ -607,9 +622,51 @@
 
       <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full min-w-0">
         
-        <div class="inline-flex max-w-full items-center space-x-2 px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white border border-gold-400/60 text-navy-950 text-[11px] xs:text-xs sm:text-sm font-semibold mb-5 sm:mb-6 shadow-sm max-w-full">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
-          <span class="truncate font-medium text-slate-800">Juiz de Fora - MG • Benfica & Atendimento Online em Todo o Brasil</span>
+        <!-- Barra de Pesquisa Híbrida (No Site & Google) no topo do Hero -->
+        <div id="ja-hero-search-wrap" class="ja-hs-wrap">
+          <style>
+            .ja-hs-wrap{position:relative;max-width:42rem;margin:0 auto 1.5rem auto;z-index:40;text-align:left}
+            .ja-hs-bar{display:flex;align-items:center;gap:6px;background:#ffffff;border:1.5px solid rgba(212,175,55,0.75);border-radius:9999px;padding:5px 6px 5px 14px;box-shadow:0 4px 18px rgba(15,23,42,0.07);transition:border-color .2s,box-shadow .2s}
+            .ja-hs-bar:focus-within{border-color:#B8860B;box-shadow:0 6px 24px rgba(184,134,11,0.18)}
+            .ja-hs-icon{width:18px;height:18px;color:#A17529;flex-shrink:0}
+            .ja-hs-input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:0.85rem;color:#0B192C;font-weight:500;padding:4px 4px}
+            .ja-hs-input::placeholder{color:#64748b;font-weight:400}
+            .ja-hs-btn-site{background:linear-gradient(135deg,#0B192C,#162C4B);color:#F3E3A2;border:none;border-radius:9999px;padding:7px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+            .ja-hs-btn-site:hover{opacity:0.92}
+            .ja-hs-btn-g{background:#f8fafc;color:#1e293b;border:1px solid #cbd5e1;border-radius:9999px;padding:6px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;transition:background .15s,border-color .15s}
+            .ja-hs-btn-g:hover{background:#f1f5f9;border-color:#94a3b8}
+            .ja-hs-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;background:#ffffff;border:1.5px solid rgba(212,175,55,0.7);border-radius:20px;box-shadow:0 20px 45px rgba(11,25,44,0.18);padding:12px;max-height:380px;overflow-y:auto;z-index:9999}
+            .ja-hs-head{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 8px 6px;border-bottom:1px solid #f1f5f9;margin-bottom:8px;font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+            .ja-hs-close{background:#f1f5f9;border:none;border-radius:999px;width:24px;height:24px;font-size:14px;font-weight:700;color:#475569;cursor:pointer;line-height:1}
+            .ja-hs-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid #e2e8f0;background:#ffffff;margin-bottom:8px;transition:border-color .15s}
+            .ja-hs-item:hover{border-color:#D4AF37}
+            .ja-hs-item-main{min-width:0;flex:1}
+            .ja-hs-badge{display:inline-block;font-size:0.65rem;font-weight:800;color:#855E1C;background:#FAF2D4;border:1px solid rgba(212,175,55,0.45);padding:2px 7px;border-radius:6px;text-transform:uppercase;margin-bottom:3px}
+            .ja-hs-title{display:block;font-size:0.86rem;font-weight:700;color:#0B192C;text-decoration:none;line-height:1.3}
+            .ja-hs-title:hover{color:#A17529}
+            .ja-hs-desc{font-size:0.74rem;color:#475569;margin:3px 0 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+            .ja-hs-item-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+            .ja-hs-link{font-size:0.72rem;font-weight:700;color:#0B192C;background:#f1f5f9;padding:5px 10px;border-radius:8px;text-decoration:none;text-align:center;white-space:nowrap}
+            .ja-hs-wa{font-size:0.7rem;font-weight:700;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:4px 9px;border-radius:8px;text-decoration:none;text-align:center;white-space:nowrap}
+            .ja-hs-footer,.ja-hs-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px solid #f1f5f9}
+            .ja-hs-empty{padding:12px;text-align:center}
+            .ja-hs-empty-title{font-size:0.82rem;color:#1e293b;margin-bottom:10px}
+            .ja-hs-btn-google{background:#f8fafc;border:1px solid #cbd5e1;color:#0B192C;font-size:0.74rem;font-weight:700;padding:6px 12px;border-radius:10px;cursor:pointer}
+            .ja-hs-btn-wa{background:#047857;color:#ffffff;font-size:0.74rem;font-weight:700;padding:6px 12px;border-radius:10px;text-decoration:none}
+            @media(max-width:480px){.ja-hs-item{flex-direction:column;align-items:stretch}.ja-hs-item-btns{flex-direction:row;justify-content:flex-end}}
+          </style>
+          <form class="ja-hs-bar" onsubmit="return window.runHeroSiteSearch(event)">
+            <svg class="ja-hs-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+            <input id="ja-hero-search-input" type="search" autocomplete="off" placeholder="Pesquisar matérias do Blog, Portal de Notícias e páginas do site..." aria-label="Pesquisar matérias do Blog, Portal de Notícias e páginas do site" class="ja-hs-input" />
+            <button type="submit" class="ja-hs-btn-site" title="Buscar matérias do Blog, Portal de Notícias e páginas do site">Buscar</button>
+          </form>
+          <div id="ja-hero-search-dropdown" class="ja-hs-dropdown" role="region" aria-label="Resultados da pesquisa no site">
+            <div class="ja-hs-head">
+              <span>Resultados encontrados no site</span>
+              <button type="button" class="ja-hs-close" onclick="window.closeHeroSearchDropdown()" aria-label="Fechar resultados">&times;</button>
+            </div>
+            <div id="ja-hero-search-results"></div>
+          </div>
         </div>
 
         <h1 class="font-serif text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-extrabold tracking-tight text-navy-950 max-w-4xl mx-auto leading-tight sm:leading-snug break-words">
@@ -3122,13 +3179,28 @@
           showUAuthAlert('Autenticado via Google com sucesso! Redirecionando...', 'success');
           if (data.authType === 'admin' || data.redirectTo === '/painel') {
             localStorage.setItem('ja_admin_token', data.token);
-            if (data.user) localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+            localStorage.setItem('ja_token', data.token);
+            if (data.user) {
+              localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+              localStorage.setItem('ja_user', JSON.stringify(data.user));
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/painel'; }, 250);
           } else if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem('jorgealvim_client_token', data.token);
             if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
+            if (data.is_pre_registered) {
+              try { sessionStorage.setItem('ja_pre_registered', '1'); } catch (e) {}
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/cliente'; }, 250);
           } else if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem('ja_employee_token', data.token);
             if (data.employee || data.user) localStorage.setItem('ja_employee_user', JSON.stringify(data.employee || data.user));
             setTimeout(() => { window.location.href = data.redirectTo || '/colaborador'; }, 250);
@@ -3173,37 +3245,49 @@
         if (res.ok && data.success) {
           showUAuthAlert('Identificado com sucesso! Redirecionando com segurança...', 'success');
           try { if (data.password_policy_outdated) sessionStorage.setItem('ja_pwd_outdated', data.password_policy_message || ''); } catch (e) {}
-          
-          // Salva tokens de sessão de forma integrada e transparente
-          if (data.token) {
-            localStorage.setItem('ja_admin_token', data.token);
-            localStorage.setItem('ja_token', data.token);
-          }
-          if (data.employeeToken) {
-            localStorage.setItem('ja_employee_token', data.employeeToken);
-          }
-          if (data.authType === 'employee' && !data.employeeToken && data.token) {
-            localStorage.setItem('ja_employee_token', data.token);
-          }
-          if (data.adminToken) {
-            localStorage.setItem('ja_admin_token', data.adminToken);
-            localStorage.setItem('ja_token', data.adminToken);
-          }
-          if (data.user) {
-            localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
-            localStorage.setItem('ja_user', JSON.stringify(data.user));
-          }
-          if (data.employee) {
-            localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
-          }
 
           if (data.authType === 'client' || data.redirectTo === '/cliente') {
+            localStorage.removeItem('ja_admin_token');
+            localStorage.removeItem('ja_token');
+            localStorage.removeItem('ja_admin_user');
+            localStorage.removeItem('ja_user');
             localStorage.setItem('jorgealvim_client_token', data.token);
             if (data.client || data.user) localStorage.setItem('ja_client_user', JSON.stringify(data.client || data.user));
             setTimeout(() => { window.location.href = data.redirectTo || '/cliente'; }, 250);
           } else if (data.authType === 'employee' || data.redirectTo === '/colaborador') {
+            localStorage.setItem('ja_employee_token', data.employeeToken || data.token);
+            if (data.employee) {
+              localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+            }
+            if (data.adminToken) {
+              localStorage.setItem('ja_admin_token', data.adminToken);
+              localStorage.setItem('ja_token', data.adminToken);
+              if (data.user) {
+                localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+                localStorage.setItem('ja_user', JSON.stringify(data.user));
+              }
+            } else {
+              localStorage.removeItem('ja_admin_token');
+              localStorage.removeItem('ja_token');
+              localStorage.removeItem('ja_admin_user');
+              localStorage.removeItem('ja_user');
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/colaborador'; }, 250);
           } else {
+            if (data.token) {
+              localStorage.setItem('ja_admin_token', data.token);
+              localStorage.setItem('ja_token', data.token);
+            }
+            if (data.user) {
+              localStorage.setItem('ja_admin_user', JSON.stringify(data.user));
+              localStorage.setItem('ja_user', JSON.stringify(data.user));
+            }
+            if (data.employeeToken) {
+              localStorage.setItem('ja_employee_token', data.employeeToken);
+            }
+            if (data.employee) {
+              localStorage.setItem('ja_employee_user', JSON.stringify(data.employee));
+            }
             setTimeout(() => { window.location.href = data.redirectTo || '/painel'; }, 250);
           }
         } else {
@@ -4213,6 +4297,7 @@
 
   <script src="/js/analytics.js"></script>
   <script defer src="/js/enhance-ui.js"></script>
+  <script defer src="/js/modules/site-search.js?v=20261020-v3"></script>
   <script>
     // Agendamento online: os links só aparecem quando o escritório liga o recurso (painel → Agenda → Agendamento online).
     (function () {

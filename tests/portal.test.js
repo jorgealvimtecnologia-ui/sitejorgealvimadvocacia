@@ -387,3 +387,84 @@ describe('Robô — leitor de RSS', () => {
     assert.equal(corpoHtml, '');
   });
 });
+
+describe('Portal — Vídeos Institucionais (Capa e Admin)', () => {
+  const MASTER = { username: 'jorgealvimtecnologia', password: 'SenhaRealDoMestre#2026' };
+  let token = '';
+
+  before(async () => {
+    const r = await request(app).post('/api/auth/login').send(MASTER);
+    token = r.body.token;
+  });
+
+  it('GET /api/portal/videos responde público com os vídeos iniciais publicados', async () => {
+    const res = await request(app).get('/api/portal/videos');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.ok(Array.isArray(res.body.videos), 'deve retornar array de vídeos');
+    assert.ok(res.body.videos.length >= 8, 'deve ter pelo menos os 8 vídeos semeados');
+    const primeiro = res.body.videos[0];
+    assert.ok(primeiro.title, 'vídeo deve ter título');
+    assert.ok(primeiro.youtube_id, 'vídeo deve ter ID do youtube');
+    assert.ok(primeiro.source_name, 'vídeo deve ter órgão oficial');
+  });
+
+  it('GET /api/portal/admin/videos sem autenticação é rejeitado', async () => {
+    const res = await request(app).get('/api/portal/admin/videos');
+    assert.ok(res.status === 401 || res.status === 403);
+  });
+
+  it('CRUD completo de vídeos por Mestre (criar, editar, alternar e excluir)', async () => {
+    // 1. Cadastrar novo vídeo
+    const createRes = await request(app)
+      .post('/api/portal/admin/videos')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Novo Vídeo Informativo STF',
+        source_name: 'STF Oficial',
+        badge_category: 'TRIBUNAIS',
+        youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        description: 'Descrição de teste para o vídeo institucional.',
+        ordem: 99,
+        is_published: 1
+      });
+
+    assert.equal(createRes.status, 200);
+    assert.equal(createRes.body.success, true);
+    const videoId = createRes.body.id;
+    assert.equal(createRes.body.youtube_id, 'dQw4w9WgXcQ');
+
+    // 2. Alternar publicação (toggle para rascunho)
+    const toggleRes = await request(app)
+      .patch(`/api/portal/admin/videos/${videoId}/toggle`)
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(toggleRes.status, 200);
+    assert.equal(toggleRes.body.is_published, 0);
+
+    // 3. Atualizar dados (PUT)
+    const updateRes = await request(app)
+      .put(`/api/portal/admin/videos/${videoId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Título Atualizado do STF',
+        source_name: 'STF',
+        badge_category: 'CONSTITUCIONAL',
+        youtube_url: 'https://youtu.be/dQw4w9WgXcQ',
+        description: 'Nova descrição atualizada.',
+        ordem: 5,
+        is_published: 1
+      });
+
+    assert.equal(updateRes.status, 200);
+    assert.equal(updateRes.body.success, true);
+
+    // 4. Excluir vídeo (DELETE)
+    const deleteRes = await request(app)
+      .delete(`/api/portal/admin/videos/${videoId}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(deleteRes.status, 200);
+    assert.equal(deleteRes.body.deleted, videoId);
+  });
+});

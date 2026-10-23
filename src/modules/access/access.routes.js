@@ -506,6 +506,9 @@ export function syncAllAccessPermissions() {
   try {
     const now = new Date().toISOString();
 
+    // 0. Limpeza: Clientes nunca devem ser inseridos na matriz de permissões de operadores do escritório
+    db.prepare(`DELETE FROM access_permissions WHERE role_template = 'cliente' OR user_type = 'cliente'`).run();
+
     // 1. Sincronizar Usuários do Painel
     const users = db.prepare(`SELECT * FROM users`).all();
     for (const u of users) {
@@ -615,35 +618,12 @@ export function syncAllAccessPermissions() {
           tplKey, tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
           tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
           tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
-          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, tpl.data_scope, `${emp.position} (${emp.contract_type})`, now, now
+          tpl.tabs.tab_users, tpl.tabs.tab_settings, 0, tpl.data_scope, `${emp.position} (${emp.contract_type})`, now, now
         );
         aplicarGranulares(emp.id, tpl);
       }
     }
 
-    // 3. Sincronizar Clientes Cadastrados (PF e PJ)
-    const clients = db.prepare(`SELECT * FROM clients`).all();
-    for (const c of clients) {
-      const tpl = ROLE_TEMPLATES.cliente;
-      const iden = c.client_type === 'PJ' ? (c.cnpj || c.cpf) : (c.cpf || c.cnpj);
-      const exists = db.prepare(`SELECT id FROM access_permissions WHERE user_id = ?`).get(c.id);
-      if (!exists) {
-        db.prepare(`
-          INSERT INTO access_permissions (
-            id, user_id, user_type, user_name, user_identifier, user_email, user_phone,
-            role_template, tab_leads, tab_clients, tab_lawsuits, tab_radar, tab_offices,
-            tab_drive, tab_calendar, tab_publications, tab_hr, tab_financial, tab_colaborador,
-            tab_portal_cliente, tab_users, tab_settings, is_active, data_scope, notes, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          `PERM-${c.id}`, c.id, 'cliente', c.full_name, iden || c.id, c.email || '', c.phone || '',
-          'cliente', tpl.tabs.tab_leads, tpl.tabs.tab_clients, tpl.tabs.tab_lawsuits, tpl.tabs.tab_radar,
-          tpl.tabs.tab_offices, tpl.tabs.tab_drive, tpl.tabs.tab_calendar, tpl.tabs.tab_publications,
-          tpl.tabs.tab_hr, tpl.tabs.tab_financial, tpl.tabs.tab_colaborador, tpl.tabs.tab_portal_cliente,
-          tpl.tabs.tab_users, tpl.tabs.tab_settings, 1, 'own', `Cliente ${c.client_type}`, now, now
-        );
-      }
-    }
     console.log('🛡️ [RBAC/ABAC] Sincronização de Matriz de Controle de Acesso concluída com sucesso!');
   } catch (err) {
     console.error('Erro na sincronização de permissões de acesso:', err);

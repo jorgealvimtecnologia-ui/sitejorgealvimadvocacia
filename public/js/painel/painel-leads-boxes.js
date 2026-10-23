@@ -92,11 +92,73 @@
           openLeadDistributeModal(b.getAttribute('data-lead-id'), b.getAttribute('data-lead-name'));
         });
       });
+
+      // Caixa: Leads Aguardando Análise do Chefe do Escritório (Dr. Jorge)
+      const paListEl = document.getElementById('dash-approval-list');
+      const paBadge = document.getElementById('dash-approval-badge');
+      const pa = data.pendingApproval || { count: 0, items: [] };
+      if (paBadge) {
+        paBadge.textContent = pa.count || 0;
+        paBadge.classList.toggle('hidden', !(pa.count > 0));
+      }
+      if (paListEl) {
+        if (!pa.items || pa.items.length === 0) {
+          paListEl.innerHTML = '<p class="text-xs text-slate-400 py-2">Nenhum lead pendente de análise pelo Dr. Jorge no momento. 👍</p>';
+        } else {
+          paListEl.innerHTML = pa.items.map(function (l) {
+            return '<div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-50">' +
+              '<div class="min-w-0 flex-1">' +
+                '<div class="font-bold text-navy-950 text-sm truncate flex items-center gap-1.5">' +
+                  '<span>⚖️</span> <span>' + esc(l.name) + '</span>' +
+                '</div>' +
+                '<div class="text-[11px] text-slate-600 truncate mt-0.5">' +
+                  '<strong>' + esc(l.area || 'Geral') + '</strong> · ' + esc(l.phone || '') + ' · ' + fmtDateTime(l.created_at) +
+                '</div>' +
+                (l.stage_note ? '<div class="text-[10px] text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded mt-1 line-clamp-1 italic">📝 ' + esc(l.stage_note) + '</div>' : '') +
+              '</div>' +
+              '<div class="flex items-center gap-1 shrink-0">' +
+                '<button type="button" onclick="if(window.viewLeadDetails) window.viewLeadDetails(\'' + esc(l.id) + '\')" class="px-2 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold shadow-2xs cursor-pointer">Ficha</button>' +
+                (canDistribute
+                  ? '<button type="button" onclick="window.approveLeadFromDashboard(\'' + esc(l.id) + '\', \'' + esc(l.name) + '\')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs cursor-pointer">Aprovar</button>'
+                  : '') +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+      }
     } catch (e) {
       if (listEl) listEl.innerHTML = '<p class="text-xs text-rose-500 py-2">Falha ao carregar os leads.</p>';
       console.warn('[LEADS BOXES] erro:', e.message);
     }
   }
+
+  // Ação de aprovação pelo Dr. Jorge Alvim a partir da Visão Geral
+  window.approveLeadFromDashboard = async function (id, name) {
+    if (!confirm('Deseja APROVAR o lead "' + name + '" e convertê-lo oficialmente em Cliente da carteira?')) return;
+    try {
+      const res = await fetch('/api/leads/' + encodeURIComponent(id) + '/approve', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ convert_to_client: true, notes: 'Aprovado pelo Dr. Jorge Alvim via Visão Geral.' })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof window.wmToast === 'function') {
+          window.wmToast('Lead aprovado e cliente cadastrado com sucesso!');
+        } else if (typeof window.showToast === 'function') {
+          window.showToast('Lead aprovado com sucesso!', 'success');
+        } else {
+          alert('Lead aprovado e cliente cadastrado com sucesso!');
+        }
+        loadLeadsBoxes();
+        if (typeof window.loadLeads === 'function') window.loadLeads();
+      } else {
+        alert(data.error || 'Erro ao aprovar lead.');
+      }
+    } catch (e) {
+      alert('Erro de conexão ao aprovar lead.');
+    }
+  };
 
   // ---- Distribuição --------------------------------------------------------
   let _distLeadId = '';

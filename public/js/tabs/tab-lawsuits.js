@@ -258,10 +258,28 @@
             ${(() => {
               const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
               const partes = Array.isArray(law.parties) ? law.parties : [];
-              if (!partes.length) return '';
+              if (!partes.length) {
+                return `
+                <div class="pt-3 border-t border-slate-100">
+                  <div class="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-dashed border-slate-200">
+                    <span class="flex items-center gap-1.5 font-medium text-slate-600">
+                      <span>👥</span><span>Partes ainda não sincronizadas pelo Radar.</span>
+                    </span>
+                    ${law.cnj_number ? `<button type="button" onclick="atualizarProcessoRadar('${law.id}')" class="px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[11px]" title="Buscar partes no tribunal via Escavador">🔄 Buscar partes no Radar</button>` : ''}
+                  </div>
+                </div>`;
+              }
+              const temApenasFallback = partes.length === 1 && partes[0].is_fallback;
               return `
               <div class="pt-3 border-t border-slate-100">
-                <span class="text-slate-600 block text-xs uppercase font-bold mb-2 flex items-center space-x-1.5"><span>👥</span><span>Partes do Processo (${partes.length})</span></span>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-slate-600 block text-xs uppercase font-bold flex items-center space-x-1.5">
+                    <span>👥</span><span>Partes do Processo (${partes.length})</span>
+                  </span>
+                  ${temApenasFallback && law.cnj_number ? `
+                    <button type="button" onclick="atualizarProcessoRadar('${law.id}')" class="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline" title="Sincronizar polo passivo e advogados pelo Radar">🔄 Buscar polo passivo no Radar</button>
+                  ` : ''}
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   ${partes.map(p => {
                     const advs = Array.isArray(p.advogados) ? p.advogados : [];
@@ -272,7 +290,7 @@
                         <strong class="text-slate-900">${esc(p.name)}</strong>
                         ${Number(p.is_client) ? '<span class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">cliente</span>' : ''}
                       </div>
-                      <div class="text-[11px] text-slate-500">${esc(p.tipo || p.polo || '')}</div>
+                      <div class="text-[11px] text-slate-500">${esc(p.tipo || p.polo || '')}${p.document ? ' • ' + esc(p.document) : ''}</div>
                       ${advTxt ? `<div class="text-[11px] text-slate-600 mt-1">⚖️ ${advTxt}</div>` : ''}
                     </div>`;
                   }).join('')}

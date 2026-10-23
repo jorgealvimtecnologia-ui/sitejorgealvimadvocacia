@@ -514,19 +514,39 @@
   // 4. PALETA UNIVERSAL DE COMANDOS & BUSCA RÁPIDA (Ctrl + K / Cmd + K)
   // ============================================================================
 
+  function isPaletteModuleAllowed(mod) {
+    if (!mod) return true;
+    if (typeof window.moduleAllowed === 'function') return window.moduleAllowed(mod);
+    const cp = window.currentUserPermissions;
+    if (!cp) return false;
+    if (cp.is_master) return true;
+    const p = cp.permissions || {};
+    const map = {
+      clients: 'tab_clients',
+      lawsuits: 'tab_lawsuits',
+      calendar: 'tab_calendar',
+      finance: 'tab_finance',
+      calc: 'tab_calc',
+      maintenance: '__master__'
+    };
+    const col = map[mod];
+    if (col === '__master__') return false;
+    return col ? p[col] === 1 : true;
+  }
+
   const PALETTE_ACTIONS = [
-    { id: 'new-client', title: 'Novo Cliente & Contrato', category: 'Ações Rápidas', icon: '👤', run: () => window.openNewClientModal?.() },
-    { id: 'new-lawsuit', title: 'Novo Processo Judicial', category: 'Ações Rápidas', icon: '⚖️', run: () => window.openNewLawsuitModal?.() },
-    { id: 'new-event', title: 'Novo Prazo / Agendamento', category: 'Ações Rápidas', icon: '📅', run: () => window.openNewEventModal?.() },
-    { id: 'new-alvara', title: 'Registrar Alvará Judicial', category: 'Ações Rápidas', icon: '💰', run: () => window.openNewAlvaraModal?.() },
-    { id: 'deadline-calc', title: 'Calculadora Inteligente de Prazos', category: 'Ferramentas', icon: '🧮', run: () => window.openDeadlineCalculator?.() },
+    { id: 'new-client', need: 'clients', title: 'Novo Cliente & Contrato', category: 'Ações Rápidas', icon: '👤', run: () => window.openNewClientModal?.() },
+    { id: 'new-lawsuit', need: 'lawsuits', title: 'Novo Processo Judicial', category: 'Ações Rápidas', icon: '⚖️', run: () => window.openNewLawsuitModal?.() },
+    { id: 'new-event', need: 'calendar', title: 'Novo Prazo / Agendamento', category: 'Ações Rápidas', icon: '📅', run: () => window.openNewEventModal?.() },
+    { id: 'new-alvara', need: 'finance', title: 'Registrar Alvará Judicial', category: 'Ações Rápidas', icon: '💰', run: () => window.openNewAlvaraModal?.() },
+    { id: 'deadline-calc', need: 'calendar', title: 'Calculadora Inteligente de Prazos', category: 'Ferramentas', icon: '🧮', run: () => window.openDeadlineCalculator?.() },
     { id: 'toggle-dark', title: 'Alternar Modo Escuro / Claro', category: 'Preferências', icon: '🌓', run: () => window.toggleDarkMode?.() },
-    { id: 'field-request', title: 'Solicitar Novo Campo ao Programador', category: 'Ferramentas', icon: '💡', run: () => window.openProgrammerFieldRequestModal?.() },
-    { id: 'tab-clients', title: 'Ir para Aba de Clientes', category: 'Navegação', icon: '👥', run: () => window.switchTab?.('clients') },
-    { id: 'tab-lawsuits', title: 'Ir para Aba de Processos', category: 'Navegação', icon: '📂', run: () => window.switchTab?.('lawsuits') },
-    { id: 'tab-finance', title: 'Ir para Aba de Finanças & Alvarás', category: 'Navegação', icon: '💵', run: () => window.switchTab?.('finance') },
-    { id: 'tab-calendar', title: 'Ir para Agenda de Prazos', category: 'Navegação', icon: '📆', run: () => window.switchTab?.('calendar') },
-    { id: 'tab-maintenance', title: 'Ir para Manutenção do Sistema', category: 'Navegação', icon: '⚙️', run: () => window.switchTab?.('maintenance') }
+    { id: 'field-request', need: 'maintenance', title: 'Solicitar Novo Campo ao Programador', category: 'Ferramentas', icon: '💡', run: () => window.openProgrammerFieldRequestModal?.() },
+    { id: 'tab-clients', need: 'clients', title: 'Ir para Aba de Clientes', category: 'Navegação', icon: '👥', run: () => window.switchTab?.('clients') },
+    { id: 'tab-lawsuits', need: 'lawsuits', title: 'Ir para Aba de Processos', category: 'Navegação', icon: '📂', run: () => window.switchTab?.('lawsuits') },
+    { id: 'tab-finance', need: 'finance', title: 'Ir para Aba de Finanças & Alvarás', category: 'Navegação', icon: '💵', run: () => window.switchTab?.('finance') },
+    { id: 'tab-calendar', need: 'calendar', title: 'Ir para Agenda de Prazos', category: 'Navegação', icon: '📆', run: () => window.switchTab?.('calendar') },
+    { id: 'tab-maintenance', need: 'maintenance', title: 'Ir para Manutenção do Sistema', category: 'Navegação', icon: '⚙️', run: () => window.switchTab?.('maintenance') }
   ];
 
   let selectedPaletteIndex = 0;
@@ -605,12 +625,15 @@
 
     let items = [];
 
-    // 1. Ações do Sistema
-    const filteredActions = PALETTE_ACTIONS.filter(a => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q));
+    // 1. Ações do Sistema (filtradas pelas permissões da RHABAC)
+    const filteredActions = PALETTE_ACTIONS.filter(a =>
+      isPaletteModuleAllowed(a.need) &&
+      (a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q))
+    );
     items.push(...filteredActions);
 
-    // 2. Clientes em memória (se disponíveis)
-    if (window.allClients && Array.isArray(window.allClients)) {
+    // 2. Clientes em memória (se disponíveis e permitidos pela RHABAC)
+    if (isPaletteModuleAllowed('clients') && window.allClients && Array.isArray(window.allClients)) {
       const matchedClients = window.allClients.filter(c => {
         const nameMatch = c.full_name?.toLowerCase().includes(q);
         const cpfMatch = cleanQ && c.cpf?.replace(/\D/g, '').includes(cleanQ);
@@ -635,8 +658,8 @@
       });
     }
 
-    // 3. Processos em memória (se disponíveis)
-    if (window.allLawsuits && Array.isArray(window.allLawsuits)) {
+    // 3. Processos em memória (se disponíveis e permitidos pela RHABAC)
+    if (isPaletteModuleAllowed('lawsuits') && window.allLawsuits && Array.isArray(window.allLawsuits)) {
       const matchedLawsuits = window.allLawsuits.filter(l => {
         const cnjMatch = l.cnj_number?.toLowerCase().includes(q) || (cleanQ && l.cnj_number?.replace(/\D/g, '').includes(cleanQ));
         const clientMatch = l.client_name?.toLowerCase().includes(q);

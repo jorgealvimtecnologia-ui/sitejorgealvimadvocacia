@@ -39,15 +39,47 @@
       "prioridade": "P2",
       "descricao": "Passo 1: comprar um chip/número dedicado para o escritório enviar/receber WhatsApp automaticamente (hoje o aviso depende do visitante apertar 'enviar' ou de um gateway inexistente). Passo 2 (se o negócio crescer): Evolution API + caixa de atendimento (inbox) dentro do painel. Também registrar no Roadmap Vivo do site as ordens pendentes quando a chave do agente estiver configurada (AUD-32).",
       "criterios": "Com o número dedicado: o escritório recebe aviso de lead/mensagem no WhatsApp sem ação do visitante. Fase 2: conversas aparecem no painel.",
-      "estado": "pendente (anotado em 15/10/2026, 'para depois'; depende de decisão/compra do Dr. Jorge) [Obs: era P3; o Roadmap do site aceita só P0-P2, então entra como P2 de PRIORIDADE BAIXA.]"
+      "estado": "em_curso (17/10/2026: infraestrutura modular preparada no painel para chip dedicado e Evolution API sem taxas por mensagem da Meta; aguarda ativação de chip físico pelo Dr. Jorge)"
     },
     {
       "ref": "MKT-06",
-      "titulo": "Newsletter do blog: enviar as matérias novas aos cadastrados por e-mail",
+      "titulo": "Newsletter do blog e campanhas em massa (Brevo API v3 com lotes de 300/dia e custo zero)",
       "prioridade": "P2",
-      "descricao": "Colocar no blog um cadastro de newsletter (campo de e-mail com consentimento) e, quando um artigo novo for publicado, enviar automaticamente um e-mail aos inscritos avisando da matéria (título, resumo e link). Usa o SMTP que já existe. Casa com a isca digital (MKT-02) e com o robô de notícias (publicação de artigos). Incluir link de descadastro (unsubscribe) em todo e-mail, por LGPD.",
-      "criterios": "O blog tem um cadastro de e-mail (opt-in); ao publicar um artigo, os inscritos recebem um e-mail com título/resumo/link; cada e-mail traz link de descadastro; a lista de inscritos fica no painel. Nada é enviado sem o inscrito ter se cadastrado.",
-      "estado": "pendente (anotado em 15/10/2026, 'para depois')"
+      "descricao": "Integração profissional de e-mail marketing e newsletter para a carteira de clientes do escritório e assinantes do portal, estruturada com a API v3 da Brevo. Respeita o limite do plano 100% gratuito (300 disparos/dia) dividindo a base em lotes diários automáticos, com proteção contra spam e link de descadastro (LGPD). Envio de e-mails transacionais (senhas e avisos de processos) com selo de reputação digital e fallback seguro para SMTP.",
+      "criterios": "API REST da Brevo conectada e testada; lotes diários de até 300 e-mails no painel; sincronização de contatos nas listas; templates de newsletter aprovados; disparo em massa realizado com relatórios de entregabilidade, aberturas e cliques; sistema transacional integrado em src/shared/email.js.",
+      "estado": "CONCLUIDO (18/10/2026): Módulo src/modules/brevo/brevo.routes.js e subaba public/js/tabs/tab-brevo.js criados. 819 contatos da carteira sincronizados em 3 listas diárias. Primeira campanha oficial de inauguração do portal enviada com sucesso para o Lote 1 (289 disparados, 171 entregues, aberturas e cliques computados em tempo real). E-mails transacionais do site (recuperação de senhas) atualizados com alta entregabilidade."
+    },
+    {
+      "ref": "MKT-07",
+      "titulo": "Meta Ads: exportação de Públicos Personalizados (Instagram e Facebook)",
+      "prioridade": "P2",
+      "descricao": "Exportação padronizada e criptografada (SHA-256) dos dados da carteira para criação de Públicos Personalizados (Custom Audiences) no Gerenciador de Anúncios da Meta (Instagram e Facebook), permitindo anúncios de utilidade pública e campanhas institucionais direcionadas.",
+      "criterios": "Estatísticas de contatos com telefone e e-mail no painel; exportação de CSV compatível com Meta Ads Manager; conformidade ética (Provimento 205/2021) e LGPD.",
+      "estado": "CONCLUIDO (17/10/2026): Painel atualizado com métricas de audiência Meta e botão de exportação segura de CSV com hashes."
+    },
+    {
+      "ref": "CONT-01",
+      "titulo": "Higienização da base de contatos, importador universal e Modo Lista Rápida",
+      "prioridade": "P1",
+      "descricao": "Tratamento de dados dos clientes: parser resiliente para importação de CSV/VCF/Google Contacts, detecção de e-mails reais, fusão inteligente de nomes compostos, classificação automática de Pessoa Jurídica (PJ) e modo compacto no painel para consulta ultra-rápida de centenas de registros sem lentidão.",
+      "criterios": "Importação sem duplicidades; identificação de PJ automática; navegação fluida de 800+ contatos no painel com Modo Lista Rápida.",
+      "estado": "CONCLUIDO (17/10/2026): Parser aprimorado, scripts de reclassificação PJ executados, cache de clientes desabilitado para dados frescos e Modo Lista Rápida ativo no painel."
+    },
+    {
+      "ref": "MKT-08",
+      "titulo": "Radar / Prospecção B2B: Google Empresas, CRM Kanban e Exportação Meta/Brevo",
+      "prioridade": "P1",
+      "descricao": "Módulo autônomo de inteligência de mercado e prospecção empresarial (PJ) focado em Juiz de Fora. Consome a Google Places API (New v1), integra 1.040 empresas locais já mapeadas, gerencia o relacionamento em CRM visual estilo Kanban (6 etapas), permite promoção para Cliente PJ oficial em 1 clique e exporta públicos formatados para Meta Ads Manager e Brevo.",
+      "criterios": "Tabela radar_b2b_prospects isolada com índices; funil Kanban visual com links para WhatsApp; conversão instantânea para tabela clients; filtros por nicho/bairro; busca ao vivo Google Places; exportação para Meta Ads e Brevo; 100% de testes passando.",
+      "estado": "CONCLUIDO (18/10/2026): Criados src/modules/radar-b2b/radar-b2b.routes.js e public/js/tabs/tab-radar-b2b.js, 1.040 empresas locais importadas no banco, integração Kanban e exportações para Meta Ads e Brevo ativas no painel e implantadas em produção."
+    },
+    {
+      "ref": "MKT-09",
+      "titulo": "Robô Enriquecedor Web (Crawler) e Consulta de CNPJ/Sócios para o Radar B2B",
+      "prioridade": "P1",
+      "descricao": "1. Robô Enriquecedor Web (Crawler) em segundo plano: visita os websites das empresas prospectadas no Radar B2B, acessa as páginas '/contato', '/fale-conosco', '/quem-somos' e rodapé, e extrai via regex e parsing HTML: e-mails corporativos (contato@..., etc.), links e perfis de redes sociais (Instagram, Facebook, LinkedIn) e o CNPJ divulgado no rodapé (obrigatório pelo Decreto 7.962/2013).\n2. Consulta de CNPJ, CNAE e Quadro de Sócios (QSA) via APIs públicas gratuitas (BrasilAPI / ReceitaWS): a partir do CNPJ encontrado ou do nome comercial/telefone, consulta dados oficiais da Receita Federal para trazer Situação Cadastral, CNAE detalhado, Capital Social e nomes dos Sócios/Administradores (QSA), permitindo abordagem jurídica altamente qualificada diretamente com os tomadores de decisão.",
+      "criterios": "Worker assíncrono com rate-limiting e timeouts de segurança; preenchimento automático das colunas de e-mail, redes sociais, CNPJ e sócios na tabela radar_b2b_prospects; enriquecimento manual em 1 clique por card e em lote configurável; sem impacto no desempenho do servidor.",
+      "estado": "pendente (anotado em 18/10/2026 a pedido do Dr. Jorge para próximos trabalhos)"
     }
   ]
 }

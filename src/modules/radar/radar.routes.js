@@ -559,6 +559,13 @@ radarRouter.post('/api/radar/atualizar-processo/:id', requireAuth, async (req, r
       pd.judge_name || '', pd.distribution_date || '', pd.valor_causa || '', pd.situacao || '', pd.fase || '',
       (Array.isArray(pd.audiencias) && pd.audiencias.length ? JSON.stringify(pd.audiencias) : ''),
       new Date().toISOString(), law.id);
+
+    // Grava as partes do processo (polo ativo, passivo, advogados)
+    if (Array.isArray(pd.partes) && pd.partes.length) {
+      const cli = db.prepare(`SELECT full_name as name, COALESCE(cpf, cnpj, '') as document FROM clients WHERE id = (SELECT client_id FROM lawsuits WHERE id = ?)`).get(law.id);
+      try { db.prepare(`DELETE FROM lawsuit_parties WHERE lawsuit_id = ?`).run(law.id); } catch {}
+      inserirPartes(law.id, pd.partes, { clienteNome: cli?.name || '', clienteDoc: cli?.document || '' });
+    }
   }
   // 2) Andamentos: grava só os NOVOS (dedupe por source_id).
   const mv = await listarMovimentacoes({ numeroCnj: law.cnj_number });

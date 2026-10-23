@@ -23,7 +23,7 @@
       "prioridade": "P1",
       "descricao": "Em vários processos as partes não aparecem na ficha, mesmo o código já mostrando law.parties. Investigar a causa (provável: processos antigos importados antes da extração de envolvidos, ou importados por full-text V1 sem partes estruturadas, ou mapeamento polo_ativo/polo_passivo -> parties não preenchido no retorno da API /api/lawsuits). Corrigir o mapeamento e, quando possível, re-enriquecer (botão 'Atualizar' do Radar) para puxar as partes que faltam. Mostrar aviso claro quando o processo não tem partes (em vez de sumir sem explicação).",
       "criterios": "Processos com partes no Escavador passam a exibi-las; os sem partes mostram um aviso ('partes não disponíveis — atualizar pelo Radar') em vez de nada; re-atualizar pelo Radar preenche as partes faltantes.",
-      "estado": "pendente P1 (bug relatado em 15/10/2026)"
+      "estado": "CONCLUIDO (18/10/2026): Backend /api/lawsuits aprimorado com fallback do cliente e documento; frontend tab-lawsuits.js exibe partes e banner com botão 'Buscar partes no Radar'; rota /api/radar/atualizar-processo/:id passa a persistir partes estruturadas em lawsuit_parties."
     },
     {
       "ref": "PROC-04",

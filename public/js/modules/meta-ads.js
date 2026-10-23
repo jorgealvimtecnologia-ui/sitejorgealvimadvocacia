@@ -40,7 +40,8 @@
   async function loadMetaAdsTab() {
     await Promise.all([
       fetchMetaConfig(),
-      fetchMetaPosts()
+      fetchMetaPosts(),
+      fetchMetaAudienceStats()
     ]);
     initLiveMockupListeners();
     syncMetaAudienceMockup();
@@ -1325,6 +1326,63 @@
   }
 
   // --------------------------------------------------------------------------
+  // 8. PÚBLICOS PERSONALIZADOS & EXPORTAÇÃO META ADS
+  // --------------------------------------------------------------------------
+  async function fetchMetaAudienceStats() {
+    const token = getAuthToken();
+    const totalEl = document.getElementById('meta-aud-total-clients');
+    const phonesEl = document.getElementById('meta-aud-phones');
+    const emailsEl = document.getElementById('meta-aud-emails');
+    const eligibleEl = document.getElementById('meta-aud-eligible');
+
+    try {
+      const res = await fetch('/api/meta-ads/audience/stats', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (totalEl) totalEl.innerText = Number(data.totalClients || 0).toLocaleString('pt-BR');
+        if (phonesEl) phonesEl.innerText = Number(data.validPhones || 0).toLocaleString('pt-BR');
+        if (emailsEl) emailsEl.innerText = Number(data.validEmails || 0).toLocaleString('pt-BR');
+        if (eligibleEl) eligibleEl.innerText = Number(data.totalEligible || 0).toLocaleString('pt-BR');
+      }
+    } catch (err) {
+      console.warn('[META ADS] Falha ao consultar estatísticas de público:', err);
+    }
+  }
+
+  async function downloadMetaAudienceCSV() {
+    const token = getAuthToken();
+    toast('Preparando lista oficial para Meta Ads...', 'info');
+
+    try {
+      const res = await fetch('/api/meta-ads/audience/export-csv', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erro ao exportar base.');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `publico_meta_ads_jorgealvim_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast('Arquivo baixado com sucesso! Pronto para subir no Gerenciador Meta.', 'success');
+    } catch (err) {
+      console.error('[META ADS] Erro no download do CSV:', err);
+      toast('Falha ao baixar CSV do público: ' + err.message, 'error');
+    }
+  }
+
+  // --------------------------------------------------------------------------
   // Expor Globalmente no Escopo do Window
   // --------------------------------------------------------------------------
   window.loadMetaAdsTab = loadMetaAdsTab;
@@ -1355,5 +1413,8 @@
   window.openMetaPublishAssistModal = openMetaPublishAssistModal;
   window.closeMetaPublishAssistModal = closeMetaPublishAssistModal;
   window.markMetaPostAsPublished = markMetaPostAsPublished;
+  window.fetchMetaAudienceStats = fetchMetaAudienceStats;
+  window.downloadMetaAudienceCSV = downloadMetaAudienceCSV;
 
 })();
+

@@ -1,0 +1,1828 @@
+/**
+ * ==============================================================================
+ * MÓDULO RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS, CRM KANBAN & EXPORTAÇÕES)
+ * ==============================================================================
+ * Jorge Alvim Advocacia — OAB/MG 222.943
+ *
+ * Funcionalidades:
+ * 1. Base isolada de Prospecção B2B (tabela radar_b2b_prospects) com índices;
+ * 2. Importação e sincronização com bases locais (Google Meu Negócio / Places);
+ * 3. Busca ao vivo via Google Places API (New v1);
+ * 4. CRM estilo Kanban (Novo -> Contatado -> Sem Resposta -> Em Negociação -> Convertido / Descartado);
+ * 5. Conversão em 1 clique para Cliente formal (PJ) na tabela clients do escritório;
+ * 6. Exportação para Meta Ads (Público Personalizado) e Brevo (E-mail/WhatsApp Marketing).
+ * ==============================================================================
+ */
+
+import express from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { db } from '../../config/db.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { logAudit } from '../../middleware/audit.js';
+import { generateNextClientFullId } from '../../shared/ids.js';
+import { enrichSingleProspect, fetchCnpjData } from './radar-b2b.enricher.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const mgCitiesFile = path.join(__dirname, 'cities-mg.json');
+let bundledMgCities = [];
+try {
+  if (fs.existsSync(mgCitiesFile)) {
+    bundledMgCities = JSON.parse(fs.readFileSync(mgCitiesFile, 'utf8'));
+  }
+} catch (_) {}
+
+export const radarB2bRouter = express.Router();
+
+// ------------------------------------------------------------------------------
+// 1. INICIALIZAÇÃO DA TABELA DE PROSPECÇÃO B2B
+// ------------------------------------------------------------------------------
+db.exec(`
+  CREATE TABLE IF NOT EXISTS radar_b2b_prospects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    place_id TEXT UNIQUE,
+    name TEXT NOT NULL,
+    phone TEXT,
+    international_phone TEXT,
+    whatsapp TEXT,
+    email TEXT,
+    website TEXT,
+    address TEXT,
+    neighborhood TEXT,
+    city TEXT DEFAULT 'Juiz de Fora',
+    state TEXT DEFAULT 'MG',
+    postal_code TEXT,
+    rating REAL,
+    user_ratings_total INTEGER DEFAULT 0,
+    business_status TEXT DEFAULT 'OPERATIONAL',
+    primary_type TEXT,
+    primary_type_display TEXT,
+    types TEXT,
+    google_maps_url TEXT,
+    latitude REAL,
+    longitude REAL,
+    status TEXT DEFAULT 'novo', -- 'novo', 'contatado', 'sem_resposta', 'negociando', 'convertido', 'descartado'
+    notes TEXT,
+    priority TEXT DEFAULT 'media', -- 'baixa', 'media', 'alta'
+    assigned_to TEXT,
+    tags TEXT,
+    is_office_client INTEGER DEFAULT 0,
+    office_client_id TEXT,
+    opt_out INTEGER DEFAULT 0,
+    disposition TEXT,
+    cep TEXT,
+    converted_client_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+`);
+
+// Migração retroativa segura para instâncias existentes
+const colsToAdd = [
+  ['whatsapp', 'TEXT'],
+  ['email', 'TEXT'],
+  ['assigned_to', 'TEXT'],
+  ['tags', 'TEXT'],
+  ['is_office_client', 'INTEGER DEFAULT 0'],
+  ['office_client_id', 'TEXT'],
+  ['opt_out', 'INTEGER DEFAULT 0'],
+  ['disposition', 'TEXT'],
+  ['cep', 'TEXT'],
+  ['cnpj', 'TEXT'],
+  ['razao_social', 'TEXT'],
+  ['socios', 'TEXT'],
+  ['capital_social', 'TEXT'],
+  ['cnae', 'TEXT'],
+  ['instagram', 'TEXT'],
+  ['facebook', 'TEXT'],
+  ['linkedin', 'TEXT'],
+  ['enriched_at', 'TEXT']
+];
+for (const [col, def] of colsToAdd) {
+  try {
+    db.exec(`ALTER TABLE radar_b2b_prospects ADD COLUMN ${col} ${def};`);
+  } catch (_) {}
+}
+
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_status ON radar_b2b_prospects(status);
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_primary_type ON radar_b2b_prospects(primary_type);
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_neighborhood ON radar_b2b_prospects(neighborhood);
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_phone ON radar_b2b_prospects(phone);
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_opt_out ON radar_b2b_prospects(opt_out);
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_assigned ON radar_b2b_prospects(assigned_to);
+
+  -- Tabela de Histórico & Linha do Tempo das Interações com o Lead
+  CREATE TABLE IF NOT EXISTS radar_b2b_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    prospect_id INTEGER NOT NULL,
+    previous_status TEXT,
+    new_status TEXT,
+    disposition TEXT,
+    operator_name TEXT,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (prospect_id) REFERENCES radar_b2b_prospects(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_radar_b2b_hist_prospect ON radar_b2b_history(prospect_id);
+
+  -- Tabela de Campanhas & Disparos WhatsApp
+  CREATE TABLE IF NOT EXISTS radar_b2b_campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    message_template TEXT NOT NULL,
+    target_status TEXT,
+    target_category TEXT,
+    target_neighborhood TEXT,
+    total_targets INTEGER DEFAULT 0,
+    sent_count INTEGER DEFAULT 0,
+    failed_count INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'rascunho',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+`);
+
+// ------------------------------------------------------------------------------
+// HELPERS & UTILITÁRIOS
+// ------------------------------------------------------------------------------
+function cleanDigits(val) {
+  if (!val) return '';
+  return String(val).replace(/\D/g, '');
+}
+
+function formatPhoneBR(raw) {
+  const digits = cleanDigits(raw);
+  if (!digits) return raw || '';
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  if (digits.startsWith('55') && digits.length >= 12) {
+    return formatPhoneBR(digits.slice(2));
+  }
+  return raw.trim();
+}
+
+function extractNeighborhood(address, city = '') {
+  if (!address) return 'Centro';
+  // Exemplo: "R. Benvindo de Paula, 527 - Jardim Primavera, Lima Duarte - MG, 36140-000"
+  const mUniversal = address.match(/-\s*([^,]+),\s*([^,-]+)\s*-\s*[A-Z]{2}/i);
+  if (mUniversal && mUniversal[1]) return mUniversal[1].trim();
+
+  if (city) {
+    const escapedCity = city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const mCity1 = address.match(new RegExp(`-\\s*([^,]+),\\s*${escapedCity}`, 'i'));
+    if (mCity1 && mCity1[1]) return mCity1[1].trim();
+    const mCity2 = address.match(new RegExp(`,\\s*([^,-]+)\\s*-\\s*${escapedCity}`, 'i'));
+    if (mCity2 && mCity2[1]) return mCity2[1].trim();
+  }
+
+  const m = address.match(/-\s*([^,]+),\s*Juiz de Fora/i);
+  if (m && m[1]) return m[1].trim();
+  const m2 = address.match(/,\s*([^,-]+)\s*-\s*Juiz de Fora/i);
+  if (m2 && m2[1]) return m2[1].trim();
+  return 'Centro';
+}
+
+function resolveLocalCompaniesCsv() {
+  const candidates = [
+    path.join(process.cwd(), 'storage', 'data', 'empresas_juiz_de_fora_ampliado_20260315_114940.csv'),
+    path.join(process.cwd(), 'storage', 'data', 'empresas_deduplicadas.csv'),
+    '/var/www/advocacia/storage/data/empresas_juiz_de_fora_ampliado_20260315_114940.csv',
+    '/var/www/advocacia/storage/data/empresas_deduplicadas.csv',
+    '/home/jorgealvim/Documents/programação/crm-leads/empresas_juiz_de_fora_ampliado_20260315_114940.csv',
+    '/home/jorgealvim/Documents/programação/crm-leads/empresas_deduplicadas.csv'
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',' && !inQuotes) {
+      result.push(cur.trim());
+      cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+// Verificação de vínculo com clientes ou leads formais do escritório
+export function checkOfficeClientMatch(phone, email, name) {
+  const clean = cleanDigits(phone);
+  if (clean && clean.length >= 8) {
+    const last8 = clean.slice(-8);
+    try {
+      const client = db.prepare(`SELECT id, client_id, name, phone FROM clients WHERE phone LIKE ? LIMIT 1`).get(`%${last8}%`);
+      if (client) return { isClient: true, clientId: client.client_id || `JA-CLI-${client.id}`, clientName: client.name };
+    } catch (_) {}
+    try {
+      const lead = db.prepare(`SELECT id, name, phone FROM leads WHERE phone LIKE ? LIMIT 1`).get(`%${last8}%`);
+      if (lead) return { isClient: false, isLead: true, leadId: lead.id, leadName: lead.name };
+    } catch (_) {}
+  }
+  if (email && email.includes('@')) {
+    try {
+      const client = db.prepare(`SELECT id, client_id, name, email FROM clients WHERE LOWER(email) = LOWER(?) LIMIT 1`).get(email.trim());
+      if (client) return { isClient: true, clientId: client.client_id || `JA-CLI-${client.id}`, clientName: client.name };
+    } catch (_) {}
+  }
+  return { isClient: false, isLead: false };
+}
+
+// ------------------------------------------------------------------------------
+// 2. ENDPOINTS DA API
+// ------------------------------------------------------------------------------
+
+/**
+ * GET /api/radar-b2b/stats
+ * Resumo estatístico do funil Kanban e base de prospecção
+ */
+radarB2bRouter.get('/api/radar-b2b/stats', requireAuth, (req, res) => {
+  try {
+    const total = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects`).get().c;
+    const statsByStatus = db.prepare(`
+      SELECT status, count(*) as count 
+      FROM radar_b2b_prospects 
+      GROUP BY status
+    `).all();
+
+    const statusCounts = {
+      novo: 0,
+      contatado: 0,
+      sem_resposta: 0,
+      negociando: 0,
+      convertido: 0,
+      descartado: 0
+    };
+    for (const r of statsByStatus) {
+      if (r.status in statusCounts) statusCounts[r.status] = r.count;
+    }
+
+    const withPhone = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE phone IS NOT NULL AND phone != ''`).get().c;
+    const withWhatsapp = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE (whatsapp IS NOT NULL AND whatsapp != '') OR (phone IS NOT NULL AND phone != '')`).get().c;
+    const withEmail = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE email IS NOT NULL AND email != ''`).get().c;
+    const withWebsite = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE website IS NOT NULL AND website != ''`).get().c;
+    const optOutCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE opt_out = 1`).get().c;
+    const officeClientCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE is_office_client = 1`).get().c;
+
+    const enrichedCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE enriched_at IS NOT NULL AND enriched_at != ''`).get().c;
+    const pendingCount = Math.max(0, total - enrichedCount);
+    const withCnpjCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE cnpj IS NOT NULL AND cnpj != ''`).get().c;
+    const withSociosCount = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects WHERE socios IS NOT NULL AND socios != ''`).get().c;
+
+    const topCategories = db.prepare(`
+      SELECT primary_type_display, count(*) as count 
+      FROM radar_b2b_prospects 
+      WHERE primary_type_display IS NOT NULL AND primary_type_display != ''
+      GROUP BY primary_type_display 
+      ORDER BY count DESC 
+      LIMIT 8
+    `).all();
+
+    const topNeighborhoods = db.prepare(`
+      SELECT neighborhood, count(*) as count 
+      FROM radar_b2b_prospects 
+      WHERE neighborhood IS NOT NULL AND neighborhood != ''
+      GROUP BY neighborhood 
+      ORDER BY count DESC 
+      LIMIT 8
+    `).all();
+
+    return res.json({
+      success: true,
+      total,
+      withPhone,
+      withWhatsapp,
+      withEmail,
+      withWebsite,
+      optOutCount,
+      officeClientCount,
+      enrichedCount,
+      pendingCount,
+      withCnpjCount,
+      withSociosCount,
+      statusCounts,
+      topCategories,
+      topNeighborhoods
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b/stats:', error);
+    return res.status(500).json({ error: 'Erro ao carregar métricas B2B.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/prospects
+ * Lista prospects para Kanban ou Tabela com filtros avançados
+ */
+radarB2bRouter.get('/api/radar-b2b/prospects', requireAuth, (req, res) => {
+  try {
+    const { 
+      status, category, neighborhood, city, state, assigned_to, 
+      disposition, opt_out, is_office_client, enrichment, search, limit = 100, offset = 0, view = 'all' 
+    } = req.query;
+
+    let sql = `SELECT * FROM radar_b2b_prospects WHERE 1=1`;
+    const params = [];
+
+    if (enrichment === 'pendente') {
+      sql += ` AND (enriched_at IS NULL OR enriched_at = '')`;
+    } else if (enrichment === 'enriquecido') {
+      sql += ` AND enriched_at IS NOT NULL AND enriched_at != ''`;
+    } else if (enrichment === 'com_cnpj') {
+      sql += ` AND cnpj IS NOT NULL AND cnpj != ''`;
+    } else if (enrichment === 'com_socios') {
+      sql += ` AND socios IS NOT NULL AND socios != ''`;
+    } else if (enrichment === 'com_email') {
+      sql += ` AND email IS NOT NULL AND email != ''`;
+    } else if (enrichment === 'sem_email_cnpj') {
+      sql += ` AND (email IS NULL OR email = '') AND (cnpj IS NULL OR cnpj = '')`;
+    }
+
+    if (status && status !== 'todos') {
+      sql += ` AND status = ?`;
+      params.push(status);
+    }
+    if (category && category !== 'todos') {
+      sql += ` AND (primary_type = ? OR primary_type_display = ?)`;
+      params.push(category, category);
+    }
+    if (neighborhood && neighborhood !== 'todos') {
+      sql += ` AND neighborhood = ?`;
+      params.push(neighborhood);
+    }
+    if (city && city !== 'todos') {
+      sql += ` AND LOWER(city) = LOWER(?)`;
+      params.push(city);
+    }
+    if (state && state !== 'todos') {
+      sql += ` AND LOWER(state) = LOWER(?)`;
+      params.push(state);
+    }
+    if (assigned_to && assigned_to !== 'todos') {
+      sql += ` AND assigned_to = ?`;
+      params.push(assigned_to);
+    }
+    if (disposition && disposition !== 'todos') {
+      sql += ` AND disposition = ?`;
+      params.push(disposition);
+    }
+    if (opt_out === '1' || opt_out === 'true') {
+      sql += ` AND opt_out = 1`;
+    } else if (opt_out === '0' || opt_out === 'false') {
+      sql += ` AND (opt_out = 0 OR opt_out IS NULL)`;
+    }
+    if (is_office_client === '1' || is_office_client === 'true') {
+      sql += ` AND is_office_client = 1`;
+    } else if (is_office_client === '0' || is_office_client === 'false') {
+      sql += ` AND (is_office_client = 0 OR is_office_client IS NULL)`;
+    }
+    if (search && search.trim()) {
+      const s = `%${search.trim().toLowerCase()}%`;
+      sql += ` AND (LOWER(name) LIKE ? OR LOWER(phone) LIKE ? OR LOWER(email) LIKE ? OR LOWER(address) LIKE ? OR LOWER(neighborhood) LIKE ?)`;
+      params.push(s, s, s, s, s);
+    }
+
+    if (view === 'kanban') {
+      sql += ` ORDER BY user_ratings_total DESC, rating DESC, id DESC LIMIT 300`;
+    } else {
+      sql += ` ORDER BY id DESC LIMIT ? OFFSET ?`;
+      params.push(Math.min(parseInt(limit, 10) || 50, 500), parseInt(offset, 10) || 0);
+    }
+
+    const rows = db.prepare(sql).all(...params);
+
+    return res.json({
+      success: true,
+      totalCount: rows.length,
+      prospects: rows
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b/prospects:', error);
+    return res.status(500).json({ error: 'Erro ao listar prospects B2B.' });
+  }
+});
+
+/**
+ * PUT /api/radar-b2b/prospects/:id/status
+ * Atualiza status no Kanban, anotações, atendente, tags, disposição e grava histórico
+ */
+radarB2bRouter.put('/api/radar-b2b/prospects/:id/status', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      status, notes, priority, assigned_to, tags, disposition, opt_out, 
+      email, whatsapp, cnpj, razao_social, socios, instagram, facebook, linkedin, capital_social, cnae 
+    } = req.body;
+
+    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'em_analise_chefe', 'convertido', 'descartado'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status Kanban inválido.' });
+    }
+
+    const current = db.prepare(`SELECT * FROM radar_b2b_prospects WHERE id = ?`).get(id);
+    if (!current) {
+      return res.status(404).json({ error: 'Prospect não encontrado.' });
+    }
+
+    const newStatus = status || current.status;
+    const newNotes = notes !== undefined ? notes : current.notes;
+    const newPriority = priority || current.priority || 'media';
+    const newAssignedTo = assigned_to !== undefined ? assigned_to : current.assigned_to;
+    const newTags = tags !== undefined ? tags : current.tags;
+    const newDisposition = disposition !== undefined ? disposition : current.disposition;
+    let newOptOut = opt_out !== undefined ? (opt_out ? 1 : 0) : current.opt_out;
+    if (newDisposition === 'nao_incomodar') {
+      newOptOut = 1;
+    }
+    const newEmail = email !== undefined ? email : current.email;
+    const newWhatsapp = whatsapp !== undefined ? whatsapp : current.whatsapp;
+    const newCnpj = cnpj !== undefined ? cnpj : current.cnpj;
+    const newRazaoSocial = razao_social !== undefined ? razao_social : current.razao_social;
+    const newSocios = socios !== undefined ? socios : current.socios;
+    const newInstagram = instagram !== undefined ? instagram : current.instagram;
+    const newFacebook = facebook !== undefined ? facebook : current.facebook;
+    const newLinkedin = linkedin !== undefined ? linkedin : current.linkedin;
+    const newCapitalSocial = capital_social !== undefined ? capital_social : current.capital_social;
+    const newCnae = cnae !== undefined ? cnae : current.cnae;
+    const now = new Date().toISOString();
+    const operatorName = req.user?.name || req.user?.username || req.user?.email || 'Operador';
+
+    // Se mudou para convertido e ainda não é cliente, cria formalmente o cliente PJ
+    let convertedClientId = current.converted_client_id;
+    if (newStatus === 'convertido' && !current.converted_client_id) {
+      convertedClientId = generateNextClientFullId();
+      try {
+        db.prepare(`
+          INSERT INTO clients (
+            id, client_type, full_name, cnpj, email, phone, social_media, website, street,
+            neighborhood, city, state, google_business, created_at, updated_at
+          ) VALUES (?, 'PJ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          convertedClientId,
+          newRazaoSocial || current.name,
+          newCnpj || '',
+          newEmail || '',
+          newWhatsapp || current.phone || '',
+          newInstagram || newLinkedin || '',
+          current.website || '',
+          current.address || '',
+          current.neighborhood || 'Centro',
+          current.city || 'Juiz de Fora',
+          current.state || 'MG',
+          current.google_maps_url || '',
+          now,
+          now
+        );
+      } catch (errConv) {
+        console.warn('[RADAR B2B] Falha ao converter cliente no status:', errConv.message);
+      }
+    }
+
+    db.prepare(`
+      UPDATE radar_b2b_prospects 
+      SET status = ?, converted_client_id = COALESCE(?, converted_client_id), notes = ?, priority = ?, assigned_to = ?, tags = ?,
+          disposition = ?, opt_out = ?, email = ?, whatsapp = ?,
+          cnpj = ?, razao_social = ?, socios = ?, instagram = ?, facebook = ?, linkedin = ?,
+          capital_social = ?, cnae = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      newStatus, convertedClientId || null, newNotes, newPriority, newAssignedTo, newTags, 
+      newDisposition, newOptOut, newEmail, newWhatsapp,
+      newCnpj, newRazaoSocial, newSocios, newInstagram, newFacebook, newLinkedin,
+      newCapitalSocial, newCnae, now, id
+    );
+
+    // Grava histórico se houver alteração relevante
+    if (newStatus !== current.status || newDisposition !== current.disposition || (notes && notes !== current.notes)) {
+      db.prepare(`
+        INSERT INTO radar_b2b_history (
+          prospect_id, previous_status, new_status, disposition, operator_name, notes, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(id, current.status, newStatus, newDisposition || '', operatorName, newNotes || '', now);
+    }
+
+    logAudit(req, {
+      event_type: 'ALTERACAO',
+      event_name: 'B2B_STATUS_UPDATE',
+      module: 'radar-b2b',
+      description: `Atualizou prospect #${id} (${current.name}) para ${newStatus} [${newDisposition || 'sem_disposicao'}] por ${operatorName}`
+    });
+
+    return res.json({ 
+      success: true, 
+      id, 
+      status: newStatus,
+      disposition: newDisposition,
+      opt_out: newOptOut,
+      assigned_to: newAssignedTo
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b update status:', error);
+    return res.status(500).json({ error: 'Erro ao atualizar prospect.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/prospects/:id/convert
+ * Converte um prospect em Cliente PJ formal do escritório
+ */
+radarB2bRouter.post('/api/radar-b2b/prospects/:id/convert', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const prospect = db.prepare(`SELECT * FROM radar_b2b_prospects WHERE id = ?`).get(id);
+
+    if (!prospect) {
+      return res.status(404).json({ error: 'Prospect não encontrado.' });
+    }
+
+    if (prospect.converted_client_id) {
+      return res.json({
+        success: true,
+        alreadyConverted: true,
+        clientId: prospect.converted_client_id,
+        message: 'Prospect já foi convertido em cliente anteriormente.'
+      });
+    }
+
+    const newClientId = generateNextClientFullId();
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO clients (
+        id, client_type, full_name, cnpj, email, phone, social_media, website, street,
+        neighborhood, city, state, google_business, created_at, updated_at
+      ) VALUES (?, 'PJ', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      newClientId,
+      prospect.razao_social || prospect.name,
+      prospect.cnpj || '',
+      prospect.email || '',
+      prospect.phone || '',
+      prospect.instagram || prospect.linkedin || '',
+      prospect.website || '',
+      prospect.address || '',
+      prospect.neighborhood || 'Centro',
+      prospect.city || 'Juiz de Fora',
+      prospect.state || 'MG',
+      prospect.google_maps_url || '',
+      now,
+      now
+    );
+
+    // Marca como convertido no radar
+    db.prepare(`
+      UPDATE radar_b2b_prospects 
+      SET status = 'convertido', converted_client_id = ?, updated_at = ?
+      WHERE id = ?
+    `).run(newClientId, now, id);
+
+    logAudit(req, {
+      event_type: 'CRIACAO',
+      event_name: 'B2B_CONVERT_CLIENT',
+      module: 'radar-b2b',
+      description: `Prospect #${id} (${prospect.name}) convertido em Cliente ${newClientId}`
+    });
+
+    return res.json({
+      success: true,
+      clientId: newClientId,
+      message: `Empresa "${prospect.name}" convertida com sucesso em Cliente PJ (${newClientId})!`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b convert:', error);
+    return res.status(500).json({ error: 'Erro ao converter prospect em cliente.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/prospects/:id/history
+ * Linha do tempo de interações e movimentações do lead
+ */
+radarB2bRouter.get('/api/radar-b2b/prospects/:id/history', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const history = db.prepare(`
+      SELECT * FROM radar_b2b_history 
+      WHERE prospect_id = ? 
+      ORDER BY id DESC
+    `).all(id);
+
+    return res.json({
+      success: true,
+      prospectId: id,
+      history
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b/prospects/:id/history:', error);
+    return res.status(500).json({ error: 'Erro ao listar histórico do prospect.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/prospects/:id/history
+ * Registra novo touchpoint / ocorrência no histórico do lead
+ */
+radarB2bRouter.post('/api/radar-b2b/prospects/:id/history', requireAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { disposition, notes, operator_name, status } = req.body;
+    const prospect = db.prepare(`SELECT * FROM radar_b2b_prospects WHERE id = ?`).get(id);
+    if (!prospect) {
+      return res.status(404).json({ error: 'Prospect não encontrado.' });
+    }
+
+    const now = new Date().toISOString();
+    const operator = operator_name || req.user?.name || req.user?.username || 'Operador';
+    const newStatus = status || prospect.status;
+    let optOut = prospect.opt_out;
+    if (disposition === 'nao_incomodar') {
+      optOut = 1;
+    }
+
+    db.prepare(`
+      UPDATE radar_b2b_prospects 
+      SET status = ?, disposition = ?, opt_out = ?, notes = ?, updated_at = ?
+      WHERE id = ?
+    `).run(newStatus, disposition || prospect.disposition, optOut, notes !== undefined ? notes : prospect.notes, now, id);
+
+    db.prepare(`
+      INSERT INTO radar_b2b_history (
+        prospect_id, previous_status, new_status, disposition, operator_name, notes, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(id, prospect.status, newStatus, disposition || '', operator, notes || '', now);
+
+    return res.json({
+      success: true,
+      message: 'Ocorrência registrada com sucesso no histórico do prospect!'
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b add history:', error);
+    return res.status(500).json({ error: 'Erro ao registrar histórico.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/pending-ids
+ * Retorna IDs reais das empresas que ainda faltam enriquecer (para nunca repetir as mesmas)
+ */
+radarB2bRouter.get('/api/radar-b2b/pending-ids', requireAuth, (req, res) => {
+  try {
+    const { city, state, limit = 50, mode = 'pendentes' } = req.query;
+    let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
+    const params = [];
+
+    if (mode === 'pendentes') {
+      sql += ` AND (enriched_at IS NULL OR enriched_at = '')`;
+    } else if (mode === 'incompletas') {
+      sql += ` AND (cnpj IS NULL OR cnpj = '' OR socios IS NULL OR socios = '' OR email IS NULL OR email = '')`;
+    }
+
+    if (city && city !== 'todos') {
+      sql += ` AND LOWER(city) = LOWER(?)`;
+      params.push(city);
+    }
+    if (state && state !== 'todos') {
+      sql += ` AND LOWER(state) = LOWER(?)`;
+      params.push(state);
+    }
+
+    sql += ` ORDER BY user_ratings_total DESC, rating DESC, id DESC LIMIT ?`;
+    params.push(Math.min(parseInt(limit, 10) || 50, 200));
+
+    const rows = db.prepare(sql).all(...params);
+    return res.json({
+      success: true,
+      ids: rows.map(r => r.id),
+      companies: rows,
+      totalFound: rows.length
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b pending-ids:', error);
+    return res.status(500).json({ error: 'Erro ao buscar pendentes de enriquecimento.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/prospects/:id/enrich
+ * Robô Enriquecedor: lê o site da empresa, acha redes sociais, e-mail e consulta Receita Federal (QSA/Sócios e CNPJ)
+ */
+radarB2bRouter.post('/api/radar-b2b/prospects/:id/enrich', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const enriched = await enrichSingleProspect(id);
+    let msg = `Empresa "${enriched.name}" processada.`;
+    if (enriched.hasNewData) {
+      msg = `🎉 Novos dados para "${enriched.name}" (${enriched.novosCampos.join(', ')})!`;
+    } else if (enriched.status_type === 'dados_confirmados') {
+      msg = `Dados cadastrais de "${enriched.name}" confirmados na Receita Federal.`;
+    } else {
+      msg = `Varredura concluída para "${enriched.name}". Nenhum dado público novo encontrado.`;
+    }
+    return res.json({
+      success: true,
+      enriched,
+      message: msg
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b enrich single:', error);
+    return res.status(500).json({ error: error.message || 'Erro ao enriquecer prospect.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/enrich-batch
+ * Executa o robô enriquecedor em lote (para IDs específicos selecionados ou filtros)
+ */
+radarB2bRouter.post('/api/radar-b2b/enrich-batch', requireAuth, async (req, res) => {
+  try {
+    const { ids, city, state, limit = 50, onlyMissingEmail = false } = req.body;
+    let targets = [];
+
+    if (Array.isArray(ids) && ids.length > 0) {
+      const placeholders = ids.map(() => '?').join(',');
+      targets = db.prepare(`SELECT id, name FROM radar_b2b_prospects WHERE id IN (${placeholders})`).all(...ids);
+    } else {
+      let sql = `SELECT id, name FROM radar_b2b_prospects WHERE 1=1`;
+      const params = [];
+
+      if (onlyMissingEmail) {
+        sql += ` AND (email IS NULL OR email = '')`;
+      }
+      if (city && city !== 'todos') {
+        sql += ` AND LOWER(city) = LOWER(?)`;
+        params.push(city);
+      }
+      if (state && state !== 'todos') {
+        sql += ` AND LOWER(state) = LOWER(?)`;
+        params.push(state);
+      }
+      sql += ` ORDER BY id DESC LIMIT ?`;
+      params.push(Math.min(parseInt(limit, 10) || 50, 200));
+
+      targets = db.prepare(sql).all(...params);
+    }
+
+    const enrichedResults = [];
+
+    for (const t of targets) {
+      try {
+        const resSingle = await enrichSingleProspect(t.id);
+        enrichedResults.push(resSingle);
+      } catch (_) {}
+      await new Promise(r => setTimeout(r, 250));
+    }
+
+    return res.json({
+      success: true,
+      processed: targets.length,
+      enrichedCount: enrichedResults.length,
+      results: enrichedResults,
+      message: `Robô Enriquecedor finalizou! ${enrichedResults.length} empresas analisadas e atualizadas com sucesso.`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b enrich batch:', error);
+    return res.status(500).json({ error: 'Erro ao rodar lote de enriquecimento.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/prospects/batch-status
+ * Atualiza o status Kanban em lote para as empresas selecionadas
+ */
+radarB2bRouter.post('/api/radar-b2b/prospects/batch-status', requireAuth, (req, res) => {
+  try {
+    const { ids, status, disposition } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Nenhum prospect selecionado.' });
+    }
+    const validStatuses = ['novo', 'contatado', 'sem_resposta', 'negociando', 'em_analise_chefe', 'convertido', 'descartado'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status Kanban inválido.' });
+    }
+
+    const now = new Date().toISOString();
+    const operatorName = req.user?.name || req.user?.username || req.user?.email || 'Operador';
+    const placeholders = ids.map(() => '?').join(',');
+
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      if (status && disposition) {
+        db.prepare(`UPDATE radar_b2b_prospects SET status = ?, disposition = ?, updated_at = ? WHERE id IN (${placeholders})`).run(status, disposition, now, ...ids);
+      } else if (status) {
+        db.prepare(`UPDATE radar_b2b_prospects SET status = ?, updated_at = ? WHERE id IN (${placeholders})`).run(status, now, ...ids);
+      } else if (disposition) {
+        db.prepare(`UPDATE radar_b2b_prospects SET disposition = ?, updated_at = ? WHERE id IN (${placeholders})`).run(disposition, now, ...ids);
+      }
+
+      for (const id of ids) {
+        db.prepare(`
+          INSERT INTO radar_b2b_history (prospect_id, new_status, disposition, operator_name, notes, created_at)
+          VALUES (?, ?, ?, ?, 'Atualização em lote', ?)
+        `).run(id, status || 'novo', disposition || '', operatorName, now);
+      }
+      db.exec('COMMIT;');
+    } catch (err) {
+      db.exec('ROLLBACK;');
+      throw err;
+    }
+
+    return res.json({
+      success: true,
+      updatedCount: ids.length,
+      message: `${ids.length} empresas atualizadas com sucesso!`
+    });
+  } catch (error) {
+    console.error('[ERRO] batch status update:', error);
+    return res.status(500).json({ error: 'Erro ao atualizar empresas em lote.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/consultar-cnpj/:cnpj
+ * Consulta dados oficiais na Receita Federal por CNPJ (Sócios, Razão Social, CNAE, Capital Social)
+ */
+radarB2bRouter.get('/api/radar-b2b/consultar-cnpj/:cnpj', requireAuth, async (req, res) => {
+  try {
+    const { cnpj } = req.params;
+    const data = await fetchCnpjData(cnpj);
+    if (!data) {
+      return res.status(404).json({ error: 'CNPJ não encontrado na Receita Federal ou formato inválido.' });
+    }
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b consultar cnpj:', error);
+    return res.status(500).json({ error: 'Erro ao consultar CNPJ: ' + error.message });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/sync-clients
+ * Cruza a base do radar com a base de clientes formais do escritório
+ */
+radarB2bRouter.post('/api/radar-b2b/sync-clients', requireAuth, (req, res) => {
+  try {
+    const prospects = db.prepare(`
+      SELECT id, name, phone, email, is_office_client, office_client_id 
+      FROM radar_b2b_prospects
+    `).all();
+
+    let matched = 0;
+    const updateStmt = db.prepare(`
+      UPDATE radar_b2b_prospects 
+      SET is_office_client = 1, office_client_id = ?
+      WHERE id = ?
+    `);
+
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      for (const p of prospects) {
+        const check = checkOfficeClientMatch(p.phone, p.email, p.name);
+        if (check.isClient) {
+          updateStmt.run(check.clientId, p.id);
+          matched++;
+        }
+      }
+      db.exec('COMMIT;');
+    } catch (e) {
+      db.exec('ROLLBACK;');
+      throw e;
+    }
+
+    return res.json({
+      success: true,
+      totalChecked: prospects.length,
+      matched,
+      message: `Sincronização concluída: ${matched} empresas identificadas como clientes do escritório!`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b sync clients:', error);
+    return res.status(500).json({ error: 'Erro ao sincronizar clientes.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/locations/states
+ * Lista oficial de Estados (UFs)
+ */
+radarB2bRouter.get('/api/radar-b2b/locations/states', requireAuth, (req, res) => {
+  const states = [
+    { sigla: 'MG', nome: 'Minas Gerais' },
+    { sigla: 'SP', nome: 'São Paulo' },
+    { sigla: 'RJ', nome: 'Rio de Janeiro' },
+    { sigla: 'ES', nome: 'Espírito Santo' },
+    { sigla: 'PR', nome: 'Paraná' },
+    { sigla: 'SC', nome: 'Santa Catarina' },
+    { sigla: 'RS', nome: 'Rio Grande do Sul' },
+    { sigla: 'BA', nome: 'Bahia' },
+    { sigla: 'GO', nome: 'Goiás' },
+    { sigla: 'DF', nome: 'Distrito Federal' },
+    { sigla: 'PE', nome: 'Pernambuco' },
+    { sigla: 'CE', nome: 'Ceará' },
+    { sigla: 'PA', nome: 'Pará' },
+    { sigla: 'MT', nome: 'Mato Grosso' },
+    { sigla: 'MS', nome: 'Mato Grosso do Sul' },
+    { sigla: 'MA', nome: 'Maranhão' },
+    { sigla: 'PB', nome: 'Paraíba' },
+    { sigla: 'RN', nome: 'Rio Grande do Norte' },
+    { sigla: 'AL', nome: 'Alagoas' },
+    { sigla: 'PI', nome: 'Piauí' },
+    { sigla: 'SE', nome: 'Sergipe' },
+    { sigla: 'RO', nome: 'Rondônia' },
+    { sigla: 'TO', nome: 'Tocantins' },
+    { sigla: 'AC', nome: 'Acre' },
+    { sigla: 'AM', nome: 'Amazonas' },
+    { sigla: 'AP', nome: 'Amapá' },
+    { sigla: 'RR', nome: 'Roraima' }
+  ];
+  return res.json({ success: true, states });
+});
+
+/**
+ * GET /api/radar-b2b/locations/cities
+ * Cidades do estado informado (com cache)
+ */
+const citiesCache = new Map();
+radarB2bRouter.get('/api/radar-b2b/locations/cities', requireAuth, async (req, res) => {
+  try {
+    const uf = (req.query.uf || 'MG').toUpperCase();
+    if (citiesCache.has(uf)) {
+      return res.json({ success: true, uf, cities: citiesCache.get(uf) });
+    }
+
+    let cities = [];
+    if (uf === 'MG' && bundledMgCities.length > 0) {
+      citiesCache.set('MG', bundledMgCities);
+      return res.json({ success: true, uf: 'MG', cities: bundledMgCities });
+    }
+
+    try {
+      const resp = await fetch(`https://brasilapi.com.br/api/ibge/municipios/v1/${uf}`, { signal: AbortSignal.timeout(3500) });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const toTitleCase = s => String(s).toLowerCase().split(' ').map(w => ['de','da','do','dos','das','e'].includes(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          cities = data.map(c => toTitleCase(c.nome || c));
+          cities.sort((a, b) => a.localeCompare('pt-BR'));
+        }
+      }
+    } catch (_) {}
+
+    if (cities.length === 0) {
+      if (uf === 'MG') {
+        cities = ['Juiz de Fora', 'Lima Duarte', 'Bicas', 'Santos Dumont', 'Matias Barbosa', 'São João del-Rei', 'Barbacena', 'Muriaé', 'Ubá', 'Cataguases', 'Leopoldina', 'Belo Horizonte', 'Uberlândia', 'Contagem', 'Betim', 'Montes Claros'];
+      } else if (uf === 'RJ') {
+        cities = ['Rio de Janeiro', 'Niterói', 'Petrópolis', 'Teresópolis', 'Nova Friburgo', 'Duque de Caxias', 'Volta Redonda', 'Barra Mansa', 'Três Rios', 'Valença', 'Paraíba do Sul'];
+      } else if (uf === 'SP') {
+        cities = ['São Paulo', 'Campinas', 'São José dos Campos', 'Ribeirão Preto', 'Santos', 'Sorocaba', 'Guarulhos', 'Osasco', 'Santo André', 'São Bernardo do Campo'];
+      }
+    }
+
+    citiesCache.set(uf, cities);
+    return res.json({ success: true, uf, cities });
+  } catch (error) {
+    return res.json({ success: true, uf: req.query.uf || 'MG', cities: ['Juiz de Fora', 'Lima Duarte', 'Bicas', 'Santos Dumont', 'Belo Horizonte'] });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/locations/cep/:cep
+ * Consulta endereço por CEP
+ */
+radarB2bRouter.get('/api/radar-b2b/locations/cep/:cep', requireAuth, async (req, res) => {
+  try {
+    const cleanCep = (req.params.cep || '').replace(/\D/g, '');
+    if (cleanCep.length !== 8) {
+      return res.status(400).json({ error: 'CEP deve conter 8 dígitos.' });
+    }
+    const resp = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`, { signal: AbortSignal.timeout(3000) });
+    if (!resp.ok) {
+      return res.status(404).json({ error: 'CEP não encontrado.' });
+    }
+    const data = await resp.json();
+    if (data.erro) {
+      return res.status(404).json({ error: 'CEP inválido ou inexistente.' });
+    }
+    return res.json({
+      success: true,
+      cep: data.cep,
+      street: data.logradouro,
+      neighborhood: data.bairro,
+      city: data.localidade,
+      state: data.uf
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao consultar CEP: ' + error.message });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/campaigns
+ * Lista campanhas criadas
+ */
+radarB2bRouter.get('/api/radar-b2b/campaigns', requireAuth, (req, res) => {
+  try {
+    const rows = db.prepare(`SELECT * FROM radar_b2b_campaigns ORDER BY id DESC`).all();
+    return res.json({ success: true, campaigns: rows });
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao listar campanhas.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/campaigns
+ * Cria uma nova campanha de abordagem B2B
+ */
+radarB2bRouter.post('/api/radar-b2b/campaigns', requireAuth, (req, res) => {
+  try {
+    const { name, message_template, target_status, target_category, target_neighborhood } = req.body;
+    if (!name || !message_template) {
+      return res.status(400).json({ error: 'Nome e texto da mensagem são obrigatórios.' });
+    }
+
+    let countSql = `SELECT count(*) as c FROM radar_b2b_prospects WHERE phone IS NOT NULL AND phone != '' AND (opt_out = 0 OR opt_out IS NULL) AND (is_office_client = 0 OR is_office_client IS NULL)`;
+    const params = [];
+    if (target_status && target_status !== 'todos') {
+      countSql += ` AND status = ?`;
+      params.push(target_status);
+    }
+    if (target_category && target_category !== 'todos') {
+      countSql += ` AND (primary_type = ? OR primary_type_display = ?)`;
+      params.push(target_category, target_category);
+    }
+    if (target_neighborhood && target_neighborhood !== 'todos') {
+      countSql += ` AND neighborhood = ?`;
+      params.push(target_neighborhood);
+    }
+    const totalTargets = db.prepare(countSql).get(...params).c;
+
+    const now = new Date().toISOString();
+    const result = db.prepare(`
+      INSERT INTO radar_b2b_campaigns (
+        name, message_template, target_status, target_category, target_neighborhood,
+        total_targets, sent_count, failed_count, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 'pronta', ?, ?)
+    `).run(name, message_template, target_status || 'todos', target_category || 'todos', target_neighborhood || 'todos', totalTargets, now, now);
+
+    return res.json({
+      success: true,
+      campaignId: result.lastInsertRowid,
+      totalTargets,
+      message: `Campanha "${name}" criada com sucesso! ${totalTargets} empresas aptas para disparo.`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b create campaign:', error);
+    return res.status(500).json({ error: 'Erro ao criar campanha.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/campaigns/send-batch
+ * Dispara ou gera fila para WhatsApp Evolution API
+ */
+radarB2bRouter.post('/api/radar-b2b/campaigns/send-batch', requireAuth, async (req, res) => {
+  try {
+    const { campaignId, mode = 'api', limit = 20 } = req.body;
+    const campaign = db.prepare(`SELECT * FROM radar_b2b_campaigns WHERE id = ?`).get(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campanha não encontrada.' });
+    }
+
+    let sql = `SELECT * FROM radar_b2b_prospects WHERE phone IS NOT NULL AND phone != '' AND (opt_out = 0 OR opt_out IS NULL) AND (is_office_client = 0 OR is_office_client IS NULL)`;
+    const params = [];
+    if (campaign.target_status && campaign.target_status !== 'todos') {
+      sql += ` AND status = ?`;
+      params.push(campaign.target_status);
+    }
+    if (campaign.target_category && campaign.target_category !== 'todos') {
+      sql += ` AND (primary_type = ? OR primary_type_display = ?)`;
+      params.push(campaign.target_category, campaign.target_category);
+    }
+    if (campaign.target_neighborhood && campaign.target_neighborhood !== 'todos') {
+      sql += ` AND neighborhood = ?`;
+      params.push(campaign.target_neighborhood);
+    }
+    sql += ` ORDER BY id ASC LIMIT ?`;
+    params.push(Math.min(parseInt(limit, 10) || 20, 100));
+
+    const targets = db.prepare(sql).all(...params);
+
+    let apiUrl = '';
+    let apiKey = '';
+    let instance = 'jorgealvim_advocacia';
+    try {
+      const u = db.prepare(`SELECT value FROM whatsapp_settings WHERE key = 'evolution_api_url'`).get();
+      if (u) apiUrl = u.value;
+      const k = db.prepare(`SELECT value FROM whatsapp_settings WHERE key = 'evolution_api_key'`).get();
+      if (k) apiKey = k.value;
+      const i = db.prepare(`SELECT value FROM whatsapp_settings WHERE key = 'instance_name'`).get();
+      if (i) instance = i.value;
+    } catch (_) {}
+
+    const results = [];
+    let sentSuccess = 0;
+    let sentFailed = 0;
+    const now = new Date().toISOString();
+    const operator = req.user?.name || req.user?.username || 'Campanha B2B';
+
+    for (const t of targets) {
+      const clean = cleanDigits(t.phone);
+      const intl = clean.startsWith('55') ? clean : `55${clean}`;
+      let text = campaign.message_template
+        .replace(/{empresa}/g, t.name || 'Empresa')
+        .replace(/{nome}/g, t.name || 'Empresa')
+        .replace(/{bairro}/g, t.neighborhood || 'Juiz de Fora')
+        .replace(/{categoria}/g, t.primary_type_display || t.primary_type || 'Empresarial')
+        .replace(/{cidade}/g, t.city || 'Juiz de Fora');
+
+      const waLink = `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
+
+      if (mode === 'api' && apiUrl) {
+        try {
+          const apiRes = await fetch(`${apiUrl}/message/sendText/${instance}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+            body: JSON.stringify({ number: intl, text }),
+            signal: AbortSignal.timeout(6000)
+          });
+          if (apiRes.ok) {
+            sentSuccess++;
+            results.push({ id: t.id, name: t.name, phone: intl, status: 'enviado_api', waLink });
+            if (t.status === 'novo') {
+              db.prepare(`UPDATE radar_b2b_prospects SET status = 'contatado', updated_at = ? WHERE id = ?`).run(now, t.id);
+            }
+            db.prepare(`
+              INSERT INTO radar_b2b_history (prospect_id, previous_status, new_status, disposition, operator_name, notes, created_at)
+              VALUES (?, ?, 'contatado', 'disparo_campanha_whatsapp', ?, ?, ?)
+            `).run(t.id, t.status, operator, `Mensagem de campanha enviada via WhatsApp API: "${campaign.name}"`, now);
+          } else {
+            sentFailed++;
+            results.push({ id: t.id, name: t.name, phone: intl, status: 'erro_api', waLink });
+          }
+        } catch (e) {
+          sentFailed++;
+          results.push({ id: t.id, name: t.name, phone: intl, status: 'offline_api', waLink });
+        }
+      } else {
+        results.push({ id: t.id, name: t.name, phone: intl, status: 'link_gerado', waLink });
+      }
+    }
+
+    db.prepare(`
+      UPDATE radar_b2b_campaigns 
+      SET sent_count = sent_count + ?, failed_count = failed_count + ?, updated_at = ?
+      WHERE id = ?
+    `).run(sentSuccess, sentFailed, now, campaignId);
+
+    return res.json({
+      success: true,
+      mode,
+      processed: targets.length,
+      sentSuccess,
+      sentFailed,
+      results
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b send batch campaign:', error);
+    return res.status(500).json({ error: 'Erro ao disparar campanha.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/importar-local
+ * Importa o CSV local de empresas deduplicadas ou ampliado já gerado pelo extrator
+ */
+radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => {
+  try {
+    const targetPath = resolveLocalCompaniesCsv();
+    if (!targetPath) {
+      return res.status(404).json({ error: 'Nenhum arquivo CSV de empresas encontrado (storage/data ou crm-leads).' });
+    }
+
+    const content = fs.readFileSync(targetPath, 'utf8');
+    const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+
+    if (lines.length <= 1) {
+      return res.status(400).json({ error: 'Arquivo CSV sem registros.' });
+    }
+
+    const header = parseCSVLine(lines[0]).map(h => h.replace(/^["'\uFEFF]+|["']+$/g, '').trim().toLowerCase());
+    const idxPlaceId = header.indexOf('place_id');
+    const idxNome = header.indexOf('nome');
+    const idxEndereco = header.indexOf('endereco');
+    const idxTelefone = header.indexOf('telefone');
+    const idxTelInt = header.indexOf('telefone_internacional');
+    const idxWebsite = header.indexOf('website');
+    const idxRating = header.indexOf('rating');
+    const idxAvaliacoes = header.indexOf('total_avaliacoes');
+    const idxStatusNegocio = header.indexOf('status_negocio');
+    const idxTipo = header.indexOf('tipo_principal');
+    const idxTipoDesc = header.indexOf('tipo_principal_descricao');
+    const idxTipos = header.indexOf('tipos');
+    const idxMaps = header.indexOf('google_maps_url');
+    const idxLat = header.indexOf('latitude');
+    const idxLng = header.indexOf('longitude');
+
+    let inserted = 0;
+    let skipped = 0;
+    const now = new Date().toISOString();
+
+    const insertStmt = db.prepare(`
+      INSERT OR IGNORE INTO radar_b2b_prospects (
+        place_id, name, phone, international_phone, website,
+        address, neighborhood, city, state, rating, user_ratings_total,
+        business_status, primary_type, primary_type_display, types,
+        google_maps_url, latitude, longitude, status, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, ?,
+        ?, ?, 'Juiz de Fora', 'MG', ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?, 'novo', ?, ?
+      )
+    `);
+
+    // Inserção em transação para alta performance (milhares de linhas em fração de segundo)
+    const insertedIds = [];
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCSVLine(lines[i]).map(c => c.replace(/^["']+|["']+$/g, '').trim());
+        const placeId = idxPlaceId >= 0 ? cols[idxPlaceId] : null;
+        const name = idxNome >= 0 ? cols[idxNome] : null;
+
+        if (!name) {
+          skipped++;
+          continue;
+        }
+
+        const address = idxEndereco >= 0 ? cols[idxEndereco] : '';
+        const neighborhood = extractNeighborhood(address);
+        const phone = idxTelefone >= 0 ? formatPhoneBR(cols[idxTelefone]) : '';
+        const intPhone = idxTelInt >= 0 ? cols[idxTelInt] : '';
+        const website = idxWebsite >= 0 ? cols[idxWebsite] : '';
+        const ratingRaw = idxRating >= 0 ? parseFloat(cols[idxRating].replace(',', '.')) : null;
+        const rating = !isNaN(ratingRaw) ? ratingRaw : null;
+        const reviewsRaw = idxAvaliacoes >= 0 ? parseInt(cols[idxAvaliacoes], 10) : 0;
+        const reviews = !isNaN(reviewsRaw) ? reviewsRaw : 0;
+        const bStatus = idxStatusNegocio >= 0 ? cols[idxStatusNegocio] : 'OPERATIONAL';
+        const pType = idxTipo >= 0 ? cols[idxTipo] : '';
+        const pTypeDesc = idxTipoDesc >= 0 ? cols[idxTipoDesc] : '';
+        const types = idxTipos >= 0 ? cols[idxTipos] : '';
+        const mapsUrl = idxMaps >= 0 ? cols[idxMaps] : '';
+        const latRaw = idxLat >= 0 ? parseFloat(cols[idxLat].replace(',', '.')) : null;
+        const lngRaw = idxLng >= 0 ? parseFloat(cols[idxLng].replace(',', '.')) : null;
+
+        const resRun = insertStmt.run(
+          placeId || `loc_${Date.now()}_${i}`,
+          name,
+          phone,
+          intPhone,
+          website,
+          address,
+          neighborhood,
+          rating,
+          reviews,
+          bStatus,
+          pType,
+          pTypeDesc || pType,
+          types,
+          mapsUrl,
+          !isNaN(latRaw) ? latRaw : null,
+          !isNaN(lngRaw) ? lngRaw : null,
+          now,
+          now
+        );
+
+        if (resRun.changes > 0) {
+          inserted++;
+          if (resRun.lastInsertRowid) insertedIds.push(resRun.lastInsertRowid);
+        } else {
+          skipped++;
+        }
+      }
+      db.exec('COMMIT;');
+    } catch (err) {
+      db.exec('ROLLBACK;');
+      throw err;
+    }
+
+    const totalNow = db.prepare(`SELECT count(*) as c FROM radar_b2b_prospects`).get().c;
+    logAudit(req, {
+      event_type: 'IMPORTACAO',
+      event_name: 'B2B_IMPORT_CSV',
+      module: 'radar-b2b',
+      description: `Importou ${inserted} empresas locais da base ${path.basename(targetPath)}`
+    });
+
+    return res.json({
+      success: true,
+      file: path.basename(targetPath),
+      inserted,
+      insertedIds,
+      skipped,
+      totalNow
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b importar local:', error);
+    return res.status(500).json({ error: 'Erro ao importar empresas do arquivo local.' });
+  }
+});
+
+/**
+ * POST /api/radar-b2b/buscar-google
+ * Busca empresas no Google Places API (com chave) ou via Base Local Ampliada enriquecida (sem chave)
+ * Permite buscar sem qualificação obrigatória e verifica se já é cliente do escritório
+ */
+radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res) => {
+  try {
+    const { query, neighborhood, city = 'Juiz de Fora', state = 'MG', includedType, apiKey: userKey, limit } = req.body;
+    const apiKey = userKey || process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_PLACES_API_KEY;
+
+    const searchTerm = (query || '').trim();
+    const nbTerm = (neighborhood || '').trim();
+    const now = new Date().toISOString();
+
+    // -------------------------------------------------------------
+    // CENÁRIO A: Chave de API Google Places disponível
+    // -------------------------------------------------------------
+    if (apiKey) {
+      const locationParts = [nbTerm ? `em ${nbTerm}` : '', city, state].filter(Boolean).join(' ');
+      const queryText = searchTerm 
+        ? `${searchTerm} ${locationParts}`.trim()
+        : `empresas e comércios em ${locationParts}`.trim();
+
+      const jfBounds = {
+        low: { latitude: -21.96, longitude: -43.65 },
+        high: { latitude: -21.48, longitude: -43.03 }
+      };
+
+      // Define a meta de empresas solicitada pelo usuário no seletor
+      let targetCount = 60;
+      if (limit === '20') targetCount = 20;
+      else if (limit === '60') targetCount = 60;
+      else if (limit === '100') targetCount = 100;
+      else if (limit === '250') targetCount = 250;
+      else if (limit === '500') targetCount = 500;
+      else if (limit === '1000') targetCount = 1000;
+      else if (limit === 'todas') targetCount = 300;
+
+      const searchQueries = [queryText];
+      if (targetCount > 60 && !searchTerm) {
+        searchQueries.push(
+          `lojas e comércios em ${locationParts}`.trim(),
+          `serviços e escritórios em ${locationParts}`.trim(),
+          `indústrias e distribuidoras em ${locationParts}`.trim(),
+          `clínicas médicas e consultórios em ${locationParts}`.trim(),
+          `restaurantes e bares em ${locationParts}`.trim(),
+          `oficinas e autopeças em ${locationParts}`.trim(),
+          `construção civil e imobiliárias em ${locationParts}`.trim()
+        );
+      }
+
+      const allPlacesMap = new Map();
+
+      for (const qText of searchQueries) {
+        if (allPlacesMap.size >= targetCount) break;
+
+        let pageToken = undefined;
+        const maxPagesForThisQuery = targetCount <= 20 ? 1 : 3;
+
+        for (let page = 0; page < maxPagesForThisQuery; page++) {
+          if (allPlacesMap.size >= targetCount) break;
+
+          const bodyPayload = {
+            textQuery: qText,
+            languageCode: 'pt-BR',
+            regionCode: 'BR',
+            pageSize: 20
+          };
+          if (pageToken) bodyPayload.pageToken = pageToken;
+          if (city && city.toLowerCase().includes('juiz de fora')) {
+            bodyPayload.locationRestriction = { rectangle: jfBounds };
+          }
+          if (includedType) bodyPayload.includedType = includedType;
+
+          const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': apiKey,
+              'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.types,places.primaryType,places.primaryTypeDisplayName,places.googleMapsUri,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,nextPageToken'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+
+          if (!response.ok) {
+            break;
+          }
+
+          const data = await response.json();
+          const places = data.places || [];
+          for (const p of places) {
+            if (p.id && !allPlacesMap.has(p.id)) {
+              allPlacesMap.set(p.id, p);
+            }
+          }
+          pageToken = data.nextPageToken;
+          if (!pageToken || places.length === 0) break;
+        }
+      }
+
+      const allPlaces = Array.from(allPlacesMap.values()).slice(0, targetCount);
+
+      let inserted = 0;
+      const insertedIds = [];
+
+      const insertStmt = db.prepare(`
+        INSERT OR IGNORE INTO radar_b2b_prospects (
+          place_id, name, phone, website, address, neighborhood,
+          city, state, rating, user_ratings_total, business_status,
+          primary_type, primary_type_display, types, google_maps_url,
+          latitude, longitude, status, is_office_client, office_client_id, created_at, updated_at
+        ) VALUES (
+          ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, 'novo', ?, ?, ?, ?
+        )
+      `);
+
+      db.exec('BEGIN TRANSACTION;');
+      try {
+        for (const p of allPlaces) {
+          const typesList = p.types || [];
+          const geoOnly = ['locality', 'political', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'postal_code'];
+          const nonGeoTypes = typesList.filter(t => !geoOnly.includes(t));
+          // Ignora entidade meramente geográfica (ex: o ponto do município sem telefone ou site)
+          if (nonGeoTypes.length === 0 && !p.nationalPhoneNumber && !p.websiteUri) {
+            continue;
+          }
+
+          const name = p.displayName?.text || 'Sem nome';
+          const address = p.formattedAddress || '';
+          const nb = extractNeighborhood(address, city) || nbTerm || 'Centro';
+          const phone = formatPhoneBR(p.nationalPhoneNumber || '');
+          const website = p.websiteUri || '';
+          const rating = p.rating || null;
+          const reviews = p.userRatingCount || 0;
+          const pType = p.primaryType || '';
+          const pTypeDesc = p.primaryTypeDisplayName?.text || pType;
+          const types = typesList.join(', ');
+          const mapsUrl = p.googleMapsUri || '';
+          const lat = p.location?.latitude || null;
+          const lng = p.location?.longitude || null;
+
+          // Verifica se já é cliente do escritório
+          const clientCheck = checkOfficeClientMatch(phone, '', name);
+
+          const resRun = insertStmt.run(
+            p.id, name, phone, website, address, nb,
+            city, state, rating, reviews, p.businessStatus || 'OPERATIONAL',
+            pType, pTypeDesc, types, mapsUrl,
+            lat, lng, clientCheck.isClient ? 1 : 0, clientCheck.clientId || null, now, now
+          );
+          if (resRun.changes > 0) {
+            inserted++;
+            if (resRun.lastInsertRowid) insertedIds.push(resRun.lastInsertRowid);
+          }
+        }
+        db.exec('COMMIT;');
+      } catch (err) {
+        db.exec('ROLLBACK;');
+        throw err;
+      }
+
+      logAudit(req, {
+        event_type: 'CONSULTA',
+        event_name: 'B2B_GOOGLE_SEARCH',
+        module: 'radar-b2b',
+        description: `Varredura Google Places (${queryText}): ${inserted} novos inseridos`
+      });
+
+      return res.json({
+        success: true,
+        mode: 'google_api_live',
+        found: allPlaces.length,
+        inserted,
+        insertedIds,
+        message: `Varredura Google Places concluída! ${allPlaces.length} empresas encontradas e ${inserted} novas adicionadas ao funil.`
+      });
+    }
+
+    // -------------------------------------------------------------
+    // CENÁRIO B: Sem Chave Google (Busca inteligente na Base Local Ampliada)
+    // -------------------------------------------------------------
+    if (city && !city.toLowerCase().includes('juiz de fora')) {
+      return res.status(400).json({
+        error: `A base local offline contém 7.880 empresas exclusivamente de Juiz de Fora - MG. Para varrer novas cidades ao vivo no Google Maps (como ${city} - ${state}), informe sua Chave de API do Google Places no campo correspondente (ou configure GOOGLE_MAPS_API_KEY no servidor).`
+      });
+    }
+
+    const localFile = resolveLocalCompaniesCsv();
+    if (!localFile) {
+      return res.status(400).json({
+        error: 'Chave de API do Google não configurada e base local não encontrada (storage/data ou crm-leads).'
+      });
+    }
+
+    const content = fs.readFileSync(localFile, 'utf8');
+    const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+    const header = parseCSVLine(lines[0]).map(h => h.replace(/^["'\uFEFF]+|["']+$/g, '').trim().toLowerCase());
+    const idxPlaceId = header.indexOf('place_id');
+    const idxNome = header.indexOf('nome');
+    const idxEndereco = header.indexOf('endereco');
+    const idxTelefone = header.indexOf('telefone');
+    const idxWebsite = header.indexOf('website');
+    const idxRating = header.indexOf('rating');
+    const idxAvaliacoes = header.indexOf('total_avaliacoes');
+    const idxTipo = header.indexOf('tipo_principal');
+    const idxTipoDesc = header.indexOf('tipo_principal_descricao');
+    const idxTipos = header.indexOf('tipos');
+    const idxMaps = header.indexOf('google_maps_url');
+
+    const maxLimit = limit === 'todas' ? 999999 : (parseInt(limit, 10) || 500);
+    let inserted = 0;
+    const insertedIds = [];
+    let matched = 0;
+    const insertStmt = db.prepare(`
+      INSERT OR IGNORE INTO radar_b2b_prospects (
+        place_id, name, phone, website, address, neighborhood,
+        city, state, rating, user_ratings_total, business_status,
+        primary_type, primary_type_display, types, google_maps_url,
+        status, is_office_client, office_client_id, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, 'OPERATIONAL',
+        ?, ?, ?, ?,
+        'novo', ?, ?, ?, ?
+      )
+    `);
+
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCSVLine(lines[i]).map(c => c.replace(/^["']+|["']+$/g, '').trim());
+        const name = idxNome >= 0 ? cols[idxNome] : '';
+        const address = idxEndereco >= 0 ? cols[idxEndereco] : '';
+        const nb = extractNeighborhood(address);
+        const pType = idxTipo >= 0 ? cols[idxTipo] : '';
+        const pTypeDesc = idxTipoDesc >= 0 ? cols[idxTipoDesc] : '';
+
+        // Filtro por termo/ramo se informado (se vazio, busca todas as empresas)
+        if (searchTerm) {
+          const q = searchTerm.toLowerCase();
+          const fullText = `${name} ${pType} ${pTypeDesc} ${cols[idxTipos] || ''}`.toLowerCase();
+          if (!fullText.includes(q)) continue;
+        }
+
+        // Filtro por bairro se informado
+        if (nbTerm) {
+          const targetNb = nbTerm.toLowerCase();
+          if (!nb.toLowerCase().includes(targetNb) && !address.toLowerCase().includes(targetNb)) continue;
+        }
+
+        matched++;
+        const placeId = idxPlaceId >= 0 && cols[idxPlaceId] ? cols[idxPlaceId] : `LOCAL-${i}`;
+        const phone = idxTelefone >= 0 ? formatPhoneBR(cols[idxTelefone]) : '';
+        const website = idxWebsite >= 0 ? cols[idxWebsite] : '';
+        const rating = idxRating >= 0 ? parseFloat((cols[idxRating] || '').replace(',', '.')) || null : null;
+        const rev = idxAvaliacoes >= 0 ? parseInt(cols[idxAvaliacoes], 10) || 0 : 0;
+        const maps = idxMaps >= 0 ? cols[idxMaps] : '';
+        const types = idxTipos >= 0 ? cols[idxTipos] : '';
+
+        // Verifica se já é cliente do escritório
+        const clientCheck = checkOfficeClientMatch(phone, '', name);
+
+        const resRun = insertStmt.run(
+          placeId, name, phone, website, address, nb,
+          city, state,
+          rating, rev,
+          pType, pTypeDesc, types, maps,
+          clientCheck.isClient ? 1 : 0, clientCheck.clientId || null, now, now
+        );
+        if (resRun.changes > 0) {
+          inserted++;
+          if (resRun.lastInsertRowid) insertedIds.push(resRun.lastInsertRowid);
+        }
+        if (inserted >= maxLimit) break;
+      }
+      db.exec('COMMIT;');
+    } catch (e) {
+      db.exec('ROLLBACK;');
+      throw e;
+    }
+
+    logAudit(req, {
+      event_type: 'CONSULTA',
+      event_name: 'B2B_LOCAL_SEARCH',
+      module: 'radar-b2b',
+      description: `Busca na base local (${searchTerm || 'todas'} / ${nbTerm || 'geral'}): ${inserted} novos inseridos de ${matched} encontrados`
+    });
+
+    return res.json({
+      success: true,
+      mode: 'base_local_ampliada',
+      found: matched,
+      matched,
+      inserted,
+      insertedIds,
+      message: `Busca concluída com sucesso! ${matched} empresas encontradas e ${inserted} novos registros adicionados ao funil.`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b buscar-google:', error);
+    return res.status(500).json({ error: 'Erro ao executar busca: ' + error.message });
+  }
+});
+
+/**
+ * Helper para extrair Primeiro e Último Nome (priorizando Sócios descobertos pelo Robô)
+ */
+function extractFirstLastName(companyName = '', sociosStr = '') {
+  let fn = '';
+  let ln = '';
+  if (sociosStr && sociosStr.trim()) {
+    // Pega o primeiro sócio (ex: "JOÃO CARLOS SILVA" ou "MARIA SANTOS")
+    const cleanSocio = sociosStr.split(/[,;\n]/)[0].replace(/[-–].*$/, '').trim();
+    const parts = cleanSocio.split(/\s+/).filter(Boolean);
+    if (parts.length > 0) {
+      fn = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+      if (parts.length > 1) {
+        ln = parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1).toLowerCase();
+      }
+    }
+  }
+  if (!fn && companyName) {
+    const cleanCompany = companyName.replace(/["',]/g, '').trim();
+    const parts = cleanCompany.split(/\s+/).filter(Boolean);
+    if (parts.length > 0) {
+      fn = parts[0];
+      if (parts.length > 1) ln = parts[parts.length - 1];
+    }
+  }
+  return { fn: fn || 'Contato', ln: ln || '' };
+}
+
+/**
+ * GET /api/radar-b2b/export/meta-ads
+ * Gera CSV com o MÍNIMO ABSOLUTO necessário para o Meta Ads (Facebook/Instagram)
+ * Exporta estritamente: phone,email (sem entregar nomes, cidades, CNPJ nem dados empresariais)
+ * Exclui clientes ativos do escritório e opt-outs
+ */
+radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => {
+  try {
+    const { status } = req.query;
+    let sql = `
+      SELECT phone, email FROM radar_b2b_prospects 
+      WHERE ((phone IS NOT NULL AND trim(phone) != '') OR (email IS NOT NULL AND trim(email) != ''))
+        AND (opt_out = 0 OR opt_out IS NULL)
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+    `;
+    const params = [];
+    if (status && status !== 'todos') {
+      sql += ` AND status = ?`;
+      params.push(status);
+    }
+    sql += ` ORDER BY id ASC`;
+
+    const prospects = db.prepare(sql).all(...params);
+
+    // Mínimo canônico estrito para Meta Ads: phone,email
+    const headers = ['phone', 'email'];
+    const rows = [headers.join(',')];
+
+    for (const p of prospects) {
+      let digits = cleanDigits(p.phone);
+      if (digits && !digits.startsWith('55')) {
+        digits = '55' + digits;
+      }
+
+      const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
+      if (!digits && !email) continue; // Meta exige pelo menos um identificador direto
+
+      rows.push(`"${digits}","${email}"`);
+    }
+
+    const csvContent = '\uFEFF' + rows.join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="meta_ads_publico_b2b.csv"');
+    return res.send(csvContent);
+  } catch (error) {
+    console.error('[ERRO] radar-b2b export meta ads:', error);
+    return res.status(500).json({ error: 'Erro ao gerar exportação para Meta Ads.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/export/brevo
+ * Gera CSV com o MÍNIMO ABSOLUTO necessário para Brevo (Sendinblue)
+ * Exporta estritamente: EMAIL,FIRSTNAME (apenas para envio e saudação na mensagem, sem entregar CNPJ nem dados do negócio)
+ * Exclui contatos sem e-mail, clientes ativos e opt-outs
+ */
+radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
+  try {
+    const { status } = req.query;
+    let sql = `
+      SELECT name, socios, email FROM radar_b2b_prospects 
+      WHERE email IS NOT NULL AND trim(email) != '' AND email LIKE '%@%'
+        AND (opt_out = 0 OR opt_out IS NULL)
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+    `;
+    const params = [];
+    if (status && status !== 'todos') {
+      sql += ` AND status = ?`;
+      params.push(status);
+    }
+    sql += ` ORDER BY id ASC`;
+
+    const prospects = db.prepare(sql).all(...params);
+
+    // Mínimo canônico estrito para Brevo: EMAIL,FIRSTNAME
+    const headers = ['EMAIL', 'FIRSTNAME'];
+    const rows = [headers.join(',')];
+
+    for (const p of prospects) {
+      const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
+      if (!email) continue;
+
+      const { fn } = extractFirstLastName(p.name, p.socios);
+      rows.push(`"${email}","${fn}"`);
+    }
+
+    const csvContent = '\uFEFF' + rows.join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="brevo_contatos_b2b.csv"');
+    return res.send(csvContent);
+  } catch (error) {
+    console.error('[ERRO] radar-b2b export brevo:', error);
+    return res.status(500).json({ error: 'Erro ao gerar exportação para Brevo.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/export/csv
+ * Exportação completa em CSV com todos os dados e notas
+ */
+radarB2bRouter.get('/api/radar-b2b/export/csv', requireAuth, (req, res) => {
+  try {
+    const prospects = db.prepare(`SELECT * FROM radar_b2b_prospects ORDER BY id ASC`).all();
+
+    const headers = [
+      'ID', 'Place_ID', 'Nome_Empresa', 'Telefone', 'Website',
+      'Endereco', 'Bairro', 'Cidade', 'UF', 'Avaliacao_Google',
+      'Total_Avaliacoes', 'Categoria', 'Status_Kanban', 'Anotacoes',
+      'Cliente_ID_Convertido', 'Criado_Em'
+    ];
+    const rows = [headers.join(',')];
+
+    for (const p of prospects) {
+      rows.push([
+        p.id,
+        `"${(p.place_id || '').replace(/"/g, '""')}"`,
+        `"${(p.name || '').replace(/"/g, '""')}"`,
+        `"${(p.phone || '').replace(/"/g, '""')}"`,
+        `"${(p.website || '').replace(/"/g, '""')}"`,
+        `"${(p.address || '').replace(/"/g, '""')}"`,
+        `"${(p.neighborhood || '').replace(/"/g, '""')}"`,
+        `"${(p.city || 'Juiz de Fora').replace(/"/g, '""')}"`,
+        `"${(p.state || 'MG').replace(/"/g, '""')}"`,
+        p.rating || '',
+        p.user_ratings_total || 0,
+        `"${(p.primary_type_display || p.primary_type || '').replace(/"/g, '""')}"`,
+        `"${p.status}"`,
+        `"${(p.notes || '').replace(/"/g, '""')}"`,
+        `"${p.converted_client_id || ''}"`,
+        `"${p.created_at}"`
+      ].join(','));
+    }
+
+    const csvContent = '\uFEFF' + rows.join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="radar_b2b_empresas_completo.csv"');
+    return res.send(csvContent);
+  } catch (error) {
+    console.error('[ERRO] radar-b2b export full csv:', error);
+    return res.status(500).json({ error: 'Erro ao gerar CSV completo.' });
+  }
+});
