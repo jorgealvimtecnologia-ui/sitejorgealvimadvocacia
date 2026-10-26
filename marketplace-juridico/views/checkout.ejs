@@ -1,0 +1,119 @@
+<%- include('partials/header', { pageTitle: 'Finalizar compra' }) %>
+<!--
+  Esta página espera as variáveis: product (objeto) e mpPublicKey (string).
+  Renderize-a a partir da página do produto na vitrine do site existente.
+  O Brick do cartão usa a public_key do INTEGRADOR (marketplace).
+-->
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+
+<h1 class="text-2xl font-semibold mb-1"><%= product.title %></h1>
+<p class="text-slate-500 mb-6">R$ <%= (product.price_cents/100).toFixed(2) %></p>
+
+<div class="grid md:grid-cols-2 gap-8">
+  <!-- Dados do comprador -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+    <h2 class="font-medium">Seus dados</h2>
+    <input id="c-name" placeholder="Nome completo" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+    <input id="c-email" type="email" placeholder="E-mail" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+    <input id="c-cpf" inputmode="numeric" placeholder="CPF (só números)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+
+    <div class="flex gap-2 pt-2">
+      <button id="btn-pix" class="flex-1 bg-[#32bcad] text-white text-sm py-2.5 rounded-lg">Pagar com Pix</button>
+      <button id="btn-card" class="flex-1 bg-slate-900 text-white text-sm py-2.5 rounded-lg">Cartão de crédito</button>
+    </div>
+  </div>
+
+  <!-- Área de pagamento -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6">
+    <div id="pix-box" class="hidden text-center">
+      <p class="text-sm text-slate-600 mb-3">Escaneie o QR ou copie o código:</p>
+      <img id="pix-img" class="mx-auto w-48 h-48 object-contain" />
+      <textarea id="pix-code" readonly class="w-full mt-3 text-xs border rounded-lg p-2"></textarea>
+      <p id="pix-status" class="text-sm mt-3 text-amber-600">Aguardando pagamento…</p>
+    </div>
+    <div id="card-box" class="hidden">
+      <div id="cardPaymentBrick_container"></div>
+    </div>
+    <p id="msg" class="text-sm text-rose-600 mt-3"></p>
+  </div>
+</div>
+
+<script>
+  const PRODUCT_ID = <%= product.id %>;
+  const PRICE = <%= product.price_cents/100 %>;
+  const mp = new MercadoPago('<%= mpPublicKey %>', { locale: 'pt-BR' });
+
+  const customer = () => ({
+    name: document.getElementById('c-name').value.trim(),
+    email: document.getElementById('c-email').value.trim(),
+    cpf: document.getElementById('c-cpf').value.replace(/\D/g, ''),
+  });
+  const show = (id) => { ['pix-box','card-box'].forEach(x =>
+    document.getElementById(x).classList.toggle('hidden', x !== id)); };
+  const msg = (t) => document.getElementById('msg').textContent = t || '';
+
+  // ---------- PIX ----------
+  document.getElementById('btn-pix').onclick = async () => {
+    const c = customer(); msg('');
+    if (!c.name || !c.email || c.cpf.length !== 11) return msg('Preencha nome, e-mail e CPF.');
+    show('pix-box');
+    const r = await fetch('/checkout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productIds: [PRODUCT_ID], customer: c, method: 'pix' })
+    });
+    const data = await r.json();
+    if (data.error) return msg(data.error);
+    document.getElementById('pix-img').src = 'data:image/png;base64,' + data.pix.qr_code_base64;
+    document.getElementById('pix-code').value = data.pix.qr_code;
+    pollStatus(data.orderUuid);
+  };
+
+  // ---------- CARTÃO (Brick) ----------
+  let brickRendered = false;
+  document.getElementById('btn-card').onclick = async () => {
+    const c = customer(); msg('');
+    if (!c.name || !c.email || c.cpf.length !== 11) return msg('Preencha nome, e-mail e CPF.');
+    show('card-box');
+    if (brickRendered) return;
+    brickRendered = true;
+    const bricks = mp.bricks();
+    await bricks.create('cardPayment', 'cardPaymentBrick_container', {
+      initialization: { amount: PRICE },
+      callbacks: {
+        onSubmit: async ({ formData }) => {
+          const r = await fetch('/checkout', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              productIds: [PRODUCT_ID], customer: c, method: 'credit_card',
+              card: {
+                token: formData.token,
+                installments: formData.installments,
+                payment_method_id: formData.payment_method_id,
+                issuer_id: formData.issuer_id,
+              }
+            })
+          });
+          const data = await r.json();
+          if (data.error) { msg(data.error); return; }
+          if (data.status === 'approved') { window.location = '/pedido/' + data.orderUuid; }
+          else { pollStatus(data.orderUuid); }
+        },
+        onError: (e) => msg('Erro no cartão: ' + (e.message || '')),
+      }
+    });
+  };
+
+  function pollStatus(uuid) {
+    const el = document.getElementById('pix-status');
+    const t = setInterval(async () => {
+      const r = await fetch('/checkout/status/' + uuid);
+      const s = await r.json();
+      if (s.status === 'paid') { clearInterval(t); window.location = '/pedido/' + uuid; }
+      else if (['rejected','cancelled'].includes(s.status)) {
+        clearInterval(t); if (el) el.textContent = 'Pagamento não concluído.';
+      }
+    }, 4000);
+  }
+</script>
+
+<%- include('partials/footer') %>

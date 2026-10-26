@@ -1,0 +1,36 @@
+<%- include('../partials/header', { pageTitle: 'Moderação' }) %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">Moderação de monografias</h1>
+  <a href="/painel/admin/financeiro" class="text-sm text-slate-600 hover:underline">Ver financeiro →</a>
+</div>
+
+<% if (pending.length === 0) { %>
+  <p class="text-slate-400">Nenhum item pendente. 🎉</p>
+<% } %>
+
+<div class="space-y-4">
+<% pending.forEach(p => { %>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex justify-between gap-4">
+      <div>
+        <h2 class="font-medium"><%= p.title %></h2>
+        <p class="text-xs text-slate-500">por <%= p.author_name %> • <%= p.author_email %> • <%= p.area || 's/ área' %></p>
+        <p class="text-sm text-slate-600 mt-2 line-clamp-3"><%= p.abstract %></p>
+        <p class="text-xs text-slate-400 mt-2">R$ <%= (p.price_cents/100).toFixed(2) %> • <%= (p.file_size_bytes/1048576).toFixed(1) %> MB</p>
+      </div>
+      <div class="shrink-0 flex flex-col gap-2 w-44">
+        <form action="/painel/admin/moderacao/<%= p.id %>/aprovar" method="POST">
+          <button class="w-full bg-emerald-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-emerald-500">Aprovar</button>
+        </form>
+        <form action="/painel/admin/moderacao/<%= p.id %>/rejeitar" method="POST" class="space-y-2">
+          <input name="reason" placeholder="Motivo da rejeição" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs" />
+          <button class="w-full bg-rose-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-rose-500">Rejeitar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+<% }) %>
+</div>
+
+<%- include('../partials/footer') %>

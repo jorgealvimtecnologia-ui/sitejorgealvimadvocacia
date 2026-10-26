@@ -1,0 +1,10 @@
+<%- include('partials/header', { pageTitle: 'Entrar' }) %>
+<!-- Exemplo mínimo. Integre ao login real do seu site (bcrypt + sessão). -->
+<form method="POST" action="/login" class="max-w-sm mx-auto bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+  <h1 class="text-xl font-semibold">Entrar</h1>
+  <% if (error) { %><p class="text-sm text-rose-600"><%= error %></p><% } %>
+  <input name="email" type="email" placeholder="E-mail" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+  <input name="password" type="password" placeholder="Senha" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+  <button class="w-full bg-slate-900 text-white text-sm py-2.5 rounded-lg">Entrar</button>
+</form>
+<%- include('partials/footer') %>

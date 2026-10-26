@@ -1002,6 +1002,7 @@
         'faq': isMaster || perms.tab_blog === 1,
         'roadmap': isMaster,
         'portal': isMaster,
+        'loja': isMaster,
         'radar-b2b': isMaster || perms.tab_leads === 1
       };
 

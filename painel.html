@@ -7400,6 +7400,16 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
         </div>
       </section>
 
+      <!-- ================= ABA: LOJA (MARKETPLACE JURÍDICO) ================= -->
+      <!-- Só mestre (MASTER_ONLY). Enquanto os pagamentos não estão ligados, mostra o cartão
+           de pendências; quando ligada, embute a moderação (/loja/painel/admin/moderacao) por
+           iframe same-origin. Preenchido sob demanda por public/js/tabs/tab-loja.js. -->
+      <section id="tab-content-loja" class="hidden space-y-6">
+        <div id="loja-tab-container">
+          <!-- Renderizado dinamicamente por public/js/tabs/tab-loja.js -->
+        </div>
+      </section>
+
       <!-- ================= ABA: RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS & CRM KANBAN) ================= -->
       <section id="tab-content-radar-b2b" class="hidden space-y-6">
         <!-- Banner e Cabeçalho do Módulo (Tema Claro - Padrão Executivo CRM) -->
@@ -13428,6 +13438,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-charts.js?v=20260909-v1"></script>
   <script src="/js/tabs/tab-roadmap.js?v=20260922-v1"></script>
   <script src="/js/tabs/tab-portal.js?v=20261017-v1"></script>
+  <script src="/js/tabs/tab-loja.js?v=20261026-v1"></script>
   <script src="/js/tabs/tab-qa.js?v=20260924"></script>
   <script src="/js/tabs/tab-deadline-alerts.js?v=20261003-v1"></script>
   <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>

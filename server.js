@@ -69,6 +69,7 @@ import { roadmapRouter } from './src/modules/roadmap/roadmap.routes.js';
 import { roadmapAgentRouter } from './src/modules/roadmap/roadmap.agent.js';
 import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
+import { marketplaceRouter, marketplaceFlagOn } from './src/modules/marketplace/marketplace.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { bookingRouter, startBookingReminders } from './src/modules/booking/booking.routes.js';
 import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
@@ -254,6 +255,45 @@ app.use(radarRouter);
 app.use(whatsappRouter);
 app.use(brevoRouter);
 app.use(radarB2bRouter);
+app.use(marketplaceRouter); // /api/loja/status (estado da loja para a aba do painel)
+
+// -------- LOJA (Marketplace Jurídico): sub-app montado em /loja SÓ quando ligado --------
+// O sub-app (marketplace-juridico/) é CommonJS e exige os segredos do Mercado Pago no
+// carregamento. Enquanto a loja não está ligada (ou faltam segredos), /loja mostra
+// "em breve" e o site sobe normal — o sub-app nem chega a ser carregado.
+function lojaEmBreve(req, res) {
+  res
+    .status(200)
+    .type('html')
+    .send(
+      '<!doctype html><html lang="pt-br"><head><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+        '<title>Loja — em breve | Jorge Alvim Advocacia</title>' +
+        '<style>body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#0A192F;color:#e2e8f0;' +
+        'display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px}' +
+        '.c{max-width:520px}.c h1{font-size:1.4rem;margin:0 0 10px}.c p{color:#94a3b8;line-height:1.6;font-size:.95rem}' +
+        'a{color:#6ee7b7;font-weight:700;text-decoration:none}</style></head><body><div class="c">' +
+        '<div style="font-size:2.4rem">🛒</div>' +
+        '<h1>Loja Jurídica — em breve</h1>' +
+        '<p>A loja de monografias e artigos jurídicos em PDF está em preparação. Em breve você poderá adquirir materiais aqui.</p>' +
+        '<p><a href="/">← Voltar ao site</a></p>' +
+        '</div></body></html>'
+    );
+}
+
+if (marketplaceFlagOn()) {
+  try {
+    const requireCjs = createRequire(import.meta.url);
+    const marketplaceApp = requireCjs('./marketplace-juridico/app.js');
+    app.use('/loja', marketplaceApp);
+    console.log('[LOJA] Marketplace montado em /loja');
+  } catch (e) {
+    console.error('[LOJA] Não foi possível montar o marketplace (faltam segredos do Mercado Pago?); servindo "em breve". Detalhe:', e.message);
+    app.use('/loja', lojaEmBreve);
+  }
+} else {
+  app.use('/loja', lojaEmBreve);
+}
 
 
 // Rota de Sitemap XML Dinâmico para o Googlebot / Google Search Console

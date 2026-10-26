@@ -33,14 +33,15 @@
       'meta-ads':{label:'Meta Ads & Marketing',emoji:'📢'},
       roadmap:{label:'Radar & Roadmap Legaltech',emoji:'🗺️'},
       portal:{label:'Portal de Notícias',emoji:'📰'},
-      'radar-b2b':{label:'Radar / Prospecção B2B (Google)',emoji:'🏢'}
+      'radar-b2b':{label:'Radar / Prospecção B2B (Google)',emoji:'🏢'},
+      loja:{label:'Loja (Marketplace)',emoji:'🛒'}
     };
     var TOOLS={editor:1,calc:1,kanban:1,explorer:1,maintenance:1};
     var GROUPS=[
       {label:'Visão Geral',emoji:'📊',items:['dashboard']},
       {label:'Clientes & Atendimento',emoji:'👥',items:['leads','clients','rockets']},
       {label:'Jurídico',emoji:'⚖️',items:['lawsuits','publications','calendar','judicial','docs','admin-requests']},
-      {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign']},
+      {label:'Financeiro',emoji:'💰',items:['finance','nfse','esign','loja']},
       {label:'Escritório & Pessoas',emoji:'🏛️',items:['colaborador','hr','offices','drive','users']},
       {label:'Conteúdo & Compliance',emoji:'🛡️',items:['radar-b2b','roadmap','portal','blog','faq','site-boxes','meta-ads','audit','lgpd','notifications']},
       {label:'Ferramentas & Sistema',emoji:'🧰',items:['pre-clients','maintenance','explorer','kanban','editor','calc']}
@@ -51,7 +52,7 @@
       offices:'initOfficesTab',drive:'initDriveTab',hr:'initHrTab',rockets:'initRocketsTab',
       dashboard:'loadDashboardOverview',esign:'loadEsignRequests',lgpd:'loadLgpdRequests',
       notifications:'loadNotificationsList','admin-requests':'loadAdminRequests',maintenance:'loadMaintenanceHealth',
-      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab',portal:'loadPortalTab','radar-b2b':'loadRadarB2bTab'};
+      'meta-ads':'loadMetaAdsTab',roadmap:'loadRoadmapTab',portal:'loadPortalTab','radar-b2b':'loadRadarB2bTab',loja:'loadLojaTab'};
 
     var windows={}, order=[], zTop=10, desktop=null, taskbar=null, storage=null;
 
@@ -1038,8 +1039,8 @@
       audit:'tab_audit', lgpd:'tab_audit', blog:'tab_blog', faq:'tab_blog', 'site-boxes':'tab_blog',
       notifications:'tab_alerts', dashboard:'tab_dashboard', kanban:'tab_kanban', editor:'tab_tools', calc:'tab_tools',
       explorer:'tab_settings', 'meta-ads':'tab_settings' };
-    // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM, Radar & Roadmap e Portal de Notícias.
-    var MASTER_ONLY={maintenance:1,roadmap:1,portal:1};
+    // Só o mestre (sem coluna na matriz): backups/sessões/VACUUM, Radar & Roadmap, Portal de Notícias e Loja.
+    var MASTER_ONLY={maintenance:1,roadmap:1,portal:1,loja:1};
     var ALWAYS_ALLOWED={rockets:1};
     function moduleAllowed(id){ if(WM_MASTER||!WM_ALLOWED) return true; if(ALWAYS_ALLOWED[id]) return true; return !!WM_ALLOWED[id]; }
     function applyPerms(){

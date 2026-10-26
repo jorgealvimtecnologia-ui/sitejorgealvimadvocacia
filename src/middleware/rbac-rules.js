@@ -73,6 +73,7 @@ export const RULES = [
   [/^\/api\/admin\/(restore|wipe|reset|export)/, MASTER],
   [/^\/api\/access-control\/(toggle|apply-template|toggle-user-status|matrix)\b/, MASTER],
   [/^\/api\/users(\/|$)/, MASTER],
+  [/^\/api\/loja(\/|$)/, MASTER],                     // Loja (Marketplace): estado/moderação só o mestre
   [/^\/api\/admin\/roadmap(\/|$)/, MASTER],
   [/^\/api\/admin\/qa(\/|$)/, MASTER],
   [/^\/api\/admin\/relatorios(\/|$)/, MASTER],
