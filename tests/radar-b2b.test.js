@@ -127,7 +127,8 @@ describe('▶ MÓDULO RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS & CRM KANBAN)', 
 
     assert.equal(res.status, 200);
     assert.ok(res.headers['content-type'].includes('text/csv'));
-    assert.ok(res.text.includes('phone,email'));
+    // Formato "Lista de Clientes" da Meta (hash no upload): email,phone,fn,ln,ct,st,zip,country
+    assert.ok(res.text.includes('email,phone,fn,ln,ct,st,zip,country'));
   });
 
   it('7. GET /api/radar-b2b/export/brevo -> gera CSV formatado para Brevo', async () => {
@@ -138,6 +139,26 @@ describe('▶ MÓDULO RADAR / PROSPECÇÃO B2B (GOOGLE EMPRESAS & CRM KANBAN)', 
     assert.equal(res.status, 200);
     assert.ok(res.headers['content-type'].includes('text/csv'));
     assert.ok(res.text.includes('EMAIL,FIRSTNAME'));
+  });
+
+  it('7b. GET /api/radar-b2b/export/google-ads -> gera CSV Customer Match do Google', async () => {
+    const res = await request(app)
+      .get('/api/radar-b2b/export/google-ads')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(res.status, 200);
+    assert.ok(res.headers['content-type'].includes('text/csv'));
+    assert.ok(res.text.includes('Email,Phone,First Name,Last Name,Country,Zip'));
+  });
+
+  it('7c. GET /api/radar-b2b/export/social -> gera CSV de redes sociais das empresas', async () => {
+    const res = await request(app)
+      .get('/api/radar-b2b/export/social')
+      .set('Authorization', `Bearer ${masterToken}`);
+
+    assert.equal(res.status, 200);
+    assert.ok(res.headers['content-type'].includes('text/csv'));
+    assert.ok(res.text.includes('Nome_Empresa,Instagram,Facebook,LinkedIn'));
   });
 
   it('8. GET /api/radar-b2b/locations/states e cities -> retorna estados e cidades do Brasil', async () => {

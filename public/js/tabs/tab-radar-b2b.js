@@ -612,10 +612,15 @@
           </div>
         ` : ''}
 
-        ${p.cnpj || p.instagram ? `
-          <div class="flex items-center justify-between text-[10px] pt-0.5">
-            ${p.cnpj ? `<span class="font-mono text-slate-500">🏢 ${escapeHtml(p.cnpj)}</span>` : '<span></span>'}
-            ${p.instagram ? `<a href="${escapeHtml(p.instagram)}" target="_blank" class="text-pink-600 hover:text-pink-700 font-semibold flex items-center gap-0.5"><span>📸</span><span>Insta</span></a>` : ''}
+        ${p.cnpj ? `
+          <div class="text-[10px] pt-0.5"><span class="font-mono text-slate-500">🏢 ${escapeHtml(p.cnpj)}</span></div>
+        ` : ''}
+
+        ${(p.instagram || p.facebook || p.linkedin) ? `
+          <div class="flex flex-wrap items-center gap-1.5 pt-1" title="Redes sociais da empresa — abra para seguir ou mandar DM">
+            ${p.instagram ? `<a href="${escapeHtml(p.instagram)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100 font-bold text-[10px]" title="Abrir Instagram da empresa"><span>📸</span><span>Instagram</span></a>` : ''}
+            ${p.facebook ? `<a href="${escapeHtml(p.facebook)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 font-bold text-[10px]" title="Abrir Facebook da empresa"><span>👍</span><span>Facebook</span></a>` : ''}
+            ${p.linkedin ? `<a href="${escapeHtml(p.linkedin)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 font-bold text-[10px]" title="Abrir LinkedIn da empresa"><span>💼</span><span>LinkedIn</span></a>` : ''}
           </div>
         ` : ''}
       </div>
@@ -1901,6 +1906,43 @@
     const token = getAuthToken();
     const url = `/api/radar-b2b/export/csv?token=${encodeURIComponent(token)}`;
     window.location.href = url;
+  };
+
+  // Exportar Google Customer Match (Google Ads)
+  window.exportarGoogleAdsB2b = function () {
+    const token = getAuthToken();
+    const url = `/api/radar-b2b/export/google-ads?token=${encodeURIComponent(token)}`;
+    toast('🔵 Gerando lista Google Customer Match (e-mail, telefone, nome, UF, CEP)…', 'info');
+    window.location.href = url;
+  };
+
+  // Exportar redes sociais das empresas (outreach social manual)
+  window.exportarSocialB2b = function () {
+    const token = getAuthToken();
+    const url = `/api/radar-b2b/export/social?token=${encodeURIComponent(token)}`;
+    toast('🌐 Gerando lista de redes sociais das empresas…', 'info');
+    window.location.href = url;
+  };
+
+  // Importar empresas por CNPJ direto da Receita Federal (BrasilAPI/Minha Receita)
+  window.importarCnpjB2b = async function () {
+    const entrada = prompt('Cole um ou mais CNPJs (um por linha ou separados por vírgula).\n\nOs dados vêm direto da Receita Federal: razão social, sócios, e-mail, telefone e endereço completo (rua, número, bairro, cidade, UF, CEP).');
+    if (!entrada || !entrada.trim()) return;
+    try {
+      toast('Consultando a Receita Federal para os CNPJs informados…');
+      const res = await fetch('/api/radar-b2b/importar-cnpj', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getHeaders() },
+        body: JSON.stringify({ cnpjs: entrada })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao importar por CNPJ');
+      toast(`✅ ${data.inserted} novas, ${data.updated} atualizadas, ${data.naoEncontrados} não localizadas (de ${data.totalCnpjs} CNPJs).`, 'success');
+      await fetchStats();
+      await fetchProspects();
+    } catch (e) {
+      toast('Erro na importação por CNPJ: ' + e.message, 'error');
+    }
   };
 
   function escapeHtml(str) {

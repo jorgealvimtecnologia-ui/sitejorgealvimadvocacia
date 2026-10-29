@@ -7470,13 +7470,37 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
                 <span>📧</span>
                 <span>Brevo</span>
               </button>
-              <button 
-                type="button" 
-                onclick="exportarCsvCompletoB2b()" 
+              <button
+                type="button"
+                onclick="exportarCsvCompletoB2b()"
                 class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs shadow-xs transition-all border border-slate-300 cursor-pointer active:scale-95"
                 title="Baixar planilha completa com todas as empresas e anotações">
                 <span>📊</span>
                 <span>CSV Geral</span>
+              </button>
+              <button
+                type="button"
+                onclick="importarCnpjB2b()"
+                class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs shadow-xs transition-all border border-amber-200 cursor-pointer active:scale-95"
+                title="Importar empresas direto da Receita Federal por CNPJ (dados completos e estruturados)">
+                <span>🧾</span>
+                <span>Importar CNPJ</span>
+              </button>
+              <button
+                type="button"
+                onclick="exportarGoogleAdsB2b()"
+                class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-bold text-xs shadow-xs transition-all border border-indigo-200 cursor-pointer active:scale-95"
+                title="Exportar lista de clientes (Customer Match) para o Google Ads — o Google faz o hash no upload">
+                <span>🔵</span>
+                <span>Google Ads</span>
+              </button>
+              <button
+                type="button"
+                onclick="exportarSocialB2b()"
+                class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-800 font-bold text-xs shadow-xs transition-all border border-pink-200 cursor-pointer active:scale-95"
+                title="Baixar CSV com as redes sociais (Instagram, Facebook, LinkedIn) das empresas para prospecção manual">
+                <span>🌐</span>
+                <span>Redes Sociais</span>
               </button>
             </div>
           </div>
@@ -13444,7 +13468,7 @@ CLÁUSULA QUARTA - DO FORO: Fica eleito o Foro da Comarca de Juiz de Fora/MG par
   <script src="/js/tabs/tab-contacts-import.js?v=20261017-v6"></script>
   <script src="/js/tabs/tab-whatsapp.js?v=20261018-v1"></script>
   <script src="/js/tabs/tab-brevo.js?v=20261018-v3"></script>
-  <script src="/js/tabs/tab-radar-b2b.js?v=20261019-v12"></script>
+  <script src="/js/tabs/tab-radar-b2b.js?v=20261029-v13"></script>
 
   <!-- ============================================================
        MÓDULOS DE GESTÃO: Dashboard, Notificações, Assinaturas, LGPD

@@ -49,12 +49,20 @@ export async function fetchCnpjData(cnpj) {
       return {
         cnpj: data.cnpj || digits,
         razao_social: data.razao_social || data.nome_fantasia || '',
+        nome_fantasia: data.nome_fantasia || '',
         socios: socios.join(', '),
         email: data.email || '',
         telefone: data.telefone || data.ddd_telefone_1 || '',
         cnae: data.cnae_fiscal_descricao || '',
         capital_social: data.capital_social ? Number(data.capital_social).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '',
-        situacao: data.descricao_situacao_cadastral || 'ATIVA'
+        situacao: data.descricao_situacao_cadastral || 'ATIVA',
+        logradouro: data.logradouro || '',
+        numero: data.numero || '',
+        complemento: data.complemento || '',
+        bairro: data.bairro || '',
+        municipio: data.municipio || '',
+        uf: data.uf || '',
+        cep: data.cep ? String(data.cep).replace(/(\d{5})(\d{3})/, '$1-$2') : ''
       };
     }
   } catch (_) {}
@@ -71,12 +79,20 @@ export async function fetchCnpjData(cnpj) {
       return {
         cnpj: data.cnpj || digits,
         razao_social: data.razao_social || data.nome_fantasia || '',
+        nome_fantasia: data.nome_fantasia || '',
         socios: socios.join(', '),
         email: data.email || '',
         telefone: data.ddd_telefone_1 || '',
         cnae: data.cnae_fiscal_descricao || '',
         capital_social: data.capital_social ? Number(data.capital_social).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '',
-        situacao: data.descricao_situacao_cadastral || 'ATIVA'
+        situacao: data.descricao_situacao_cadastral || 'ATIVA',
+        logradouro: data.logradouro || '',
+        numero: data.numero || '',
+        complemento: data.complemento || '',
+        bairro: data.bairro || '',
+        municipio: data.municipio || '',
+        uf: data.uf || '',
+        cep: data.cep ? String(data.cep).replace(/(\d{5})(\d{3})/, '$1-$2') : ''
       };
     }
   } catch (_) {}
