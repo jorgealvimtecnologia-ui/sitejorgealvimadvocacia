@@ -387,3 +387,19 @@ lojaPreviewRouter.get('/loja/preview/admin/financeiro', (req, res) => {
     </div>`;
   res.send(layout('Financeiro', body, '/loja/preview/admin/financeiro'));
 });
+
+// ---------------------------------------------------------------------------
+//  BLINDAGEM: tratador de erros do router. No Express 5, QUALQUER erro (síncrono
+//  ou promessa rejeitada) lançado por uma rota acima é encaminhado para cá —
+//  então um erro numa página NUNCA derruba o processo do servidor. Responde
+//  uma página 500 amigável e segue vivo.
+// ---------------------------------------------------------------------------
+lojaPreviewRouter.use('/loja/preview', (err, req, res, next) => {
+  console.error('[LOJA][preview] erro tratado na rota', req.originalUrl, '→', err && err.message);
+  if (res.headersSent) return next(err);
+  try {
+    res.status(500).send(layout('Erro', '<div class="panel" style="text-align:center"><h1 style="color:#991b1b">Ops, algo deu errado</h1><p class="muted">Não foi possível carregar esta página da prévia.</p><a class="btn btn-primary" href="/loja/preview">← Voltar à vitrine</a></div>'));
+  } catch (_) {
+    res.status(500).type('text').send('Erro ao carregar a prévia da loja.');
+  }
+});
