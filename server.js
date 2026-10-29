@@ -74,7 +74,7 @@ import { bookingRouter, startBookingReminders } from './src/modules/booking/book
 import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
 import { whatsappRouter } from './src/modules/whatsapp/whatsapp.routes.js';
 import { brevoRouter } from './src/modules/brevo/brevo.routes.js';
-import { radarB2bRouter } from './src/modules/radar-b2b/radar-b2b.routes.js';
+import { radarB2bRouter, startB2bAutoEnricher } from './src/modules/radar-b2b/radar-b2b.routes.js';
 import { loginRateLimit } from './src/shared/login-guard.js';
 import { serveStoredFiles } from './src/middleware/stored-files.js';
 import { modernImages } from './src/middleware/modern-images.js';
@@ -1760,6 +1760,7 @@ if (!IS_TEST) {
     // Alertas de prazo por WhatsApp/e-mail (só para advogados), com escalonamento e ciência.
     try { startBookingReminders(); } catch (e) { console.warn('[BOOT] Lembretes de agendamento não iniciados:', e.message); }
     try { startDeadlineAlerts(); } catch (e) { console.warn('[BOOT] Alertas de prazo externos não iniciados:', e.message); }
+    try { startB2bAutoEnricher(); } catch (e) { console.warn('[BOOT] Auto-enriquecedor B2B não iniciado:', e.message); }
     // Vigia do .env: toda alteração gera e-mail ao titular (cofre criptografado + relatório só com nomes).
     try { installProcessErrorHandlers(); startWatchdog({ db, notify: createNotification }); } catch (e) { console.warn('[BOOT] Vigia de saúde não iniciado:', e.message); }
     try { startEnvWatcher({ dir: __dirname }); } catch (e) { console.warn('[BOOT] Vigia do .env não iniciado:', e.message); }

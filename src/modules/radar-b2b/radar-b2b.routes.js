@@ -22,7 +22,7 @@ import { db } from '../../config/db.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { logAudit } from '../../middleware/audit.js';
 import { generateNextClientFullId } from '../../shared/ids.js';
-import { enrichSingleProspect, fetchCnpjData } from './radar-b2b.enricher.js';
+import { enrichSingleProspect, fetchCnpjData, isValidCnpj } from './radar-b2b.enricher.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1360,6 +1360,93 @@ radarB2bRouter.post('/api/radar-b2b/importar-local', requireAuth, (req, res) => 
 });
 
 /**
+ * POST /api/radar-b2b/importar-cnpj
+ * Importa empresas DIRETO da Receita Federal (BrasilAPI/Minha Receita) a partir de uma
+ * lista de CNPJs — dados completos e estruturados (razão social, sócios, e-mail, telefone,
+ * endereço com rua/número/bairro/UF/CEP, CNAE). Já entram marcadas como enriquecidas.
+ * Body: { cnpjs: "um por linha ou separados por vírgula" | ["...","..."] }
+ */
+radarB2bRouter.post('/api/radar-b2b/importar-cnpj', requireAuth, async (req, res) => {
+  try {
+    let { cnpjs } = req.body;
+    let lista = [];
+    if (Array.isArray(cnpjs)) lista = cnpjs;
+    else if (typeof cnpjs === 'string') lista = cnpjs.split(/[\n,;]+/);
+    lista = [...new Set(lista.map(c => cleanDigits(c)).filter(c => c.length === 14 && isValidCnpj(c)))].slice(0, 300);
+
+    if (lista.length === 0) {
+      return res.status(400).json({ error: 'Nenhum CNPJ válido informado (envie CNPJs com 14 dígitos).' });
+    }
+
+    const now = new Date().toISOString();
+    const insertStmt = db.prepare(`
+      INSERT OR IGNORE INTO radar_b2b_prospects (
+        place_id, name, phone, email, address, neighborhood, city, state,
+        postal_code, cep, cnpj, razao_social, socios, capital_social, cnae,
+        status, enriched_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'novo', ?, ?, ?)
+    `);
+
+    let inserted = 0, updated = 0, naoEncontrados = 0, jaExistiam = 0;
+    const insertedIds = [];
+
+    for (const digits of lista) {
+      const d = await fetchCnpjData(digits);
+      if (!d) { naoEncontrados++; await new Promise(r => setTimeout(r, 200)); continue; }
+
+      const name = d.nome_fantasia || d.razao_social || `CNPJ ${digits}`;
+      const endereco = [d.logradouro, d.numero].filter(Boolean).join(', ')
+        + (d.complemento ? ` ${d.complemento}` : '')
+        + (d.bairro ? ` - ${d.bairro}` : '');
+      const phone = d.telefone ? formatPhoneBR(d.telefone) : '';
+      const placeId = `cnpj_${digits}`;
+
+      const existing = db.prepare(`SELECT id FROM radar_b2b_prospects WHERE place_id = ? OR cnpj = ?`).get(placeId, d.cnpj || digits);
+      if (existing) {
+        db.prepare(`
+          UPDATE radar_b2b_prospects SET
+            email = COALESCE(NULLIF(email,''), ?), phone = COALESCE(NULLIF(phone,''), ?),
+            address = COALESCE(NULLIF(address,''), ?), neighborhood = COALESCE(NULLIF(neighborhood,''), ?),
+            postal_code = COALESCE(NULLIF(postal_code,''), ?), cep = COALESCE(NULLIF(cep,''), ?),
+            cnpj = ?, razao_social = COALESCE(NULLIF(razao_social,''), ?), socios = COALESCE(NULLIF(socios,''), ?),
+            capital_social = COALESCE(NULLIF(capital_social,''), ?), cnae = COALESCE(NULLIF(cnae,''), ?),
+            enriched_at = ?, updated_at = ?
+          WHERE id = ?
+        `).run(
+          d.email || '', phone, endereco, d.bairro || '', d.cep || '', d.cep || '',
+          d.cnpj || digits, d.razao_social || '', d.socios || '', d.capital_social || '', d.cnae || '',
+          now, now, existing.id
+        );
+        updated++;
+      } else {
+        const r = insertStmt.run(
+          placeId, name, phone, d.email || '', endereco, d.bairro || '',
+          d.municipio || 'Juiz de Fora', d.uf || 'MG',
+          d.cep || '', d.cep || '', d.cnpj || digits, d.razao_social || '',
+          d.socios || '', d.capital_social || '', d.cnae || '', now, now, now
+        );
+        if (r.changes > 0) { inserted++; if (r.lastInsertRowid) insertedIds.push(r.lastInsertRowid); }
+        else jaExistiam++;
+      }
+      await new Promise(r => setTimeout(r, 200)); // cortesia com a API pública
+    }
+
+    logAudit(req, {
+      event_type: 'IMPORTACAO', event_name: 'B2B_IMPORT_CNPJ', module: 'radar-b2b',
+      description: `Importação por CNPJ: ${inserted} novas, ${updated} atualizadas, ${naoEncontrados} não encontradas (de ${lista.length} CNPJs)`
+    });
+
+    return res.json({
+      success: true, totalCnpjs: lista.length, inserted, updated, naoEncontrados, jaExistiam, insertedIds,
+      message: `Importação por CNPJ concluída: ${inserted} novas, ${updated} atualizadas, ${naoEncontrados} não localizadas na Receita.`
+    });
+  } catch (error) {
+    console.error('[ERRO] radar-b2b importar-cnpj:', error);
+    return res.status(500).json({ error: 'Erro ao importar por CNPJ.' });
+  }
+});
+
+/**
  * POST /api/radar-b2b/buscar-google
  * Busca empresas no Google Places API (com chave) ou via Base Local Ampliada enriquecida (sem chave)
  * Permite buscar sem qualificação obrigatória e verifica se já é cliente do escritório
@@ -1469,14 +1556,21 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
           place_id, name, phone, website, address, neighborhood,
           city, state, rating, user_ratings_total, business_status,
           primary_type, primary_type_display, types, google_maps_url,
+          postal_code, cep,
           latitude, longitude, status, is_office_client, office_client_id, created_at, updated_at
         ) VALUES (
           ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
           ?, ?, ?, ?,
+          ?, ?,
           ?, ?, 'novo', ?, ?, ?, ?
         )
       `);
+
+      // Gate de dados mínimos: para entrar no CRM a empresa precisa ter o básico
+      // para ser enriquecida/contactada (nome + telefone OU site). Sem isso, não
+      // há como a gente abordar nem o robô enriquecer — então nem salva.
+      let skippedMinData = 0;
 
       db.exec('BEGIN TRANSACTION;');
       try {
@@ -1494,6 +1588,13 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
           const nb = extractNeighborhood(address, city) || nbTerm || 'Centro';
           const phone = formatPhoneBR(p.nationalPhoneNumber || '');
           const website = p.websiteUri || '';
+          // Gate de dados mínimos: sem nome real, ou sem telefone E sem site, a empresa
+          // não tem como ser abordada nem enriquecida — não entra no banco.
+          if (!name || name === 'Sem nome' || (!phone && !website)) {
+            skippedMinData++;
+            continue;
+          }
+          const cep = (address.match(/\d{5}-?\d{3}/) || [''])[0];
           const rating = p.rating || null;
           const reviews = p.userRatingCount || 0;
           const pType = p.primaryType || '';
@@ -1510,6 +1611,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
             p.id, name, phone, website, address, nb,
             city, state, rating, reviews, p.businessStatus || 'OPERATIONAL',
             pType, pTypeDesc, types, mapsUrl,
+            cep || null, cep || null,
             lat, lng, clientCheck.isClient ? 1 : 0, clientCheck.clientId || null, now, now
           );
           if (resRun.changes > 0) {
@@ -1536,7 +1638,8 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         found: allPlaces.length,
         inserted,
         insertedIds,
-        message: `Varredura Google Places concluída! ${allPlaces.length} empresas encontradas e ${inserted} novas adicionadas ao funil.`
+        skippedMinData,
+        message: `Varredura Google Places concluída! ${allPlaces.length} encontradas, ${inserted} novas adicionadas` + (skippedMinData ? ` e ${skippedMinData} descartadas por não terem dados mínimos (sem telefone e sem site).` : '.')
       });
     }
 
@@ -1575,6 +1678,7 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
     let inserted = 0;
     const insertedIds = [];
     let matched = 0;
+    let skippedMinDataLocal = 0;
     const insertStmt = db.prepare(`
       INSERT OR IGNORE INTO radar_b2b_prospects (
         place_id, name, phone, website, address, neighborhood,
@@ -1620,6 +1724,12 @@ radarB2bRouter.post('/api/radar-b2b/buscar-google', requireAuth, async (req, res
         const rev = idxAvaliacoes >= 0 ? parseInt(cols[idxAvaliacoes], 10) || 0 : 0;
         const maps = idxMaps >= 0 ? cols[idxMaps] : '';
         const types = idxTipos >= 0 ? cols[idxTipos] : '';
+
+        // Gate de dados mínimos: nome + telefone OU site (senão não dá para abordar/enriquecer)
+        if (!name || (!phone && !website)) {
+          skippedMinDataLocal++;
+          continue;
+        }
 
         // Verifica se já é cliente do escritório
         const clientCheck = checkOfficeClientMatch(phone, '', name);
@@ -1703,7 +1813,7 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
   try {
     const { status } = req.query;
     let sql = `
-      SELECT phone, email FROM radar_b2b_prospects 
+      SELECT name, socios, phone, whatsapp, email, city, state, postal_code, cep FROM radar_b2b_prospects
       WHERE ((phone IS NOT NULL AND trim(phone) != '') OR (email IS NOT NULL AND trim(email) != ''))
         AND (opt_out = 0 OR opt_out IS NULL)
         AND (is_office_client = 0 OR is_office_client IS NULL)
@@ -1717,20 +1827,27 @@ radarB2bRouter.get('/api/radar-b2b/export/meta-ads', requireAuth, (req, res) => 
 
     const prospects = db.prepare(sql).all(...params);
 
-    // Mínimo canônico estrito para Meta Ads: phone,email
-    const headers = ['phone', 'email'];
+    // Formato "Lista de Clientes" da Meta. Quanto mais identificadores, maior o match —
+    // e a Meta faz o HASH (SHA-256) de tudo no upload, então nada trafega legível.
+    // Colunas canônicas da Meta: email,phone,fn,ln,ct,st,zip,country
+    const headers = ['email', 'phone', 'fn', 'ln', 'ct', 'st', 'zip', 'country'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
-      let digits = cleanDigits(p.phone);
-      if (digits && !digits.startsWith('55')) {
-        digits = '55' + digits;
-      }
+      let digits = cleanDigits(p.whatsapp || p.phone);
+      if (digits && !digits.startsWith('55')) digits = '55' + digits;
 
       const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
       if (!digits && !email) continue; // Meta exige pelo menos um identificador direto
 
-      rows.push(`"${digits}","${email}"`);
+      const { fn, ln } = extractFirstLastName(p.name, p.socios);
+      const ct = (p.city || '').trim().toLowerCase().replace(/\s+/g, '');
+      const st = (p.state || '').trim().toLowerCase().replace(/[^a-z]/gi, '');
+      const zip = cleanDigits(p.postal_code || p.cep || '');
+      const country = (digits || email) ? 'br' : '';
+
+      rows.push([email, digits, (fn || '').toLowerCase(), (ln || '').toLowerCase(), ct, st, zip, country]
+        .map(v => `"${String(v).replace(/[",\r\n]/g, '')}"`).join(','));
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
@@ -1753,7 +1870,7 @@ radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
   try {
     const { status } = req.query;
     let sql = `
-      SELECT name, socios, email FROM radar_b2b_prospects 
+      SELECT name, socios, email, phone, whatsapp, razao_social, city FROM radar_b2b_prospects
       WHERE email IS NOT NULL AND trim(email) != '' AND email LIKE '%@%'
         AND (opt_out = 0 OR opt_out IS NULL)
         AND (is_office_client = 0 OR is_office_client IS NULL)
@@ -1767,16 +1884,25 @@ radarB2bRouter.get('/api/radar-b2b/export/brevo', requireAuth, (req, res) => {
 
     const prospects = db.prepare(sql).all(...params);
 
-    // Mínimo canônico estrito para Brevo: EMAIL,FIRSTNAME
-    const headers = ['EMAIL', 'FIRSTNAME'];
+    // Brevo (e-mail + SMS): além do e-mail e primeiro nome, leva sobrenome, telefone
+    // (para SMS/WhatsApp), empresa e cidade — ajuda personalização e segmentação.
+    // Atenção: a Brevo guarda esses campos em TEXTO (não é hash como a Meta).
+    const headers = ['EMAIL', 'FIRSTNAME', 'LASTNAME', 'SMS', 'COMPANY', 'CITY'];
     const rows = [headers.join(',')];
 
     for (const p of prospects) {
       const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
       if (!email) continue;
 
-      const { fn } = extractFirstLastName(p.name, p.socios);
-      rows.push(`"${email}","${fn}"`);
+      const { fn, ln } = extractFirstLastName(p.name, p.socios);
+      let digits = cleanDigits(p.whatsapp || p.phone);
+      if (digits && !digits.startsWith('55')) digits = '55' + digits;
+      const sms = digits ? '+' + digits : '';
+      const company = (p.razao_social || p.name || '').trim();
+      const city = (p.city || '').trim();
+
+      rows.push([email, fn, ln, sms, company, city]
+        .map(v => `"${String(v).replace(/[",\r\n]/g, '')}"`).join(','));
     }
 
     const csvContent = '\uFEFF' + rows.join('\r\n');
@@ -1835,3 +1961,124 @@ radarB2bRouter.get('/api/radar-b2b/export/csv', requireAuth, (req, res) => {
     return res.status(500).json({ error: 'Erro ao gerar CSV completo.' });
   }
 });
+
+/**
+ * GET /api/radar-b2b/export/google-ads
+ * CSV no formato "Lista de Clientes" do Google Ads (Customer Match). O Google faz o
+ * HASH no upload. Colunas detectadas pelo cabeçalho: Email, Phone, First Name,
+ * Last Name, Country, Zip. Exclui opt-outs e clientes ativos do escritório.
+ */
+radarB2bRouter.get('/api/radar-b2b/export/google-ads', requireAuth, (req, res) => {
+  try {
+    const { status } = req.query;
+    let sql = `
+      SELECT name, socios, phone, whatsapp, email, state, postal_code, cep FROM radar_b2b_prospects
+      WHERE ((phone IS NOT NULL AND trim(phone) != '') OR (whatsapp IS NOT NULL AND trim(whatsapp) != '') OR (email IS NOT NULL AND trim(email) != ''))
+        AND (opt_out = 0 OR opt_out IS NULL)
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+    `;
+    const params = [];
+    if (status && status !== 'todos') { sql += ` AND status = ?`; params.push(status); }
+    sql += ` ORDER BY id ASC`;
+
+    const prospects = db.prepare(sql).all(...params);
+    const headers = ['Email', 'Phone', 'First Name', 'Last Name', 'Country', 'Zip'];
+    const rows = [headers.join(',')];
+
+    for (const p of prospects) {
+      let digits = cleanDigits(p.whatsapp || p.phone);
+      if (digits && !digits.startsWith('55')) digits = '55' + digits;
+      const email = (p.email || '').trim().toLowerCase().replace(/[",\r\n]/g, '');
+      if (!digits && !email) continue;
+      const { fn, ln } = extractFirstLastName(p.name, p.socios);
+      const zip = cleanDigits(p.postal_code || p.cep || '');
+      const phone = digits ? '+' + digits : '';
+      rows.push([email, phone, fn, ln, (digits || email) ? 'BR' : '', zip]
+        .map(v => `"${String(v).replace(/[",\r\n]/g, '')}"`).join(','));
+    }
+
+    const csvContent = '﻿' + rows.join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="google_customer_match_b2b.csv"');
+    return res.send(csvContent);
+  } catch (error) {
+    console.error('[ERRO] radar-b2b export google-ads:', error);
+    return res.status(500).json({ error: 'Erro ao gerar exportação para Google Ads.' });
+  }
+});
+
+/**
+ * GET /api/radar-b2b/export/social
+ * Lista de "outreach social": empresa + links de Instagram/Facebook/LinkedIn (e WhatsApp)
+ * para a prospecção manual nas redes. Só empresas com ao menos uma rede captada.
+ */
+radarB2bRouter.get('/api/radar-b2b/export/social', requireAuth, (req, res) => {
+  try {
+    const prospects = db.prepare(`
+      SELECT name, instagram, facebook, linkedin, whatsapp, phone, city, state FROM radar_b2b_prospects
+      WHERE ((instagram IS NOT NULL AND trim(instagram) != '')
+          OR (facebook IS NOT NULL AND trim(facebook) != '')
+          OR (linkedin IS NOT NULL AND trim(linkedin) != ''))
+        AND (is_office_client = 0 OR is_office_client IS NULL)
+        AND (opt_out = 0 OR opt_out IS NULL)
+      ORDER BY id ASC
+    `).all();
+
+    const headers = ['Nome_Empresa', 'Instagram', 'Facebook', 'LinkedIn', 'WhatsApp', 'Cidade', 'UF'];
+    const rows = [headers.join(',')];
+    for (const p of prospects) {
+      const wa = p.whatsapp || p.phone || '';
+      rows.push([p.name || '', p.instagram || '', p.facebook || '', p.linkedin || '', wa, p.city || '', p.state || '']
+        .map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    }
+
+    const csvContent = '﻿' + rows.join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="radar_b2b_redes_sociais.csv"');
+    return res.send(csvContent);
+  } catch (error) {
+    console.error('[ERRO] radar-b2b export social:', error);
+    return res.status(500).json({ error: 'Erro ao gerar exportação de redes sociais.' });
+  }
+});
+
+/**
+ * Auto-enriquecedor em background: a cada ciclo pega um lote de pendentes
+ * (enriched_at vazio) e enriquece sozinho, com rate-limit. Roda em produção, ou
+ * fora dela com B2B_AUTO_ENRICH=true. Nunca roda dois ciclos ao mesmo tempo.
+ */
+let _autoEnrichRunning = false;
+export function startB2bAutoEnricher() {
+  const enabled = process.env.NODE_ENV === 'production' || process.env.B2B_AUTO_ENRICH === 'true';
+  if (!enabled) {
+    console.log('[RADAR B2B] Auto-enriquecedor desligado (defina B2B_AUTO_ENRICH=true para ligar fora de produção).');
+    return;
+  }
+  const BATCH = Number(process.env.B2B_AUTO_ENRICH_BATCH || 15);
+  const INTERVAL_MS = Number(process.env.B2B_AUTO_ENRICH_INTERVAL_MS || 180000); // 3 min
+
+  async function cycle() {
+    if (_autoEnrichRunning) return;
+    _autoEnrichRunning = true;
+    try {
+      const pendentes = db.prepare(
+        `SELECT id FROM radar_b2b_prospects WHERE (enriched_at IS NULL OR enriched_at = '') ORDER BY user_ratings_total DESC, id DESC LIMIT ?`
+      ).all(BATCH);
+      if (pendentes.length === 0) return;
+      let ok = 0;
+      for (const p of pendentes) {
+        try { await enrichSingleProspect(p.id); ok++; } catch (_) {}
+        await new Promise(r => setTimeout(r, 300));
+      }
+      console.log(`[RADAR B2B] Auto-enriquecedor: ${ok}/${pendentes.length} processadas neste ciclo.`);
+    } catch (e) {
+      console.warn('[RADAR B2B] Auto-enriquecedor falhou no ciclo:', e.message);
+    } finally {
+      _autoEnrichRunning = false;
+    }
+  }
+
+  setInterval(cycle, INTERVAL_MS);
+  setTimeout(cycle, 15000); // primeira passada 15s após subir o servidor
+  console.log(`[RADAR B2B] Auto-enriquecedor LIGADO (lote de ${BATCH} a cada ${Math.round(INTERVAL_MS / 1000)}s).`);
+}
