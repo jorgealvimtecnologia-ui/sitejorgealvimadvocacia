@@ -1,0 +1,63 @@
+<%- include('../partials/header', { pageTitle: 'Financeiro da Plataforma' }) %>
+
+<h1 class="text-2xl font-semibold mb-6">Financeiro da Plataforma</h1>
+
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">GMV (volume)</p>
+    <p class="text-2xl font-semibold mt-1">R$ <%= data.totals.gmv_brl.toFixed(2) %></p>
+  </div>
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">Lucro (comissões)</p>
+    <p class="text-2xl font-semibold mt-1 text-emerald-700">R$ <%= data.totals.lucro_comissao_brl.toFixed(2) %></p>
+  </div>
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">Repassado a autores</p>
+    <p class="text-2xl font-semibold mt-1">R$ <%= data.totals.repassado_autores_brl.toFixed(2) %></p>
+  </div>
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">Pedidos pagos</p>
+    <p class="text-2xl font-semibold mt-1"><%= data.totals.pedidos_pagos %></p>
+  </div>
+</div>
+
+<canvas id="chartPlat" height="90" class="mb-10 bg-white rounded-xl border border-slate-200 p-4"></canvas>
+
+<h2 class="font-medium mb-3">Repasses por autor</h2>
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-100 text-slate-600">
+      <tr><th class="text-left px-4 py-3">Autor</th><th class="px-4 py-3">Vendas</th>
+          <th class="px-4 py-3">Comissão (nossa)</th><th class="px-4 py-3">Repasse (autor)</th></tr>
+    </thead>
+    <tbody>
+      <% data.porAutor.forEach(a => { %>
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-3"><%= a.autor %></td>
+          <td class="px-4 py-3 text-center"><%= a.vendas %></td>
+          <td class="px-4 py-3 text-center text-emerald-700">R$ <%= a.comissao_brl.toFixed(2) %></td>
+          <td class="px-4 py-3 text-center">R$ <%= a.repasse_brl.toFixed(2) %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-slate-400 mt-4">
+  Observação: no split 1:1 o repasse cai direto na conta Mercado Pago do autor.
+  Estes números são o registro interno para conciliação, não o saldo do MP.
+</p>
+
+<script>
+  const m = <%- JSON.stringify(data.mensal.reverse()) %>;
+  new Chart(document.getElementById('chartPlat'), {
+    type: 'line',
+    data: { labels: m.map(x=>x.mes), datasets: [
+      { label: 'GMV', data: m.map(x=>x.gmv_cents/100), borderColor:'#94a3b8', tension:.3 },
+      { label: 'Lucro', data: m.map(x=>x.lucro_cents/100), borderColor:'#059669', tension:.3 }
+    ]},
+    options: { scales: { y: { beginAtZero: true } } }
+  });
+</script>
+
+<%- include('../partials/footer') %>

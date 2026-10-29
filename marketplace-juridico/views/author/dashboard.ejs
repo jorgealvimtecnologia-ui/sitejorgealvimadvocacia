@@ -1,0 +1,87 @@
+<%- include('../partials/header', { pageTitle: 'Painel do Autor' }) %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold">Painel do Autor</h1>
+  <a href="/painel/autor/novo"
+     class="bg-slate-900 text-white text-sm px-4 py-2 rounded-lg hover:bg-slate-700">
+     + Enviar monografia
+  </a>
+</div>
+
+<% if (query.enviado) { %>
+  <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-lg">
+    Arquivo enviado! Ele passará por moderação antes de aparecer na vitrine.
+  </div>
+<% } %>
+
+<!-- Conexão Mercado Pago -->
+<div class="mb-8 p-5 rounded-xl border <%= mpConnected ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' %>">
+  <% if (mpConnected) { %>
+    <p class="text-sm text-emerald-800 font-medium">✓ Conta Mercado Pago conectada. Você receberá os repasses direto.</p>
+  <% } else { %>
+    <p class="text-sm text-amber-800 mb-3">Conecte seu Mercado Pago para receber pelas vendas (split automático).</p>
+    <a href="/oauth/connect" class="inline-block bg-[#009ee3] text-white text-sm px-4 py-2 rounded-lg">Conectar Mercado Pago</a>
+  <% } %>
+</div>
+
+<!-- Cards financeiros -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">Líquido recebido</p>
+    <p class="text-2xl font-semibold mt-1">R$ <%= finance.totals.liquido_brl.toFixed(2) %></p>
+  </div>
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">Itens vendidos</p>
+    <p class="text-2xl font-semibold mt-1"><%= finance.totals.itens_vendidos %></p>
+  </div>
+  <div class="p-5 bg-white rounded-xl border border-slate-200">
+    <p class="text-xs text-slate-500 uppercase">Comissão da plataforma</p>
+    <p class="text-2xl font-semibold mt-1">R$ <%= finance.totals.comissao_brl.toFixed(2) %></p>
+  </div>
+</div>
+
+<canvas id="chartMensal" height="90" class="mb-10 bg-white rounded-xl border border-slate-200 p-4"></canvas>
+
+<!-- Tabela de produtos -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-100 text-slate-600">
+      <tr><th class="text-left px-4 py-3">Título</th><th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3">Downloads</th><th class="px-4 py-3">Preço</th></tr>
+    </thead>
+    <tbody>
+      <% products.forEach(p => { %>
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-3"><%= p.title %></td>
+          <td class="px-4 py-3 text-center">
+            <% const badge = { pending:'bg-amber-100 text-amber-700', approved:'bg-emerald-100 text-emerald-700', rejected:'bg-rose-100 text-rose-700' }[p.status]; %>
+            <span class="px-2 py-1 rounded text-xs <%= badge %>"><%= p.status %></span>
+            <% if (p.status==='rejected' && p.rejection_reason) { %>
+              <p class="text-xs text-rose-500 mt-1"><%= p.rejection_reason %></p>
+            <% } %>
+          </td>
+          <td class="px-4 py-3 text-center"><%= p.downloads_count %></td>
+          <td class="px-4 py-3 text-center">R$ <%= (p.price_cents/100).toFixed(2) %></td>
+        </tr>
+      <% }) %>
+      <% if (products.length===0) { %>
+        <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">Nenhuma monografia enviada ainda.</td></tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const mensal = <%- JSON.stringify(finance.mensal.reverse()) %>;
+  new Chart(document.getElementById('chartMensal'), {
+    type: 'bar',
+    data: {
+      labels: mensal.map(m => m.mes),
+      datasets: [{ label: 'Líquido (R$)', data: mensal.map(m => m.liquido_cents/100),
+                   backgroundColor: '#0f172a' }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+</script>
+
+<%- include('../partials/footer') %>

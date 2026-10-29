@@ -1,0 +1,25 @@
+{
+  "name": "marketplace-juridico",
+  "version": "1.0.0",
+  "description": "Marketplace de monografias e artigos jurídicos em PDF com split de pagamentos Mercado Pago",
+  "main": "app.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node app.js",
+    "migrate": "node -e \"require('./db').migrate(); console.log('schema aplicado')\"",
+    "genkey": "node -e \"console.log('TOKEN_ENCRYPTION_KEY=' + require('crypto').randomBytes(32).toString('hex'))\"",
+    "seed:admin": "node scripts/create-admin.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0",
+    "helmet": "^7.1.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-lib": "^1.17.1",
+    "bcrypt": "^5.1.1"
+  }
+}
