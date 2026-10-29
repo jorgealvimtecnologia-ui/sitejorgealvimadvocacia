@@ -56,8 +56,9 @@ export function marketplacePendencias() {
  */
 marketplaceRouter.get('/api/loja/status', (req, res) => {
   const ready = marketplaceReady();
-  // Prévia do front-end nativo (src/modules/loja): liga em dev, ou com MARKETPLACE_PREVIEW=true.
-  const previewOn = process.env.MARKETPLACE_PREVIEW === 'true' || process.env.NODE_ENV !== 'production';
+  // Prévia do front-end nativo (src/modules/loja): disponível para o mestre (dev aberto;
+  // em produção o /loja/preview exige token de mestre). Só desliga com MARKETPLACE_PREVIEW=off.
+  const previewOn = process.env.MARKETPLACE_PREVIEW !== 'off';
   return res.json({
     success: true,
     ready,

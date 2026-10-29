@@ -15,11 +15,19 @@
  * São rotas de PÁGINA (não /api), então o rbacGuard não as filtra; o gate é a flag.
  */
 import express from 'express';
+import { validateToken } from '../../middleware/auth.js';
 
 export const lojaPreviewRouter = express.Router();
 
-function previewOn() {
-  return process.env.MARKETPLACE_PREVIEW === 'true' || process.env.NODE_ENV !== 'production';
+// Mestre? (mesma regra do requireMaster do app)
+function isMasterToken(token) {
+  const s = validateToken(token);
+  return !!(s && (s.role === 'master' || s.username === 'jorgealvimtecnologia'));
+}
+// Lê um cookie do cabeçalho (sem depender de cookie-parser).
+function cookieVal(header, name) {
+  const m = (header || '').match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+  return m ? decodeURIComponent(m[1]) : null;
 }
 
 // Comissão padrão da plataforma (igual ao marketplace real)
@@ -173,9 +181,22 @@ function productCard(p) {
 // ===========================================================================
 //  ROTAS (todas atrás do gate previewOn)
 // ===========================================================================
+// Kill-switch opcional: MARKETPLACE_PREVIEW=off desliga a prévia em qualquer ambiente.
+// Fora de produção: aberto (revisão local). Em PRODUÇÃO: INTERNO — só o mestre acessa
+// (o painel abre a prévia com ?token=<admin>; o gate valida e grava um cookie curto para
+// as navegações internas). Sem mestre válido => 404, então o público geral NÃO vê a loja.
 lojaPreviewRouter.use('/loja/preview', (req, res, next) => {
-  if (!previewOn()) return res.status(404).send('Prévia da loja indisponível.');
-  next();
+  if (process.env.MARKETPLACE_PREVIEW === 'off') return res.status(404).send('Prévia da loja indisponível.');
+  if (process.env.NODE_ENV !== 'production') return next();
+
+  const qToken = req.query.token;
+  if (qToken && isMasterToken(qToken)) {
+    res.setHeader('Set-Cookie', 'loja_preview=' + encodeURIComponent(qToken) + '; Path=/loja/preview; HttpOnly; SameSite=Lax; Max-Age=28800');
+    return next();
+  }
+  const ck = cookieVal(req.headers.cookie, 'loja_preview');
+  if (ck && isMasterToken(ck)) return next();
+  return res.status(404).send('Prévia da loja indisponível.');
 });
 
 // VITRINE ------------------------------------------------------------------
