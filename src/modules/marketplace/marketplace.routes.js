@@ -56,6 +56,8 @@ export function marketplacePendencias() {
  */
 marketplaceRouter.get('/api/loja/status', (req, res) => {
   const ready = marketplaceReady();
+  // Prévia do front-end nativo (src/modules/loja): liga em dev, ou com MARKETPLACE_PREVIEW=true.
+  const previewOn = process.env.MARKETPLACE_PREVIEW === 'true' || process.env.NODE_ENV !== 'production';
   return res.json({
     success: true,
     ready,
@@ -64,5 +66,7 @@ marketplaceRouter.get('/api/loja/status', (req, res) => {
     vitrineUrl: '/loja',
     moderacaoUrl: '/loja/painel/admin/moderacao',
     comissaoPadrao: Number(process.env.PLATFORM_FEE_PERCENT || 15),
+    previewOn,
+    previewUrl: '/loja/preview',
   });
 });

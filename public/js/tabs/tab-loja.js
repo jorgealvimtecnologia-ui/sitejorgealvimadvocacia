@@ -65,6 +65,20 @@
       + 'loading="lazy"></iframe>';
   }
 
+  // Bloco de PRÉVIA: embute o front-end nativo da loja (/loja/preview) para o
+  // titular aprovar layout e rotinas — dados de exemplo, pagamento simulado.
+  function blocoPreview(data) {
+    var url = data.previewUrl || '/loja/preview';
+    return '<div style="margin-top:18px;border:1px solid #bae6fd;background:#f0f9ff;border-radius:14px;padding:16px 18px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">'
+      + '<strong style="color:#075985;font-size:.95rem">🧪 Prévia do front-end da loja (para aprovação)</strong>'
+      + '<a href="' + esc(url) + '" target="_blank" rel="noopener" style="font-size:.8rem;font-weight:700;color:#047857;border:1px solid #6ee7b7;background:#ecfdf5;padding:6px 12px;border-radius:999px;text-decoration:none">Abrir em nova aba ↗</a>'
+      + '</div>'
+      + '<p style="margin:0 0 10px;font-size:.82rem;color:#075985">Dados de exemplo e pagamento simulado. Navegue por vitrine, produto, checkout, painel do autor, moderação e financeiro.</p>'
+      + '<iframe title="Prévia da Loja" src="' + esc(url) + '" style="width:100%;height:78vh;min-height:560px;border:1px solid #bae6fd;border-radius:12px;background:#fff" loading="lazy"></iframe>'
+      + '</div>';
+  }
+
   function loadLojaTab() {
     var box = document.getElementById('loja-tab-container');
     if (!box || montado) return;
@@ -79,7 +93,8 @@
             + '<div style="border:1px solid #fecaca;background:#fef2f2;border-radius:14px;padding:18px 20px;color:#991b1b;font-size:.85rem">Não foi possível consultar o estado da loja.</div>';
           return;
         }
-        box.innerHTML = data.ready ? iframeModeracao(data) : cartaoPendencias(data);
+        if (data.ready) { box.innerHTML = iframeModeracao(data); return; }
+        box.innerHTML = cartaoPendencias(data) + (data.previewOn ? blocoPreview(data) : '');
       })
       .catch(function () {
         montado = false; // permite nova tentativa ao reabrir a aba

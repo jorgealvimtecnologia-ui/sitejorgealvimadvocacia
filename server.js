@@ -70,6 +70,7 @@ import { roadmapAgentRouter } from './src/modules/roadmap/roadmap.agent.js';
 import { qaRouter } from './src/modules/qa/qa.routes.js';
 import { ocrRouter } from './src/modules/ocr/ocr.routes.js';
 import { marketplaceRouter, marketplaceFlagOn } from './src/modules/marketplace/marketplace.routes.js';
+import { lojaPreviewRouter } from './src/modules/loja/loja.routes.js';
 import { recaptchaRouter } from './src/modules/recaptcha/recaptcha.routes.js';
 import { bookingRouter, startBookingReminders } from './src/modules/booking/booking.routes.js';
 import { indicatorsRouter } from './src/modules/indicators/indicators.routes.js';
@@ -256,6 +257,7 @@ app.use(whatsappRouter);
 app.use(brevoRouter);
 app.use(radarB2bRouter);
 app.use(marketplaceRouter); // /api/loja/status (estado da loja para a aba do painel)
+app.use(lojaPreviewRouter); // /loja/preview/* — front-end nativo da loja em modo PRÉVIA (gate por flag)
 
 // -------- LOJA (Marketplace Jurídico): sub-app montado em /loja SÓ quando ligado --------
 // O sub-app (marketplace-juridico/) é CommonJS e exige os segredos do Mercado Pago no
